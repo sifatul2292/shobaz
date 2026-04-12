@@ -38,3 +38,9 @@ logs/
 # Misc
 *.tgz
 .cache/
+
+# Config
+backend/src/config/configuration.ts
+backend/.env
+frontend/.env
+frontend/.env.local
