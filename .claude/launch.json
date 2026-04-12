@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3006"],
+      "port": 3006,
+      "autoPort": false,
+      "cwd": "/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/frontend"
+    },
+    {
+      "name": "Backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dist/main"],
+      "port": 4000,
+      "cwd": "/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/backend"
+    },
+    {
+      "name": "Admin",
+      "runtimeExecutable": "serve",
+      "runtimeArgs": ["/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/admin/dist/angular-ui", "-p", "3007", "--single"],
+      "port": 3007
+    }
+  ]
+}
