@@ -415,35 +415,6 @@ setBundleProducts(bundleItems);
                   </div>
                 </div>
               </div>
-
-              {/* Description Tabs */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="flex border-b border-gray-100">
-                  {['description', 'author', 'reviews'].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 px-4 py-4 text-base font-medium transition-colors ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-                    >
-                      {tab === 'description' ? 'বিবরণ' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
-                    </button>
-                  ))}
-                </div>
-                <div className="p-5 bg-white">
-                  {activeTab === 'description' && product.description && (
-                    <div className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: product.description }} />
-                  )}
-                  {activeTab === 'author' && authorName && (
-                    <div>
-                      <h3 className="font-bold text-xl text-gray-800 mb-3">{authorName}</h3>
-                      <p className="text-gray-600">লেখকের অন্যান্য বই সমূহ দেখতে লেখকের নামে সার্চ করুন।</p>
-                    </div>
-                  )}
-                  {activeTab === 'reviews' && (
-                    <div className="text-gray-500">No reviews yet. Be the first to review!</div>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* RIGHT: Video + Delivery + Related */}
@@ -584,6 +555,35 @@ setBundleProducts(bundleItems);
               </div>
             </div>
           )}
+
+          {/* Product Description Tabs */}
+          <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="flex border-b border-gray-100">
+              {['description', 'author', 'reviews'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 px-4 py-4 text-base font-medium transition-colors ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                >
+                  {tab === 'description' ? 'বিবরণ' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
+                </button>
+              ))}
+            </div>
+            <div className="p-5 bg-white">
+              {activeTab === 'description' && product.description && (
+                <div className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: product.description }} />
+              )}
+              {activeTab === 'author' && authorName && (
+                <div>
+                  <h3 className="font-bold text-xl text-gray-800 mb-3">{authorName}</h3>
+                  <p className="text-gray-600">লেখকের অন্যান্য বই সমূহ দেখতে লেখকের নামে সার্চ করুন।</p>
+                </div>
+              )}
+              {activeTab === 'reviews' && (
+                <div className="text-gray-500">No reviews yet. Be the first to review!</div>
+              )}
+            </div>
+          </div>
 
           {/* Recently Viewed & Best Sellers */}
           {relatedProducts.length > 0 && (
