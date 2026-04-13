@@ -8,21 +8,19 @@ import { Product } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import Image from 'next/image';
 import { 
-  FaChevronLeft, FaChevronRight, FaShareAlt, FaHeart, FaStar, 
-  FaShoppingCart, FaBoxOpen, FaTimes, FaCheck, FaTruck, 
-  FaUndo, FaShieldAlt, FaClock, FaMinus, FaPlus,
-  FaRegCommentDots, FaFacebook, FaTwitter, FaWhatsapp, FaLink
+  FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes, 
+  FaCheck, FaTruck, FaUndo, FaShieldAlt, FaMoneyBillWave, FaStar,
+  FaMinus, FaPlus, FaPlay, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
-
-interface Props {
-  params: Promise<{ slug: string }>;
-}
 
 interface BundleItem {
   product: Product;
   discount: number;
+}
+
+interface Props {
+  params: Promise<{ slug: string }>;
 }
 
 export default function ProductDetailClient({ params }: Props) {
@@ -33,18 +31,16 @@ export default function ProductDetailClient({ params }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [slug, setSlug] = useState('');
   const [activeImage, setActiveImage] = useState(0);
-  const [showLightbox, setShowLightbox] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [activeTab, setActiveTab] = useState('description');
 
   const { addItem, items } = useCartStore();
 
   useEffect(() => {
-    params.then((p) => {
-      setSlug(p.slug);
-    });
+    params.then((p) => setSlug(p.slug));
   }, [params]);
 
   useEffect(() => {
@@ -55,45 +51,30 @@ export default function ProductDetailClient({ params }: Props) {
     setLoading(true);
     try {
       const res = await api.get(`/product/get-by-slug/${slug}`);
-      console.log('Product API Response:', res.data);
-      
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
         
-        // Use boughtTogetherProducts from backend API
-        const backendBoughtTogether = productData.boughtTogetherProducts || [];
-        console.log('boughtTogetherProducts from backend:', backendBoughtTogether);
-        
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
           let allProducts = relatedRes.data.data;
-          
-          // Handle if allProducts.items exists (pagination wrapper)
-          if (allProducts.items) {
-            allProducts = allProducts.items;
-          }
-          
-          if (!Array.isArray(allProducts)) {
-            allProducts = [];
-          }
+          if (allProducts.items) allProducts = allProducts.items;
+          if (!Array.isArray(allProducts)) allProducts = [];
           
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
-          setRelatedProducts(filtered.slice(0, 6));
+          setRelatedProducts(filtered.slice(0, 10));
           
+          // Bundle products from backend
+          const backendBoughtTogether = productData.boughtTogetherProducts || [];
           let bundleItems: BundleItem[] = [];
           const bundleDiscount = 10;
           
-          // Use backend boughtTogetherProducts if available
-          if (backendBoughtTogether && Array.isArray(backendBoughtTogether) && backendBoughtTogether.length > 0) {
-            console.log('Using backend boughtTogetherProducts:', backendBoughtTogether);
+          if (backendBoughtTogether?.length > 0) {
             bundleItems = backendBoughtTogether.map((p: Product) => ({
               product: p,
               discount: bundleDiscount
             }));
           } else {
-            // Fallback: use first 3 related products
-            console.log('Using fallback related products as bundle');
             bundleItems = filtered.slice(0, 3).map((p: Product) => ({
               product: p,
               discount: bundleDiscount
@@ -108,31 +89,10 @@ export default function ProductDetailClient({ params }: Props) {
     setLoading(false);
   };
 
-  const handleToggleBundleItem = (productId: string) => {
-    setSelectedBundle(prev => 
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  const handleAddBundleToCart = () => {
-    if (product) {
-      addItem(product, quantity);
-      selectedBundle.forEach(id => {
-        const item = bundleProducts.find(b => b.product._id === id);
-        if (item) {
-          addItem(item.product, 1);
-        }
-      });
-      toast.success('🎉 বান্ডেল কার্টে যোগ হয়েছে!');
-    }
-  };
-
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
-      toast.success('🛒 কার্টে যোগ হয়েছে');
+      toast.success('কার্টে যোগ হয়েছে');
     }
   };
 
@@ -143,36 +103,23 @@ export default function ProductDetailClient({ params }: Props) {
     }
   };
 
-  const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    toast.success(isWishlisted ? 'উইশলিস্ট থেকে সরানো হয়েছে' : 'উইশলিস্টে যোগ হয়েছে');
+  const handleToggleBundle = (productId: string) => {
+    setSelectedBundle(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
-  const handleShare = () => {
-    setShowShareModal(!showShareModal);
-  };
-
-  const copyToClipboard = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    toast.success('লিংক কপি হয়েছে!');
-  };
-
-  const shareToFacebook = () => {
-    const url = encodeURIComponent(window.location.href);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-  };
-
-  const shareToTwitter = () => {
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(product?.name || 'Check this product');
-    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
-  };
-
-  const shareToWhatsApp = () => {
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`${product?.name} - ${url}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+  const handleAddBundleToCart = () => {
+    if (product) {
+      addItem(product, quantity);
+      selectedBundle.forEach(id => {
+        const item = bundleProducts.find(b => b.product._id === id);
+        if (item) addItem(item.product, 1);
+      });
+      toast.success('বান্ডেল কার্টে যোগ হয়েছে!');
+    }
   };
 
   const getCurrentPrice = (p: Product) => {
@@ -181,9 +128,7 @@ export default function ProductDetailClient({ params }: Props) {
     return discount > 0 ? salePrice - discount : salePrice;
   };
 
-  const getOriginalPrice = (p: Product) => {
-    return p.salePrice || 0;
-  };
+  const getOriginalPrice = (p: Product) => p.salePrice || 0;
 
   const getDiscountPercent = (p: Product) => {
     const salePrice = p.salePrice || 0;
@@ -207,46 +152,15 @@ export default function ProductDetailClient({ params }: Props) {
   };
 
   const isInCart = items.some(item => item.product._id === product?._id);
-
-  const nextImage = () => {
-    if (product?.images) {
-      setActiveImage((prev) => (prev + 1) % product.images!.length);
-    }
-  };
-
-  const prevImage = () => {
-    if (product?.images) {
-      setActiveImage((prev) => (prev - 1 + product.images!.length) % product.images!.length);
-    }
-  };
-
-  const getPreviewUrl = (pdfUrl?: string) => {
-    if (!pdfUrl) return null;
-    if (pdfUrl.includes('drive.google.com')) {
-      const fileIdMatch = pdfUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (fileIdMatch) return `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
-    }
-    return pdfUrl;
-  };
-
-  const getYouTubeId = (url?: string) => {
-    if (!url) return null;
-    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-    return match ? match[1] : null;
-  };
+  const previewUrl = product?.pdfFile || product?.previewPdfUrl;
+  const youtubeId = product?.videoUrl?.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <main className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-teal-500"></div>
-              <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border-2 border-teal-200 opacity-30"></div>
-            </div>
-            <p className="text-gray-500 animate-pulse">লোড হচ্ছে...</p>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
         </main>
         <Footer />
       </div>
@@ -259,7 +173,6 @@ export default function ProductDetailClient({ params }: Props) {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-6xl mb-4">😕</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">পণ্য পাওয়া যায়নি</h2>
             <Link href="/products" className="text-teal-600 hover:underline">সকল বই দেখুন</Link>
           </div>
@@ -273,706 +186,362 @@ export default function ProductDetailClient({ params }: Props) {
   const currentPrice = getCurrentPrice(product);
   const originalPrice = getOriginalPrice(product);
   const discountPercent = getDiscountPercent(product);
+  const savings = originalPrice - currentPrice;
   const authorName = getAuthorName(product.author);
   const publisherName = getPublisherName(product.publisher);
   const inStock = product.quantity === undefined || product.quantity > 0;
   const rating = product.ratingAvr || 0;
-  const reviewCount = product.ratingCount || 0;
-  const previewUrl = getPreviewUrl(product.pdfFile || product.previewPdfUrl);
-  const youtubeId = getYouTubeId(product.videoUrl);
-  const bundleDiscount = product.bundleDiscount || 10;
+  const bundleDiscount = 10;
+
+  const nextImage = () => product?.images && setActiveImage((prev) => (prev + 1) % product.images!.length);
+  const prevImage = () => product?.images && setActiveImage((prev) => (prev - 1 + product.images!.length) % product.images!.length);
+
+  const bundleTotal = currentPrice + selectedBundle.reduce((sum, id) => {
+    const item = bundleProducts.find(b => b.product._id === id);
+    return sum + (item ? getCurrentPrice(item.product) * 0.9 : 0);
+  }, 0);
+
+  const bundleSavings = selectedBundle.reduce((sum, id) => {
+    const item = bundleProducts.find(b => b.product._id === id);
+    return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
+  }, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-teal-50/30">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <main className="flex-1 w-full">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6 overflow-x-auto whitespace-nowrap pb-2">
-            <Link href="/" className="hover:text-teal-600 transition-colors">হোম</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/products" className="hover:text-teal-600 transition-colors">বই</Link>
-            {product.category && (
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+            <Link href="/" className="hover:text-teal-600">হোম</Link>
+            <span>›</span>
+            <Link href="/products" className="hover:text-teal-600">বই</Link>
+            {product.category?.[0] && (
               <>
-                <span className="text-gray-300">›</span>
-                <Link href={`/products?category=${product.category.slug}`} className="hover:text-teal-600 transition-colors">{product.category.name}</Link>
+                <span>›</span>
+                <Link href={`/products?category=${product.category[0].slug}`} className="hover:text-teal-600">{product.category[0].name}</Link>
               </>
             )}
-            <span className="text-gray-300">›</span>
-            <span className="text-gray-700 font-medium">{product.name}</span>
+            <span>›</span>
+            <span className="text-gray-700 truncate max-w-[200px]">{product.name}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column - Images */}
-            <div className="lg:col-span-5 space-y-4">
-              {/* Main Image with Lightbox */}
-              <div 
-                className="relative bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden group"
-              >
-                <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 flex items-center justify-center relative">
-                  {images[activeImage] ? (
-                    <img
-                      src={imgUrl(images[activeImage])!}
-                      alt={product.name || 'Book'}
-                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <span className="text-9xl filter drop-shadow-xl">📖</span>
-                  )}
-                  
-                  {/* Preview Badge - Click to open PDF */}
-                  {previewUrl && (
-                    <button 
-                      onClick={() => setShowPreviewModal(true)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <span className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
-                        📄 একটু পড়ে দেখুন
-                      </span>
-                    </button>
-                  )}
-                </div>
-                
-                {/* Discount Badge */}
-                {discountPercent > 0 && (
-                  <div className="absolute top-4 left-4 flex flex-col gap-1">
-                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-lg">
-                      {discountPercent}% ছাড়
-                    </span>
-                  </div>
-                )}
-
-                {/* Navigation Arrows */}
-                {images.length > 1 && (
-                  <>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white shadow-xl rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                    >
-                      <FaChevronLeft className="text-gray-700" />
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white shadow-xl rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                    >
-                      <FaChevronRight className="text-gray-700" />
-                    </button>
-                  </>
-                )}
-
-                {/* Share & Wishlist */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleWishlist(); }}
-                    className={`bg-white/95 hover:bg-white shadow-xl rounded-full p-2.5 transition-all duration-300 hover:scale-110 ${isWishlisted ? 'text-red-500' : 'text-gray-600'}`}
-                  >
-                    <FaHeart className={isWishlisted ? 'fill-current' : ''} />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                    className="bg-white/95 hover:bg-white shadow-xl rounded-full p-2.5 transition-all duration-300 hover:scale-110 text-gray-600"
-                  >
-                    <FaShareAlt />
-                  </button>
-                </div>
-
-                {/* Image Counter */}
-                {images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
-                    {activeImage + 1} / {images.length}
-                  </div>
-                )}
-              </div>
-
-              {/* Thumbnails */}
-              {images.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
-                  {images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImage(idx)}
-                      className={`w-20 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                        idx === activeImage 
-                          ? 'border-teal-500 shadow-lg scale-105' 
-                          : 'border-transparent hover:border-gray-300 hover:scale-105'
-                      }`}
-                    >
-                      <img src={imgUrl(img)!} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Video Section */}
-              {youtubeId && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 p-5">
-                  <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    ভিডিও প্রিভিউ
-                  </h3>
-                  <div 
-                    className="aspect-video rounded-xl overflow-hidden bg-black cursor-pointer relative"
-                    onClick={() => setShowLightbox(true)}
-                  >
-                    <img 
-                      src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`}
-                      alt="Video"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors">
-                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-2xl ml-1">▶</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column - Details */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Product Info Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 p-6 md:p-8">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">{product.name}</h1>
-                    
-                    {/* Author & Publisher */}
-                    <div className="flex flex-wrap gap-3 mb-4">
-                      {authorName && (
-                        <Link 
-                          href={`/products?author=${encodeURIComponent(authorName)}`}
-                          className="flex items-center gap-2 bg-gradient-to-r from-teal-50 to-emerald-50 px-4 py-2 rounded-full hover:from-teal-100 hover:to-emerald-100 transition-all"
-                        >
-                          <span className="text-teal-600">✍️</span>
-                          <span className="text-sm text-teal-700 font-medium">{authorName}</span>
-                        </Link>
-                      )}
-                      {publisherName && (
-                        <Link 
-                          href={`/products?publisher=${encodeURIComponent(publisherName)}`}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-full hover:from-blue-100 hover:to-indigo-100 transition-all"
-                        >
-                          <span className="text-blue-600">🏢</span>
-                          <span className="text-sm text-blue-700 font-medium">{publisherName}</span>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ratings */}
-                {(rating || reviewCount) && (
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar key={star} className={`text-sm ${star <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-                      ))}
-                    </div>
-                    <span className="text-yellow-600 font-bold">{rating.toFixed(1)}</span>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-gray-500">{reviewCount} রিভিউ</span>
-                    {product.ratingDetails && (
-                      <span className="text-teal-600 text-sm underline cursor-pointer hover:text-teal-700">
-                        রেটিং দেখুন
-                      </span>
+          {/* Main 3-Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* LEFT: Product Image + Preview */}
+            <div className="lg:col-span-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24">
+                {/* Main Image */}
+                <div className="relative bg-gray-50 rounded-lg mb-3">
+                  <div className="aspect-[3/4] flex items-center justify-center">
+                    {images[activeImage] ? (
+                      <img src={imgUrl(images[activeImage])!} alt={product.name} className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-7xl">📖</span>
                     )}
                   </div>
+                  
+                  {images.length > 1 && (
+                    <>
+                      <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow rounded-full p-2">
+                        <FaChevronLeft className="text-gray-600" />
+                      </button>
+                      <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow rounded-full p-2">
+                        <FaChevronRight className="text-gray-600" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnails */}
+                {images.length > 1 && (
+                  <div className="flex gap-2 justify-center mb-3">
+                    {images.map((img, idx) => (
+                      <button key={idx} onClick={() => setActiveImage(idx)} className={`w-12 h-14 rounded border-2 ${idx === activeImage ? 'border-teal-500' : 'border-gray-200'}`}>
+                        <img src={imgUrl(img)!} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 )}
 
-                {/* Price */}
-                <div className="flex items-center gap-4 py-5 border-y border-gray-100">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
-                      ৳{currentPrice}
-                    </span>
-                    {discountPercent > 0 && originalPrice > 0 && (
+                {/* Preview Button */}
+                {previewUrl && (
+                  <button 
+                    onClick={() => setShowPreviewModal(true)}
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md font-medium flex items-center justify-center gap-2"
+                  >
+                    <span>একটু পড়ে দেখুন</span>
+                    <span className="transform rotate-90">➜</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* CENTER: Product Info */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                {/* Title */}
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
+                
+                {/* Author, Category, Publisher */}
+                <div className="space-y-2 mb-4">
+                  {authorName && <p className="text-gray-600">লেখক: <Link href={`/products?author=${encodeURIComponent(authorName)}`} className="text-teal-600 hover:underline font-medium">{authorName}</Link></p>}
+                  {product.category?.[0] && <p className="text-gray-600">ক্যাটাগরি: <Link href={`/products?category=${product.category[0].slug}`} className="text-teal-600 hover:underline font-medium">{product.category[0].name}</Link></p>}
+                  {publisherName && <p className="text-gray-600">প্রকাশনা: <span className="font-medium">{publisherName}</span></p>}
+                  {product.weight && <p className="text-gray-500 text-sm">ওজন: {product.weight}g</p>}
+                </div>
+
+                {/* Price Block */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-2xl font-bold text-red-600">৳{currentPrice}</span>
+                    {discountPercent > 0 && (
                       <>
-                        <span className="text-xl text-gray-400 line-through">৳{originalPrice}</span>
-                        <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold px-3 py-1 rounded-full">
-                          সেভ ৳{originalPrice - currentPrice}
-                        </span>
+                        <span className="text-gray-400 line-through">৳{originalPrice}</span>
+                        <span className="text-green-600 text-sm font-medium">-{discountPercent}%</span>
                       </>
                     )}
                   </div>
+                  {savings > 0 && (
+                    <p className="text-green-600 text-sm">You Save ৳{savings} ({discountPercent}% Off)</p>
+                  )}
                 </div>
 
-                {/* Stock & Quick Info */}
-                <div className="flex flex-wrap items-center gap-3 mt-4">
+                {/* Stock */}
+                <div className="flex items-center gap-2 mb-4">
                   {inStock ? (
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-medium">
-                      <FaBoxOpen className="text-green-500" />
-                      <span>স্টকে আছে</span>
-                    </div>
+                    <span className="text-green-600 font-medium flex items-center gap-1"><FaBoxOpen /> In Stock</span>
                   ) : (
-                    <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full font-medium">
-                      <span>স্টকে নেই</span>
-                    </div>
-                  )}
-                  
-                  {product.totalPages && (
-                    <span className="bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm">
-                      📄 {product.totalPages} পৃষ্ঠা
-                    </span>
-                  )}
-                  {product.edition && (
-                    <span className="bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm">
-                      📓 {product.edition}
-                    </span>
-                  )}
-                  {product.language && (
-                    <span className="bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm">
-                      🌍 {product.language}
-                    </span>
+                    <span className="text-red-500 font-medium">Stock Out</span>
                   )}
                 </div>
 
-                {/* Quantity & Add to Cart */}
-                <div className="mt-8 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
-                      <button 
-                        onClick={() => setQuantity(q => Math.max(1, q - 1))} 
-                        className="px-5 py-4 hover:bg-gray-100 text-xl font-bold transition-colors text-gray-600"
-                      >
-                        <FaMinus />
+                {/* Short Description */}
+                {product.shortDescription && (
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <p className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}>{product.shortDescription}</p>
+                    {product.shortDescription?.length > 150 && (
+                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-teal-600 text-sm font-medium mt-1">
+                        {showFullDescription ? 'আরও কম দেখুন' : 'আরও দেখুন'}
                       </button>
-                      <span className="px-8 py-4 font-bold text-lg min-w-[80px] text-center bg-white">{quantity}</span>
-                      <button 
-                        onClick={() => setQuantity(q => q + 1)} 
-                        className="px-5 py-4 hover:bg-gray-100 text-xl font-bold transition-colors text-gray-600"
-                      >
-                        <FaPlus />
-                      </button>
-                    </div>
-                    <button 
-                      onClick={handleAddToCart} 
-                      disabled={!inStock}
-                      className={`flex-1 py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
-                        inStock 
-                          ? 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white' 
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <FaShoppingCart className="text-lg" />
-                      {isInCart ? 'কার্টে আছে ✓' : 'কার্টে যোগ করুন'}
-                    </button>
+                    )}
                   </div>
+                )}
 
+                {/* CTA Area */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center border border-gray-300 rounded">
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 hover:bg-gray-50">−</button>
+                    <span className="px-4 py-2 font-medium">{quantity}</span>
+                    <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 hover:bg-gray-50">+</button>
+                  </div>
                   <button 
-                    onClick={handleBuyNow} 
+                    onClick={handleAddToCart}
                     disabled={!inStock}
-                    className={`w-full py-5 rounded-2xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
-                      inStock 
-                        ? 'bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600 hover:from-orange-600 hover:via-orange-600 hover:to-orange-700 text-white' 
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className={`flex-1 py-2.5 rounded font-bold ${inStock ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}
                   >
-                    ⚡ এখনই কিনুন
+                    🛒 কার্টে যোগ করুন
                   </button>
                 </div>
+
+                <button 
+                  onClick={handleBuyNow}
+                  disabled={!inStock}
+                  className={`w-full py-3 rounded font-bold text-white ${inStock ? 'bg-teal-600 hover:bg-teal-700' : 'bg-gray-200'}`}
+                >
+                  এখনই অর্ডার করুন
+                </button>
+
+                {/* Trust Block */}
+                <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <div className="text-center">
+                    <FaTruck className="text-teal-600 mx-auto mb-1" />
+                    <p className="text-xs text-gray-500">Free Delivery</p>
+                  </div>
+                  <div className="text-center">
+                    <FaShieldAlt className="text-teal-600 mx-auto mb-1" />
+                    <p className="text-xs text-gray-500">100% Authentic</p>
+                  </div>
+                  <div className="text-center">
+                    <FaUndo className="text-teal-600 mx-auto mb-1" />
+                    <p className="text-xs text-gray-500">7 Days Return</p>
+                  </div>
+                  <div className="text-center">
+                    <FaMoneyBillWave className="text-teal-600 mx-auto mb-1" />
+                    <p className="text-xs text-gray-500">Cash on Delivery</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Quick Info Cards - Glassmorphism */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-5 text-center hover:bg-white/80 transition-all hover:scale-105">
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <FaTruck className="text-xl text-teal-600" />
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium">ফ্রি শিপিং</p>
-                  <p className="text-sm font-bold text-gray-800">৳500+ অর্ডারে</p>
-                </div>
-                <div className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-5 text-center hover:bg-white/80 transition-all hover:scale-105">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <FaUndo className="text-xl text-blue-600" />
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium">হass্যাসি রিটার্ন</p>
-                  <p className="text-sm font-bold text-gray-800">৭ দিনের মধ্যে</p>
-                </div>
-                <div className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-5 text-center hover:bg-white/80 transition-all hover:scale-105">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <FaShieldAlt className="text-xl text-purple-600" />
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium">নিরাপদ পেমেন্ট</p>
-                  <p className="text-sm font-bold text-gray-800">১০০% নিরাপদ</p>
-                </div>
-              </div>
-
-              {/* Description */}
-              {product.description && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-4 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-gray-100">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                      📖 বিবরণ
-                    </h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="text-gray-600 leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: product.description }} />
-                  </div>
-                </div>
-              )}
-
-              {/* Features */}
-              {product.features && product.features.length > 0 && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-4 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-gray-100">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                      ✨ বৈশিষ্ট্য
-                    </h2>
-                  </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {product.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-4 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 rounded-xl border border-teal-100">
-                        <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <FaCheck className="text-white text-xs" />
+              {/* Bought Together */}
+              {bundleProducts.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h2 className="text-lg font-bold text-gray-800 mb-3">পাঠকেরা একসাথে কিনে থাকেন</h2>
+                  
+                  <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                    {bundleProducts.map((item) => (
+                      <div 
+                        key={item.product._id}
+                        onClick={() => handleToggleBundle(item.product._id)}
+                        className={`flex-shrink-0 w-24 p-2 rounded border-2 cursor-pointer ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}
+                      >
+                        <div className="w-16 h-20 bg-gray-100 rounded mb-1 mx-auto">
+                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
                         </div>
-                        <span className="text-gray-700 font-medium">{feature}</span>
+                        <p className="text-xs text-gray-600 line-clamp-2 text-center">{item.product.name}</p>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
 
-              {/* Specifications */}
-              {product.specifications && Object.keys(product.specifications).length > 0 && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-4 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-gray-100">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                      📋 স্পেসিফিকেশন
-                    </h2>
-                  </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                        <span className="text-gray-500 font-medium">{key}</span>
-                        <span className="font-bold text-gray-800">{value}</span>
+                  {selectedBundle.length > 0 && (
+                    <div className="flex items-center justify-between bg-teal-50 rounded p-3">
+                      <div>
+                        <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</span></p>
+                        <p className="text-xs text-green-600">You Save ৳{bundleSavings.toFixed(0)}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Reviews */}
-              {product.reviews && product.reviews.length > 0 && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-4 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-gray-100 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                      <FaRegCommentDots /> কাস্টমার রিভিউ ({product.reviews.length})
-                    </h2>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar key={star} className={`text-sm ${star <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-                      ))}
-                      <span className="ml-2 text-gray-600 font-medium">{rating.toFixed(1)}</span>
+                      <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded font-medium">
+                        Add All to Cart
+                      </button>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Description Tabs */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="flex border-b border-gray-200">
+                  {['description', 'author', 'reviews'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-3 text-sm font-medium ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-500'}`}
+                    >
+                      {tab === 'description' ? 'বিবরণ' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-4">
+                  {activeTab === 'description' && product.description && (
+                    <div className="text-gray-600 prose prose-sm" dangerouslySetInnerHTML={{ __html: product.description }} />
+                  )}
+                  {activeTab === 'author' && authorName && (
+                    <div>
+                      <h3 className="font-bold text-lg mb-2">{authorName}</h3>
+                      <p className="text-gray-600">লেখকের অন্যান্য বই</p>
+                    </div>
+                  )}
+                  {activeTab === 'reviews' && (
+                    <p className="text-gray-500">No reviews yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT: Video + Delivery + Related */}
+            <div className="lg:col-span-3 space-y-4">
+              {/* Video Review */}
+              {youtubeId && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h3 className="font-bold text-gray-800 mb-3">বুক রিভিউ</h3>
+                  <div className="aspect-video rounded bg-black">
+                    <iframe src={`https://www.youtube.com/embed/${youtubeId}`} className="w-full h-full" allowFullScreen />
                   </div>
-                  <div className="p-6 space-y-4">
-                    {product.reviews.map((review) => (
-                      <div key={review._id} className="p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {(review.user?.name || 'A')[0].toUpperCase()}
+                </div>
+              )}
+
+              {/* Delivery Info */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-bold text-gray-800 mb-3">Delivery</h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span> Dhaka City</span>
+                    <span className="font-medium">৳50 (1-2 Days)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Outside Dhaka</span>
+                    <span className="font-medium">৳100 (2-4 Days)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Related Books */}
+              {relatedProducts.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h3 className="font-bold text-gray-800 mb-3">Related Books</h3>
+                  <div className="space-y-3">
+                    {relatedProducts.slice(0, 5).map((p) => {
+                      const pPrice = getCurrentPrice(p);
+                      const pOriginal = getOriginalPrice(p);
+                      const pDiscount = getDiscountPercent(p);
+                      return (
+                        <Link key={p._id} href={`/products/${p.slug}`} className="flex gap-2 group">
+                          <div className="w-12 h-16 bg-gray-100 rounded flex-shrink-0">
+                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
                           </div>
-                          <div>
-                            <span className="font-bold text-gray-800">{review.user?.name || 'Anonymous'}</span>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <FaStar key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-                              ))}
-                              <span className="text-gray-400 text-xs ml-2">
-                                {review.createdAt && new Date(review.createdAt).toLocaleDateString('bn-BD')}
-                              </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-800 line-clamp-2 group-hover:text-teal-600">{p.name}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <FaStar className="text-yellow-400 text-xs" />
+                              <span className="text-xs text-gray-500">{p.ratingAvr?.toFixed(1) || 0}</span>
                             </div>
+                            <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
                           </div>
-                        </div>
-                        <p className="text-gray-600 leading-relaxed">{review.comment}</p>
-                      </div>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Bought Together - Bundle Section */}
-          {bundleProducts.length > 0 && (
-            <div className="mt-12 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-3xl shadow-xl border border-teal-100 p-6 md:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">📦 একসাথে কিনুন</h2>
-                  <p className="text-gray-500 text-sm mt-1">বান্ডেলে কিনলে {bundleDiscount}% ছাড় পান</p>
-                </div>
-                {selectedBundle.length > 0 && (
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">সেভ করুন</p>
-                    <p className="text-xl font-bold text-green-600">
-                      ৳{selectedBundle.reduce((sum, id) => {
-                        const item = bundleProducts.find(b => b.product._id === id);
-                        return sum + (item ? getCurrentPrice(item.product) * (bundleDiscount / 100) : 0);
-                      }, 0).toFixed(0)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                {/* Main Product */}
-                <div className="bg-white rounded-2xl p-4 flex items-center gap-4 border-2 border-teal-500 shadow-lg">
-                  <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                    {product?.images?.[0] && (
-                      <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 line-clamp-2">{product?.name}</p>
-                    <p className="text-teal-600 font-bold">৳{currentPrice}</p>
-                  </div>
-                  <FaCheck className="text-teal-500 text-xl flex-shrink-0" />
-                </div>
-
-                {/* Bundle Items */}
-                {bundleProducts.map((item) => (
-                  <div 
-                    key={item.product._id}
-                    onClick={() => handleToggleBundleItem(item.product._id)}
-                    className={`bg-white rounded-2xl p-4 flex items-center gap-3 cursor-pointer transition-all ${
-                      selectedBundle.includes(item.product._id)
-                        ? 'border-2 border-teal-500 shadow-lg ring-2 ring-teal-200'
-                        : 'border border-gray-200 hover:border-teal-300'
-                    }`}
-                  >
-                    <div className="w-14 h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      {item.product.images?.[0] && (
-                        <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-teal-600 font-bold text-sm">৳{getCurrentPrice(item.product)}</p>
-                        <span className="text-xs text-green-600">-{bundleDiscount}%</span>
-                      </div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      selectedBundle.includes(item.product._id)
-                        ? 'bg-teal-500 border-teal-500'
-                        : 'border-gray-300'
-                    }`}>
-                      {selectedBundle.includes(item.product._id) && (
-                        <FaCheck className="text-white text-xs" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between bg-white rounded-2xl p-4">
-                <div>
-                  <p className="text-gray-500 text-sm">মোট:</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ৳{(currentPrice + selectedBundle.reduce((sum, id) => {
-                      const item = bundleProducts.find(b => b.product._id === id);
-                      return sum + (item ? getCurrentPrice(item.product) * (1 - bundleDiscount / 100) : 0);
-                    }, 0)).toFixed(0)}
-                  </p>
-                </div>
-                <button 
-                  onClick={handleAddBundleToCart}
-                  disabled={selectedBundle.length === 0}
-                  className={`px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
-                    selectedBundle.length > 0
-                      ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg hover:shadow-xl'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  🎁 সব কার্টে যোগ করুন
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Related Products */}
+          {/* Recently Viewed & Best Sellers (simplified) */}
           {relatedProducts.length > 0 && (
-            <div className="mt-16">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 bg-gradient-to-b from-teal-500 to-emerald-500 rounded-full"></div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800">সম্পর্কিত বই</h2>
-                </div>
-                <Link href="/products" className="text-teal-600 hover:text-teal-700 font-medium flex items-center gap-2">
-                  সব দেখুন <span>→</span>
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
-                {relatedProducts.slice(0, 6).map((p) => {
-                  const pCurrentPrice = getCurrentPrice(p);
-                  const pOriginalPrice = getOriginalPrice(p);
-                  const pDiscountPercent = getDiscountPercent(p);
-                  const pImg = p.images?.[0];
-                  const pName = p.name || 'Untitled';
-                  const pSlug = p.slug || p._id;
-                  const pAuthor = getAuthorName(p.author);
-                  
-                  return (
-                    <Link key={p._id} href={`/products/${pSlug}`} className="group">
-                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                        <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
-                          {pImg ? (
-                            <img src={imgUrl(pImg)!} alt={pName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          ) : (
-                            <span className="text-5xl">📖</span>
-                          )}
-                          {pDiscountPercent > 0 && (
-                            <span className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-                              {pDiscountPercent}% ছাড়
-                            </span>
-                          )}
-                          {/* Quick Add Button */}
-                          <button 
-                            onClick={(e) => { e.preventDefault(); addItem(p, 1); toast.success('🛒 কার্টে যোগ হয়েছে'); }}
-                            className="absolute bottom-3 left-3 right-3 bg-teal-600 text-white py-2 rounded-full font-medium text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg"
-                          >
-                            কার্টে যোগ
-                          </button>
-                        </div>
-                        <div className="p-3">
-                          <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 min-h-[2.5rem]">{pName}</h3>
-                          {pAuthor && <p className="text-xs text-gray-500 mb-2 truncate">{pAuthor}</p>}
-                          {pOriginalPrice > 0 && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-base font-bold text-teal-600">৳{pCurrentPrice}</span>
-                              {pDiscountPercent > 0 && <span className="text-xs text-gray-400 line-through">৳{pOriginalPrice}</span>}
-                            </div>
-                          )}
-                        </div>
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">সর্বশেষ দেখা বই</h2>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {relatedProducts.slice(0, 5).map((p) => (
+                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-32">
+                      <div className="w-24 h-32 bg-gray-100 rounded mb-2">
+                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
                       </div>
+                      <p className="text-sm text-gray-800 line-clamp-2">{p.name}</p>
+                      <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
                     </Link>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">সর্বাধিক বিক্রিত বই</h2>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {relatedProducts.slice(0, 5).map((p) => (
+                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-32">
+                      <div className="w-24 h-32 bg-gray-100 rounded mb-2">
+                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
+                      </div>
+                      <p className="text-sm text-gray-800 line-clamp-2">{p.name}</p>
+                      <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           )}
         </div>
       </main>
 
-      {/* Lightbox */}
-      {showLightbox && images.length > 0 && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center">
-          <button 
-            onClick={() => setShowLightbox(false)}
-            className="absolute top-6 right-6 text-white/70 hover:text-white p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all"
-          >
-            <FaTimes className="text-2xl" />
-          </button>
-          
-          <button 
-            onClick={prevImage}
-            className="absolute left-6 text-white/70 hover:text-white p-4 bg-white/10 hover:bg-white/20 rounded-full transition-all hover:scale-110"
-          >
-            <FaChevronLeft className="text-2xl" />
-          </button>
-          
-          <div className="max-w-4xl max-h-[80vh] p-4">
-            <img
-              src={imgUrl(images[activeImage])!}
-              alt={product.name || 'Book'}
-              className="max-w-full max-h-[80vh] object-contain"
-            />
-          </div>
-          
-          <button 
-            onClick={nextImage}
-            className="absolute right-6 text-white/70 hover:text-white p-4 bg-white/10 hover:bg-white/20 rounded-full transition-all hover:scale-110"
-          >
-            <FaChevronRight className="text-2xl" />
-          </button>
-          
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveImage(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === activeImage ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-gray-800 text-lg">প্রিভিউ</h3>
-              <button 
-                onClick={() => setShowPreviewModal(false)} 
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <FaTimes />
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b">
+              <h3 className="font-bold">Preview</h3>
+              <button onClick={() => setShowPreviewModal(false)} className="p-1 hover:bg-gray-100 rounded"><FaTimes /></button>
             </div>
-            <iframe 
-              src={previewUrl} 
-              className="flex-1 w-full" 
-              allow="autoplay" 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-gray-800 text-lg">শেয়ার করুন</h3>
-              <button 
-                onClick={() => setShowShareModal(false)} 
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <button 
-                onClick={shareToFacebook}
-                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white text-xl transition-colors"
-              >
-                <FaFacebook />
-              </button>
-              <button 
-                onClick={shareToTwitter}
-                className="w-12 h-12 bg-sky-500 hover:bg-sky-600 rounded-full flex items-center justify-center text-white text-xl transition-colors"
-              >
-                <FaTwitter />
-              </button>
-              <button 
-                onClick={shareToWhatsApp}
-                className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white text-xl transition-colors"
-              >
-                <FaWhatsapp />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-              <input 
-                type="text" 
-                value={typeof window !== 'undefined' ? window.location.href : ''} 
-                readOnly
-                className="flex-1 bg-transparent text-gray-600 text-sm outline-none"
-              />
-              <button 
-                onClick={copyToClipboard}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                কপি
-              </button>
-            </div>
+            <iframe src={previewUrl.includes('drive.google.com') ? previewUrl.replace('/view', '/preview') : previewUrl} className="flex-1 w-full" allow="autoplay" />
           </div>
         </div>
       )}
