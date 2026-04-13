@@ -400,55 +400,6 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
               </div>
 
-              {/* Bought Together */}
-              {bundleProducts.length > 0 && (
-                <div className="bg-gray-50 rounded-xl border-2 border-teal-200 p-5 shadow-sm">
-                  <h2 className="text-lg font-bold text-teal-700 mb-4">পাঠকেরা একসাথে কিনে থাকেন</h2>
-                   
-                  <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-2 scrollbar-hide">
-                    {/* Main product (always included) */}
-                    <div className="flex-shrink-0 w-28 p-2 rounded-xl border-2 border-teal-300 bg-white shadow-sm opacity-75">
-                      <div className="w-20 h-24 bg-gray-100 rounded-lg mb-2 mx-auto">
-                        {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
-                      </div>
-                      <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
-                    </div>
-                    
-                    {bundleProducts.map((item, index) => (
-                      <div key={item.product._id} className="flex items-center">
-                        <span className="text-xl text-gray-400">+</span>
-                        <div 
-                          onClick={() => handleToggleBundle(item.product._id)}
-                          className={`flex-shrink-0 w-28 p-2 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 relative ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-white shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                        >
-                          {/* Checkbox */}
-                          <div className={`absolute top-1 left-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedBundle.includes(item.product._id) ? 'bg-teal-500 border-teal-500' : 'border-gray-300 bg-white'}`}>
-                            {selectedBundle.includes(item.product._id) && <FaCheck className="text-white text-xs" />}
-                          </div>
-                          <div className="w-20 h-24 bg-gray-100 rounded-lg mb-2 mx-auto mt-1">
-                            {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
-                          </div>
-                          <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <span className="text-xl text-gray-400">=</span>
-                  </div>
-
-                  {selectedBundle.length > 0 && (
-                    <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-teal-100">
-                      <div>
-                        <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900 text-lg">৳{bundleTotal.toFixed(0)}</span></p>
-                        <p className="text-xs text-green-600 font-medium">You Save ৳{bundleSavings.toFixed(0)}</p>
-                      </div>
-                      <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-lg font-bold transition-transform hover:scale-105">
-                        Add All to Cart
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Description Tabs */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="flex border-b border-gray-100">
@@ -547,6 +498,48 @@ export default function ProductDetailClient({ params }: Props) {
               )}
             </div>
           </div>
+
+          {/* Bought Together - Separate Section Below */}
+          {bundleProducts.length > 0 && (
+            <div className="mt-12 bg-gray-50 rounded-xl border-2 border-teal-200 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-teal-700 mb-5">পাঠকেরা একসাথে কিনে থাকেন</h2>
+                
+              <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-3 scrollbar-hide">
+                {/* Main product */}
+                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-32 p-3 rounded-xl border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 transition-colors">
+                  <div className="w-24 h-32 bg-gray-100 rounded-lg mb-2 mx-auto">
+                    {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                  </div>
+                  <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
+                </Link>
+                
+                {bundleProducts.map((item) => (
+                  <div key={item.product._id} className="flex items-center">
+                    <span className="text-2xl text-gray-400">+</span>
+                    <Link href={`/products/${item.product.slug}`} className="flex-shrink-0 w-32 p-3 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:border-teal-300 bg-white">
+                      <div className="w-24 h-32 bg-gray-100 rounded-lg mb-2 mx-auto">
+                        {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                      </div>
+                      <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
+                    </Link>
+                  </div>
+                ))}
+                <span className="text-2xl text-gray-400">=</span>
+              </div>
+
+              {selectedBundle.length > 0 && (
+                <div className="flex items-center justify-between bg-white rounded-lg p-5 shadow-sm border border-teal-100 max-w-md">
+                  <div>
+                    <p className="text-base text-gray-600">Total: <span className="font-bold text-gray-900 text-2xl">৳{bundleTotal.toFixed(0)}</span></p>
+                    <p className="text-sm text-green-600 font-medium">You Save ৳{bundleSavings.toFixed(0)}</p>
+                  </div>
+                  <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg font-bold transition-transform hover:scale-105">
+                    Add All to Cart
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Recently Viewed & Best Sellers */}
           {relatedProducts.length > 0 && (
