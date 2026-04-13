@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { 
   FaChevronLeft, FaChevronRight, FaShare, FaHeart, FaStar, 
   FaShoppingCart, FaBoxOpen, FaTimes, FaCheck, FaTruck, 
-  FaReturn, FaShieldAlt, FaClock, FaEye, FaMinus, FaPlus,
+  FaUndo, FaShieldAlt, FaClock, FaEye, FaMinus, FaPlus,
   FaRegCommentDots
 } from 'react-icons/fa';
 
@@ -456,7 +456,7 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
                 <div className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-5 text-center hover:bg-white/80 transition-all hover:scale-105">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <FaReturn className="text-xl text-blue-600" />
+                    <FaUndo className="text-xl text-blue-600" />
                   </div>
                   <p className="text-xs text-gray-500 font-medium">হass্যাসি রিটার্ন</p>
                   <p className="text-sm font-bold text-gray-800">৭ দিনের মধ্যে</p>
