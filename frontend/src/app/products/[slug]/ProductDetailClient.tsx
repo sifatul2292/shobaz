@@ -63,8 +63,8 @@ export default function ProductDetailClient({ params }: Props) {
         const productData = res.data.data;
         setProduct(productData);
         
-        console.log('Product specs:', productData);
-        console.log('Product videoUrl:', productData.videoUrl);
+        console.log('Product boughtTogetherProducts:', productData.boughtTogetherProducts);
+        console.log('Product boughtTogetherIds:', productData.boughtTogetherIds);
         
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
@@ -77,15 +77,18 @@ export default function ProductDetailClient({ params }: Props) {
           
           // Bundle products from backend
           const backendBoughtTogether = productData.boughtTogetherProducts || [];
+          console.log('Backend bought together:', backendBoughtTogether);
+          
           let bundleItems: BundleItem[] = [];
           const bundleDiscount = 10;
           
           if (backendBoughtTogether?.length > 0) {
-            bundleItems = backendBoughtTogether.map((p: Product) => ({
-              product: p,
+            bundleItems = backendBoughtTogether.map((p: any) => ({
+              product: { ...p, slug: p.slug || '' },
               discount: bundleDiscount
             }));
           } else {
+            // Fallback to related products if no bought together configured
             bundleItems = filtered.slice(0, 3).map((p: Product) => ({
               product: p,
               discount: bundleDiscount
@@ -116,11 +119,15 @@ export default function ProductDetailClient({ params }: Props) {
     setLoadingReviews(true);
     try {
       const res = await api.post('/review/get-all-review-by-query', {
-        filter: { 'product._id': productId, status: true },
-        pagination: { page: 1, limit: 10 }
+        filter: {},
+        pagination: { page: 1, limit: 10 },
+        sort: { createdAt: -1 }
       });
       if (res.data?.data) {
-        setReviews(res.data.data);
+        const allReviews = res.data.data;
+        const productReviews = allReviews.filter((r: any) => r.product?._id === productId || r.product === productId);
+        const approvedReviews = productReviews.filter((r: Review) => r.status === true);
+        setReviews(approvedReviews);
       }
     } catch (err) { console.error('Failed to fetch reviews:', err); }
     setLoadingReviews(false);
@@ -443,46 +450,26 @@ export default function ProductDetailClient({ params }: Props) {
                   এখনই অর্ডার করুন
                 </button>
 
-                {/* Trust Block */}
-                <div className="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-gray-200">
-                  <div className="text-center py-2">
-                    <FaTruck className="text-xl text-teal-600 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500 font-medium">Free Delivery</p>
+                {/* Book Review Video */}
+                {youtubeId && (
+                  <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <h3 className="font-bold text-lg text-teal-700 mb-3">বুক রিভিউ</h3>
+                    <div className="aspect-video rounded-lg overflow-hidden shadow-md bg-black">
+                      <iframe 
+                        src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+                        className="w-full h-full" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen 
+                        title="Book Review Video"
+                      />
+                    </div>
                   </div>
-                  <div className="text-center py-2">
-                    <FaShieldAlt className="text-xl text-teal-600 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500 font-medium">100% Authentic</p>
-                  </div>
-                  <div className="text-center py-2">
-                    <FaUndo className="text-xl text-teal-600 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500 font-medium">7 Days Return</p>
-                  </div>
-                  <div className="text-center py-2">
-                    <FaMoneyBillWave className="text-xl text-teal-600 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500 font-medium">Cash on Delivery</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* RIGHT: Video + Delivery + Related */}
             <div className="lg:col-span-3 space-y-5">
-              {/* Video Review */}
-              {youtubeId ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                  <h3 className="font-bold text-lg text-teal-700 mb-3">বুক রিভিউ</h3>
-                  <div className="aspect-video rounded-lg overflow-hidden shadow-md bg-black">
-                    <iframe 
-                      src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-                      className="w-full h-full" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen 
-                      title="Book Review Video"
-                    />
-                  </div>
-                </div>
-              ) : null}
-
               {/* Delivery Info */}
               <div className="bg-white rounded-xl border border-gray-200 p-3">
                 <h3 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2">
@@ -514,15 +501,22 @@ export default function ProductDetailClient({ params }: Props) {
 
               {/* Related Books */}
               {relatedProducts.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                  <h3 className="font-bold text-lg text-teal-700 mb-4">Related Books</h3>
-                  <div className="space-y-4">
-                    {relatedProducts.slice(0, 5).map((p) => {
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <h3 className="font-bold text-lg text-teal-700 mb-3">Related Books</h3>
+                  <div className="space-y-3">
+                    {relatedProducts.slice(0, 6).map((p) => {
                       const pPrice = getCurrentPrice(p);
+                      const pOriginalPrice = getOriginalPrice(p);
+                      const pDiscount = getDiscountPercent(p);
                       return (
                         <Link key={p._id} href={`/products/${p.slug}`} className="flex gap-3 group">
-                          <div className="w-14 h-20 bg-gray-100 rounded-lg flex-shrink-0 shadow-sm overflow-hidden">
+                          <div className="w-14 h-20 bg-gray-100 rounded-lg flex-shrink-0 shadow-sm overflow-hidden relative">
                             {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                            {pDiscount > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded">
+                                -{pDiscount}%
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-teal-600 transition-colors">{p.name}</p>
@@ -531,12 +525,17 @@ export default function ProductDetailClient({ params }: Props) {
                               <span className="text-xs text-gray-500">{p.ratingAvr?.toFixed(1) || 0}</span>
                             </div>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
+                              <div>
+                                <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
+                                {pDiscount > 0 && (
+                                  <p className="text-xs text-gray-400 line-through">৳{pOriginalPrice}</p>
+                                )}
+                              </div>
                               <button 
                                 onClick={(e) => { e.preventDefault(); addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
-                                className="w-7 h-7 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-sm transition-transform hover:scale-110"
+                                className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-transform hover:scale-105"
                               >
-                                +
+                                + Add
                               </button>
                             </div>
                           </div>
@@ -549,57 +548,91 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
           </div>
 
-          {/* Bought Together - Modern Inline Layout */}
+          {/* Bought Together - Modern Card Layout */}
           {bundleProducts.length > 0 && (
-            <div className="mt-12 bg-gray-50 rounded-xl border border-gray-200 p-4 md:p-6">
-              <h2 className="text-lg md:text-xl font-bold text-teal-700 mb-4 md:mb-5">পাঠকেরা একসাথে কিনে থাকেন</h2>
-              
-              <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {/* Main product */}
-                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-24 md:w-[120px] p-1.5 md:p-2 rounded-lg border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 hover:scale-[1.03] hover:shadow-md transition-all">
-                  <div className="w-full h-20 md:h-28 bg-gray-100 rounded-lg mb-1 md:mb-2">
-                    {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
-                  </div>
-                  <p className="text-[10px] md:text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
-                </Link>
-                
-                {bundleProducts.map((item) => (
-                  <div key={item.product._id} className="flex items-center">
-                    <span className="text-lg md:text-xl font-bold text-gray-400">+</span>
-                    <div className={`relative w-24 md:w-[120px] p-1.5 md:p-2 rounded-lg border-2 bg-white transition-all hover:scale-[1.03] hover:shadow-md ${selectedBundle.includes(item.product._id) ? 'border-teal-500 shadow-md' : 'border-gray-200'}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedBundle.includes(item.product._id)}
-                        onChange={() => handleToggleBundle(item.product._id)}
-                        className="absolute top-0.5 left-0.5 w-3 h-3 md:w-4 md:h-4 accent-teal-600 cursor-pointer z-10"
-                      />
-                      <Link href={`/products/${item.product.slug}`} className="block">
-                        <div className="w-full h-20 md:h-28 bg-gray-100 rounded-lg mb-1 md:mb-2">
-                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
-                        </div>
-                        <p className="text-[10px] md:text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-                
-                <span className="text-lg md:text-xl font-bold text-gray-400">=</span>
+            <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-4">
+                <h2 className="text-xl font-bold text-white">📚 পাঠকেরা একসাথে কিনে থাকেন</h2>
+                <p className="text-teal-100 text-sm mt-1">Save 10% when you buy together</p>
               </div>
               
-              {/* Total + CTA - Below on mobile, inline on desktop */}
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-3 md:gap-4 mt-3 md:mt-4 pt-3 md:pt-0 border-t md:border-t-0 border-gray-200">
-                <div className="text-center md:text-left">
-                  <p className="text-xs md:text-sm text-gray-500">Total</p>
-                  <p className="text-base md:text-lg font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</p>
-                  <p className="text-green-600 text-xs md:text-sm font-medium">Save ৳{bundleSavings.toFixed(0)}</p>
+              <div className="p-6">
+                <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap">
+                  {/* Main product */}
+                  <div className="text-center">
+                    <div className="w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md">
+                      {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                    <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{product?.name}</p>
+                    <p className="text-sm font-bold text-teal-600 mt-1">৳{getCurrentPrice(product!)}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl text-gray-400">+</span>
+                    <div className="w-28 h-36 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl border-2 border-dashed border-teal-300 flex items-center justify-center">
+                      <span className="text-teal-600 font-medium text-sm px-2">Select Books</span>
+                    </div>
+                  </div>
+                  
+                  {bundleProducts.map((item) => {
+                    const itemPrice = getCurrentPrice(item.product);
+                    const itemOriginal = getOriginalPrice(item.product);
+                    const itemDiscount = getDiscountPercent(item.product);
+                    const isSelected = selectedBundle.includes(item.product._id);
+                    
+                    return (
+                      <div key={item.product._id} className="text-center group">
+                        <div 
+                          className={`relative w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-4 ring-teal-500 ring-offset-2' : ''}`}
+                          onClick={() => handleToggleBundle(item.product._id)}
+                        >
+                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
+                          {itemDiscount > 0 && (
+                            <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">-{itemDiscount}%</span>
+                          )}
+                          <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isSelected ? 'opacity-0' : 'opacity-100'}`}>
+                            <FaPlus className="text-white text-2xl" />
+                          </div>
+                          {isSelected && (
+                            <div className="absolute top-1 left-1 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                              <FaCheck className="text-white text-xs" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{item.product.name}</p>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <p className="text-sm font-bold text-teal-600">৳{itemPrice}</p>
+                          {itemDiscount > 0 && <p className="text-xs text-gray-400 line-through">৳{itemOriginal}</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl text-gray-400">=</span>
+                    <span className="text-2xl font-bold text-gray-400">→</span>
+                  </div>
+                  
+                  {/* Total Card */}
+                  <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 min-w-[140px] text-center border border-orange-100">
+                    <p className="text-xs text-gray-500 mb-1">Bundle Price</p>
+                    <p className="text-2xl font-bold text-orange-600">৳{bundleTotal.toFixed(0)}</p>
+                    {bundleSavings > 0 && (
+                      <p className="text-xs text-green-600 font-medium mt-1">You save ৳{bundleSavings.toFixed(0)}</p>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  onClick={handleAddBundleToCart} 
-                  disabled={selectedBundle.length === 0}
-                  className="w-full md:w-auto bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white px-4 md:px-5 py-2 md:py-2 rounded-lg font-bold text-sm md:text-base transition-transform hover:scale-105"
-                >
-                  Add All to Cart
-                </button>
+                
+                {/* CTA Button */}
+                <div className="mt-6 flex justify-center">
+                  <button 
+                    onClick={handleAddBundleToCart} 
+                    disabled={selectedBundle.length === 0}
+                    className="w-full max-w-md bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
+                  >
+                    🛒 Add {selectedBundle.length > 0 ? selectedBundle.length + 1 : 'All'} to Cart
+                  </button>
+                </div>
               </div>
             </div>
           )}
