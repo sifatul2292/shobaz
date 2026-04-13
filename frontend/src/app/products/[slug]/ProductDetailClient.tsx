@@ -332,15 +332,15 @@ export default function ProductDetailClient({ params }: Props) {
 
                 {/* CTA Area */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center border border-gray-300 rounded">
-                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 hover:bg-gray-50">−</button>
-                    <span className="px-4 py-2 font-medium">{quantity}</span>
-                    <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 hover:bg-gray-50">+</button>
+                  <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50">
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-4 py-3 hover:bg-gray-100 text-lg font-bold transition-transform hover:scale-110">−</button>
+                    <span className="px-5 py-3 font-bold text-lg min-w-[60px] text-center bg-white">{quantity}</span>
+                    <button onClick={() => setQuantity(q => q + 1)} className="px-4 py-3 hover:bg-gray-100 text-lg font-bold transition-transform hover:scale-110">+</button>
                   </div>
                   <button 
                     onClick={handleAddToCart}
                     disabled={!inStock}
-                    className={`flex-1 py-2.5 rounded font-bold ${inStock ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                    className={`flex-1 py-3.5 rounded-lg font-bold text-base transition-all hover:scale-[1.02] shadow-sm ${inStock ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}
                   >
                     🛒 কার্টে যোগ করুন
                   </button>
@@ -349,54 +349,56 @@ export default function ProductDetailClient({ params }: Props) {
                 <button 
                   onClick={handleBuyNow}
                   disabled={!inStock}
-                  className={`w-full py-3 rounded font-bold text-white ${inStock ? 'bg-teal-600 hover:bg-teal-700' : 'bg-gray-200'}`}
+                  className={`w-full py-4 rounded-lg font-bold text-lg text-white transition-all hover:scale-[1.01] shadow-md ${inStock ? 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800' : 'bg-gray-200 text-gray-400'}`}
                 >
                   এখনই অর্ডার করুন
                 </button>
 
                 {/* Trust Block */}
-                <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <div className="text-center">
-                    <FaTruck className="text-teal-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">Free Delivery</p>
+                <div className="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-gray-200">
+                  <div className="text-center py-2">
+                    <FaTruck className="text-xl text-teal-600 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">Free Delivery</p>
                   </div>
-                  <div className="text-center">
-                    <FaShieldAlt className="text-teal-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">100% Authentic</p>
+                  <div className="text-center py-2">
+                    <FaShieldAlt className="text-xl text-teal-600 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">100% Authentic</p>
                   </div>
-                  <div className="text-center">
-                    <FaUndo className="text-teal-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">7 Days Return</p>
+                  <div className="text-center py-2">
+                    <FaUndo className="text-xl text-teal-600 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">7 Days Return</p>
                   </div>
-                  <div className="text-center">
-                    <FaMoneyBillWave className="text-teal-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500">Cash on Delivery</p>
+                  <div className="text-center py-2">
+                    <FaMoneyBillWave className="text-xl text-teal-600 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">Cash on Delivery</p>
                   </div>
                 </div>
               </div>
 
               {/* Bought Together */}
               {bundleProducts.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-3">পাঠকেরা একসাথে কিনে থাকেন</h2>
+                <div className="bg-gray-50 rounded-xl border-2 border-teal-200 p-5 shadow-sm">
+                  <h2 className="text-lg font-bold text-teal-700 mb-4">পাঠকেরা একসাথে কিনে থাকেন</h2>
                   
-                  <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                  <div className="flex items-center gap-3 mb-5 overflow-x-auto pb-2 scrollbar-hide">
+                    <span className="text-2xl text-gray-400">+</span>
                     {bundleProducts.map((item) => (
                       <div 
                         key={item.product._id}
                         onClick={() => handleToggleBundle(item.product._id)}
-                        className={`flex-shrink-0 w-24 p-2 rounded border-2 cursor-pointer ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}
+                        className={`flex-shrink-0 w-28 p-3 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-white shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                       >
-                        <div className="w-16 h-20 bg-gray-100 rounded mb-1 mx-auto">
-                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
+                        <div className="w-20 h-28 bg-gray-100 rounded-lg mb-2 mx-auto shadow-sm">
+                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2 text-center">{item.product.name}</p>
+                        <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
                       </div>
                     ))}
+                    <span className="text-2xl text-gray-400">=</span>
                   </div>
 
                   {selectedBundle.length > 0 && (
-                    <div className="flex items-center justify-between bg-teal-50 rounded p-3">
+                    <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-teal-100">
                       <div>
                         <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</span></p>
                         <p className="text-xs text-green-600">You Save ৳{bundleSavings.toFixed(0)}</p>
@@ -440,48 +442,46 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
 
             {/* RIGHT: Video + Delivery + Related */}
-            <div className="lg:col-span-3 space-y-4">
+            <div className="lg:col-span-3 space-y-5">
               {/* Video Review */}
               {youtubeId && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <h3 className="font-bold text-gray-800 mb-3">বুক রিভিউ</h3>
-                  <div className="aspect-video rounded bg-black">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                  <h3 className="font-bold text-lg text-teal-700 mb-4">বুক রিভিউ</h3>
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-md">
                     <iframe src={`https://www.youtube.com/embed/${youtubeId}`} className="w-full h-full" allowFullScreen />
                   </div>
                 </div>
               )}
 
               {/* Delivery Info */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <h3 className="font-bold text-gray-800 mb-3">Delivery</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex justify-between">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 className="font-bold text-lg text-teal-700 mb-4">Delivery</h3>
+                <div className="space-y-3 text-base text-gray-700">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
                     <span> Dhaka City</span>
-                    <span className="font-medium">৳50 (1-2 Days)</span>
+                    <span className="font-bold">৳50 (1-2 Days)</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between py-2">
                     <span>Outside Dhaka</span>
-                    <span className="font-medium">৳100 (2-4 Days)</span>
+                    <span className="font-bold">৳100 (2-4 Days)</span>
                   </div>
                 </div>
               </div>
 
               {/* Related Books */}
               {relatedProducts.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <h3 className="font-bold text-gray-800 mb-3">Related Books</h3>
-                  <div className="space-y-3">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                  <h3 className="font-bold text-lg text-teal-700 mb-4">Related Books</h3>
+                  <div className="space-y-4">
                     {relatedProducts.slice(0, 5).map((p) => {
                       const pPrice = getCurrentPrice(p);
-                      const pOriginal = getOriginalPrice(p);
-                      const pDiscount = getDiscountPercent(p);
                       return (
-                        <Link key={p._id} href={`/products/${p.slug}`} className="flex gap-2 group">
-                          <div className="w-12 h-16 bg-gray-100 rounded flex-shrink-0">
-                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
+                        <Link key={p._id} href={`/products/${p.slug}`} className="flex gap-3 group">
+                          <div className="w-14 h-20 bg-gray-100 rounded-lg flex-shrink-0 shadow-sm">
+                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-800 line-clamp-2 group-hover:text-teal-600">{p.name}</p>
+                            <p className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-teal-600 transition-colors">{p.name}</p>
                             <div className="flex items-center gap-1 mt-1">
                               <FaStar className="text-yellow-400 text-xs" />
                               <span className="text-xs text-gray-500">{p.ratingAvr?.toFixed(1) || 0}</span>
@@ -497,32 +497,32 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
           </div>
 
-          {/* Recently Viewed & Best Sellers (simplified) */}
+          {/* Recently Viewed & Best Sellers */}
           {relatedProducts.length > 0 && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">সর্বশেষ দেখা বই</h2>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {relatedProducts.slice(0, 5).map((p) => (
-                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-32">
-                      <div className="w-24 h-32 bg-gray-100 rounded mb-2">
-                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="mt-10">
+                <h2 className="text-xl font-bold text-teal-700 mb-5">সর্বশেষ দেখা বই</h2>
+                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
+                  {relatedProducts.slice(0, 8).map((p) => (
+                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
+                      <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
                       </div>
-                      <p className="text-sm text-gray-800 line-clamp-2">{p.name}</p>
+                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-teal-600">{p.name}</p>
                       <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
                     </Link>
                   ))}
                 </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">সর্বাধিক বিক্রিত বই</h2>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {relatedProducts.slice(0, 5).map((p) => (
-                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-32">
-                      <div className="w-24 h-32 bg-gray-100 rounded mb-2">
-                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded" />}
+              <div className="mt-10">
+                <h2 className="text-xl font-bold text-teal-700 mb-5">সর্বাধিক বিক্রিত বই</h2>
+                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
+                  {relatedProducts.slice(0, 8).map((p) => (
+                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
+                      <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
                       </div>
-                      <p className="text-sm text-gray-800 line-clamp-2">{p.name}</p>
+                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-teal-600">{p.name}</p>
                       <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
                     </Link>
                   ))}
