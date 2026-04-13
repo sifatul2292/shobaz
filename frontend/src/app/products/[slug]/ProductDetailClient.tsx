@@ -61,9 +61,9 @@ export default function ProductDetailClient({ params }: Props) {
         const productData = res.data.data;
         setProduct(productData);
         
-        // Log the boughtTogether field
-        console.log('boughtTogether:', productData.boughtTogether);
-        console.log('bundleDiscount:', productData.bundleDiscount);
+        // Use boughtTogetherProducts from backend API
+        const backendBoughtTogether = productData.boughtTogetherProducts || [];
+        console.log('boughtTogetherProducts from backend:', backendBoughtTogether);
         
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
@@ -81,36 +81,18 @@ export default function ProductDetailClient({ params }: Props) {
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 6));
           
-          // Use backend boughtTogether if available
           let bundleItems: BundleItem[] = [];
-          let bundleDiscount = productData.bundleDiscount || 10;
+          const bundleDiscount = 10;
           
-          const boughtTogether = productData.boughtTogether;
-          
-          // Check if boughtTogether exists and has items
-          if (boughtTogether && Array.isArray(boughtTogether) && boughtTogether.length > 0) {
-            console.log('Using backend boughtTogether products:', boughtTogether);
-            
-            // Map boughtTogether - could be IDs (strings) or full objects
-            bundleItems = boughtTogether.map((item: any) => {
-              // If it's a string (product ID), find the full product
-              if (typeof item === 'string') {
-                const fullProduct = allProducts.find((p: Product) => p._id === item);
-                return {
-                  product: fullProduct || { _id: item, name: 'Unknown', images: [] },
-                  discount: bundleDiscount
-                };
-              }
-              // If it's a full product object
-              return {
-                product: item,
-                discount: bundleDiscount
-              };
-            }).filter((b: BundleItem) => b.product.name); // Filter out unknown products
-          } 
-          
-          // Only use fallback if no valid boughtTogether products
-          if (bundleItems.length === 0) {
+          // Use backend boughtTogetherProducts if available
+          if (backendBoughtTogether && Array.isArray(backendBoughtTogether) && backendBoughtTogether.length > 0) {
+            console.log('Using backend boughtTogetherProducts:', backendBoughtTogether);
+            bundleItems = backendBoughtTogether.map((p: Product) => ({
+              product: p,
+              discount: bundleDiscount
+            }));
+          } else {
+            // Fallback: use first 3 related products
             console.log('Using fallback related products as bundle');
             bundleItems = filtered.slice(0, 3).map((p: Product) => ({
               product: p,

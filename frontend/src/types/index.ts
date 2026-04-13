@@ -33,6 +33,7 @@ export interface Product {
   ratingDetails?: { stars: number; count: number }[];
   reviews?: Review[];
   boughtTogether?: Product[];
+  boughtTogetherProducts?: Product[];
   bundleDiscount?: number;
 }
 

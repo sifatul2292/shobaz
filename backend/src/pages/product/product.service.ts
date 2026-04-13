@@ -852,67 +852,53 @@ export class ProductService {
     select: string,
   ): Promise<ResponsePayload> {
     try {
-      // let data;
-      let productById;
-      // console.log('slug', slug);
       const data = await this.productModel
         .findOne({ slug: slug })
         .select(select)
         .populate('tags');
 
-      // Check if the slug is a valid MongoDB ObjectId
-      // if (Types.ObjectId.isValid(slug)) {
-      //   // If it's an ObjectId, search by _id
-      //   productById = await this.productModel
-      //     .findById(slug)
-      //     .select(select)
-      //     .populate('tags');
-      // } else {
-      //   // Otherwise, search by slug
-      //   data = await this.productModel
-      //     .findOne({ slug: slug })
-      //     .select(select)
-      //     .populate('tags');
-      // }
-      // let fShopInfo;
-      // if (!productById && !data) {
-      //   // const url = `https://www.alambook.com/product-details/${slug}`;
-      //   fShopInfo = await this.redirectUrlModel.findOne({
-      //     fromUrl: slug,
-      //   });
-      // }
-      // // console.log('fShopInfo',slug);
-      // // console.log('fShopInfo',fShopInfo);
-      // // Check if the found product needs redirection
-      // if (productById) {
-      //   return {
-      //     success: false,
-      //     message: 'Redirect',
-      //     redirectTo: `/product-details/${productById?.slug}`,
-      //   };
-      // }
+      if (!data) {
+        return {
+          success: false,
+          message: 'Product not found',
+          data: null,
+        } as ResponsePayload;
+      }
 
-      // if (!data && !productById) {
-      //   if (fShopInfo?.toUrl) {
-      //     return {
-      //       success: false,
-      //       message: 'Redirect',
-      //       redirectTo: fShopInfo?.toUrl,
-      //     };
-      //   } else {
-      //     return {
-      //       success: false,
-      //       message: 'Redirect',
-      //       redirectTo: `**`,
-      //     };
-      //   }
-      // }
+      // Get bought together products
+      let boughtTogetherProducts = [];
+      const productIds = data.boughtTogetherIds;
 
-      // this.updateSpecificProduct('65db41b467e6bde2558cf9a2');
+      // If product has boughtTogetherIds, use those
+      if (productIds && productIds.length > 0) {
+        const mIds = productIds.slice(0, 3).map((id: string) => new ObjectId(id));
+        boughtTogetherProducts = await this.productModel
+          .find({ _id: { $in: mIds } })
+          .select('_id name images salePrice discountAmount')
+          .limit(3);
+      } else {
+        // Otherwise, use global default
+        const globalConfig = await this.boughtTogetherConfigModel.findOne();
+        if (globalConfig && globalConfig.productIds && globalConfig.productIds.length > 0) {
+          const mIds = globalConfig.productIds.slice(0, 3).map((id: string) => new ObjectId(id));
+          // Exclude current product
+          boughtTogetherProducts = await this.productModel
+            .find({ _id: { $in: mIds, $ne: data._id } })
+            .select('_id name images salePrice discountAmount')
+            .limit(3);
+        }
+      }
+
+      // Attach bought together products to response
+      const responseData = {
+        ...data.toObject(),
+        boughtTogetherProducts: boughtTogetherProducts,
+      };
+
       return {
         success: true,
         message: 'Success',
-        data,
+        data: responseData,
       } as ResponsePayload;
     } catch (err) {
       throw new InternalServerErrorException(err.message);
