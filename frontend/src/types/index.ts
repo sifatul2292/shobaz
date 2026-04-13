@@ -39,10 +39,25 @@ export interface Product {
 
 export interface Review {
   _id: string;
-  user: User;
+  user: {
+    _id: string;
+    name: string;
+    profileImg?: string;
+  };
+  product: {
+    _id: string;
+    name: string;
+    images?: string[];
+    slug?: string;
+  };
   rating: number;
-  comment: string;
+  review: string;
+  reviewDate?: string;
   createdAt?: string;
+  status?: boolean;
+  isReview?: boolean;
+  reply?: string;
+  replyDate?: string;
 }
 
 export interface Author {
