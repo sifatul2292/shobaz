@@ -117,8 +117,8 @@ export default function ProductsPage() {
                     </div>
                     
                     {/* Text Section */}
-                    <div className="p-4 pt-3">
-                      <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1.5 min-h-[2.8rem] leading-tight">{productName}</h3>
+                    <div className="p-4">
+                      <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
                       {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
                       {salePrice > 0 && (
                         <div className="flex items-center gap-2">
@@ -129,10 +129,10 @@ export default function ProductsPage() {
                       {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
                     </div>
                     
-                    {/* Add to Cart Button - appears on hover anywhere on the entire card */}
+                    {/* Add to Cart Button - appears on hover over image only */}
                     <button 
                       onClick={() => handleAddToCart(product)}
-                      className="absolute inset-x-3 bottom-4 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl z-10 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0"
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-xl z-10 md:opacity-0 md:scale-90 md:hover:opacity-100 md:hover:scale-100"
                     >
                       <span>🛒</span>
                       <span>কার্টে যোগ</span>
