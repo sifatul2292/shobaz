@@ -334,16 +334,17 @@ export default function ProductDetailClient({ params }: Props) {
                     </span>
                   )}
                   {product.totalPages && (
-                    <span className="text-gray-400">|</span>
-                  )}
-                  {product.totalPages && (
-                    <span className="text-gray-500 text-sm">{product.totalPages} পৃষ্ঠা</span>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-500 text-sm">{product.totalPages} পৃষ্ঠা</span>
+                    </>
                   )}
                   {product.edition && (
                     <>
                       <span className="text-gray-400">|</span>
                       <span className="text-gray-500 text-sm">{product.edition} সংস্করণ</span>
-                    )}
+                    </>
+                  )}
                 </div>
 
                 {/* Quantity & Add to Cart */}
