@@ -379,31 +379,44 @@ export default function ProductDetailClient({ params }: Props) {
               {bundleProducts.length > 0 && (
                 <div className="bg-gray-50 rounded-xl border-2 border-teal-200 p-5 shadow-sm">
                   <h2 className="text-lg font-bold text-teal-700 mb-4">পাঠকেরা একসাথে কিনে থাকেন</h2>
-                  
-                  <div className="flex items-center gap-3 mb-5 overflow-x-auto pb-2 scrollbar-hide">
-                    <span className="text-2xl text-gray-400">+</span>
-                    {bundleProducts.map((item) => (
-                      <div 
-                        key={item.product._id}
-                        onClick={() => handleToggleBundle(item.product._id)}
-                        className={`flex-shrink-0 w-28 p-3 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-white shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                      >
-                        <div className="w-20 h-28 bg-gray-100 rounded-lg mb-2 mx-auto shadow-sm">
-                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                   
+                  <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-2 scrollbar-hide">
+                    {/* Main product (always included) */}
+                    <div className="flex-shrink-0 w-28 p-2 rounded-xl border-2 border-teal-300 bg-white shadow-sm opacity-75">
+                      <div className="w-20 h-24 bg-gray-100 rounded-lg mb-2 mx-auto">
+                        {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                      </div>
+                      <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
+                    </div>
+                    
+                    {bundleProducts.map((item, index) => (
+                      <div key={item.product._id} className="flex items-center">
+                        <span className="text-xl text-gray-400">+</span>
+                        <div 
+                          onClick={() => handleToggleBundle(item.product._id)}
+                          className={`flex-shrink-0 w-28 p-2 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 relative ${selectedBundle.includes(item.product._id) ? 'border-teal-500 bg-white shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                        >
+                          {/* Checkbox */}
+                          <div className={`absolute top-1 left-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedBundle.includes(item.product._id) ? 'bg-teal-500 border-teal-500' : 'border-gray-300 bg-white'}`}>
+                            {selectedBundle.includes(item.product._id) && <FaCheck className="text-white text-xs" />}
+                          </div>
+                          <div className="w-20 h-24 bg-gray-100 rounded-lg mb-2 mx-auto mt-1">
+                            {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                          </div>
+                          <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
                         </div>
-                        <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
                       </div>
                     ))}
-                    <span className="text-2xl text-gray-400">=</span>
+                    <span className="text-xl text-gray-400">=</span>
                   </div>
 
                   {selectedBundle.length > 0 && (
                     <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-teal-100">
                       <div>
-                        <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</span></p>
-                        <p className="text-xs text-green-600">You Save ৳{bundleSavings.toFixed(0)}</p>
+                        <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900 text-lg">৳{bundleTotal.toFixed(0)}</span></p>
+                        <p className="text-xs text-green-600 font-medium">You Save ৳{bundleSavings.toFixed(0)}</p>
                       </div>
-                      <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded font-medium">
+                      <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-lg font-bold transition-transform hover:scale-105">
                         Add All to Cart
                       </button>
                     </div>
@@ -412,30 +425,30 @@ export default function ProductDetailClient({ params }: Props) {
               )}
 
               {/* Description Tabs */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="flex border-b border-gray-200">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="flex border-b border-gray-100">
                   {['description', 'author', 'reviews'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-3 text-sm font-medium ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-500'}`}
+                      className={`flex-1 px-4 py-4 text-base font-medium transition-colors ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                     >
                       {tab === 'description' ? 'বিবরণ' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
                     </button>
                   ))}
                 </div>
-                <div className="p-4">
+                <div className="p-5 bg-white">
                   {activeTab === 'description' && product.description && (
-                    <div className="text-gray-600 prose prose-sm" dangerouslySetInnerHTML={{ __html: product.description }} />
+                    <div className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: product.description }} />
                   )}
                   {activeTab === 'author' && authorName && (
                     <div>
-                      <h3 className="font-bold text-lg mb-2">{authorName}</h3>
-                      <p className="text-gray-600">লেখকের অন্যান্য বই</p>
+                      <h3 className="font-bold text-xl text-gray-800 mb-3">{authorName}</h3>
+                      <p className="text-gray-600">লেখকের অন্যান্য বই সমূহ দেখতে লেখকের নামে সার্চ করুন।</p>
                     </div>
                   )}
                   {activeTab === 'reviews' && (
-                    <p className="text-gray-500">No reviews yet</p>
+                    <div className="text-gray-500">No reviews yet. Be the first to review!</div>
                   )}
                 </div>
               </div>
@@ -444,14 +457,19 @@ export default function ProductDetailClient({ params }: Props) {
             {/* RIGHT: Video + Delivery + Related */}
             <div className="lg:col-span-3 space-y-5">
               {/* Video Review */}
-              {youtubeId && (
+              {youtubeId ? (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                   <h3 className="font-bold text-lg text-teal-700 mb-4">বুক রিভিউ</h3>
-                  <div className="aspect-video rounded-lg overflow-hidden shadow-md">
-                    <iframe src={`https://www.youtube.com/embed/${youtubeId}`} className="w-full h-full" allowFullScreen />
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-md bg-black">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${youtubeId}`} 
+                      className="w-full h-full" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen 
+                    />
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Delivery Info */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -477,7 +495,7 @@ export default function ProductDetailClient({ params }: Props) {
                       const pPrice = getCurrentPrice(p);
                       return (
                         <Link key={p._id} href={`/products/${p.slug}`} className="flex gap-3 group">
-                          <div className="w-14 h-20 bg-gray-100 rounded-lg flex-shrink-0 shadow-sm">
+                          <div className="w-14 h-20 bg-gray-100 rounded-lg flex-shrink-0 shadow-sm overflow-hidden">
                             {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -486,7 +504,15 @@ export default function ProductDetailClient({ params }: Props) {
                               <FaStar className="text-yellow-400 text-xs" />
                               <span className="text-xs text-gray-500">{p.ratingAvr?.toFixed(1) || 0}</span>
                             </div>
-                            <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
+                              <button 
+                                onClick={(e) => { e.preventDefault(); addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
+                                className="w-7 h-7 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-sm transition-transform hover:scale-110"
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
                         </Link>
                       );
