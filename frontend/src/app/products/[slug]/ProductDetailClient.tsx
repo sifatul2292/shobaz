@@ -501,55 +501,55 @@ export default function ProductDetailClient({ params }: Props) {
 
           {/* Bought Together - Modern Inline Layout */}
           {bundleProducts.length > 0 && (
-            <div className="mt-12 bg-gray-50 rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-teal-700 mb-5">পাঠকেরা একসাথে কিনে থাকেন</h2>
+            <div className="mt-12 bg-gray-50 rounded-xl border border-gray-200 p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-bold text-teal-700 mb-4 md:mb-5">পাঠকেরা একসাথে কিনে থাকেন</h2>
               
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {/* Main product */}
-                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-[120px] p-2 rounded-lg border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 hover:scale-[1.03] hover:shadow-md transition-all">
-                  <div className="w-full h-28 bg-gray-100 rounded-lg mb-2">
+                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-24 md:w-[120px] p-1.5 md:p-2 rounded-lg border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 hover:scale-[1.03] hover:shadow-md transition-all">
+                  <div className="w-full h-20 md:h-28 bg-gray-100 rounded-lg mb-1 md:mb-2">
                     {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                   </div>
-                  <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
+                  <p className="text-[10px] md:text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
                 </Link>
                 
                 {bundleProducts.map((item) => (
                   <div key={item.product._id} className="flex items-center">
-                    <span className="text-xl font-bold text-gray-400">+</span>
-                    <div className={`relative w-[120px] p-2 rounded-lg border-2 bg-white transition-all hover:scale-[1.03] hover:shadow-md ${selectedBundle.includes(item.product._id) ? 'border-teal-500 shadow-md' : 'border-gray-200'}`}>
+                    <span className="text-lg md:text-xl font-bold text-gray-400">+</span>
+                    <div className={`relative w-24 md:w-[120px] p-1.5 md:p-2 rounded-lg border-2 bg-white transition-all hover:scale-[1.03] hover:shadow-md ${selectedBundle.includes(item.product._id) ? 'border-teal-500 shadow-md' : 'border-gray-200'}`}>
                       <input
                         type="checkbox"
                         checked={selectedBundle.includes(item.product._id)}
                         onChange={() => handleToggleBundle(item.product._id)}
-                        className="absolute top-1 left-1 w-4 h-4 accent-teal-600 cursor-pointer z-10"
+                        className="absolute top-0.5 left-0.5 w-3 h-3 md:w-4 md:h-4 accent-teal-600 cursor-pointer z-10"
                       />
                       <Link href={`/products/${item.product.slug}`} className="block">
-                        <div className="w-full h-28 bg-gray-100 rounded-lg mb-2">
+                        <div className="w-full h-20 md:h-28 bg-gray-100 rounded-lg mb-1 md:mb-2">
                           {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                         </div>
-                        <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
+                        <p className="text-[10px] md:text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
                       </Link>
                     </div>
                   </div>
                 ))}
                 
-                <span className="text-xl font-bold text-gray-400">=</span>
-                
-                {/* Inline Total + CTA */}
-                <div className="ml-4 flex items-center gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-lg font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</p>
-                    <p className="text-green-600 text-sm font-medium">Save ৳{bundleSavings.toFixed(0)}</p>
-                  </div>
-                  <button 
-                    onClick={handleAddBundleToCart} 
-                    disabled={selectedBundle.length === 0}
-                    className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white px-5 py-2 rounded-lg font-bold transition-transform hover:scale-105"
-                  >
-                    Add All to Cart
-                  </button>
+                <span className="text-lg md:text-xl font-bold text-gray-400">=</span>
+              </div>
+              
+              {/* Total + CTA - Below on mobile, inline on desktop */}
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-3 md:gap-4 mt-3 md:mt-4 pt-3 md:pt-0 border-t md:border-t-0 border-gray-200">
+                <div className="text-center md:text-left">
+                  <p className="text-xs md:text-sm text-gray-500">Total</p>
+                  <p className="text-base md:text-lg font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</p>
+                  <p className="text-green-600 text-xs md:text-sm font-medium">Save ৳{bundleSavings.toFixed(0)}</p>
                 </div>
+                <button 
+                  onClick={handleAddBundleToCart} 
+                  disabled={selectedBundle.length === 0}
+                  className="w-full md:w-auto bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white px-4 md:px-5 py-2 md:py-2 rounded-lg font-bold text-sm md:text-base transition-transform hover:scale-105"
+                >
+                  Add All to Cart
+                </button>
               </div>
             </div>
           )}
