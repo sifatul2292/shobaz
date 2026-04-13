@@ -153,7 +153,30 @@ export default function ProductDetailClient({ params }: Props) {
 
   const isInCart = items.some(item => item.product._id === product?._id);
   const previewUrl = product?.pdfFile || product?.previewPdfUrl;
-  const youtubeId = product?.videoUrl?.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
+  
+  // Extract YouTube video ID from various URL formats
+  const getYoutubeId = (url?: string): string | null => {
+    if (!url) return null;
+    
+    // Handle youtu.be format
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) return shortMatch[1];
+    
+    // Handle youtube.com/watch?v= format
+    const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) return watchMatch[1];
+    
+    // Handle youtube.com/embed/ format
+    const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) return embedMatch[1];
+    
+    return null;
+  };
+  
+  const youtubeId = getYoutubeId(product?.videoUrl);
+  
+  console.log('Video URL from product:', product?.videoUrl);
+  console.log('Extracted YouTube ID:', youtubeId);
 
   if (loading) {
     return (
