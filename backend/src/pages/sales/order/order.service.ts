@@ -101,6 +101,9 @@ export class OrderService {
       orderId: orderIdUnique,
       month: this.utilsService.getDateMonth(false, new Date()),
       year: this.utilsService.getDateYear(new Date()),
+      orderStatus: OrderStatus.PENDING,
+      paymentStatus: 'unpaid',
+      discount: 0,
     };
 
     if (addOrderDto.phoneNo && !addOrderDto.user) {
@@ -240,9 +243,12 @@ export class OrderService {
         orderId: orderIdUnique,
         month: this.utilsService.getDateMonth(false, new Date()),
         year: this.utilsService.getDateYear(new Date()),
+        orderStatus: OrderStatus.PENDING,
+        paymentStatus: 'unpaid',
+        discount: 0,
       };
 
-      const mData = { ...newOrderMake, ...dataExtra };
+      const mData = { ...addOrderDto, ...newOrderMake, ...dataExtra };
       const newData = new this.orderModel(mData);
 
       const saveData = await newData.save();
@@ -931,7 +937,10 @@ export class OrderService {
 
   async getOrderById(id: string, select: string): Promise<ResponsePayload> {
     try {
-      const data = await this.orderModel.findById(id).select(select);
+      const query = select 
+        ? this.orderModel.findById(id).select(select)
+        : this.orderModel.findById(id);
+      const data = await query;
       return {
         success: true,
         message: 'Success',
@@ -1804,6 +1813,26 @@ async updateOrderById(
 
   // New Order Make
   private async newOrderMake(orderData: any) {
+    // If orderedItems are already provided (from frontend), use them directly
+    if (orderData.orderedItems && Array.isArray(orderData.orderedItems)) {
+      const cartSubTotal = orderData.orderedItems.reduce(
+        (acc: number, item: any) => acc + (item.regularPrice || 0) * (item.quantity || 1),
+        0
+      );
+      
+      const cartDiscountAmount = orderData.orderedItems.reduce(
+        (acc: number, item: any) => acc + ((item.regularPrice || 0) - (item.salePrice || 0)) * (item.quantity || 1),
+        0
+      );
+
+      return {
+        products: orderData.orderedItems,
+        cartSubTotal,
+        cartDiscountAmount,
+      };
+    }
+    
+    // Original flow - fetch from database
     let cartItems: any[] = [];
 
     // Card Data Get

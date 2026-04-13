@@ -92,14 +92,21 @@ export class OrderController {
   }
 
   @Post('/add-order-by-anonymous')
-  @UsePipes(ValidationPipe)
-  // @UseGuards(UserJwtAuthGuard)
   async addOrderByAnonymous(
     @Body()
-    addOrderDto: AddOrderDto,
-    // @GetTokenUser() user: User,
+    addOrderDto: any,
   ): Promise<ResponsePayload> {
-    return await this.orderService.addOrderByAnonymous(addOrderDto);
+    try {
+      console.log('Received order data keys:', Object.keys(addOrderDto));
+      console.log('Name:', addOrderDto.name);
+      console.log('PhoneNo:', addOrderDto.phoneNo);
+      console.log('ShippingAddress:', addOrderDto.shippingAddress);
+      console.log('orderedItems:', addOrderDto.orderedItems?.length);
+      return await this.orderService.addOrderByAnonymous(addOrderDto);
+    } catch (error) {
+      console.error('Error in addOrderByAnonymous:', error);
+      throw error;
+    }
   }
 
   @Post('/insert-many')

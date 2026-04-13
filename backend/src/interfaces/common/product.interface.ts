@@ -64,6 +64,7 @@ export interface Product {
   createdAt?: Date;
   updatedAt?: Date;
   select?: boolean;
+  boughtTogetherIds?: string[];
 }
 
 interface CatalogInfo {

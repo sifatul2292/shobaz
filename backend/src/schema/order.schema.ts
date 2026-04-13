@@ -96,7 +96,8 @@ export const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      required: true,
+      required: false,
+      default: 'unpaid',
     },
     courierLink: {
       type: String,
@@ -105,7 +106,7 @@ export const OrderSchema = new mongoose.Schema(
     orderedItems: [ORDER_ITEM_SCHEMA],
     subTotal: {
       type: Number,
-      required: true,
+      required: false,
     },
     deliveryCharge: {
       type: Number,
@@ -122,7 +123,8 @@ export const OrderSchema = new mongoose.Schema(
     },
     discount: {
       type: Number,
-      required: true,
+      required: false,
+      default: 0,
     },
     orderDiscountFromApps: {
       type: Number,
@@ -174,7 +176,8 @@ export const OrderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: Number,
-      required: true,
+      required: false,
+      default: 1,
     },
     hasOrderTimeline: {
       type: Boolean,

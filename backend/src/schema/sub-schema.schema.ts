@@ -435,19 +435,19 @@ export const ORDER_ITEM_SCHEMA = new mongoose.Schema(
     },
     unitPrice: {
       type: Number,
-      required: true,
+      required: false,
     },
     salePrice: {
       type: Number,
-      required: true,
+      required: false,
     },
     quantity: {
       type: Number,
-      required: true,
+      required: false,
     },
     orderType: {
       type: String,
-      required: true,
+      required: false,
     },
     discountAmount: {
       type: Number,

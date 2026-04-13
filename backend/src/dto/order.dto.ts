@@ -52,6 +52,14 @@ export class AddOrderDto {
   @IsOptional()
   @IsString()
   coupon: string;
+
+  @IsOptional()
+  @IsArray()
+  carts: string[];
+
+  @IsOptional()
+  @IsArray()
+  cartData: any[];
 }
 
 export class FilterOrderDto {

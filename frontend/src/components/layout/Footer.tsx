@@ -18,7 +18,9 @@ export default function Footer() {
         ]);
         if (shopRes.data?.data) setShopInfo(shopRes.data.data);
         if (pagesRes.data?.data) setPages(pagesRes.data.data);
-      } catch (err) { console.error(err); }
+      } catch (err: any) {
+        console.log('Footer fetch error (ignoring):', err.message);
+      }
     };
     fetchData();
   }, []);

@@ -120,7 +120,7 @@ export default function ProductDetailClient({ params }: Props) {
     try {
       const res = await api.post('/review/get-all-review-by-query', {
         filter: {},
-        pagination: { page: 1, limit: 10 },
+        pagination: { currentPage: 1, pageSize: 10 },
         sort: { createdAt: -1 }
       });
       if (res.data?.data) {
