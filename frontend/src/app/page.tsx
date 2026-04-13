@@ -140,6 +140,7 @@ export default function HomePage() {
     
     return (
       <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative">
+        {/* Image Section */}
         <Link href={`/products/${productSlug}`} className="block">
           <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
             {img ? (
@@ -156,14 +157,8 @@ export default function HomePage() {
             )}
           </div>
         </Link>
-        {/* Quick Add to Cart Button - shows on hover (desktop) or always (mobile) */}
-        <button 
-          onClick={() => handleAddToCart(product)}
-          className="absolute bottom-20 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl z-10 md:opacity-0 md:translate-y-2 md:hover:opacity-100 md:hover:translate-y-0 mx-3"
-        >
-          <span>🛒</span>
-          <span>কার্টে যোগ</span>
-        </button>
+        
+        {/* Text Section (part of hover area) */}
         <div className="p-4 pt-3">
           <Link href={`/products/${productSlug}`} className="block cursor-pointer">
             <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1.5 min-h-[2.8rem] leading-tight">{productName}</h3>
@@ -177,6 +172,15 @@ export default function HomePage() {
             {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
           </Link>
         </div>
+        
+        {/* Quick Add to Cart Button - appears on hover anywhere on the entire card */}
+        <button 
+          onClick={() => handleAddToCart(product)}
+          className="absolute inset-x-3 bottom-4 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl z-10 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0"
+        >
+          <span>🛒</span>
+          <span>কার্টে যোগ</span>
+        </button>
       </div>
     );
   };
