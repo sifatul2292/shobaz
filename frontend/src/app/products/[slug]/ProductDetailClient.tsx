@@ -13,7 +13,7 @@ import {
   FaChevronLeft, FaChevronRight, FaShareAlt, FaHeart, FaStar, 
   FaShoppingCart, FaBoxOpen, FaTimes, FaCheck, FaTruck, 
   FaUndo, FaShieldAlt, FaClock, FaMinus, FaPlus,
-  FaRegCommentDots, FaFacebook, FaTwitter, FaWhatsApp, FaLink
+  FaRegCommentDots, FaFacebook, FaTwitter, FaWhatsapp, FaLink
 } from 'react-icons/fa';
 
 interface Props {
@@ -972,7 +972,7 @@ export default function ProductDetailClient({ params }: Props) {
                 onClick={shareToWhatsApp}
                 className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white text-xl transition-colors"
               >
-                <FaWhatsApp />
+                <FaWhatsapp />
               </button>
             </div>
 
