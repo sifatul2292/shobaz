@@ -499,15 +499,15 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
           </div>
 
-          {/* Bought Together - Separate Section Below */}
+          {/* Bought Together - Modern Inline Layout */}
           {bundleProducts.length > 0 && (
-            <div className="mt-12 bg-gray-50 rounded-xl border-2 border-teal-200 p-6 shadow-sm">
+            <div className="mt-12 bg-gray-50 rounded-xl border border-gray-200 p-6">
               <h2 className="text-xl font-bold text-teal-700 mb-5">পাঠকেরা একসাথে কিনে থাকেন</h2>
-                
-              <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-3 scrollbar-hide">
+              
+              <div className="flex items-center gap-3 flex-wrap">
                 {/* Main product */}
-                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-32 p-3 rounded-xl border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 transition-colors">
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg mb-2 mx-auto">
+                <Link href={`/products/${product?.slug}`} className="flex-shrink-0 w-[120px] p-2 rounded-lg border-2 border-teal-300 bg-white shadow-sm hover:border-teal-500 hover:scale-[1.03] hover:shadow-md transition-all">
+                  <div className="w-full h-28 bg-gray-100 rounded-lg mb-2">
                     {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
                   </div>
                   <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{product?.name}</p>
@@ -515,29 +515,42 @@ export default function ProductDetailClient({ params }: Props) {
                 
                 {bundleProducts.map((item) => (
                   <div key={item.product._id} className="flex items-center">
-                    <span className="text-2xl text-gray-400">+</span>
-                    <Link href={`/products/${item.product.slug}`} className="flex-shrink-0 w-32 p-3 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:border-teal-300 bg-white">
-                      <div className="w-24 h-32 bg-gray-100 rounded-lg mb-2 mx-auto">
-                        {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
-                      </div>
-                      <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
-                    </Link>
+                    <span className="text-xl font-bold text-gray-400">+</span>
+                    <div className={`relative w-[120px] p-2 rounded-lg border-2 bg-white transition-all hover:scale-[1.03] hover:shadow-md ${selectedBundle.includes(item.product._id) ? 'border-teal-500 shadow-md' : 'border-gray-200'}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedBundle.includes(item.product._id)}
+                        onChange={() => handleToggleBundle(item.product._id)}
+                        className="absolute top-1 left-1 w-4 h-4 accent-teal-600 cursor-pointer z-10"
+                      />
+                      <Link href={`/products/${item.product.slug}`} className="block">
+                        <div className="w-full h-28 bg-gray-100 rounded-lg mb-2">
+                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover rounded-lg" />}
+                        </div>
+                        <p className="text-xs text-gray-700 font-medium line-clamp-2 text-center">{item.product.name}</p>
+                      </Link>
+                    </div>
                   </div>
                 ))}
-                <span className="text-2xl text-gray-400">=</span>
-              </div>
-
-              {selectedBundle.length > 0 && (
-                <div className="flex items-center justify-between bg-white rounded-lg p-5 shadow-sm border border-teal-100 max-w-md">
+                
+                <span className="text-xl font-bold text-gray-400">=</span>
+                
+                {/* Inline Total + CTA */}
+                <div className="ml-4 flex items-center gap-4">
                   <div>
-                    <p className="text-base text-gray-600">Total: <span className="font-bold text-gray-900 text-2xl">৳{bundleTotal.toFixed(0)}</span></p>
-                    <p className="text-sm text-green-600 font-medium">You Save ৳{bundleSavings.toFixed(0)}</p>
+                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-lg font-bold text-gray-900">৳{bundleTotal.toFixed(0)}</p>
+                    <p className="text-green-600 text-sm font-medium">Save ৳{bundleSavings.toFixed(0)}</p>
                   </div>
-                  <button onClick={handleAddBundleToCart} className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg font-bold transition-transform hover:scale-105">
+                  <button 
+                    onClick={handleAddBundleToCart} 
+                    disabled={selectedBundle.length === 0}
+                    className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white px-5 py-2 rounded-lg font-bold transition-transform hover:scale-105"
+                  >
                     Add All to Cart
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
