@@ -160,7 +160,7 @@ export default function HomePage() {
                 e.preventDefault();
                 handleAddToCart(product);
               }}
-              className="absolute bottom-3 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 md:translate-y-0 md:opacity-100"
+              className="absolute bottom-3 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl md:opacity-0 md:translate-y-4 md:hover:opacity-100 md:hover:translate-y-0"
             >
               <span>🛒</span>
               <span>কার্টে যোগ</span>
