@@ -117,7 +117,7 @@ export default function ProductsPage() {
                     </div>
                     
                     {/* Text Section */}
-                    <div className="p-4 pb-16 relative">
+                    <div className="p-4 pb-4 group-hover:pb-16 transition-all duration-300">
                       <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
                       {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
                       {salePrice > 0 && (
@@ -128,10 +128,10 @@ export default function ProductsPage() {
                       )}
                       {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
                       
-                      {/* Add to Cart Button - below price, shows on hover anywhere on card */}
+                      {/* Add to Cart Button - shows on hover */}
                       <button 
                         onClick={() => handleAddToCart(product)}
-                        className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 shadow-md hover:shadow-lg"
+                        className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg"
                       >
                         কার্টে যোগ করুন
                       </button>
