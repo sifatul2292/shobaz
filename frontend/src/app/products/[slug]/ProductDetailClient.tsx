@@ -20,9 +20,15 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+interface BundleItem {
+  product: Product;
+  discount: number;
+}
+
 export default function ProductDetailClient({ params }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [bundleProducts, setBundleProducts] = useState<BundleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [slug, setSlug] = useState('');
@@ -30,6 +36,7 @@ export default function ProductDetailClient({ params }: Props) {
   const [showLightbox, setShowLightbox] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
 
   const { addItem, items } = useCartStore();
 
@@ -52,11 +59,40 @@ export default function ProductDetailClient({ params }: Props) {
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
           const allProducts = relatedRes.data.data;
-          setRelatedProducts(allProducts.filter((p: Product) => p._id !== res.data.data._id).slice(0, 10));
+          const filtered = allProducts.filter((p: Product) => p._id !== res.data.data._id);
+          setRelatedProducts(filtered.slice(0, 6));
+          // Create bundle products - 3 products with 10% bundle discount
+          setBundleProducts(filtered.slice(0, 3).map((p: Product) => ({
+            product: p,
+            discount: 10
+          })));
+          // Auto-select all bundle items
+          setSelectedBundle(filtered.slice(0, 3).map((p: Product) => p._id));
         }
       }
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  const handleToggleBundleItem = (productId: string) => {
+    setSelectedBundle(prev => 
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleAddBundleToCart = () => {
+    if (product) {
+      addItem(product, quantity);
+      selectedBundle.forEach(id => {
+        const item = bundleProducts.find(b => b.product._id === id);
+        if (item) {
+          addItem(item.product, 1);
+        }
+      });
+      toast.success('🎉 বান্ডেল কার্টে যোগ হয়েছে!');
+    }
   };
 
   const handleAddToCart = () => {
@@ -596,6 +632,103 @@ export default function ProductDetailClient({ params }: Props) {
               )}
             </div>
           </div>
+
+          {/* Bought Together - Bundle Section */}
+          {bundleProducts.length > 0 && (
+            <div className="mt-12 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-3xl shadow-xl border border-teal-100 p-6 md:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">📦 একসাথে কিনুন</h2>
+                  <p className="text-gray-500 text-sm mt-1">বান্ডেলে কিনলে ১০% ছাড় পান</p>
+                </div>
+                {selectedBundle.length > 0 && (
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">সেভ করুন</p>
+                    <p className="text-xl font-bold text-green-600">
+                      ৳{selectedBundle.reduce((sum, id) => {
+                        const item = bundleProducts.find(b => b.product._id === id);
+                        return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
+                      }, 0).toFixed(0)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {/* Main Product */}
+                <div className="bg-white rounded-2xl p-4 flex items-center gap-4 border-2 border-teal-500 shadow-lg">
+                  <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    {product?.images?.[0] && (
+                      <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 line-clamp-2">{product?.name}</p>
+                    <p className="text-teal-600 font-bold">৳{currentPrice}</p>
+                  </div>
+                  <FaCheck className="text-teal-500 text-xl flex-shrink-0" />
+                </div>
+
+                {/* Bundle Items */}
+                {bundleProducts.map((item) => (
+                  <div 
+                    key={item.product._id}
+                    onClick={() => handleToggleBundleItem(item.product._id)}
+                    className={`bg-white rounded-2xl p-4 flex items-center gap-3 cursor-pointer transition-all ${
+                      selectedBundle.includes(item.product._id)
+                        ? 'border-2 border-teal-500 shadow-lg ring-2 ring-teal-200'
+                        : 'border border-gray-200 hover:border-teal-300'
+                    }`}
+                  >
+                    <div className="w-14 h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                      {item.product.images?.[0] && (
+                        <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-teal-600 font-bold text-sm">৳{getCurrentPrice(item.product)}</p>
+                        <span className="text-xs text-green-600">-১০%</span>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selectedBundle.includes(item.product._id)
+                        ? 'bg-teal-500 border-teal-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedBundle.includes(item.product._id) && (
+                        <FaCheck className="text-white text-xs" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between bg-white rounded-2xl p-4">
+                <div>
+                  <p className="text-gray-500 text-sm">মোট:</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ৳{(currentPrice + selectedBundle.reduce((sum, id) => {
+                      const item = bundleProducts.find(b => b.product._id === id);
+                      return sum + (item ? getCurrentPrice(item.product) * 0.9 : 0);
+                    }, 0)).toFixed(0)}
+                  </p>
+                </div>
+                <button 
+                  onClick={handleAddBundleToCart}
+                  disabled={selectedBundle.length === 0}
+                  className={`px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
+                    selectedBundle.length > 0
+                      ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  🎁 সব কার্টে যোগ করুন
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
