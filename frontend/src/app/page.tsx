@@ -40,7 +40,7 @@ export default function HomePage() {
       try {
         const [productsRes, categoriesRes, tagsRes, bannersRes, authorsRes, publishersRes, blogsRes] = await Promise.allSettled([
           api.get('/product/get-all-data'),
-          api.post('/category/get-all', { filter: { isActive: true }, pagination: { pageSize: 20, currentPage: 1 }, sort: { name: 1 } }),
+          api.post('/category/get-all'),
           api.get('/tag/get-all-basic'),
           api.get('/banner-carousel/get-all-basic'),
           api.get('/author/get-all-basic'),
@@ -65,8 +65,11 @@ export default function HomePage() {
             catsData = categoriesRes.value.data.data.items;
           }
           if (Array.isArray(catsData)) {
+            console.log('Categories fetched:', catsData.length, catsData);
             setCategories(catsData);
           }
+        } else if (categoriesRes.status === 'rejected') {
+          console.error('Categories API failed:', categoriesRes.reason);
         }
         if (tagsRes.status === 'fulfilled' && tagsRes.value.data?.data) {
           setTags(tagsRes.value.data.data.slice(0, 20));
@@ -87,8 +90,8 @@ export default function HomePage() {
         if (blogsRes.status === 'fulfilled' && blogsRes.value.data?.data) {
           setBlogs(blogsRes.value.data.data.slice(0, 3));
         }
-      } catch (err) {
-        console.error('Fetch error:', err);
+      } catch (err: any) {
+        console.error('Home page fetch error:', err);
       } finally {
         setLoading(false);
       }
