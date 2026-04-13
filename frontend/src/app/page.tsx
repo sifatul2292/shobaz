@@ -226,22 +226,52 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Categories with Icons */}
+        {/* Categories Section - Modern Grid */}
         {categories.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 -mt-16 relative z-10">
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-              {categories.slice(0, 8).map((cat, idx) => (
-                <Link key={cat._id} href={`/products?category=${cat.slug}`} className="bg-white rounded-2xl p-4 text-center shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group">
-                  <div className="w-14 h-14 mx-auto mb-2 bg-teal-50 rounded-full flex items-center justify-center">
-                    {cat.image ? (
-                      <img src={imgUrl(cat.image)!} alt={cat.name} className="w-10 h-10 object-contain" />
-                    ) : (
-                      <span className="text-2xl">📚</span>
-                    )}
+          <section className="max-w-7xl mx-auto px-4 py-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-800">📚 বইয়ের ক্যাটাগরি</h2>
+              </div>
+              <Link href="/products" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {categories.map((cat, idx) => (
+                <Link 
+                  key={cat._id} 
+                  href={`/products?category=${cat.slug}`} 
+                  className="group bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-2xl transition-all hover:-translate-y-2 border border-slate-100 hover:border-teal-200 relative overflow-hidden"
+                >
+                  {/* Hover gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-cyan-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      {cat.image ? (
+                        <img src={imgUrl(cat.image)!} alt={cat.name} className="w-10 h-10 object-contain" />
+                      ) : (
+                        <span className="text-3xl">📚</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700 group-hover:text-teal-600 line-clamp-1 block">
+                      {cat.name}
+                    </span>
                   </div>
-                  <span className="text-xs font-medium text-gray-700 group-hover:text-teal-600 line-clamp-1">{cat.name}</span>
                 </Link>
               ))}
+              {/* View All Card */}
+              <Link 
+                href="/products" 
+                className="group bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl p-6 text-center shadow-md hover:shadow-2xl transition-all hover:-translate-y-2 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-white/10"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-3xl text-white">→</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">সব ক্যাটাগরি</span>
+                </div>
+              </Link>
             </div>
           </section>
         )}
