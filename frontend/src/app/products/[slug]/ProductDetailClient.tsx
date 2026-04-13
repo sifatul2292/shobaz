@@ -321,7 +321,9 @@ export default function ProductDetailClient({ params }: Props) {
                 {/* Short Description */}
                 {product.shortDescription && (
                   <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <p className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}>{product.shortDescription}</p>
+                    <p className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}>
+                      {product.shortDescription.replace(/<[^>]*>/g, '')}
+                    </p>
                     {product.shortDescription?.length > 150 && (
                       <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-teal-600 text-sm font-medium mt-1">
                         {showFullDescription ? 'আরও কম দেখুন' : 'আরও দেখুন'}
