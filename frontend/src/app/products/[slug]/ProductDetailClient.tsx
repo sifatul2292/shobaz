@@ -37,6 +37,7 @@ export default function ProductDetailClient({ params }: Props) {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
 
   const { addItem, items } = useCartStore();
 
