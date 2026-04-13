@@ -5,18 +5,41 @@ export interface Product {
   description?: string;
   shortDescription?: string;
   images?: string[];
+  videoUrl?: string;
   price: number;
   salePrice?: number;
   discountAmount?: number;
   discountType?: number;
   stock?: number;
+  quantity?: number;
   author?: Author | string;
   publisher?: Publisher | string;
   category?: Category;
+  subCategory?: Category;
   status?: string;
   createdAt?: string;
   previewPdfUrl?: string;
   pdfFile?: string;
+  features?: string[];
+  specifications?: Record<string, string>;
+  edition?: string;
+  totalPages?: number;
+  weight?: string;
+  language?: string;
+  country?: string;
+  ratingAvr?: number;
+  ratingCount?: number;
+  ratingTotal?: number;
+  ratingDetails?: { stars: number; count: number }[];
+  reviews?: Review[];
+}
+
+export interface Review {
+  _id: string;
+  user: User;
+  rating: number;
+  comment: string;
+  createdAt?: string;
 }
 
 export interface Author {

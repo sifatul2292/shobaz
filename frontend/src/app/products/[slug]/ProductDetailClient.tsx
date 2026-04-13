@@ -131,6 +131,13 @@ export default function ProductDetailClient({ params }: Props) {
   const discountPercent = getDiscountPercent(product);
   const authorName = getAuthorName(product.author);
   const publisherName = getPublisherName(product.publisher);
+  const bookDetails = [
+    product.edition && { label: 'সংস্করণ', value: product.edition },
+    product.totalPages && { label: 'পৃষ্ঠা সংখ্যা', value: product.totalPages.toString() },
+    product.weight && { label: 'ওজন', value: product.weight },
+    product.language && { label: 'ভাষা', value: product.language },
+    product.country && { label: 'দেশ', value: product.country },
+  ].filter(Boolean) as { label: string; value: string }[];
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -173,6 +180,21 @@ export default function ProductDetailClient({ params }: Props) {
                   ))}
                 </div>
               )}
+
+              {/* Video Section */}
+              {product.videoUrl && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <h3 className="font-bold text-gray-800 mb-3">🎬 ভিডিও</h3>
+                  <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                    <iframe
+                      src={product.videoUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Details Section */}
@@ -206,6 +228,40 @@ export default function ProductDetailClient({ params }: Props) {
                   <p className="text-sm text-green-600 mt-2">✓ স্টকে আছে</p>
                 )}
               </div>
+
+              {/* Ratings */}
+              {(product.ratingAvr || product.ratingCount) && (
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className="text-lg">
+                          {star <= Math.round(product.ratingAvr || 0) ? '⭐' : '☆'}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-gray-600">
+                      {product.ratingAvr?.toFixed(1)} ({product.ratingCount} রিভিউ)
+                    </span>
+                  </div>
+                  {product.ratingDetails && (
+                    <div className="mt-3 space-y-1">
+                      {product.ratingDetails.map((r) => (
+                        <div key={r.stars} className="flex items-center gap-2 text-sm">
+                          <span>{r.stars} ⭐</span>
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-yellow-400"
+                              style={{ width: `${(r.count / (product.ratingCount || 1)) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-gray-500 w-8">{r.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Quantity & Add to Cart */}
               <div className="flex items-center gap-4">
@@ -249,6 +305,75 @@ export default function ProductDetailClient({ params }: Props) {
               )}
             </div>
           </div>
+
+          {/* Book Details */}
+          {bookDetails.length > 0 && (
+            <div className="mt-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">📚 বইয়ের বিবরণ</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {bookDetails.map((detail, idx) => (
+                  <div key={idx} className="text-center">
+                    <p className="text-sm text-gray-500">{detail.label}</p>
+                    <p className="font-medium text-gray-800">{detail.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Features */}
+          {product.features && product.features.length > 0 && (
+            <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">✨ বৈশিষ্ট্য</h2>
+              <ul className="space-y-2">
+                {product.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-gray-600">
+                    <span className="text-teal-600 mt-1">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Specifications */}
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
+            <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">📋 স্পেসিফিকেশন</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(product.specifications).map(([key, value]) => (
+                  <div key={key} className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500">{key}</span>
+                    <span className="font-medium text-gray-800">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Reviews */}
+          {product.reviews && product.reviews.length > 0 && (
+            <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">💬 গ্রাহক রিভিউ ({product.reviews.length})</h2>
+              <div className="space-y-4">
+                {product.reviews.map((review) => (
+                  <div key={review._id} className="border-b border-gray-100 pb-4 last:border-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} className="text-sm">
+                            {star <= review.rating ? '⭐' : '☆'}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="font-medium text-gray-800">{review.user?.name || 'Anonymous'}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
