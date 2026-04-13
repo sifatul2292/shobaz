@@ -123,9 +123,12 @@ export interface ShopInfo {
   siteName?: string;
   siteLogo?: string;
   navLogo?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
+  footerLogo?: string;
+  shortDescription?: string;
+  addresses?: { type: number; value: string }[];
+  phones?: { type: number; value: string }[];
+  emails?: { type: number; value: string }[];
+  socialLinks?: { type: number; value: string }[];
   facebook?: string;
   youtube?: string;
 }

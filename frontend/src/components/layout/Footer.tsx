@@ -3,104 +3,283 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { ShopInfo } from '@/types';
-import api from '@/lib/api';
+import api, { imgUrl } from '@/lib/api';
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaFacebook, FaYoutube, FaInstagram, FaTwitter, FaChevronRight } from 'react-icons/fa';
+
+interface Page {
+  _id: string;
+  title: string;
+  slug: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
 
 export default function Footer() {
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
-  const [pages, setPages] = useState<{ _id: string; title: string; slug: string }[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [shopRes, pagesRes] = await Promise.all([
+        const [shopRes, pagesRes, categoriesRes] = await Promise.all([
           api.get('/shop-information/get'),
           api.get('/additional-page/get-all?includeInactive=false'),
+          api.post('/category/get-all', { filter: { visibility: true }, pagination: { currentPage: 1, pageSize: 8 } }),
         ]);
         if (shopRes.data?.data) setShopInfo(shopRes.data.data);
         if (pagesRes.data?.data) setPages(pagesRes.data.data);
+        if (categoriesRes.data?.data) setCategories(categoriesRes.data.data);
       } catch (err: any) {
-        console.log('Footer fetch error (ignoring):', err.message);
+        console.log('Footer fetch error:', err.message);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
   }, []);
 
+  const getPhone = () => shopInfo?.phones?.find(p => p.type === 0)?.value || shopInfo?.phones?.[0]?.value;
+  const getEmail = () => shopInfo?.emails?.find(e => e.type === 0)?.value || shopInfo?.emails?.[0]?.value;
+  const getAddress = () => shopInfo?.addresses?.find(a => a.type === 0)?.value || shopInfo?.addresses?.[0]?.value;
+  const getFacebook = () => shopInfo?.socialLinks?.find(s => s.value?.includes('facebook'))?.value;
+  const getYoutube = () => shopInfo?.socialLinks?.find(s => s.value?.includes('youtube'))?.value;
+  const getInstagram = () => shopInfo?.socialLinks?.find(s => s.value?.includes('instagram'))?.value;
+  const getTwitter = () => shopInfo?.socialLinks?.find(s => s.value?.includes('twitter'))?.value;
+
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* About */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-4">Shobaz</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              বাংলাদেশের অন্যতম বিশ্বস্ত অনলাইন বইয়ের দোকান। আমরা বই প্রেমিদের জন্য বইয়ের একটি বিশাল সংগ্রহ প্রদান করি।
+    <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 py-16">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              {shopInfo?.navLogo ? (
+                <img src={imgUrl(shopInfo.navLogo)!} alt="Shobaz" className="h-12 w-auto" />
+              ) : (
+                <div className="h-12 w-12 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">S</span>
+                </div>
+              )}
+              <span className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                {shopInfo?.siteName || 'Shobaz'}
+              </span>
+            </div>
+            <p className="text-slate-400 mb-6 leading-relaxed max-w-md">
+              {shopInfo?.shortDescription || 'বাংলাদেশের অন্যতম বিশ্বস্ত অনলাইন বইয়ের দোকান। আমরা বই প্রেমিদের জন্য বইয়ের একটি বিশাল সংগ্রহ প্রদান করি।'}
             </p>
-            <div className="flex gap-3">
-            {shopInfo?.facebook && (
-              <a href={shopInfo.facebook} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.77,7.46H14.5v-1.9c0-.9.6-1.1,1-1.1h3V.5h-4.33C10.24.5,9.5,3.44,9.5,5.32v2.15h-3v4h3v12h5v-12h3.85l.42-4Z"/></svg>
-              </a>
-            )}
-            {shopInfo?.youtube && (
-              <a href={shopInfo.youtube} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615,3.184c-3.604-.246-11.631-.245-15.23,0-3.897.266-4.356,2.62-4.385,8.816.029,6.185.484,8.549,4.385,8.816,3.6.245,11.626.246,15.23,0,3.897-.266,4.356-2.62,4.385-8.816-.029-6.185-.484-8.549-4.385-8.816Zm-10.615,12.816v-8l8,3.993-8,4.007Z"/></svg>
-              </a>
-            )}
-          </div>
+            
+            {/* Contact Info */}
+            <div className="space-y-4">
+              {getAddress() && (
+                <div className="flex items-start gap-3 text-slate-400">
+                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                    <FaMapMarkerAlt className="text-teal-400" />
+                  </div>
+                  <span className="text-sm">{getAddress()}</span>
+                </div>
+              )}
+              {getPhone() && (
+                <div className="flex items-center gap-3 text-slate-400">
+                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                    <FaPhone className="text-teal-400" />
+                  </div>
+                  <span className="text-sm">{getPhone()}</span>
+                </div>
+              )}
+              {getEmail() && (
+                <div className="flex items-center gap-3 text-slate-400">
+                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                    <FaEnvelope className="text-teal-400" />
+                  </div>
+                  <span className="text-sm">{getEmail()}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Social Links */}
+            <div className="flex gap-3 mt-6">
+              {getFacebook() && (
+                <a href={getFacebook()!} target="_blank" rel="noopener noreferrer" 
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-all duration-300 hover:-translate-y-1">
+                  <FaFacebook className="text-teal-400" />
+                </a>
+              )}
+              {getYoutube() && (
+                <a href={getYoutube()!} target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-red-500 transition-all duration-300 hover:-translate-y-1">
+                  <FaYoutube className="text-red-400" />
+                </a>
+              )}
+              {getInstagram() && (
+                <a href={getInstagram()!} target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-all duration-300 hover:-translate-y-1">
+                  <FaInstagram className="text-pink-400" />
+                </a>
+              )}
+              {getTwitter() && (
+                <a href={getTwitter()!} target="_blank" rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-all duration-300 hover:-translate-y-1">
+                  <FaTwitter className="text-blue-400" />
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">দ্রুত লিংক</h3>
-            <ul className="space-y-2">
-              <li><Link href="/products" className="text-sm hover:text-green-500 transition-colors">সকল বই</Link></li>
-              <li><Link href="/authors" className="text-sm hover:text-green-500 transition-colors">লেখক</Link></li>
-              <li><Link href="/publishers" className="text-sm hover:text-green-500 transition-colors">প্রকাশনা</Link></li>
-              <li><Link href="/offers" className="text-sm hover:text-green-500 transition-colors">অফার</Link></li>
-              <li><Link href="/blog" className="text-sm hover:text-green-500 transition-colors">ব্লগ</Link></li>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              দ্রুত লিংক
+            </h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/products" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  সকল বই
+                </Link>
+              </li>
+              <li>
+                <Link href="/authors" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  লেখক
+                </Link>
+              </li>
+              <li>
+                <Link href="/publishers" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  প্রকাশনা
+                </Link>
+              </li>
+              <li>
+                <Link href="/offers" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  অফার
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  ব্লগ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Categories */}
+          <div>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              বইয়ের ক্যাটাগরি
+            </h3>
+            <ul className="space-y-3">
+              {categories.slice(0, 6).map((category) => (
+                <li key={category._id}>
+                  <Link href={`/products?category=${category.slug}`} 
+                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                    <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Customer Service */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">গ্রাহক সেবা</h3>
-            <ul className="space-y-2">
-              <li><Link href="/contact" className="text-sm hover:text-green-500 transition-colors">যোগাযোগ</Link></li>
-              <li><Link href="/about" className="text-sm hover:text-green-500 transition-colors">আমাদের সম্পর্কে</Link></li>
-              <li><Link href="/terms" className="text-sm hover:text-green-500 transition-colors">শর্তাবলী</Link></li>
-              <li><Link href="/privacy-policy" className="text-sm hover:text-green-500 transition-colors">গোপনীয়তা নীতি</Link></li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-4">যোগাযোগ</h3>
-            <ul className="space-y-3 text-sm">
-              {shopInfo?.address && (
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                  <span>{shopInfo.address}</span>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              গ্রাহক সেবা
+            </h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/contact" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  যোগাযোগ
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  আমাদের সম্পর্কে
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  শর্তাবলী
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-policy" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                  <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  গোপনীয়তা নীতি
+                </Link>
+              </li>
+              {pages.map((page) => (
+                <li key={page._id}>
+                  <Link href={`/page/${page.slug}`} 
+                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                    <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {page.title}
+                  </Link>
                 </li>
-              )}
-              {shopInfo?.phone && (
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                  <span>{shopInfo.phone}</span>
-                </li>
-              )}
-              {shopInfo?.email && (
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                  <span>{shopInfo.email}</span>
-                </li>
-              )}
+              ))}
             </ul>
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-sm text-gray-500">© ২০২৬ Shobaz। সর্বস্বত্ব সংরক্ষিত।</p>
+        {/* Newsletter Section */}
+        <div className="mt-16 pt-10 border-t border-slate-700/50">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">নিউজলেটার সাবস্ক্রাইব করুন</h3>
+              <p className="text-slate-400 text-sm">নতুন বই এবং অফারের আপডেট পেতে আমাদের সাথে থাকুন</p>
+            </div>
+            <form className="flex w-full lg:w-auto" onSubmit={(e) => e.preventDefault()}>
+              <input 
+                type="email" 
+                placeholder="আপনার ইমেইল" 
+                className="flex-1 lg:w-72 px-5 py-3 bg-slate-800/50 border border-slate-700 rounded-l-xl focus:outline-none focus:border-teal-500 text-white placeholder-slate-500"
+              />
+              <button type="submit" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-r-xl font-medium transition-all">
+                সাবস্ক্রাইব
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-10 pt-8 border-t border-slate-700/50">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-slate-500 text-sm">
+              © {currentYear} <span className="text-teal-400 font-medium">{shopInfo?.siteName || 'Shobaz'}</span>. সর্বস্বত্ব সংরক্ষিত।
+            </p>
+            <div className="flex items-center gap-6 text-sm text-slate-500">
+              <Link href="/terms" className="hover:text-teal-400 transition-colors">শর্তাবলী</Link>
+              <Link href="/privacy-policy" className="hover:text-teal-400 transition-colors">গোপনীয়তা নীতি</Link>
+              <Link href="/refund-policy" className="hover:text-teal-400 transition-colors">রিফান্ড পলিসি</Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm">Designed with</span>
+              <span className="text-red-500">❤</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
