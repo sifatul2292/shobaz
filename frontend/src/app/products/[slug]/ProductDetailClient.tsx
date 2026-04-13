@@ -10,10 +10,10 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  FaChevronLeft, FaChevronRight, FaShare, FaHeart, FaStar, 
+  FaChevronLeft, FaChevronRight, FaShareAlt, FaHeart, FaStar, 
   FaShoppingCart, FaBoxOpen, FaTimes, FaCheck, FaTruck, 
   FaUndo, FaShieldAlt, FaClock, FaMinus, FaPlus,
-  FaRegCommentDots
+  FaRegCommentDots, FaFacebook, FaTwitter, FaWhatsApp, FaLink
 } from 'react-icons/fa';
 
 interface Props {
@@ -36,7 +36,7 @@ export default function ProductDetailClient({ params }: Props) {
   const [showLightbox, setShowLightbox] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { addItem, items } = useCartStore();
 
@@ -163,6 +163,33 @@ export default function ProductDetailClient({ params }: Props) {
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted);
     toast.success(isWishlisted ? 'উইশলিস্ট থেকে সরানো হয়েছে' : 'উইশলিস্টে যোগ হয়েছে');
+  };
+
+  const handleShare = () => {
+    setShowShareModal(!showShareModal);
+  };
+
+  const copyToClipboard = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast.success('লিংক কপি হয়েছে!');
+  };
+
+  const shareToFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  };
+
+  const shareToTwitter = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(product?.name || 'Check this product');
+    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+  };
+
+  const shareToWhatsApp = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`${product?.name} - ${url}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   const getCurrentPrice = (p: Product) => {
@@ -360,10 +387,10 @@ export default function ProductDetailClient({ params }: Props) {
                     <FaHeart className={isWishlisted ? 'fill-current' : ''} />
                   </button>
                   <button 
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => { e.stopPropagation(); handleShare(); }}
                     className="bg-white/95 hover:bg-white shadow-xl rounded-full p-2.5 transition-all duration-300 hover:scale-110 text-gray-600"
                   >
-                    <FaShare />
+                    <FaShareAlt />
                   </button>
                 </div>
 
@@ -910,6 +937,59 @@ export default function ProductDetailClient({ params }: Props) {
               className="flex-1 w-full" 
               allow="autoplay" 
             />
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-gray-800 text-lg">শেয়ার করুন</h3>
+              <button 
+                onClick={() => setShowShareModal(false)} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <button 
+                onClick={shareToFacebook}
+                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white text-xl transition-colors"
+              >
+                <FaFacebook />
+              </button>
+              <button 
+                onClick={shareToTwitter}
+                className="w-12 h-12 bg-sky-500 hover:bg-sky-600 rounded-full flex items-center justify-center text-white text-xl transition-colors"
+              >
+                <FaTwitter />
+              </button>
+              <button 
+                onClick={shareToWhatsApp}
+                className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white text-xl transition-colors"
+              >
+                <FaWhatsApp />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+              <input 
+                type="text" 
+                value={typeof window !== 'undefined' ? window.location.href : ''} 
+                readOnly
+                className="flex-1 bg-transparent text-gray-600 text-sm outline-none"
+              />
+              <button 
+                onClick={copyToClipboard}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                কপি
+              </button>
+            </div>
           </div>
         </div>
       )}
