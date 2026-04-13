@@ -140,7 +140,7 @@ export default function HomePage() {
     
     return (
       <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative">
-        <Link href={`/products/${productSlug}`} className="block cursor-pointer">
+        <Link href={`/products/${productSlug}`} className="block">
           <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
             {img ? (
               <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -154,19 +154,16 @@ export default function HomePage() {
                 {discountPercent}% OFF
               </span>
             )}
-            {/* Quick Add to Cart Button - shows on hover (desktop) or always (mobile) */}
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart(product);
-              }}
-              className="absolute bottom-3 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl md:opacity-0 md:translate-y-4 md:hover:opacity-100 md:hover:translate-y-0"
-            >
-              <span>🛒</span>
-              <span>কার্টে যোগ</span>
-            </button>
           </div>
         </Link>
+        {/* Quick Add to Cart Button - shows on hover (desktop) or always (mobile) */}
+        <button 
+          onClick={() => handleAddToCart(product)}
+          className="absolute bottom-20 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl z-10 md:opacity-0 md:translate-y-2 md:hover:opacity-100 md:hover:translate-y-0 mx-3"
+        >
+          <span>🛒</span>
+          <span>কার্টে যোগ</span>
+        </button>
         <div className="p-4 pt-3">
           <Link href={`/products/${productSlug}`} className="block cursor-pointer">
             <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1.5 min-h-[2.8rem] leading-tight">{productName}</h3>

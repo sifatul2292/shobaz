@@ -100,40 +100,41 @@ export default function ProductsPage() {
               return (
                 <Link key={product._id} href={`/products/${productSlug}`} className="group">
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative">
-                    <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
-                      {img ? (
-                        <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full">
-                          <span className="text-7xl filter drop-shadow-lg">📖</span>
-                        </div>
-                      )}
-                      {discountPercent > 0 && (
-                        <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-                          {discountPercent}% OFF
-                        </span>
-                      )}
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(product);
-                        }}
-                        className="absolute bottom-3 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl md:opacity-0 md:translate-y-4 md:hover:opacity-100 md:hover:translate-y-0"
-                      >
-                        <span>🛒</span>
-                        <span>কার্টে যোগ</span>
-                      </button>
-                    </div>
+                    <Link href={`/products/${productSlug}`} className="block">
+                      <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
+                        {img ? (
+                          <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full">
+                            <span className="text-7xl filter drop-shadow-lg">📖</span>
+                          </div>
+                        )}
+                        {discountPercent > 0 && (
+                          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
+                            {discountPercent}% OFF
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                    <button 
+                      onClick={() => handleAddToCart(product)}
+                      className="absolute bottom-20 left-3 right-3 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl z-10 md:opacity-0 md:translate-y-2 md:hover:opacity-100 md:hover:translate-y-0 mx-3"
+                    >
+                      <span>🛒</span>
+                      <span>কার্টে যোগ</span>
+                    </button>
                     <div className="p-4 pt-3">
-                      <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1.5 min-h-[2.8rem] leading-tight">{productName}</h3>
-                      {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
-                      {salePrice > 0 && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-teal-600">৳{currentPrice}</span>
-                          {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
-                        </div>
-                      )}
-                      {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
+                      <Link href={`/products/${productSlug}`} className="block cursor-pointer">
+                        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1.5 min-h-[2.8rem] leading-tight">{productName}</h3>
+                        {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
+                        {salePrice > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-teal-600">৳{currentPrice}</span>
+                            {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
+                          </div>
+                        )}
+                        {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
+                      </Link>
                     </div>
                   </div>
                 </Link>
