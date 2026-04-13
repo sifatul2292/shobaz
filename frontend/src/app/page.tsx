@@ -175,10 +175,9 @@ export default function HomePage() {
           {/* Add to Cart Button - below price, shows on hover anywhere on card */}
           <button 
             onClick={() => handleAddToCart(product)}
-            className="absolute bottom-3 left-4 right-4 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 md:opacity-0 md:group-hover:opacity-100"
+            className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 shadow-md hover:shadow-lg"
           >
-            <span>🛒</span>
-            <span>কার্টে যোগ</span>
+            কার্টে যোগ করুন
           </button>
         </div>
       </div>
