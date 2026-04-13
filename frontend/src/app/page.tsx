@@ -139,7 +139,7 @@ export default function HomePage() {
     }
     
     return (
-      <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative">
+      <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
         {/* Image Section */}
         <Link href={`/products/${productSlug}`} className="block">
           <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
@@ -158,8 +158,8 @@ export default function HomePage() {
           </div>
         </Link>
         
-        {/* Text Section */}
-        <div className="p-4">
+        {/* Text Section - button appears on hover anywhere on card */}
+        <div className="p-4 pb-16 relative">
           <Link href={`/products/${productSlug}`} className="block cursor-pointer">
             <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
             {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
@@ -171,16 +171,16 @@ export default function HomePage() {
             )}
             {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
           </Link>
+          
+          {/* Add to Cart Button - below price, shows on hover anywhere on card */}
+          <button 
+            onClick={() => handleAddToCart(product)}
+            className="absolute bottom-3 left-4 right-4 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 md:opacity-0 md:group-hover:opacity-100"
+          >
+            <span>🛒</span>
+            <span>কার্টে যোগ</span>
+          </button>
         </div>
-        
-        {/* Quick Add to Cart Button - appears on hover over image only */}
-        <button 
-          onClick={() => handleAddToCart(product)}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-xl z-10 md:opacity-0 md:scale-90 md:hover:opacity-100 md:hover:scale-100"
-        >
-          <span>🛒</span>
-          <span>কার্টে যোগ</span>
-        </button>
       </div>
     );
   };
