@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
-import { Product } from '@/types';
+import { Product, ShippingCharge } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -36,6 +36,7 @@ export default function ProductDetailClient({ params }: Props) {
   const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+  const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
 
   const { addItem, items } = useCartStore();
 
@@ -54,6 +55,8 @@ export default function ProductDetailClient({ params }: Props) {
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
+        
+        console.log('Product videoUrl:', productData.videoUrl);
         
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
@@ -81,11 +84,20 @@ export default function ProductDetailClient({ params }: Props) {
             }));
           }
           
-          setBundleProducts(bundleItems);
+setBundleProducts(bundleItems);
           setSelectedBundle(bundleItems.map(b => b.product._id));
         }
       }
     } catch (err) { console.error(err); }
+
+    // Fetch shipping charge
+    try {
+      const shipRes = await api.get('/shipping-charge/get');
+      if (shipRes.data?.data) {
+        setShippingCharge(shipRes.data.data);
+      }
+    } catch (shipErr) { console.error('Failed to fetch shipping charge:', shipErr); }
+
     setLoading(false);
   };
 
@@ -170,13 +182,17 @@ export default function ProductDetailClient({ params }: Props) {
     const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
     if (embedMatch) return embedMatch[1];
     
+    // Handle youtube.com/shorts/ format
+    const shortsMatch = url.match(/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (shortsMatch) return shortsMatch[1];
+    
+    // Handle direct video ID (11 characters)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+    
     return null;
   };
   
   const youtubeId = getYoutubeId(product?.videoUrl);
-  
-  console.log('Video URL from product:', product?.videoUrl);
-  console.log('Extracted YouTube ID:', youtubeId);
 
   if (loading) {
     return (
@@ -434,26 +450,47 @@ export default function ProductDetailClient({ params }: Props) {
             <div className="lg:col-span-3 space-y-5">
               {/* Video Review */}
               {youtubeId ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                  <h3 className="font-bold text-lg text-teal-700 mb-4">বুক রিভিউ</h3>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <h3 className="font-bold text-lg text-teal-700 mb-3">বুক রিভিউ</h3>
                   <div className="aspect-video rounded-lg overflow-hidden shadow-md bg-black">
                     <iframe 
-                      src={`https://www.youtube.com/embed/${youtubeId}`} 
+                      src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
                       className="w-full h-full" 
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                       allowFullScreen 
+                      title="Book Review Video"
                     />
                   </div>
                 </div>
               ) : null}
 
               {/* Delivery Info */}
-              <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100 p-4">
-                <h3 className="font-bold text-teal-700 mb-3">🚚 Delivery</h3>
-                <div className="flex flex-wrap gap-3">
-                  <span className="bg-white px-3 py-2 rounded-lg text-sm font-medium text-gray-700 shadow-sm">Dhaka: ৳50 (1-2 Days)</span>
-                  <span className="bg-white px-3 py-2 rounded-lg text-sm font-medium text-gray-700 shadow-sm">Outside: ৳100 (2-4 Days)</span>
+              <div className="bg-white rounded-xl border border-gray-200 p-3">
+                <h3 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2">
+                  <FaTruck className="text-teal-600 text-xs" /> Delivery
+                </h3>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors cursor-pointer group">
+                    <span className="text-gray-600">Inside Dhaka</span>
+                    <span className="font-bold text-teal-700">৳{shippingCharge?.deliveryInDhaka || 60}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group">
+                    <span className="text-gray-600">Outside Dhaka</span>
+                    <span className="font-bold text-gray-700">৳{shippingCharge?.deliveryOutsideDhaka || 120}</span>
+                  </div>
+                  {shippingCharge?.deliveryOutsideBD ? (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group">
+                      <span className="text-gray-600">Outside Bangladesh</span>
+                      <span className="font-bold text-gray-700">৳{shippingCharge.deliveryOutsideBD}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 opacity-60">
+                      <span className="text-gray-500">Outside Bangladesh</span>
+                      <span className="font-bold text-gray-400">N/A</span>
+                    </div>
+                  )}
                 </div>
+                <p className="text-xs text-gray-400 mt-2 text-center">Delivery in 1-4 business days</p>
               </div>
 
               {/* Related Books */}
