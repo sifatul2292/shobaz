@@ -55,19 +55,34 @@ export default function ProductDetailClient({ params }: Props) {
     try {
       const res = await api.get(`/product/get-by-slug/${slug}`);
       if (res.data?.data) {
-        setProduct(res.data.data);
+        const productData = res.data.data;
+        setProduct(productData);
+        
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
           const allProducts = relatedRes.data.data;
-          const filtered = allProducts.filter((p: Product) => p._id !== res.data.data._id);
+          const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 6));
-          // Create bundle products - 3 products with 10% bundle discount
-          setBundleProducts(filtered.slice(0, 3).map((p: Product) => ({
-            product: p,
-            discount: 10
-          })));
-          // Auto-select all bundle items
-          setSelectedBundle(filtered.slice(0, 3).map((p: Product) => p._id));
+          
+          // Use backend boughtTogether if available, otherwise fallback to related products
+          let bundleItems: BundleItem[] = [];
+          let bundleDiscount = productData.bundleDiscount || 10;
+          
+          if (productData.boughtTogether && productData.boughtTogether.length > 0) {
+            bundleItems = productData.boughtTogether.map((p: Product) => ({
+              product: p,
+              discount: bundleDiscount
+            }));
+          } else {
+            // Fallback: use first 3 related products as bundle
+            bundleItems = filtered.slice(0, 3).map((p: Product) => ({
+              product: p,
+              discount: bundleDiscount
+            }));
+          }
+          
+          setBundleProducts(bundleItems);
+          setSelectedBundle(bundleItems.map(b => b.product._id));
         }
       }
     } catch (err) { console.error(err); }
@@ -219,6 +234,7 @@ export default function ProductDetailClient({ params }: Props) {
   const reviewCount = product.ratingCount || 0;
   const previewUrl = getPreviewUrl(product.pdfFile || product.previewPdfUrl);
   const youtubeId = getYouTubeId(product.videoUrl);
+  const bundleDiscount = product.bundleDiscount || 10;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-teal-50/30">
@@ -639,7 +655,7 @@ export default function ProductDetailClient({ params }: Props) {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900">📦 একসাথে কিনুন</h2>
-                  <p className="text-gray-500 text-sm mt-1">বান্ডেলে কিনলে ১০% ছাড় পান</p>
+                  <p className="text-gray-500 text-sm mt-1">বান্ডেলে কিনলে {bundleDiscount}% ছাড় পান</p>
                 </div>
                 {selectedBundle.length > 0 && (
                   <div className="text-right">
@@ -647,7 +663,7 @@ export default function ProductDetailClient({ params }: Props) {
                     <p className="text-xl font-bold text-green-600">
                       ৳{selectedBundle.reduce((sum, id) => {
                         const item = bundleProducts.find(b => b.product._id === id);
-                        return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
+                        return sum + (item ? getCurrentPrice(item.product) * (bundleDiscount / 100) : 0);
                       }, 0).toFixed(0)}
                     </p>
                   </div>
@@ -689,7 +705,7 @@ export default function ProductDetailClient({ params }: Props) {
                       <p className="text-xs font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
                       <div className="flex items-center gap-1">
                         <p className="text-teal-600 font-bold text-sm">৳{getCurrentPrice(item.product)}</p>
-                        <span className="text-xs text-green-600">-১০%</span>
+                        <span className="text-xs text-green-600">-{bundleDiscount}%</span>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -711,7 +727,7 @@ export default function ProductDetailClient({ params }: Props) {
                   <p className="text-2xl font-bold text-gray-900">
                     ৳{(currentPrice + selectedBundle.reduce((sum, id) => {
                       const item = bundleProducts.find(b => b.product._id === id);
-                      return sum + (item ? getCurrentPrice(item.product) * 0.9 : 0);
+                      return sum + (item ? getCurrentPrice(item.product) * (1 - bundleDiscount / 100) : 0);
                     }, 0)).toFixed(0)}
                   </p>
                 </div>

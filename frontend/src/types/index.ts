@@ -32,6 +32,8 @@ export interface Product {
   ratingTotal?: number;
   ratingDetails?: { stars: number; count: number }[];
   reviews?: Review[];
+  boughtTogether?: Product[];
+  bundleDiscount?: number;
 }
 
 export interface Review {
