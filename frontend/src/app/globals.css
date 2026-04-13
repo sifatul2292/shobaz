@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --font-bengali: 'Noto Sans Bengali', system-ui, sans-serif;
+  --font-english: system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-bengali);
+}
+
+.font-bengali {
+  font-family: var(--font-bengali);
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #16a34a !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #16a34a !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}

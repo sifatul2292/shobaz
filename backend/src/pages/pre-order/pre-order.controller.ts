@@ -25,6 +25,15 @@ export class PreOrderController {
     return await this.preOrderService.getAllPreOrders(filterPreOrderDto, searchString);
   }
 
+  @Get('/get-all-basic')
+  async getAllPreOrdersBasic(): Promise<ResponsePayload> {
+    return await this.preOrderService.getAllPreOrders({
+      filter: {},
+      pagination: { pageSize: 100, currentPage: 1 },
+      sort: { createdAt: -1 },
+    });
+  }
+
   @Get('/:id')
   async getSinglePreOrderById(
     @Param('id', MongoIdValidationPipe) id: string,

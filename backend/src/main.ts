@@ -9,19 +9,20 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // Allow Cors
   app.enableCors({
-    // origin: '*',
     origin: [
+      'http://localhost:3000',
+      'http://localhost:3006',
+      'http://localhost:4000',
       'http://localhost:4200',
       'http://localhost:42002',
       'http://localhost:3001',
       'http://localhost:3002',
-      'http://localhost:3006',
       'http://localhost:3007',
       'http://localhost:3005',
       'http://localhost:3004',
       'http://localhost:3003',
-      'http://localhost:3006',
       'http://localhost:3008',
+      'http://localhost:3009',
       'https://www.alambook.com',
       'https://alambook.com',
       'https://admin.alambook.com',
