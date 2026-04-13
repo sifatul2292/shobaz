@@ -448,17 +448,11 @@ export default function ProductDetailClient({ params }: Props) {
               ) : null}
 
               {/* Delivery Info */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 className="font-bold text-lg text-teal-700 mb-4">Delivery</h3>
-                <div className="space-y-3 text-base text-gray-700">
-                  <div className="flex justify-between py-2 border-b border-gray-100">
-                    <span> Dhaka City</span>
-                    <span className="font-bold">৳50 (1-2 Days)</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span>Outside Dhaka</span>
-                    <span className="font-bold">৳100 (2-4 Days)</span>
-                  </div>
+              <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100 p-4">
+                <h3 className="font-bold text-teal-700 mb-3">🚚 Delivery</h3>
+                <div className="flex flex-wrap gap-3">
+                  <span className="bg-white px-3 py-2 rounded-lg text-sm font-medium text-gray-700 shadow-sm">Dhaka: ৳50 (1-2 Days)</span>
+                  <span className="bg-white px-3 py-2 rounded-lg text-sm font-medium text-gray-700 shadow-sm">Outside: ৳100 (2-4 Days)</span>
                 </div>
               </div>
 
