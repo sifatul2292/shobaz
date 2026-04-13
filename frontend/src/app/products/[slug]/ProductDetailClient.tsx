@@ -54,9 +54,15 @@ export default function ProductDetailClient({ params }: Props) {
     setLoading(true);
     try {
       const res = await api.get(`/product/get-by-slug/${slug}`);
+      console.log('Product API Response:', res.data);
+      
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
+        
+        // Log the boughtTogether field
+        console.log('boughtTogether:', productData.boughtTogether);
+        console.log('bundleDiscount:', productData.bundleDiscount);
         
         const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
@@ -68,13 +74,16 @@ export default function ProductDetailClient({ params }: Props) {
           let bundleItems: BundleItem[] = [];
           let bundleDiscount = productData.bundleDiscount || 10;
           
-          if (productData.boughtTogether && productData.boughtTogether.length > 0) {
-            bundleItems = productData.boughtTogether.map((p: Product) => ({
-              product: p,
+          // Check if boughtTogether exists and has items
+          if (productData.boughtTogether && Array.isArray(productData.boughtTogether) && productData.boughtTogether.length > 0) {
+            console.log('Using backend boughtTogether products:', productData.boughtTogether);
+            bundleItems = productData.boughtTogether.map((p: any) => ({
+              product: typeof p === 'string' ? { _id: p, name: '', images: [] } : p,
               discount: bundleDiscount
             }));
           } else {
             // Fallback: use first 3 related products as bundle
+            console.log('Using fallback related products as bundle');
             bundleItems = filtered.slice(0, 3).map((p: Product) => ({
               product: p,
               discount: bundleDiscount
