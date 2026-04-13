@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { 
   FaChevronLeft, FaChevronRight, FaShare, FaHeart, FaStar, 
   FaShoppingCart, FaBoxOpen, FaTimes, FaCheck, FaTruck, 
-  FaUndo, FaShieldAlt, FaClock, FaEye, FaMinus, FaPlus,
+  FaUndo, FaShieldAlt, FaClock, FaMinus, FaPlus,
   FaRegCommentDots
 } from 'react-icons/fa';
 
@@ -210,8 +210,7 @@ export default function ProductDetailClient({ params }: Props) {
             <div className="lg:col-span-5 space-y-4">
               {/* Main Image with Lightbox */}
               <div 
-                className="relative bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden group cursor-pointer"
-                onClick={() => setShowLightbox(true)}
+                className="relative bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden group"
               >
                 <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 flex items-center justify-center relative">
                   {images[activeImage] ? (
@@ -224,16 +223,23 @@ export default function ProductDetailClient({ params }: Props) {
                     <span className="text-9xl filter drop-shadow-xl">📖</span>
                   )}
                   
-                  {/* Zoom indicator */}
-                  <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <FaEye /> দেখুন
-                  </div>
+                  {/* Preview Badge - Click to open PDF */}
+                  {previewUrl && (
+                    <button 
+                      onClick={() => setShowPreviewModal(true)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <span className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
+                        📄 একটু পড়ে দেখুন
+                      </span>
+                    </button>
+                  )}
                 </div>
                 
                 {/* Discount Badge */}
                 {discountPercent > 0 && (
                   <div className="absolute top-4 left-4 flex flex-col gap-1">
-                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-lg animate-pulse">
+                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-lg">
                       {discountPercent}% ছাড়
                     </span>
                   </div>
@@ -323,17 +329,6 @@ export default function ProductDetailClient({ params }: Props) {
                     </div>
                   </div>
                 </div>
-              )}
-
-              {/* PDF Preview Button */}
-              {previewUrl && (
-                <button 
-                  onClick={() => setShowPreviewModal(true)}
-                  className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
-                >
-                  <span>📄</span>
-                  একটু পড়ে দেখুন
-                </button>
               )}
             </div>
 
