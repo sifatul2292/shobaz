@@ -338,11 +338,11 @@ export default function ProductDetailClient({ params }: Props) {
                 {previewUrl && (
                   <button 
                     onClick={() => setShowPreviewModal(true)}
-                    className="w-full mb-3 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md transition-colors"
+                    className="mb-3 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
                   >
-                    <HiOutlineEye className="w-5 h-5" />
+                    <HiOutlineEye className="w-3.5 h-3.5" />
                     একটু পড়ে দেখুন
-                    <svg className="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
