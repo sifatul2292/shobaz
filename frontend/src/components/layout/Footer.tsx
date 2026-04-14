@@ -55,7 +55,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+    <footer className="relative bg-gradient-to-br from-teal-50 via-white to-cyan-50 text-gray-800 overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -72,39 +72,39 @@ export default function Footer() {
               {shopInfo?.navLogo ? (
                 <img src={imgUrl(shopInfo.navLogo)!} alt="Shobaz" className="h-12 w-auto" />
               ) : (
-                <div className="h-12 w-12 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl font-bold text-white">S</span>
+                <div className="h-12 w-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-800">S</span>
                 </div>
               )}
-              <span className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 text-teal-700">
                 {shopInfo?.siteName || 'Shobaz'}
               </span>
             </div>
-            <p className="text-slate-400 mb-6 leading-relaxed max-w-md">
+            <p className="text-gray-600 mb-6 leading-relaxed max-w-md">
               {shopInfo?.shortDescription || 'বাংলাদেশের অন্যতম বিশ্বস্ত অনলাইন বইয়ের দোকান। আমরা বই প্রেমিদের জন্য বইয়ের একটি বিশাল সংগ্রহ প্রদান করি।'}
             </p>
             
             {/* Contact Info */}
             <div className="space-y-4">
               {getAddress() && (
-                <div className="flex items-start gap-3 text-slate-400">
-                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                <div className="flex items-start gap-3 text-gray-600">
+                  <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
                     <FaMapMarkerAlt className="text-teal-400" />
                   </div>
                   <span className="text-sm">{getAddress()}</span>
                 </div>
               )}
               {getPhone() && (
-                <div className="flex items-center gap-3 text-slate-400">
-                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
                     <FaPhone className="text-teal-400" />
                   </div>
                   <span className="text-sm">{getPhone()}</span>
                 </div>
               )}
               {getEmail() && (
-                <div className="flex items-center gap-3 text-slate-400">
-                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
                     <FaEnvelope className="text-teal-400" />
                   </div>
                   <span className="text-sm">{getEmail()}</span>
@@ -116,25 +116,25 @@ export default function Footer() {
             <div className="flex gap-3 mt-6">
               {getFacebook() && (
                 <a href={getFacebook()!} target="_blank" rel="noopener noreferrer" 
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-all duration-300 hover:-translate-y-1">
+                  className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-all duration-300 hover:-translate-y-1">
                   <FaFacebook className="text-teal-400" />
                 </a>
               )}
               {getYoutube() && (
                 <a href={getYoutube()!} target="_blank" rel="noopener noreferrer"
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-red-500 transition-all duration-300 hover:-translate-y-1">
+                  className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center hover:bg-red-500 transition-all duration-300 hover:-translate-y-1">
                   <FaYoutube className="text-red-400" />
                 </a>
               )}
               {getInstagram() && (
                 <a href={getInstagram()!} target="_blank" rel="noopener noreferrer"
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-all duration-300 hover:-translate-y-1">
+                  className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-all duration-300 hover:-translate-y-1">
                   <FaInstagram className="text-pink-400" />
                 </a>
               )}
               {getTwitter() && (
                 <a href={getTwitter()!} target="_blank" rel="noopener noreferrer"
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-all duration-300 hover:-translate-y-1">
+                  className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-all duration-300 hover:-translate-y-1">
                   <FaTwitter className="text-blue-400" />
                 </a>
               )}
@@ -144,36 +144,36 @@ export default function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-600 to-cyan-600 rounded-full"></span>
               দ্রুত লিংক
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/products" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/products" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   সকল বই
                 </Link>
               </li>
               <li>
-                <Link href="/authors" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/authors" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   লেখক
                 </Link>
               </li>
               <li>
-                <Link href="/publishers" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/publishers" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   প্রকাশনা
                 </Link>
               </li>
               <li>
-                <Link href="/offers" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/offers" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   অফার
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/blog" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   ব্লগ
                 </Link>
@@ -184,14 +184,14 @@ export default function Footer() {
           {/* Categories */}
           <div>
             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-600 to-cyan-600 rounded-full"></span>
               বইয়ের ক্যাটাগরি
             </h3>
             <ul className="space-y-3">
               {categories.slice(0, 6).map((category) => (
                 <li key={category._id}>
                   <Link href={`/products?category=${category.slug}`} 
-                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                    className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                     <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {category.name}
                   </Link>
@@ -203,30 +203,30 @@ export default function Footer() {
           {/* Customer Service */}
           <div>
             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"></span>
+              <span className="w-1 h-6 bg-gradient-to-b from-teal-600 to-cyan-600 rounded-full"></span>
               গ্রাহক সেবা
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/contact" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/contact" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   যোগাযোগ
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/about" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   আমাদের সম্পর্কে
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/terms" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   শর্তাবলী
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-policy" className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                <Link href="/privacy-policy" className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                   <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   গোপনীয়তা নীতি
                 </Link>
@@ -234,7 +234,7 @@ export default function Footer() {
               {pages.map((page) => (
                 <li key={page._id}>
                   <Link href={`/page/${page.slug}`} 
-                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 group">
+                    className="text-gray-600 hover:text-teal-400 transition-colors flex items-center gap-2 group">
                     <FaChevronRight className="text-xs text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {page.title}
                   </Link>
@@ -249,13 +249,13 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-semibold mb-2">নিউজলেটার সাবস্ক্রাইব করুন</h3>
-              <p className="text-slate-400 text-sm">নতুন বই এবং অফারের আপডেট পেতে আমাদের সাথে থাকুন</p>
+              <p className="text-gray-600 text-sm">নতুন বই এবং অফারের আপডেট পেতে আমাদের সাথে থাকুন</p>
             </div>
             <form className="flex w-full lg:w-auto" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="email" 
                 placeholder="আপনার ইমেইল" 
-                className="flex-1 lg:w-72 px-5 py-3 bg-slate-800/50 border border-slate-700 rounded-l-xl focus:outline-none focus:border-teal-500 text-white placeholder-slate-500"
+                className="flex-1 lg:w-72 px-5 py-3 bg-white border border-gray-200 rounded-l-xl focus:outline-none focus:border-teal-500 text-gray-800 placeholder-gray-400"
               />
               <button type="submit" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-r-xl font-medium transition-all">
                 সাবস্ক্রাইব
