@@ -31,7 +31,6 @@ interface Props {
 export default function ProductDetailClient({ params }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [bundleProducts, setBundleProducts] = useState<BundleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +83,7 @@ export default function ProductDetailClient({ params }: Props) {
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 10));
           
-          // Recently Viewed - newest products (sorted by createdAt or just take from list)
-          setRecentlyViewed(filtered.slice(0, 8));
-          
-          // Best Sellers - products with highest rating/discount
+          // Best Sellers - products sorted by rating (highest first)
           const sortedByRating = [...filtered].sort((a, b) => (b.ratingAvr || 0) - (a.ratingAvr || 0));
           setBestSellers(sortedByRating.slice(0, 8));
           
@@ -902,66 +898,34 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
           </div>
 
-          {/* Recently Viewed & Best Sellers */}
-          {(recentlyViewed.length > 0 || bestSellers.length > 0) && (
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Recently Viewed */}
-              {recentlyViewed.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
-                    <h2 className="text-base font-bold text-gray-800">সর্বশেষ দেখা বই</h2>
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {recentlyViewed.slice(0, 6).map((p) => (
-                      <div key={p._id} className="flex-shrink-0 w-28 group">
-                        <Link href={`/products/${p.slug}`}>
-                          <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                          </div>
-                          <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                          <p className="text-xs font-bold text-green-500 mb-1">৳{getCurrentPrice(p)}</p>
-                        </Link>
-                        <button 
-                          onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-medium py-1 rounded transition-colors"
-                        >
-                          + Add to Cart
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+          {/* Best Sellers */}
+          {bestSellers.length > 0 && (
+            <div className="mt-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
+                  <h2 className="text-base font-bold text-gray-800">সর্বাধিক বিক্রিত বই</h2>
                 </div>
-              )}
-              
-              {/* Best Sellers */}
-              {bestSellers.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
-                    <h2 className="text-base font-bold text-gray-800">সর্বাধিক বিক্রিত বই</h2>
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {bestSellers.slice(0, 6).map((p) => (
-                      <div key={p._id} className="flex-shrink-0 w-28 group">
-                        <Link href={`/products/${p.slug}`}>
-                          <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                          </div>
-                          <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                          <p className="text-xs font-bold text-green-500 mb-1">৳{getCurrentPrice(p)}</p>
-                        </Link>
-                        <button 
-                          onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-medium py-1 rounded transition-colors"
-                        >
-                          + Add to Cart
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {bestSellers.slice(0, 8).map((p) => (
+                    <div key={p._id} className="flex-shrink-0 w-28 group">
+                      <Link href={`/products/${p.slug}`}>
+                        <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                          {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
+                        </div>
+                        <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                        <p className="text-xs font-bold text-green-500 mb-1">৳{getCurrentPrice(p)}</p>
+                      </Link>
+                      <button 
+                        onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-medium py-1 rounded transition-colors"
+                      >
+                        + Add to Cart
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
