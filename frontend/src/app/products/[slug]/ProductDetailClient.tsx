@@ -334,8 +334,22 @@ export default function ProductDetailClient({ params }: Props) {
               {/* LEFT: Product Image + Preview */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24">
+                {/* Preview Button - Above Image */}
+                {previewUrl && (
+                  <button 
+                    onClick={() => setShowPreviewModal(true)}
+                    className="w-full mb-3 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md transition-colors"
+                  >
+                    <HiOutlineEye className="w-5 h-5" />
+                    একটু পড়ে দেখুন
+                    <svg className="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+                )}
+
                 {/* Main Image - Clickable for PDF Preview */}
-                <div className="relative bg-gray-50 rounded-lg mb-3 group">
+                <div className="relative bg-gray-50 rounded-lg group">
                   <button 
                     type="button"
                     onClick={() => previewUrl && setShowPreviewModal(true)}
@@ -348,20 +362,6 @@ export default function ProductDetailClient({ params }: Props) {
                       <HiOutlineBookOpen className="w-32 h-32 text-gray-300" />
                     )}
                   </button>
-                  
-                  {/* Preview Button Overlay */}
-                  {previewUrl && (
-                    <button 
-                      onClick={() => setShowPreviewModal(true)}
-                      className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
-                    >
-                      <HiOutlineEye className="w-4 h-4" />
-                      একটু পড়ে দেখুন
-                      <svg className="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </button>
-                  )}
                   
                   {previewUrl && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity pointer-events-none">
@@ -394,16 +394,6 @@ export default function ProductDetailClient({ params }: Props) {
                   </div>
                 )}
 
-                {/* Preview Button */}
-                {previewUrl && (
-                  <button 
-                    onClick={() => setShowPreviewModal(true)}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md font-medium flex items-center justify-center gap-2"
-                  >
-                    <span>একটু পড়ে দেখুন</span>
-                    <span className="transform rotate-90">➜</span>
-                  </button>
-                )}
               </div>
             </div>
 
