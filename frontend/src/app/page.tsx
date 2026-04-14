@@ -29,6 +29,8 @@ export default function HomePage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<{ [key: string]: Product[] }>({});
 
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);
@@ -67,6 +69,31 @@ export default function HomePage() {
           if (Array.isArray(catsData)) {
             console.log('Categories fetched:', catsData.length, catsData);
             setCategories(catsData);
+            
+            if (productsRes.status === 'fulfilled' && productsRes.value.data?.data) {
+              let productsData = productsRes.value.data.data;
+              if (productsRes.value.data.data.items) {
+                productsData = productsRes.value.data.data.items;
+              }
+              if (Array.isArray(productsData)) {
+                const initialCategoryProducts: { [key: string]: Product[] } = {};
+                catsData.forEach((cat: Category) => {
+                  const filtered = productsData.filter((p: Product) => {
+                    const c = p.category as any;
+                    if (Array.isArray(c)) {
+                      return c.some((c: any) => c.slug === cat.slug);
+                    } else if (c?.slug) {
+                      return c.slug === cat.slug;
+                    }
+                    return false;
+                  }).slice(0, 4);
+                  if (filtered.length > 0) {
+                    initialCategoryProducts[cat.slug] = filtered;
+                  }
+                });
+                setCategoryProducts(initialCategoryProducts);
+              }
+            }
           }
         } else if (categoriesRes.status === 'rejected') {
           console.error('Categories API failed:', categoriesRes.reason);
@@ -121,6 +148,23 @@ export default function HomePage() {
     if (searchQuery.trim()) {
       router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const handleCategoryHover = async (categorySlug: string) => {
+    if (categoryProducts[categorySlug]) return;
+    
+    const allProducts = [...products, ...featuredProducts, ...newProducts];
+    const categoryFiltered = allProducts.filter((p: Product) => {
+      const cat = p.category as any;
+      if (Array.isArray(cat)) {
+        return cat.some((c: any) => c.slug === categorySlug);
+      } else if (cat?.slug) {
+        return cat.slug === categorySlug;
+      }
+      return false;
+    }).slice(0, 4);
+    
+    setCategoryProducts(prev => ({ ...prev, [categorySlug]: categoryFiltered }));
   };
 
   const ProductCard = ({ product, showAddToCart }: { product: Product; showAddToCart?: boolean }) => {
@@ -187,6 +231,54 @@ export default function HomePage() {
     );
   };
 
+const CategoryCard = ({ cat }: { cat: Category }) => {
+    return (
+    <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden'>
+      <Link href={`/products?category=${cat.slug}`} className='flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all'>
+        <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
+          {cat.image ? (
+            <img src={imgUrl(cat.image)!} alt={cat.name} className='w-6 h-6 object-contain' />
+          ) : (
+            <span className='text-xl'>📚</span>
+          )}
+        </div>
+        <div className='flex-1 min-w-0'>
+          <h3 className='text-sm font-semibold text-gray-800 truncate'>{cat.name}</h3>
+          <p className='text-xs text-gray-500'>{categoryProducts[cat.slug]?.length || 0} টি বই</p>
+        </div>
+      </Link>
+      
+      {categoryProducts[cat.slug] && categoryProducts[cat.slug].length > 0 && (
+        <div className='grid grid-cols-4 gap-1 px-2 pb-2'>
+          {categoryProducts[cat.slug].map((product) => {
+            const img = product.images?.[0];
+            const productName = product.name || 'Untitled';
+            const productSlug = product.slug || product._id;
+            
+            return (
+              <Link key={product._id} href={`/products/${productSlug}`} className='group'>
+                <div className='bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-all'>
+                  <div className='aspect-square bg-gray-100 relative overflow-hidden'>
+                    {img ? (
+                      <img src={imgUrl(img)!} alt={productName} className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
+                    ) : (
+                      <div className='w-full h-full flex items-center justify-center text-2xl'>📖</div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+      
+      <Link href={`/products?category=${cat.slug}`} className='block text-center py-2 text-teal-600 text-sm font-medium hover:text-teal-700 border-t border-gray-100'>
+        সব বই দেখুন →
+      </Link>
+    </div>
+  );
+};
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -229,67 +321,45 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Categories Section - Modern Grid */}
+        {/* Categories Section - Grid */}
         {categories.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 py-10">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800">📚 বইয়ের ক্যাটাগরি</h2>
+          <section className='max-w-7xl mx-auto px-4 py-6'>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='flex items-center gap-3'>
+                <h2 className='text-xl font-bold text-gray-800'>📚 বইয়ের ক্যাটাগরি</h2>
               </div>
-              <Link href="/products" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href='/products' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {categories.map((cat, idx) => (
-                <Link 
-                  key={cat._id} 
-                  href={`/products?category=${cat.slug}`} 
-                  className="group bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-2xl transition-all hover:-translate-y-2 border border-slate-100 hover:border-teal-200 relative overflow-hidden"
-                >
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-cyan-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      {cat.image ? (
-                        <img src={imgUrl(cat.image)!} alt={cat.name} className="w-10 h-10 object-contain" />
-                      ) : (
-                        <span className="text-3xl">📚</span>
-                      )}
-                    </div>
-                    <span className="text-sm font-semibold text-gray-700 group-hover:text-teal-600 line-clamp-1 block">
-                      {cat.name}
-                    </span>
-                  </div>
-                </Link>
+            
+            <div className='hidden md:grid md:grid-cols-4 gap-4'>
+              {categories.slice(0, 8).map((cat) => (
+                <CategoryCard cat={cat} />
               ))}
-              {/* View All Card */}
-              <Link 
-                href="/products" 
-                className="group bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl p-6 text-center shadow-md hover:shadow-2xl transition-all hover:-translate-y-2 relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-white/10"></div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl text-white">→</span>
-                  </div>
-                  <span className="text-sm font-semibold text-white">সব ক্যাটাগরি</span>
-                </div>
-              </Link>
+            </div>
+            
+            <div className='md:hidden'>
+              <Swiper slidesPerView={1.2} spaceBetween={12} freeMode={true} modules={[Navigation]}>
+                {categories.slice(0, 8).map((cat) => (
+                  <SwiperSlide key={cat._id}>
+                    <CategoryCard cat={cat} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           </section>
         )}
 
         {/* Featured Products - Hot Deals */}
         {featuredProducts.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 py-10">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800">🔥 হট ডিল</h2>
-                <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium">অফার</span>
+          <section className='max-w-7xl mx-auto px-4 py-10'>
+            <div className='flex items-center justify-between mb-6'>
+              <div className='flex items-center gap-3'>
+                <h2 className='text-2xl font-bold text-gray-800'>🔥 হট ডিল</h2>
+                <span className='bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium'>অফার</span>
               </div>
-              <Link href="/products?sort=discountAmount" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href='/products?sort=discountAmount' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'>
               {featuredProducts.slice(0, 12).map((product) => (
                 <ProductCard key={product._id} product={product} showAddToCart />
               ))}
