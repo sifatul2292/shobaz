@@ -914,13 +914,21 @@ export default function ProductDetailClient({ params }: Props) {
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {recentlyViewed.slice(0, 6).map((p) => (
-                      <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-28 group">
-                        <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                          {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                        </div>
-                        <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                        <p className="text-xs font-bold text-green-500">৳{getCurrentPrice(p)}</p>
-                      </Link>
+                      <div key={p._id} className="flex-shrink-0 w-28 group">
+                        <Link href={`/products/${p.slug}`}>
+                          <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
+                          </div>
+                          <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                          <p className="text-xs font-bold text-green-500 mb-1">৳{getCurrentPrice(p)}</p>
+                        </Link>
+                        <button 
+                          onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-medium py-1 rounded transition-colors"
+                        >
+                          + Add to Cart
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -935,13 +943,21 @@ export default function ProductDetailClient({ params }: Props) {
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {bestSellers.slice(0, 6).map((p) => (
-                      <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-28 group">
-                        <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                          {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                        </div>
-                        <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                        <p className="text-xs font-bold text-green-500">৳{getCurrentPrice(p)}</p>
-                      </Link>
+                      <div key={p._id} className="flex-shrink-0 w-28 group">
+                        <Link href={`/products/${p.slug}`}>
+                          <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                            {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
+                          </div>
+                          <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                          <p className="text-xs font-bold text-green-500 mb-1">৳{getCurrentPrice(p)}</p>
+                        </Link>
+                        <button 
+                          onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-medium py-1 rounded transition-colors"
+                        >
+                          + Add to Cart
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
