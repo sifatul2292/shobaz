@@ -48,6 +48,15 @@ export class ProductController {
     return await this.productService.getAllProductForUi(query);
   }
 
+  @Get('/search')
+  @UsePipes(ValidationPipe)
+  async searchProducts(
+    @Query('q') q: string,
+    @Query('limit') limit: number = 10,
+  ): Promise<ResponsePayload> {
+    return await this.productService.searchProducts(q, limit);
+  }
+
 
 
   /**

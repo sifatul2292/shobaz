@@ -400,6 +400,41 @@ export class ProductService {
     }
   }
 
+  async searchProducts(q: string, limit: number): Promise<ResponsePayload> {
+    try {
+      const mFilter: any = {
+        $or: [
+          { name: this.utilsService.createRegexFromString1(q) },
+          { nameEn: this.utilsService.createRegexFromString1(q) },
+          { seoKeywords: this.utilsService.createRegexFromString1(q) },
+          { translatorName: this.utilsService.createRegexFromString1(q) },
+          { 'category.name': this.utilsService.createRegexFromString1(q) },
+          { 'publisher.name': this.utilsService.createRegexFromString1(q) },
+          { 'author.name': this.utilsService.createRegexFromString1(q) },
+        ],
+      };
+
+      const data = await this.productModel
+        .find(mFilter)
+        .select(
+          'name nameEn slug images price salePrice discountAmount discountType author category',
+        )
+        .limit(Number(limit))
+        .sort({ createdAt: -1 });
+
+      const totalCount = await this.productModel.countDocuments(mFilter);
+
+      return {
+        success: true,
+        message: 'Success! Data fetched successfully.',
+        data,
+        count: totalCount,
+      } as ResponsePayload;
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  }
+
   /**
    * getAllProducts
    * getProductById

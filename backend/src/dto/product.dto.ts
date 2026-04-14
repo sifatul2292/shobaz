@@ -129,6 +129,10 @@ export class GetProductByIdsDto {
 
 export class FilterAndPaginationProductDto {
   @IsOptional()
+  @IsString()
+  search: string;
+
+  @IsOptional()
   @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()

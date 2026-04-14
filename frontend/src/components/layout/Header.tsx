@@ -88,7 +88,7 @@ export default function Header() {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const res = await api.get(`/product/get-all?q=${encodeURIComponent(searchQuery)}&page=1&limit=20`);
+      const res = await api.get(`/product/search?q=${encodeURIComponent(searchQuery)}&limit=20`);
       setSearchResults({ products: res.data?.data || [] });
       setOpen(true);
     } catch (err) { console.error(err); }
@@ -99,7 +99,7 @@ export default function Header() {
     setSearchQuery(value);
     if (value.length < 2) { setSearchResults(null); setOpen(false); return; }
     try {
-      const res = await api.get(`/product/get-all?q=${encodeURIComponent(value)}&page=1&limit=10`);
+      const res = await api.get(`/product/search?q=${encodeURIComponent(value)}&limit=10`);
       setSearchResults({ products: res.data?.data || [] });
       setOpen(true);
     } catch (err) { console.error(err); }
@@ -172,17 +172,20 @@ export default function Header() {
                   <div className="p-2">
                     <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">বই</h4>
                     {searchResults.products.slice(0, 6).map((product) => {
-                      const salePrice = product.salePrice || product.regularPrice;
-                      const hasDiscount = product.discountAmount && product.discountAmount > 0;
+                      const authorName = Array.isArray(product.author) ? product.author[0]?.name : product.author;
+                      const originalPrice = product.salePrice || 0;
+                      const discount = product.discountAmount || 0;
+                      const hasDiscount = discount > 0;
+                      const currentPrice = originalPrice - discount;
                       return (
                         <Link key={product._id} href={`/products/${product.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg group">
                           <img src={imgUrl(product.images?.[0]) || ''} alt={product.name} className="w-12 h-16 object-cover rounded" />
                           <div className="flex-1 min-w-0">
                             <h5 className="text-sm font-medium truncate">{product.name}</h5>
-                            <p className="text-xs text-gray-500">{product.author}</p>
+                            <p className="text-xs text-gray-500">{authorName}</p>
                             <p className="text-sm font-bold text-green-600">
-                              {hasDiscount && <span className="text-xs text-gray-400 line-through mr-1">৳{salePrice}</span>}
-                              ৳{hasDiscount ? product.regularPrice : salePrice}
+                              {hasDiscount && <span className="text-xs text-gray-400 line-through mr-1">৳{originalPrice}</span>}
+                              ৳{currentPrice}
                             </p>
                           </div>
                           <button onClick={(e) => handleAddToCartSearch(e, product)} className="opacity-0 group-hover:opacity-100 transition-opacity bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shrink-0">
