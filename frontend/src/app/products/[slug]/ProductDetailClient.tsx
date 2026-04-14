@@ -918,48 +918,51 @@ export default function ProductDetailClient({ params }: Props) {
 
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-start justify-center overflow-y-auto"
-          onClick={() => setShowPreviewModal(false)}
-        >
-          {/* Close Button */}
+        <div className="fixed inset-0 z-[100]">
+          {/* Close Button - outside scroll container */}
           <button 
             onClick={() => setShowPreviewModal(false)} 
-            className="fixed top-4 right-4 z-50 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-colors shadow-lg"
+            className="fixed top-4 right-4 z-[110] w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-colors shadow-lg"
           >
             <FaTimes className="text-gray-800 w-5 h-5" />
           </button>
 
-          {/* PDF Viewer - Scrollable */}
+          {/* Scrollable Background */}
           <div 
-            className="w-full max-w-3xl my-4 md:my-8 bg-white rounded-lg shadow-2xl mx-2"
-            onClick={(e) => e.stopPropagation()}
+            className="w-full h-full overflow-y-auto bg-black/90 backdrop-blur-sm flex items-start justify-center py-4"
+            onClick={() => setShowPreviewModal(false)}
           >
-            <Document
-              file={previewUrl}
-              onLoadSuccess={({ numPages }: { numPages: number }) => {
-                setNumPages(numPages);
-                setPdfLoading(false);
-              }}
-              loading={
-                <div className="flex items-center justify-center min-h-[50vh]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-                </div>
-              }
+            {/* PDF Viewer */}
+            <div 
+              className="w-full max-w-3xl my-4 bg-white rounded-lg shadow-2xl mx-2"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex flex-col items-center gap-4 md:gap-6 px-2 md:px-4 py-4 md:py-6">
-                {Array.from(new Array(numPages), (_, index) => (
-                  <Page 
-                    key={index + 1}
-                    pageNumber={index + 1} 
-                    width={Math.min(500, window.innerWidth - 40)}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                    className="shadow-lg bg-white"
-                  />
-                ))}
-              </div>
-            </Document>
+              <Document
+                file={previewUrl}
+                onLoadSuccess={({ numPages }: { numPages: number }) => {
+                  setNumPages(numPages);
+                  setPdfLoading(false);
+                }}
+                loading={
+                  <div className="flex items-center justify-center min-h-[50vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                  </div>
+                }
+              >
+                <div className="flex flex-col items-center gap-4 md:gap-6 px-2 md:px-4 py-4 md:py-6">
+                  {Array.from(new Array(numPages), (_, index) => (
+                    <Page 
+                      key={index + 1}
+                      pageNumber={index + 1} 
+                      width={Math.min(500, window.innerWidth - 40)}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      className="shadow-lg bg-white"
+                    />
+                  ))}
+                </div>
+              </Document>
+            </div>
           </div>
         </div>
       )}
