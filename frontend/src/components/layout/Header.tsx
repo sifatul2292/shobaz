@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
 import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const CORE_ROUTES = ['products', 'authors', 'publishers', 'offers', 'blog', 'about', 'contact'];
 
@@ -46,7 +47,7 @@ export default function Header() {
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const { items } = useCartStore();
+  const { items, addItem } = useCartStore();
 
   useEffect(() => {
     const fetchShopInfo = async () => {
@@ -102,6 +103,13 @@ export default function Header() {
       setSearchResults({ products: res.data?.data || [] });
       setOpen(true);
     } catch (err) { console.error(err); }
+  };
+
+  const handleAddToCartSearch = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1);
+    toast.success('🛒 কার্টে যোগ হয়েছে');
   };
 
   return (
@@ -163,16 +171,26 @@ export default function Header() {
                 ) : (
                   <div className="p-2">
                     <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">বই</h4>
-                    {searchResults.products.slice(0, 6).map((product) => (
-                      <Link key={product._id} href={`/products/${product.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                        <img src={imgUrl(product.images?.[0]) || ''} alt={product.name} className="w-12 h-16 object-cover rounded" />
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-sm font-medium truncate">{product.name}</h5>
-                          <p className="text-xs text-gray-500">{product.author}</p>
-                          <p className="text-sm font-bold text-green-600">৳{product.salePrice || product.regularPrice}</p>
-                        </div>
-                      </Link>
-                    ))}
+                    {searchResults.products.slice(0, 6).map((product) => {
+                      const salePrice = product.salePrice || product.regularPrice;
+                      const hasDiscount = product.discountAmount && product.discountAmount > 0;
+                      return (
+                        <Link key={product._id} href={`/products/${product.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg group">
+                          <img src={imgUrl(product.images?.[0]) || ''} alt={product.name} className="w-12 h-16 object-cover rounded" />
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-sm font-medium truncate">{product.name}</h5>
+                            <p className="text-xs text-gray-500">{product.author}</p>
+                            <p className="text-sm font-bold text-green-600">
+                              {hasDiscount && <span className="text-xs text-gray-400 line-through mr-1">৳{salePrice}</span>}
+                              ৳{hasDiscount ? product.regularPrice : salePrice}
+                            </p>
+                          </div>
+                          <button onClick={(e) => handleAddToCartSearch(e, product)} className="opacity-0 group-hover:opacity-100 transition-opacity bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shrink-0">
+                            +Add
+                          </button>
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
                 {searchResults.products && searchResults.products.length > 0 && (
