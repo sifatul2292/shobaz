@@ -586,7 +586,7 @@ export default function ProductDetailClient({ params }: Props) {
               <div className="p-4">
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   {/* Main product */}
-                    <Link href={`/products/${product?.slug || product?._id}`} className="text-center group block">
+                    <Link href={product?.slug ? `/products/${product.slug}` : '#'} onClick={(e) => !product?.slug && e.preventDefault()} className={`text-center group block ${!product?.slug ? 'pointer-events-none opacity-50' : ''}`}>
                     <div className="w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm hover:scale-105 transition-transform">
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
@@ -609,10 +609,10 @@ export default function ProductDetailClient({ params }: Props) {
                     
                     return (
                       <div key={item.product._id} className="text-center group">
-                        <Link href={`/products/${item.product.slug || item.product._id}`} className="block">
+                        <Link href={item.product.slug ? `/products/${item.product.slug}` : '#'} onClick={(e) => !item.product.slug && e.preventDefault()} className={`block ${!item.product.slug ? 'pointer-events-none opacity-50' : ''}`}>
                         <div 
                           className={`relative w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-2 ring-green-500' : ''}`}
-                          onClick={(e) => { e.preventDefault(); handleToggleBundle(item.product._id); }}
+                          onClick={(e) => { if (item.product.slug) { e.preventDefault(); handleToggleBundle(item.product._id); } }}
                         >
                           {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
                           {itemDiscount > 0 && (
