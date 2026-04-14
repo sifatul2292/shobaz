@@ -913,26 +913,26 @@ export default function ProductDetailClient({ params }: Props) {
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div 
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-0"
           onClick={() => setShowPreviewModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl"
+            className="bg-white w-full h-full flex flex-col"
             onClick={(e) => e.stopPropagation()}
             style={{
               animation: 'modalSlideIn 0.3s ease-out',
             }}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-2xl">
+            <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 shrink-0">
               <h3 className="font-bold text-white text-lg">প্রিভিউ</h3>
               <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
                 <FaTimes className="text-white w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 bg-gray-100">
+            <div className="flex-1 bg-gray-900">
               <iframe 
-                src={previewUrl.includes('drive.google.com') ? previewUrl.replace('/view', '/preview') : previewUrl} 
-                className="w-full h-full rounded-b-2xl"
+                src={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(previewUrl)}`}
+                className="w-full h-full"
                 allow="autoplay" 
               />
             </div>
