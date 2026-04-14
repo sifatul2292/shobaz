@@ -338,7 +338,7 @@ export default function ProductDetailClient({ params }: Props) {
                 <div className="relative bg-gray-50 rounded-lg mb-3 group">
                   <button 
                     type="button"
-                    onClick={() => { console.log('Clicked, previewUrl:', previewUrl); previewUrl && setShowPreviewModal(true); }}
+                    onClick={() => previewUrl && setShowPreviewModal(true)}
                     disabled={!previewUrl}
                     className={`w-full aspect-[3/4] flex items-center justify-center ${previewUrl ? 'cursor-pointer' : 'cursor-default'}`}
                   >
@@ -348,6 +348,20 @@ export default function ProductDetailClient({ params }: Props) {
                       <HiOutlineBookOpen className="w-32 h-32 text-gray-300" />
                     )}
                   </button>
+                  
+                  {/* Preview Button Overlay */}
+                  {previewUrl && (
+                    <button 
+                      onClick={() => setShowPreviewModal(true)}
+                      className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
+                    >
+                      <HiOutlineEye className="w-4 h-4" />
+                      একটু পড়ে দেখুন
+                      <svg className="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  )}
                   
                   {previewUrl && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity pointer-events-none">
