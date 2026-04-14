@@ -586,13 +586,19 @@ export default function ProductDetailClient({ params }: Props) {
               <div className="p-4">
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   {/* Main product */}
-                    <Link href={product?.slug ? `/products/${product.slug}` : '#'} onClick={(e) => !product?.slug && e.preventDefault()} className={`text-center group block ${!product?.slug ? 'pointer-events-none opacity-50' : ''}`}>
+                    <div className="text-center group">
                     <div className="w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm hover:scale-105 transition-transform">
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
-                    <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors">{product?.name}</p>
+                    {product?.slug ? (
+                      <Link href={`/products/${product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block">
+                        {product?.name}
+                      </Link>
+                    ) : (
+                      <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{product?.name}</p>
+                    )}
                     <p className="text-xs font-bold text-green-500 mt-0.5">৳{getCurrentPrice(product!)}</p>
-                  </Link>
+                  </div>
                   
                   <div className="flex items-center gap-1">
                     <span className="text-lg text-gray-400">+</span>
@@ -609,10 +615,9 @@ export default function ProductDetailClient({ params }: Props) {
                     
                     return (
                       <div key={item.product._id} className="text-center group">
-                        <Link href={item.product.slug ? `/products/${item.product.slug}` : '#'} onClick={(e) => !item.product.slug && e.preventDefault()} className={`block ${!item.product.slug ? 'pointer-events-none opacity-50' : ''}`}>
                         <div 
                           className={`relative w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-2 ring-green-500' : ''}`}
-                          onClick={(e) => { if (item.product.slug) { e.preventDefault(); handleToggleBundle(item.product._id); } }}
+                          onClick={() => handleToggleBundle(item.product._id)}
                         >
                           {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
                           {itemDiscount > 0 && (
@@ -627,8 +632,13 @@ export default function ProductDetailClient({ params }: Props) {
                             </div>
                           )}
                         </div>
-                        <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors">{item.product.name}</p>
-                        </Link>
+                        {item.product.slug ? (
+                          <Link href={`/products/${item.product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block">
+                            {item.product.name}
+                          </Link>
+                        ) : (
+                          <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{item.product.name}</p>
+                        )}
                         <p className="text-xs font-bold text-green-500">৳{itemPrice}</p>
                       </div>
                     );
