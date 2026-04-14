@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { Hind_Siliguri, Poppins } from "next/font/google";
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-bengali",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-english",
+});
 
 export const metadata: Metadata = {
   title: "Shobaz - Online Bookstore",
@@ -14,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn">
-      <body>
+      <body className={`${hindSiliguri.variable} ${poppins.variable}`}>
         <Toaster position="top-right" />
         {children}
       </body>

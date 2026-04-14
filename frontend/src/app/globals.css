@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --font-bengali: 'Noto Sans Bengali', system-ui, sans-serif;
-  --font-english: system-ui, sans-serif;
+  --font-bengali: var(--font-bengali), system-ui, sans-serif;
+  --font-english: var(--font-english), system-ui, sans-serif;
 }
 
 body {
