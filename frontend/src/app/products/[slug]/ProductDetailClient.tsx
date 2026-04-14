@@ -329,16 +329,16 @@ export default function ProductDetailClient({ params }: Props) {
           </nav>
 
           {/* Main 3-Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
-              {/* LEFT: Product Image + Preview */}
+            {/* LEFT: Product Image + Preview */}
             <div className="lg:col-span-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sticky top-24">
                 {/* Preview Button - Above Image */}
                 {previewUrl && (
                   <button 
                     onClick={() => setShowPreviewModal(true)}
-                    className="mb-3 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+                    className="mb-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
                   >
                     <HiOutlineEye className="w-3.5 h-3.5" />
                     একটু পড়ে দেখুন
@@ -349,7 +349,7 @@ export default function ProductDetailClient({ params }: Props) {
                 )}
 
                 {/* Main Image - Clickable for PDF Preview */}
-                <div className="relative bg-gray-50 rounded-lg group">
+                <div className="relative bg-gray-50 rounded-lg group mb-2">
                   <button 
                     type="button"
                     onClick={() => previewUrl && setShowPreviewModal(true)}
@@ -398,8 +398,8 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
 
             {/* CENTER: Product Info */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+            <div className="lg:col-span-5 space-y-3">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 {/* Title */}
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
                 
@@ -525,9 +525,9 @@ export default function ProductDetailClient({ params }: Props) {
 
               {/* Related Books */}
               {relatedProducts.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                  <h3 className="font-bold text-lg text-green-600 mb-3">Related Books</h3>
-                  <div className="space-y-3">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                  <h3 className="font-bold text-lg text-green-600 mb-2">Related Books</h3>
+                  <div className="space-y-2">
                     {relatedProducts.slice(0, 6).map((p) => {
                       const pPrice = getCurrentPrice(p);
                       const pOriginalPrice = getOriginalPrice(p);
