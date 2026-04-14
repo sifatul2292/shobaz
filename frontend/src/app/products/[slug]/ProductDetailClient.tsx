@@ -935,18 +935,31 @@ export default function ProductDetailClient({ params }: Props) {
             className="w-full h-full overflow-y-auto bg-gray-100 pt-16 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col items-center gap-6 px-4">
-              {Array.from(new Array(numPages), (_, index) => (
-                <Page 
-                  key={index + 1}
-                  pageNumber={index + 1} 
-                  width={Math.min(600, window.innerWidth - 80)}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  className="shadow-xl bg-white"
-                />
-              ))}
-            </div>
+            <Document
+              file={previewUrl}
+              onLoadSuccess={({ numPages }: { numPages: number }) => {
+                setNumPages(numPages);
+                setPdfLoading(false);
+              }}
+              loading={
+                <div className="flex items-center justify-center min-h-[50vh]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                </div>
+              }
+            >
+              <div className="flex flex-col items-center gap-6 px-4">
+                {Array.from(new Array(numPages), (_, index) => (
+                  <Page 
+                    key={index + 1}
+                    pageNumber={index + 1} 
+                    width={Math.min(600, window.innerWidth - 80)}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    className="shadow-xl bg-white"
+                  />
+                ))}
+              </div>
+            </Document>
           </div>
         </div>
       )}
