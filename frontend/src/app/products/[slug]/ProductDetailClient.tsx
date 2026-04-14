@@ -591,7 +591,7 @@ export default function ProductDetailClient({ params }: Props) {
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
                     {product?.slug ? (
-                      <Link href={`/products/${product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block">
+                      <Link href={`/products/${product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block underline">
                         {product?.name}
                       </Link>
                     ) : (
@@ -633,7 +633,7 @@ export default function ProductDetailClient({ params }: Props) {
                           )}
                         </div>
                         {item.product.slug ? (
-                          <Link href={`/products/${item.product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block">
+                          <Link href={`/products/${item.product.slug}`} className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto group-hover:text-green-500 transition-colors block underline">
                             {item.product.name}
                           </Link>
                         ) : (
