@@ -39,7 +39,7 @@ export default function Header() {
   const router = useRouter();
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<{ products: Product[]; publishers: any[]; authors: any[] } | null>(null);
+  const [searchResults, setSearchResults] = useState<{ products: Product[] } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pages, setPages] = useState<{ _id: string; title: string; slug: string }[]>([]);
@@ -87,8 +87,8 @@ export default function Header() {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const res = await api.post('/product/search', { q: searchQuery });
-      setSearchResults(res.data);
+      const res = await api.get(`/product/get-all?q=${encodeURIComponent(searchQuery)}&page=1&limit=20`);
+      setSearchResults({ products: res.data?.data || [] });
       setOpen(true);
     } catch (err) { console.error(err); }
     finally { setIsSearching(false); }
@@ -98,8 +98,8 @@ export default function Header() {
     setSearchQuery(value);
     if (value.length < 2) { setSearchResults(null); setOpen(false); return; }
     try {
-      const res = await api.post('/product/search', { q: value });
-      setSearchResults(res.data);
+      const res = await api.get(`/product/get-all?q=${encodeURIComponent(value)}&page=1&limit=10`);
+      setSearchResults({ products: res.data?.data || [] });
       setOpen(true);
     } catch (err) { console.error(err); }
   };
@@ -158,50 +158,24 @@ export default function Header() {
             {/* Search Results Dropdown */}
             {open && searchResults && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-[70vh] overflow-auto z-50">
-                {searchResults.products?.length === 0 && searchResults.publishers?.length === 0 && searchResults.authors?.length === 0 ? (
+                {(!searchResults.products || searchResults.products.length === 0) ? (
                   <div className="p-4 text-center text-gray-500">কোনো ফলাফল পাওয়া যায়নি</div>
                 ) : (
-                  <>
-                    {searchResults.publishers?.length > 0 && (
-                      <div className="p-2">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">প্রকাশনা</h4>
-                        {searchResults.publishers.slice(0, 3).map((pub: any) => (
-                          <Link key={pub._id} href={`/products?publisher=${pub.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                            <img src={imgUrl(pub.image) || ''} alt={pub.name} className="w-10 h-10 object-cover rounded" />
-                            <span className="text-sm font-medium">{pub.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.authors?.length > 0 && (
-                      <div className="p-2 border-t">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">লেখক</h4>
-                        {searchResults.authors.slice(0, 3).map((auth: any) => (
-                          <Link key={auth._id} href={`/products?author=${auth.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                            <img src={imgUrl(auth.image) || ''} alt={auth.name} className="w-10 h-10 object-cover rounded" />
-                            <span className="text-sm font-medium">{auth.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.products?.length > 0 && (
-                      <div className="p-2 border-t">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">বই</h4>
-                        {searchResults.products.slice(0, 5).map((product) => (
-                          <Link key={product._id} href={`/products/${product.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                            <img src={imgUrl(product.images?.[0]) || ''} alt={product.name} className="w-12 h-16 object-cover rounded" />
-                            <div className="flex-1 min-w-0">
-                              <h5 className="text-sm font-medium truncate">{product.name}</h5>
-                              <p className="text-xs text-gray-500">{product.author}</p>
-                              <p className="text-sm font-bold text-green-600">৳{product.salePrice || product.price}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
+                  <div className="p-2">
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">বই</h4>
+                    {searchResults.products.slice(0, 6).map((product) => (
+                      <Link key={product._id} href={`/products/${product.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                        <img src={imgUrl(product.images?.[0]) || ''} alt={product.name} className="w-12 h-16 object-cover rounded" />
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-medium truncate">{product.name}</h5>
+                          <p className="text-xs text-gray-500">{product.author}</p>
+                          <p className="text-sm font-bold text-green-600">৳{product.salePrice || product.regularPrice}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 )}
-                {searchResults.products?.length > 0 && (
+                {searchResults.products && searchResults.products.length > 0 && (
                   <Link href={`/products?q=${searchQuery}`} onClick={() => setOpen(false)} className="block p-3 text-center text-green-600 font-medium border-t hover:bg-gray-50">
                     সব দেখুন →
                   </Link>
