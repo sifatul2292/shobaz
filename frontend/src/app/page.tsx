@@ -298,19 +298,48 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
       <main className="flex-1">
         {/* Hero Banner */}
         {banners.length > 0 && (
-          <section className="relative h-[300px] md:h-[400px] lg:h-[500px]">
-            <Swiper modules={[Navigation, Autoplay]} autoplay={{ delay: 5000 }} navigation pagination={{ clickable: true }} loop className="h-full">
-              {banners.map((banner) => (
+          <section className="relative h-[280px] md:h-[380px] lg:h-[480px] overflow-hidden">
+            <Swiper
+              modules={[Navigation, Autoplay, Pagination]}
+              autoplay={{ delay: 5000, disableOnInteraction: false }}
+              navigation
+              pagination={{ clickable: true, dynamicBullets: true }}
+              loop
+              speed={800}
+              effect="fade"
+              fadeEffect={{ crossFade: true }}
+              className="h-full"
+            >
+              {banners.map((banner, index) => (
                 <SwiperSlide key={banner._id} className="h-full">
                   <Link href={banner.link || '/'}>
-                    <div className="w-full h-full bg-gradient-to-r from-teal-600 to-teal-800 relative">
+                    <div className="w-full h-full relative">
                       {banner.image && (
-                        <img src={imgUrl(banner.image)!} alt={banner.title || ''} className="w-full h-full object-cover opacity-30" />
+                        <div className="absolute inset-0">
+                          <img 
+                            src={imgUrl(banner.image)!} 
+                            alt={banner.title || ''} 
+                            className="w-full h-full object-cover transform scale-105" 
+                          />
+                          <div className="absolute inset-0 bg-black/40" />
+                        </div>
                       )}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center text-white px-4">
-                          <h1 className="text-3xl md:text-5xl font-bold mb-4">{banner.title || 'বইয়ের জগৎ'}</h1>
-                          <p className="text-lg md:text-xl text-teal-100">{banner.description || 'সেরা বইয়ের সংগ্রহ'}</p>
+                      {!banner.image && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800" />
+                      )}
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="max-w-7xl mx-auto w-full px-4 md:px-8">
+                          <div className="max-w-xl">
+                            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight animate-fadeInUp" style={{ animationDelay: `${index * 100}ms` }}>
+                              {banner.title || 'বইয়ের জগৎ'}
+                            </h1>
+                            <p className="text-sm md:text-lg lg:text-xl text-white/90 mb-6 animate-fadeInUp" style={{ animationDelay: `${index * 100 + 150}ms` }}>
+                              {banner.description || 'সেরা বইয়ের সংগ্রহ'}
+                            </p>
+                            <span className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-2.5 rounded-full font-semibold text-sm animate-fadeInUp" style={{ animationDelay: `${index * 100 + 300}ms` }}>
+                              এখনই দেখুন <span className="text-lg">→</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
