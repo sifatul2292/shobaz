@@ -8,12 +8,14 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
 import { Order } from '@/types';
 import Link from 'next/link';
+import { FaShippingFast } from 'react-icons/fa';
 
 export default function OrdersPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -29,6 +31,28 @@ export default function OrdersPage() {
       if (res.data?.data) setOrders(res.data.data);
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  const sendToCourier = async (orderId: string) => {
+    if (!confirm('এই অর্ডার কুরিয়ারে পাঠানো হবে, নিশ্চিত করুন?')) return;
+    setSendingId(orderId);
+    try {
+      const res = await api.post(`/sales/order/send-to-courier/${orderId}`);
+      if (res.data?.success) {
+        alert('অর্ডার সফলভাবে কুরিয়ারে পাঠানো হয়েছে!');
+        fetchOrders();
+      } else {
+        alert(res.data?.message || 'কুরিয়ারে পাঠাতে ব্যর্থ');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'কুরিয়ারে পাঠাতে ব্যর্থ');
+    }
+    setSendingId(null);
+  };
+
+  const getPhoneNumber = (order: Order): string => {
+    if (typeof order.shippingAddress === 'string') return order.shippingAddress;
+    return order.shippingAddress?.phone || order.shippingAddress?.address || '';
   };
 
   if (!isAuthenticated) return null;
@@ -68,7 +92,19 @@ export default function OrdersPage() {
                 </div>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t">
                   <span className="font-bold text-green-600">৳{order.totalAmount}</span>
-                  <button className="text-green-600 text-sm hover:underline">বিস্তারিত</button>
+                  <div className="flex items-center gap-3">
+                    {getPhoneNumber(order) && (
+                      <span className="text-sm text-gray-600">{getPhoneNumber(order)}</span>
+                    )}
+                    <button
+                      onClick={() => sendToCourier(order._id)}
+                      disabled={sendingId === order._id}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+                    >
+                      <FaShippingFast className="text-xs" />
+                      {sendingId === order._id ? 'পাঠাচ্ছি...' : 'কুরিয়ারে পাঠান'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
