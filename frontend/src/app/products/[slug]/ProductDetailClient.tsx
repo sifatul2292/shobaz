@@ -930,7 +930,7 @@ export default function ProductDetailClient({ params }: Props) {
             <FaTimes className="text-white w-5 h-5" />
           </button>
 
-          {/* PDF Viewer */}
+          {/* PDF Viewer - Scrollable */}
           <div 
             className="w-full max-w-4xl h-[90vh] bg-white rounded-lg overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
@@ -957,38 +957,19 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
               }
             >
-              <div className="flex-1 overflow-auto bg-gray-100 p-4">
-                <Page 
-                  pageNumber={pageNumber} 
-                  width={window.innerWidth < 768 ? 300 : 600}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                />
+              <div className="flex-1 overflow-auto bg-gray-100 p-4 space-y-4">
+                {Array.from(new Array(numPages), (_, index) => (
+                  <Page 
+                    key={index + 1}
+                    pageNumber={index + 1} 
+                    width={window.innerWidth < 768 ? 300 : 600}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    className="shadow-lg bg-white"
+                  />
+                ))}
               </div>
             </Document>
-
-            {/* Page Navigation */}
-            {numPages > 1 && (
-              <div className="flex items-center justify-center gap-4 py-3 bg-gray-50 border-t">
-                <button
-                  onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
-                  disabled={pageNumber <= 1}
-                  className="p-2 rounded-full bg-white shadow hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <HiOutlineChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-sm text-gray-600">
-                  {pageNumber} / {numPages}
-                </span>
-                <button
-                  onClick={() => setPageNumber(Math.min(numPages, pageNumber + 1))}
-                  disabled={pageNumber >= numPages}
-                  className="p-2 rounded-full bg-white shadow hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <HiOutlineChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
