@@ -9,12 +9,15 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { HiOutlineBookOpen, HiOutlineEye } from 'react-icons/hi';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { HiOutlineBookOpen, HiOutlineEye, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi';
 import { 
   FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes, 
   FaCheck, FaTruck, FaUndo, FaShieldAlt, FaMoneyBillWave, FaStar,
   FaMinus, FaPlus, FaPlay, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface BundleItem {
   product: Product;
@@ -35,6 +38,9 @@ export default function ProductDetailClient({ params }: Props) {
   const [activeImage, setActiveImage] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pdfLoading, setPdfLoading] = useState(true);
   const [selectedBundle, setSelectedBundle] = useState<string[]>([]);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
@@ -913,20 +919,77 @@ export default function ProductDetailClient({ params }: Props) {
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center"
           onClick={() => setShowPreviewModal(false)}
         >
+          {/* Close Button */}
           <button 
             onClick={() => setShowPreviewModal(false)} 
             className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
           >
             <FaTimes className="text-white w-5 h-5" />
           </button>
-          <iframe 
-            src={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(previewUrl)}`}
-            className="w-full max-w-5xl h-[90vh] rounded-lg shadow-2xl"
-            allow="autoplay" 
-          />
+
+          {/* PDF Viewer */}
+          <div 
+            className="w-full max-w-4xl h-[90vh] bg-white rounded-lg overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Document
+              file={previewUrl}
+              onLoadSuccess={({ numPages }: { numPages: number }) => {
+                setNumPages(numPages);
+                setPdfLoading(false);
+              }}
+              onLoadError={(error: Error) => {
+                console.error('PDF load error:', error);
+                setPdfLoading(false);
+              }}
+              loading={
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                </div>
+              }
+              error={
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <FaTimes className="w-12 h-12 mb-2" />
+                  <p>Failed to load PDF</p>
+                </div>
+              }
+            >
+              <div className="flex-1 overflow-auto bg-gray-100 p-4">
+                <Page 
+                  pageNumber={pageNumber} 
+                  width={window.innerWidth < 768 ? 300 : 600}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              </div>
+            </Document>
+
+            {/* Page Navigation */}
+            {numPages > 1 && (
+              <div className="flex items-center justify-center gap-4 py-3 bg-gray-50 border-t">
+                <button
+                  onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
+                  disabled={pageNumber <= 1}
+                  className="p-2 rounded-full bg-white shadow hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <HiOutlineChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm text-gray-600">
+                  {pageNumber} / {numPages}
+                </span>
+                <button
+                  onClick={() => setPageNumber(Math.min(numPages, pageNumber + 1))}
+                  disabled={pageNumber >= numPages}
+                  className="p-2 rounded-full bg-white shadow hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <HiOutlineChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
