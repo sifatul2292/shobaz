@@ -31,7 +31,31 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/product/get-all-data');
+      const filterPayload: any = { filter: {} };
+      
+      if (filters.category) {
+        filterPayload.filter.category = filters.category;
+      }
+      if (filters.author) {
+        filterPayload.filter.author = filters.author;
+      }
+      if (filters.publisher) {
+        filterPayload.filter.publisher = filters.publisher;
+      }
+      if (filters.q) {
+        filterPayload.search = filters.q;
+      }
+      
+      filterPayload.pagination = { currentPage: page, pageSize: 24 };
+      filterPayload.sort = filters.sortBy === 'discountAmount' 
+        ? { discountAmount: -1 }
+        : filters.sortBy === 'price'
+        ? { salePrice: 1 }
+        : filters.sortBy === 'price-desc'
+        ? { salePrice: -1 }
+        : { createdAt: -1 };
+
+      const res = await api.post('/product/get-all', filterPayload);
       if (res.data?.data) {
         let productsData = res.data.data;
         if (res.data.data.items) {
