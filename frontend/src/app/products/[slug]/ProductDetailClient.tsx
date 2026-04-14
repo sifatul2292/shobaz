@@ -331,9 +331,10 @@ export default function ProductDetailClient({ params }: Props) {
                 {/* Main Image - Clickable for PDF Preview */}
                 <div className="relative bg-gray-50 rounded-lg mb-3 group">
                   <button 
-                    onClick={() => previewUrl && setShowPreviewModal(true)}
+                    type="button"
+                    onClick={() => { console.log('Clicked, previewUrl:', previewUrl); previewUrl && setShowPreviewModal(true); }}
                     disabled={!previewUrl}
-                    className="w-full aspect-[3/4] flex items-center justify-center"
+                    className={`w-full aspect-[3/4] flex items-center justify-center ${previewUrl ? 'cursor-pointer' : 'cursor-default'}`}
                   >
                     {images[activeImage] ? (
                       <img src={imgUrl(images[activeImage])!} alt={product.name} className="w-full h-full object-contain" />
@@ -343,7 +344,7 @@ export default function ProductDetailClient({ params }: Props) {
                   </button>
                   
                   {previewUrl && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity pointer-events-none">
                       <div className="bg-white/90 rounded-full p-3">
                         <HiOutlineEye className="w-7 h-7 text-teal-600" />
                       </div>
@@ -911,13 +912,30 @@ export default function ProductDetailClient({ params }: Props) {
 
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b">
-              <h3 className="font-bold">Preview</h3>
-              <button onClick={() => setShowPreviewModal(false)} className="p-1 hover:bg-gray-100 rounded"><FaTimes /></button>
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowPreviewModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              animation: 'modalSlideIn 0.3s ease-out',
+            }}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-2xl">
+              <h3 className="font-bold text-white text-lg">প্রিভিউ</h3>
+              <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                <FaTimes className="text-white w-5 h-5" />
+              </button>
             </div>
-            <iframe src={previewUrl.includes('drive.google.com') ? previewUrl.replace('/view', '/preview') : previewUrl} className="flex-1 w-full" allow="autoplay" />
+            <div className="flex-1 bg-gray-100">
+              <iframe 
+                src={previewUrl.includes('drive.google.com') ? previewUrl.replace('/view', '/preview') : previewUrl} 
+                className="w-full h-full rounded-b-2xl"
+                allow="autoplay" 
+              />
+            </div>
           </div>
         </div>
       )}
