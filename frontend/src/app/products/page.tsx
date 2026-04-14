@@ -34,13 +34,13 @@ export default function ProductsPage() {
       const filterPayload: any = { filter: {} };
       
       if (filters.category) {
-        filterPayload.filter.category = filters.category;
+        filterPayload.filter['category.slug'] = filters.category;
       }
       if (filters.author) {
-        filterPayload.filter.author = filters.author;
+        filterPayload.filter['author.slug'] = filters.author;
       }
       if (filters.publisher) {
-        filterPayload.filter.publisher = filters.publisher;
+        filterPayload.filter['publisher.slug'] = filters.publisher;
       }
       if (filters.q) {
         filterPayload.search = filters.q;
@@ -55,7 +55,11 @@ export default function ProductsPage() {
         ? { salePrice: -1 }
         : { createdAt: -1 };
 
+      console.log('Fetching products with filter:', JSON.stringify(filterPayload));
+      
       const res = await api.post('/product/get-all', filterPayload);
+      console.log('Products response:', res.data);
+      
       if (res.data?.data) {
         let productsData = res.data.data;
         if (res.data.data.items) {
@@ -65,7 +69,9 @@ export default function ProductsPage() {
           setProducts(productsData);
         }
       }
-    } catch (err) { console.error(err); }
+    } catch (err: any) { 
+      console.error('Fetch products error:', err.response?.data || err); 
+    }
     setLoading(false);
   };
 
