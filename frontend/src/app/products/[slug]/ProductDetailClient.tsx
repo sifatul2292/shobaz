@@ -9,7 +9,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { HiOutlineBookOpen } from 'react-icons/hi';
+import { HiOutlineBookOpen, HiOutlineEye } from 'react-icons/hi';
 import { 
   FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes, 
   FaCheck, FaTruck, FaUndo, FaShieldAlt, FaMoneyBillWave, FaStar,
@@ -325,18 +325,30 @@ export default function ProductDetailClient({ params }: Props) {
           {/* Main 3-Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* LEFT: Product Image + Preview */}
+              {/* LEFT: Product Image + Preview */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24">
-                {/* Main Image */}
-                <div className="relative bg-gray-50 rounded-lg mb-3">
-                  <div className="aspect-[3/4] flex items-center justify-center">
+                {/* Main Image - Clickable for PDF Preview */}
+                <div className="relative bg-gray-50 rounded-lg mb-3 group">
+                  <button 
+                    onClick={() => previewUrl && setShowPreviewModal(true)}
+                    disabled={!previewUrl}
+                    className="w-full aspect-[3/4] flex items-center justify-center"
+                  >
                     {images[activeImage] ? (
                       <img src={imgUrl(images[activeImage])!} alt={product.name} className="w-full h-full object-contain" />
                     ) : (
                       <HiOutlineBookOpen className="w-32 h-32 text-gray-300" />
                     )}
-                  </div>
+                  </button>
+                  
+                  {previewUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity">
+                      <div className="bg-white/90 rounded-full p-3">
+                        <HiOutlineEye className="w-7 h-7 text-teal-600" />
+                      </div>
+                    </div>
+                  )}
                   
                   {images.length > 1 && (
                     <>
