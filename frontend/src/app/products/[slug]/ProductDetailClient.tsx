@@ -574,30 +574,30 @@ export default function ProductDetailClient({ params }: Props) {
 
           {/* Bought Together - Modern Card Layout */}
           {bundleProducts.length > 0 && (
-            <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <HiOutlineBookOpen className="w-6 h-6" />
+            <div className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-3">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <HiOutlineBookOpen className="w-5 h-5" />
                   পাঠকেরা একসাথে কিনে থাকেন
                 </h2>
-                <p className="text-green-100 text-sm mt-1">Save 10% when you buy together</p>
+                <p className="text-green-100 text-xs mt-0.5">Save 10% when you buy together</p>
               </div>
               
-              <div className="p-6">
-                <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap">
+              <div className="p-4">
+                <div className="flex items-center justify-center gap-3 flex-wrap">
                   {/* Main product */}
                   <div className="text-center">
-                    <div className="w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md">
+                    <div className="w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm">
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
-                    <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{product?.name}</p>
-                    <p className="text-sm font-bold text-green-500 mt-1">৳{getCurrentPrice(product!)}</p>
+                    <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{product?.name}</p>
+                    <p className="text-xs font-bold text-green-500 mt-0.5">৳{getCurrentPrice(product!)}</p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl text-gray-400">+</span>
-                    <div className="w-28 h-36 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-dashed border-green-300 flex items-center justify-center">
-                      <span className="text-green-500 font-medium text-sm px-2">Select Books</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg text-gray-400">+</span>
+                    <div className="w-20 h-28 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-dashed border-green-300 flex items-center justify-center">
+                      <span className="text-green-500 font-medium text-[10px] px-1">Select</span>
                     </div>
                   </div>
                   
@@ -610,54 +610,51 @@ export default function ProductDetailClient({ params }: Props) {
                     return (
                       <div key={item.product._id} className="text-center group">
                         <div 
-                          className={`relative w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-4 ring-green-500 ring-offset-2' : ''}`}
+                          className={`relative w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-2 ring-green-500' : ''}`}
                           onClick={() => handleToggleBundle(item.product._id)}
                         >
                           {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
                           {itemDiscount > 0 && (
-                            <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">-{itemDiscount}%</span>
+                            <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[8px] font-bold px-1 rounded">-{itemDiscount}%</span>
                           )}
                           <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isSelected ? 'opacity-0' : 'opacity-100'}`}>
-                            <FaPlus className="text-white text-2xl" />
+                            <FaPlus className="text-white text-lg" />
                           </div>
                           {isSelected && (
-                            <div className="absolute top-1 left-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                              <FaCheck className="text-white text-xs" />
+                            <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <FaCheck className="text-white text-[8px]" />
                             </div>
                           )}
                         </div>
-                        <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{item.product.name}</p>
-                        <div className="flex items-center justify-center gap-1 mt-1">
-                          <p className="text-sm font-bold text-green-500">৳{itemPrice}</p>
-                          {itemDiscount > 0 && <p className="text-xs text-gray-400 line-through">৳{itemOriginal}</p>}
-                        </div>
+                        <p className="text-[10px] font-medium text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{item.product.name}</p>
+                        <p className="text-xs font-bold text-green-500">৳{itemPrice}</p>
                       </div>
                     );
                   })}
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl text-gray-400">=</span>
-                    <span className="text-2xl font-bold text-gray-400">→</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg text-gray-400">=</span>
                   </div>
                   
                   {/* Total Card */}
-                  <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 min-w-[140px] text-center border border-orange-100">
-                    <p className="text-xs text-gray-500 mb-1">Bundle Price</p>
-                    <p className="text-2xl font-bold text-orange-600">৳{bundleTotal.toFixed(0)}</p>
+                  <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg p-3 min-w-[100px] text-center border border-orange-100">
+                    <p className="text-[10px] text-gray-500">Total</p>
+                    <p className="text-lg font-bold text-orange-600">৳{bundleTotal.toFixed(0)}</p>
                     {bundleSavings > 0 && (
-                      <p className="text-xs text-green-600 font-medium mt-1">You save ৳{bundleSavings.toFixed(0)}</p>
+                      <p className="text-[10px] text-green-600 font-medium">Save ৳{bundleSavings.toFixed(0)}</p>
                     )}
                   </div>
                 </div>
                 
                 {/* CTA Button */}
-                <div className="mt-6 flex justify-center">
+                <div className="mt-4 flex justify-center">
                   <button 
                     onClick={handleAddBundleToCart} 
                     disabled={selectedBundle.length === 0}
-                    className="w-full max-w-md bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
+                    className="w-full max-w-xs bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white py-2.5 px-6 rounded-lg font-semibold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    🛒 Add {selectedBundle.length > 0 ? selectedBundle.length + 1 : 'All'} to Cart
+                    <FaShoppingCart className="text-sm" />
+                    Add to Cart
                   </button>
                 </div>
               </div>
