@@ -381,7 +381,7 @@ export class ProductService {
       const data = await this.productModel
         .find(mFilter)
         .select(
-          'name nameEn seoKeyword seoTitle seoDescription author discountType slug discountAmount tags quantity regularPrice salePrice ratingTotal images ratingCount',
+          'name nameEn seoKeyword seoTitle seoDescription author category subCategory brand publisher discountType slug discountAmount tags quantity regularPrice salePrice ratingTotal images ratingCount',
         )
         .skip(Number(skip))
         .limit(Number(limit))

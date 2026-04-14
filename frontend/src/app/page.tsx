@@ -175,10 +175,10 @@ export default function HomePage() {
             {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
           </Link>
           
-          {/* Add to Cart Button - always visible on mobile, shows on hover desktop */}
+          {/* Add to Cart Button - shows on hover */}
           <button 
             onClick={() => handleAddToCart(product)}
-            className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 shadow-md hover:shadow-lg"
+            className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg"
           >
             কার্টে যোগ করুন
           </button>
