@@ -303,55 +303,57 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
       <main className="flex-1">
         {/* Hero Banner */}
         {banners.length > 0 && (
-          <section className="relative h-[280px] md:h-[380px] lg:h-[480px] overflow-hidden">
-            <Swiper
-              modules={[Navigation, Autoplay, Pagination]}
-              autoplay={{ delay: 5000, disableOnInteraction: false }}
-              navigation
-              pagination={{ clickable: true, dynamicBullets: true }}
-              loop
-              speed={800}
-              effect="fade"
-              fadeEffect={{ crossFade: true }}
-              className="h-full"
-            >
-              {banners.map((banner, index) => (
-                <SwiperSlide key={banner._id} className="h-full">
-                  <Link href={banner.link || '/'}>
-                    <div className="w-full h-full relative">
-                      {banner.image && (
-                        <div className="absolute inset-0">
-                          <img 
-                            src={imgUrl(banner.image)!} 
-                            alt={banner.title || ''} 
-                            className="w-full h-full object-cover transform scale-105" 
-                          />
-                          <div className="absolute inset-0 bg-black/40" />
-                        </div>
-                      )}
-                      {!banner.image && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-green-600 to-green-700" />
-                      )}
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="max-w-7xl mx-auto w-full px-4 md:px-8">
-                          <div className="max-w-xl">
-                            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight animate-fadeInUp" style={{ animationDelay: `${index * 100}ms` }}>
-                              {banner.title || 'বইয়ের জগৎ'}
-                            </h1>
-                            <p className="text-sm md:text-lg lg:text-xl text-white/90 mb-6 animate-fadeInUp" style={{ animationDelay: `${index * 100 + 150}ms` }}>
-                              {banner.description || 'সেরা বইয়ের সংগ্রহ'}
-                            </p>
-                            <span className="inline-flex items-center gap-2 bg-white text-green-600 px-5 py-2.5 rounded-full font-semibold text-sm animate-fadeInUp" style={{ animationDelay: `${index * 100 + 300}ms` }}>
-                              এখনই দেখুন <span className="text-lg">→</span>
-                            </span>
+          <section className="max-w-7xl mx-auto px-4 py-4">
+            <div className="relative h-[200px] md:h-[280px] lg:h-[350px] rounded-2xl overflow-hidden shadow-lg">
+              <Swiper
+                modules={[Navigation, Autoplay, Pagination]}
+                autoplay={{ delay: 5000, disableOnInteraction: false }}
+                navigation
+                pagination={{ clickable: true, dynamicBullets: true }}
+                loop
+                speed={800}
+                effect="fade"
+                fadeEffect={{ crossFade: true }}
+                className="h-full rounded-2xl"
+              >
+                {banners.map((banner, index) => (
+                  <SwiperSlide key={banner._id} className="h-full rounded-2xl">
+                    <Link href={banner.link || '/'}>
+                      <div className="w-full h-full relative">
+                        {banner.image && (
+                          <div className="absolute inset-0">
+                            <img 
+                              src={imgUrl(banner.image)!} 
+                              alt={banner.title || ''} 
+                              className="w-full h-full object-cover transform scale-105" 
+                            />
+                            <div className="absolute inset-0 bg-black/30" />
+                          </div>
+                        )}
+                        {!banner.image && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-green-600 to-green-700" />
+                        )}
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full px-8 md:px-12">
+                            <div className="max-w-lg">
+                              <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
+                                {banner.title || 'বইয়ের জগৎ'}
+                              </h1>
+                              <p className="text-sm md:text-base text-white/90 mb-4">
+                                {banner.description || 'সেরা বইয়ের সংগ্রহ'}
+                              </p>
+                              <span className="inline-flex items-center gap-2 bg-white text-green-600 px-4 py-2 rounded-full font-semibold text-sm">
+                                এখনই দেখুন <span>→</span>
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </section>
         )}
 
