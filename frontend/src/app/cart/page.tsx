@@ -6,7 +6,8 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import { imgUrl } from '@/lib/api';
-import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaArrowRight, FaBookmark, FaHeart, FaTruck, FaShieldAlt } from 'react-icons/fa';
+import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaArrowRight, FaBookmark, FaHeart } from 'react-icons/fa';
+import { HiOutlineTruck, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
 const getAuthorName = (author: any) => {
   if (!author) return '';
@@ -84,7 +85,7 @@ export default function CartPage() {
                         {img ? (
                           <img src={imgUrl(img)!} alt={name} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-4xl">📖</span>
+                          <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                       </div>
@@ -211,13 +212,13 @@ export default function CartPage() {
                 <div className="mt-6 space-y-3">
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <FaTruck className="text-green-600 text-xs" />
+                      <HiOutlineTruck className="text-green-600 text-xs" />
                     </div>
                     <span>ফ্রি ডেলিভারি</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <FaShieldAlt className="text-blue-600 text-xs" />
+                      <HiOutlineShieldCheck className="text-blue-600 text-xs" />
                     </div>
                     <span>১০০% নিরাপদ পেমেন্ট</span>
                   </div>

@@ -9,6 +9,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { HiOutlineBookOpen } from 'react-icons/hi';
 import { 
   FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes, 
   FaCheck, FaTruck, FaUndo, FaShieldAlt, FaMoneyBillWave, FaStar,
@@ -333,7 +334,7 @@ export default function ProductDetailClient({ params }: Props) {
                     {images[activeImage] ? (
                       <img src={imgUrl(images[activeImage])!} alt={product.name} className="w-full h-full object-contain" />
                     ) : (
-                      <span className="text-7xl">📖</span>
+                      <HiOutlineBookOpen className="w-32 h-32 text-gray-300" />
                     )}
                   </div>
                   
@@ -552,7 +553,10 @@ export default function ProductDetailClient({ params }: Props) {
           {bundleProducts.length > 0 && (
             <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-4">
-                <h2 className="text-xl font-bold text-white">📚 পাঠকেরা একসাথে কিনে থাকেন</h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <HiOutlineBookOpen className="w-6 h-6" />
+                  পাঠকেরা একসাথে কিনে থাকেন
+                </h2>
                 <p className="text-teal-100 text-sm mt-1">Save 10% when you buy together</p>
               </div>
               

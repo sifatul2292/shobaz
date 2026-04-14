@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
+import { HiOutlineBookOpen } from 'react-icons/hi';
 
 interface Order {
   _id: string;
@@ -126,7 +127,9 @@ export default function OrderSuccessPage() {
                           {item.image ? (
                             <img src={imgUrl(item.image)!} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl">📖</div>
+                            <div className="w-full h-full flex items-center justify-center">
+                        <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
+                      </div>
                           )}
                         </div>
                         <div className="flex-1">

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
 import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
 import toast from 'react-hot-toast';
+
+import { HiOutlineTruck, HiOutlineSparkles, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
 const CORE_ROUTES = ['products', 'authors', 'publishers', 'offers', 'blog', 'about', 'contact'];
 
@@ -27,10 +29,10 @@ const NAV_LINKS = [
 ];
 
 const ANNOUNCEMENTS = [
-  '🎉 TK.500+ অর্ডারে বিনামূল্যে ডেলিভারি',
-  '📚 নির্বাচিত বইয়ে ৩০% পর্যন্ত ছাড়',
-  '🚚 ঢাকায় মাত্র ৬০ টাকায় ডেলিভারি',
-  '🎁 প্রতিটি অর্ডারে বিশেষ উপহার',
+  { icon: HiOutlineTruck, text: 'TK.500+ অর্ডারে বিনামূল্যে ডেলিভারি' },
+  { icon: HiOutlineBookOpen, text: 'নির্বাচিত বইয়ে ৩০% পর্যন্ত ছাড়' },
+  { icon: HiOutlineSparkles, text: 'ঢাকায় মাত্র ৬০ টাকায় ডেলিভারি' },
+  { icon: HiOutlineShieldCheck, text: 'প্রতিটি অর্ডারে বিশেষ উপহার' },
 ];
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
@@ -116,7 +118,10 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       {/* Announcement Bar */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center py-1.5 text-sm">
-        <span className="animate-pulse">{ANNOUNCEMENTS[announcementIndex]}</span>
+        <span className="animate-pulse flex items-center justify-center gap-2">
+          {React.createElement(ANNOUNCEMENTS[announcementIndex].icon, { className: "w-4 h-4" })}
+          {ANNOUNCEMENTS[announcementIndex].text}
+        </span>
       </div>
 
       {/* Main Header */}

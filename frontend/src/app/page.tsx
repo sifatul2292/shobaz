@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { HiOutlineBookOpen, HiOutlineFire, HiOutlineSparkles } from 'react-icons/hi';
+import { HiOutlineBookOpen, HiOutlineFire, HiOutlineSparkles, HiOutlineTruck, HiOutlineShieldCheck } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -195,7 +195,7 @@ export default function HomePage() {
               <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
             ) : (
               <div className="flex items-center justify-center w-full h-full">
-                <span className="text-7xl filter drop-shadow-lg">📖</span>
+                <HiOutlineBookOpen className="w-20 h-20 text-gray-300" />
               </div>
             )}
             {discountPercent > 0 && (
@@ -263,7 +263,9 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                     {img ? (
                       <img src={imgUrl(img)!} alt={productName} className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
                     ) : (
-                      <div className='w-full h-full flex items-center justify-center text-2xl'>📖</div>
+                      <div className='w-full h-full flex items-center justify-center'>
+                        <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -514,7 +516,9 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                     {blog.image ? (
                       <img src={imgUrl(blog.image)!} alt={blog.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-5xl">📖</div>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <HiOutlineBookOpen className="w-12 h-12 text-gray-300" />
+                      </div>
                     )}
                   </div>
                   <div className="p-4">
@@ -537,17 +541,17 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                 <p className="text-teal-200 text-sm">বিভিন্ন ক্যাটাগরি</p>
               </div>
               <div className="text-white">
-                <div className="text-4xl mb-2">🚚</div>
+                <HiOutlineTruck className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">ফ্রি ডেলিভারি</h3>
                 <p className="text-teal-200 text-sm">৫০০+ টাকায়</p>
               </div>
               <div className="text-white">
-                <div className="text-4xl mb-2">⚡</div>
+                <HiOutlineSparkles className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">দ্রুত ডেলিভারি</h3>
                 <p className="text-teal-200 text-sm">২-৫ দিনে</p>
               </div>
               <div className="text-white">
-                <div className="text-4xl mb-2">🛡️</div>
+                <HiOutlineShieldCheck className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">গারান্টি</h3>
                 <p className="text-teal-200 text-sm">১০০% সন্তুষ্টি</p>
               </div>

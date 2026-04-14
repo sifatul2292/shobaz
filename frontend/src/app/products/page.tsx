@@ -361,7 +361,7 @@ export default function ProductsPage() {
                 </div>
               ) : paginatedProducts.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                  <div className="text-6xl mb-4">📚</div>
+                  <HiOutlineBookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">কোনো বই পাওয়া যায়নি</h3>
                   <p className="text-gray-500 mb-4">আপনার ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন</p>
                   <button onClick={clearFilters} className="px-6 py-2.5 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition">
@@ -394,7 +394,7 @@ export default function ProductsPage() {
                               <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             ) : (
                               <div className="flex items-center justify-center w-full h-full">
-                                <span className="text-7xl filter drop-shadow-lg">📖</span>
+                                <HiOutlineBookOpen className="w-20 h-20 text-gray-300" />
                               </div>
                             )}
                             {discountPercent > 0 && (
@@ -450,7 +450,7 @@ export default function ProductsPage() {
                             {img ? (
                               <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-4xl">📖</span>
+                              <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
