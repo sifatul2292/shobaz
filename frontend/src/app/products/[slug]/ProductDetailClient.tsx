@@ -586,7 +586,7 @@ export default function ProductDetailClient({ params }: Props) {
               <div className="p-4">
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   {/* Main product */}
-                    <Link href={`/products/${product?.slug}`} className="text-center group block">
+                    <Link href={`/products/${product?.slug || product?._id}`} className="text-center group block">
                     <div className="w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm hover:scale-105 transition-transform">
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
@@ -609,7 +609,7 @@ export default function ProductDetailClient({ params }: Props) {
                     
                     return (
                       <div key={item.product._id} className="text-center group">
-                        <Link href={`/products/${item.product.slug}`} className="block">
+                        <Link href={`/products/${item.product.slug || item.product._id}`} className="block">
                         <div 
                           className={`relative w-20 h-28 bg-gray-100 rounded-lg overflow-hidden mb-1.5 shadow-sm cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-2 ring-green-500' : ''}`}
                           onClick={(e) => { e.preventDefault(); handleToggleBundle(item.product._id); }}
