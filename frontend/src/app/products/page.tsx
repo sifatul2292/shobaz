@@ -31,34 +31,8 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const filterPayload: any = { filter: {} };
-      
-      if (filters.category) {
-        filterPayload.filter['category.slug'] = filters.category;
-      }
-      if (filters.author) {
-        filterPayload.filter['author.slug'] = filters.author;
-      }
-      if (filters.publisher) {
-        filterPayload.filter['publisher.slug'] = filters.publisher;
-      }
-      if (filters.q) {
-        filterPayload.search = filters.q;
-      }
-      
-      filterPayload.pagination = { currentPage: page, pageSize: 24 };
-      filterPayload.sort = filters.sortBy === 'discountAmount' 
-        ? { discountAmount: -1 }
-        : filters.sortBy === 'price'
-        ? { salePrice: 1 }
-        : filters.sortBy === 'price-desc'
-        ? { salePrice: -1 }
-        : { createdAt: -1 };
-
-      console.log('Fetching products with filter:', JSON.stringify(filterPayload));
-      
-      const res = await api.post('/product/get-all', filterPayload);
-      console.log('Products response:', res.data);
+      const res = await api.get('/product/get-all-data');
+      console.log('Products raw response:', res.data);
       
       if (res.data?.data) {
         let productsData = res.data.data;
@@ -66,7 +40,50 @@ export default function ProductsPage() {
           productsData = res.data.data.items;
         }
         if (Array.isArray(productsData)) {
-          setProducts(productsData);
+          // Client-side filtering
+          let filtered = productsData;
+          
+          if (filters.category) {
+            filtered = filtered.filter((p: Product) => {
+              const cats = p.category as any;
+              if (Array.isArray(cats)) {
+                return cats.some((c: any) => c.slug === filters.category);
+              }
+              return false;
+            });
+          }
+          if (filters.author) {
+            filtered = filtered.filter((p: Product) => {
+              const auth = p.author as any;
+              if (Array.isArray(auth)) {
+                return auth.some((a: any) => a.slug === filters.author);
+              } else if (auth?.slug) {
+                return auth.slug === filters.author;
+              }
+              return false;
+            });
+          }
+          if (filters.publisher) {
+            filtered = filtered.filter((p: Product) => {
+              const pub = p.publisher as any;
+              if (Array.isArray(pub)) {
+                return pub.some((p: any) => p.slug === filters.publisher);
+              } else if (pub?.slug) {
+                return pub.slug === filters.publisher;
+              }
+              return false;
+            });
+          }
+          if (filters.q) {
+            const q = filters.q.toLowerCase();
+            filtered = filtered.filter((p: Product) => 
+              p.name?.toLowerCase().includes(q) || 
+              p.description?.toLowerCase().includes(q)
+            );
+          }
+          
+          console.log('Filtered products:', filtered.length, 'from category:', filters.category);
+          setProducts(filtered);
         }
       }
     } catch (err: any) { 
@@ -97,7 +114,9 @@ export default function ProductsPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">📚 সকল বই</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">
+          {filters.category ? `${decodeURIComponent(filters.category)} - বই` : '📚 সকল বই'}
+        </h1>
         
         {loading ? (
           <div className="flex items-center justify-center py-20">
