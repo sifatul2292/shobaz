@@ -957,17 +957,20 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
               }
             >
-              <div className="flex-1 overflow-auto bg-gray-100 p-4 space-y-4">
-                {Array.from(new Array(numPages), (_, index) => (
-                  <Page 
-                    key={index + 1}
-                    pageNumber={index + 1} 
-                    width={window.innerWidth < 768 ? 300 : 600}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                    className="shadow-lg bg-white"
-                  />
-                ))}
+              <div className="flex-1 overflow-y-auto overflow-x-auto bg-gray-100 p-8">
+                <div className="flex flex-col items-center gap-6 min-h-full">
+                  {Array.from(new Array(numPages), (_, index) => (
+                    <Page 
+                      key={index + 1}
+                      pageNumber={index + 1} 
+                      width={Math.min(600, window.innerWidth - 80)}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      className="shadow-xl bg-white"
+                      scale={1}
+                    />
+                  ))}
+                </div>
               </div>
             </Document>
           </div>
