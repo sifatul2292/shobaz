@@ -329,27 +329,27 @@ export default function ProductDetailClient({ params }: Props) {
           </nav>
 
           {/* Main 3-Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
             
             {/* LEFT: Product Image + Preview */}
-            <div className="lg:col-span-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sticky top-24">
+            <div className="lg:col-span-4 xl:col-span-3">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sticky top-24">
                 {/* Preview Button - Above Image */}
                 {previewUrl && (
                   <button 
                     onClick={() => setShowPreviewModal(true)}
-                    className="mb-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+                    className="mb-1.5 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm transition-colors w-full justify-center"
                   >
-                    <HiOutlineEye className="w-3.5 h-3.5" />
+                    <HiOutlineEye className="w-3 h-3" />
                     একটু পড়ে দেখুন
-                    <svg className="w-3 h-3 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-2.5 h-2.5 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
                 )}
 
                 {/* Main Image - Clickable for PDF Preview */}
-                <div className="relative bg-gray-50 rounded-lg group mb-2">
+                <div className="relative bg-gray-50 rounded-lg group">
                   <button 
                     type="button"
                     onClick={() => previewUrl && setShowPreviewModal(true)}
@@ -398,37 +398,37 @@ export default function ProductDetailClient({ params }: Props) {
             </div>
 
             {/* CENTER: Product Info */}
-            <div className="lg:col-span-5 space-y-3">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="lg:col-span-4 xl:col-span-5 space-y-2">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
                 {/* Title */}
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-tight mb-1">{product.name}</h1>
                 
                 {/* Author, Category, Publisher */}
-                <div className="space-y-2 mb-4">
-                  {authorName && <p className="text-gray-600">লেখক: <Link href={`/products?author=${encodeURIComponent(authorName)}`} className="text-green-500 hover:underline font-medium">{authorName}</Link></p>}
-                  {product.category?.[0] && <p className="text-gray-600">ক্যাটাগরি: <Link href={`/products?category=${product.category[0].slug}`} className="text-green-500 hover:underline font-medium">{product.category[0].name}</Link></p>}
-                  {publisherName && <p className="text-gray-600">প্রকাশনা: <span className="font-medium">{publisherName}</span></p>}
-                  {product.weight && <p className="text-gray-500 text-sm">ওজন: {product.weight}g</p>}
+                <div className="space-y-1 mb-2">
+                  {authorName && <p className="text-gray-600 text-sm">লেখক: <Link href={`/products?author=${encodeURIComponent(authorName)}`} className="text-green-500 hover:underline font-medium">{authorName}</Link></p>}
+                  {product.category?.[0] && <p className="text-gray-600 text-sm">ক্যাটাগরি: <Link href={`/products?category=${product.category[0].slug}`} className="text-green-500 hover:underline font-medium">{product.category[0].name}</Link></p>}
+                  {publisherName && <p className="text-gray-600 text-sm">প্রকাশনা: <span className="font-medium">{publisherName}</span></p>}
+                  {product.weight && <p className="text-gray-500 text-xs">ওজন: {product.weight}g</p>}
                 </div>
 
                 {/* Price Block */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-2xl font-bold text-red-600">৳{currentPrice}</span>
+                <div className="bg-gray-50 rounded-lg p-2 mb-2">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold text-red-600">৳{currentPrice}</span>
                     {discountPercent > 0 && (
                       <>
-                        <span className="text-gray-400 line-through">৳{originalPrice}</span>
-                        <span className="text-green-600 text-sm font-medium">-{discountPercent}%</span>
+                        <span className="text-gray-400 line-through text-sm">৳{originalPrice}</span>
+                        <span className="text-green-600 text-xs font-medium">-{discountPercent}%</span>
                       </>
                     )}
                   </div>
                   {savings > 0 && (
-                    <p className="text-green-600 text-sm">You Save ৳{savings} ({discountPercent}% Off)</p>
+                    <p className="text-green-600 text-xs">You Save ৳{savings} ({discountPercent}% Off)</p>
                   )}
                 </div>
 
                 {/* Stock */}
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-2">
                   {inStock ? (
                     <span className="text-green-600 font-medium flex items-center gap-1"><FaBoxOpen /> In Stock</span>
                   ) : (
@@ -438,13 +438,13 @@ export default function ProductDetailClient({ params }: Props) {
 
                 {/* Short Description */}
                 {product.shortDescription && (
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <p className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}>
+                  <div className="bg-gray-50 rounded-lg p-2 mb-2">
+                    <p className={`text-gray-600 text-xs ${!showFullDescription ? 'line-clamp-2' : ''}`}>
                       {product.shortDescription.replace(/<[^>]*>/g, '')}
                     </p>
                     {product.shortDescription?.length > 150 && (
-                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-green-500 text-sm font-medium mt-1">
-                        {showFullDescription ? 'আরও কম দেখুন' : 'আরও দেখুন'}
+                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-green-500 text-xs font-medium mt-1">
+                        {showFullDescription ? 'আরও কম' : 'আরও দেখুন'}
                       </button>
                     )}
                   </div>
@@ -453,14 +453,14 @@ export default function ProductDetailClient({ params }: Props) {
                 {/* CTA Area */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50">
-                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-4 py-3 hover:bg-gray-100 text-lg font-bold transition-transform hover:scale-110">−</button>
-                    <span className="px-5 py-3 font-bold text-lg min-w-[60px] text-center bg-white">{quantity}</span>
-                    <button onClick={() => setQuantity(q => q + 1)} className="px-4 py-3 hover:bg-gray-100 text-lg font-bold transition-transform hover:scale-110">+</button>
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 hover:bg-gray-100 text-lg font-bold">−</button>
+                    <span className="px-4 py-2 font-bold text-base min-w-[50px] text-center bg-white">{quantity}</span>
+                    <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 hover:bg-gray-100 text-lg font-bold">+</button>
                   </div>
                   <button 
                     onClick={handleAddToCart}
                     disabled={!inStock}
-                    className={`flex-1 py-3.5 rounded-lg font-bold text-base transition-all hover:scale-[1.02] shadow-sm ${inStock ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                    className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all hover:scale-[1.02] shadow-sm ${inStock ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}
                   >
                     🛒 কার্টে যোগ করুন
                   </button>
@@ -469,7 +469,7 @@ export default function ProductDetailClient({ params }: Props) {
                 <button 
                   onClick={handleBuyNow}
                   disabled={!inStock}
-                  className={`w-full py-4 rounded-lg font-bold text-lg text-white transition-all hover:scale-[1.01] shadow-md ${inStock ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' : 'bg-gray-200 text-gray-400'}`}
+                  className={`w-full py-3 rounded-lg font-bold text-base text-white transition-all hover:scale-[1.01] shadow-md ${inStock ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' : 'bg-gray-200 text-gray-400'}`}
                 >
                   এখনই অর্ডার করুন
                 </button>
@@ -525,9 +525,9 @@ export default function ProductDetailClient({ params }: Props) {
 
               {/* Related Books */}
               {relatedProducts.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
-                  <h3 className="font-bold text-lg text-green-600 mb-2">Related Books</h3>
-                  <div className="space-y-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
+                  <h3 className="font-bold text-base text-green-600 mb-1.5">Related Books</h3>
+                  <div className="space-y-1.5">
                     {relatedProducts.slice(0, 6).map((p) => {
                       const pPrice = getCurrentPrice(p);
                       const pOriginalPrice = getOriginalPrice(p);
