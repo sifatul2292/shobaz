@@ -55,7 +55,7 @@ export default function CheckoutPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">আপনার কার্ট খালি</h2>
             <p className="text-gray-500 mb-4">আপনি কোনো পণ্য যোগ করেননি</p>
-            <a href="/products" className="inline-block bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium">বই কিনুন</a>
+            <a href="/products" className="inline-block bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium">বই কিনুন</a>
           </div>
         </main>
         <Footer />
@@ -188,12 +188,12 @@ export default function CheckoutPage() {
         {/* Progress Header */}
         <div className="bg-white border-b py-4">
           <div className="max-w-5xl mx-auto px-4 flex items-center justify-center gap-8">
-            <div className="flex items-center gap-2 text-teal-600">
+            <div className="flex items-center gap-2 text-green-500">
               <FaShoppingCart />
               <span className="font-medium">কার্ট</span>
             </div>
             <div className="w-8 h-px bg-gray-300"></div>
-            <div className="flex items-center gap-2 text-teal-600 font-medium">
+            <div className="flex items-center gap-2 text-green-500 font-medium">
               <FaTruck />
               <span>চেকআউট</span>
             </div>
@@ -212,9 +212,9 @@ export default function CheckoutPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Delivery Address Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-4">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
                     <h2 className="text-xl font-bold text-white">ডেলিভারি ঠিকানা</h2>
-                    <p className="text-teal-100 text-sm mt-1">আপনার অর্ডার কোথায় পাঠাতে হবে</p>
+                    <p className="text-green-100 text-sm mt-1">আপনার অর্ডার কোথায় পাঠাতে হবে</p>
                   </div>
                   <div className="p-6 space-y-5">
                     {/* Name */}
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
                         value={formData.name}
                         onChange={(e) => { setFormData({ ...formData, name: e.target.value }); if (errors.name) setErrors({ ...errors, name: '' }); }}
                         placeholder="আপনার সম্পূর্ণ নাম"
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                       />
                       {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                     </div>
@@ -238,7 +238,7 @@ export default function CheckoutPage() {
                         value={formData.phone}
                         onChange={handlePhoneChange}
                         placeholder="০১XXXXXXXXX"
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                       />
                       {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                       <p className="text-gray-400 text-xs mt-1">১১ সংখ্যার বাংলাদেশি নম্বর (০১ দিয়ে শুরু)</p>
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                         onChange={(e) => { setFormData({ ...formData, address: e.target.value }); if (errors.address) setErrors({ ...errors, address: '' }); }}
                         placeholder="বাড়ি নং, রোড নং, এলাকার নাম, জেলা"
                         rows={3}
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                       />
                       {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
                     </div>
@@ -266,15 +266,15 @@ export default function CheckoutPage() {
                           onClick={() => setDeliveryLocation('inside')}
                           className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                             deliveryLocation === 'inside' 
-                              ? 'border-teal-500 bg-teal-50 shadow-md' 
-                              : 'border-gray-200 hover:border-teal-300'
+                              ? 'border-green-500 bg-green-50 shadow-md' 
+                              : 'border-gray-200 hover:border-green-300'
                           }`}
                         >
-                          <FaMapMarkerAlt className={`text-xl ${deliveryLocation === 'inside' ? 'text-teal-600' : 'text-gray-400'}`} />
-                          <span className={`font-medium ${deliveryLocation === 'inside' ? 'text-teal-700' : 'text-gray-600'}`}>
+                          <FaMapMarkerAlt className={`text-xl ${deliveryLocation === 'inside' ? 'text-green-500' : 'text-gray-400'}`} />
+                          <span className={`font-medium ${deliveryLocation === 'inside' ? 'text-green-600' : 'text-gray-600'}`}>
                             ঢাকা সিটির ভিতরে
                           </span>
-                          <span className={`text-sm font-bold ${deliveryLocation === 'inside' ? 'text-teal-600' : 'text-gray-500'}`}>
+                          <span className={`text-sm font-bold ${deliveryLocation === 'inside' ? 'text-green-500' : 'text-gray-500'}`}>
                             ৳{shippingCharge?.deliveryInDhaka || 60}
                           </span>
                         </button>
@@ -283,15 +283,15 @@ export default function CheckoutPage() {
                           onClick={() => setDeliveryLocation('outside')}
                           className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                             deliveryLocation === 'outside' 
-                              ? 'border-teal-500 bg-teal-50 shadow-md' 
-                              : 'border-gray-200 hover:border-teal-300'
+                              ? 'border-green-500 bg-green-50 shadow-md' 
+                              : 'border-gray-200 hover:border-green-300'
                           }`}
                         >
-                          <FaTruck className={`text-xl ${deliveryLocation === 'outside' ? 'text-teal-600' : 'text-gray-400'}`} />
-                          <span className={`font-medium ${deliveryLocation === 'outside' ? 'text-teal-700' : 'text-gray-600'}`}>
+                          <FaTruck className={`text-xl ${deliveryLocation === 'outside' ? 'text-green-500' : 'text-gray-400'}`} />
+                          <span className={`font-medium ${deliveryLocation === 'outside' ? 'text-green-600' : 'text-gray-600'}`}>
                             ঢাকা সিটির বাহিরে
                           </span>
-                          <span className={`text-sm font-bold ${deliveryLocation === 'outside' ? 'text-teal-600' : 'text-gray-500'}`}>
+                          <span className={`text-sm font-bold ${deliveryLocation === 'outside' ? 'text-green-500' : 'text-gray-500'}`}>
                             ৳{shippingCharge?.deliveryOutsideDhaka || 120}
                           </span>
                         </button>
@@ -307,7 +307,7 @@ export default function CheckoutPage() {
                     <p className="text-orange-100 text-sm mt-1">নিরাপদ পেমেন্ট</p>
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl border-2 border-green-200">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border-2 border-green-200">
                       <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-2xl">💵</span>
                       </div>
@@ -327,9 +327,9 @@ export default function CheckoutPage() {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-24">
-                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-4">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-4">
                   <h3 className="font-bold text-white">অর্ডার সারাংশ</h3>
-                  <p className="text-teal-100 text-sm">{items.length}টি পণ্য</p>
+                  <p className="text-green-100 text-sm">{items.length}টি পণ্য</p>
                 </div>
                 
                 <div className="p-5">
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
                           <p className="text-xs text-gray-500">পরিমাণ: {item.quantity}</p>
-                          <p className="text-sm font-bold text-teal-600 mt-1">৳{((item.product.salePrice || item.product.price) * item.quantity).toFixed(0)}</p>
+                          <p className="text-sm font-bold text-green-500 mt-1">৳{((item.product.salePrice || item.product.price) * item.quantity).toFixed(0)}</p>
                         </div>
                       </div>
                     ))}
@@ -355,11 +355,11 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>ডেলিভারি চার্জ ({deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাহিরে'})</span>
-                      <span className="font-medium text-teal-600">৳{shipping}</span>
+                      <span className="font-medium text-green-500">৳{shipping}</span>
                     </div>
                     <div className="flex justify-between font-bold text-xl pt-2 border-t">
                       <span>মোট</span>
-                      <span className="text-teal-600">৳{total.toFixed(0)}</span>
+                      <span className="text-green-500">৳{total.toFixed(0)}</span>
                     </div>
                   </div>
 
@@ -367,7 +367,7 @@ export default function CheckoutPage() {
                     type="submit"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-5 rounded-xl font-bold text-lg mt-5 transition-all hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-5 rounded-xl font-bold text-lg mt-5 transition-all hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100"
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">

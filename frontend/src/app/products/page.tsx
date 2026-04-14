@@ -222,13 +222,13 @@ export default function ProductsPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <main className="flex-1">
-        <div className="bg-gradient-to-r from-teal-600 to-teal-800 py-8">
+        <div className="bg-gradient-to-r from-green-500 to-green-700 py-8">
           <div className="max-w-7xl mx-auto px-4">
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
               <HiOutlineBookOpen className="w-7 h-7" />
               {filters.category ? `${decodeURIComponent(filters.category)}` : 'সকল বই'}
             </h1>
-            <p className="text-teal-100">{filteredProducts.length} টি বই পাওয়া গেছে</p>
+            <p className="text-green-100">{filteredProducts.length} টি বই পাওয়া গেছে</p>
           </div>
         </div>
 
@@ -251,7 +251,7 @@ export default function ProductsPage() {
                     <select 
                       value={filters.category}
                       onChange={(e) => updateURL('category', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">সব ক্যাটাগরি</option>
                       {categories.map((cat) => (
@@ -265,7 +265,7 @@ export default function ProductsPage() {
                     <select 
                       value={filters.author}
                       onChange={(e) => updateURL('author', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">সব লেখক</option>
                       {authors.slice(0, 20).map((auth) => (
@@ -279,7 +279,7 @@ export default function ProductsPage() {
                     <select 
                       value={filters.publisher}
                       onChange={(e) => updateURL('publisher', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">সব প্রকাশনা</option>
                       {publishers.slice(0, 20).map((pub) => (
@@ -296,14 +296,14 @@ export default function ProductsPage() {
                         placeholder="কম"
                         value={filters.priceMin}
                         onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                       <input
                         type="number"
                         placeholder="বেশি"
                         value={filters.priceMax}
                         onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -324,7 +324,7 @@ export default function ProductsPage() {
                     <select 
                       value={filters.sortBy}
                       onChange={(e) => updateURL('sort', e.target.value)}
-                      className="p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="newest">নতুন আগমন</option>
                       <option value="price-asc">দাম: কম থেকে বেশি</option>
@@ -336,7 +336,7 @@ export default function ProductsPage() {
                     <div className="hidden md:flex border border-gray-200 rounded-xl overflow-hidden">
                       <button 
                         onClick={() => setViewMode('grid')}
-                        className={`p-2.5 ${viewMode === 'grid' ? 'bg-teal-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                        className={`p-2.5 ${viewMode === 'grid' ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -344,7 +344,7 @@ export default function ProductsPage() {
                       </button>
                       <button 
                         onClick={() => setViewMode('list')}
-                        className={`p-2.5 ${viewMode === 'list' ? 'bg-teal-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                        className={`p-2.5 ${viewMode === 'list' ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -357,14 +357,14 @@ export default function ProductsPage() {
 
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
                 </div>
               ) : paginatedProducts.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                   <HiOutlineBookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">কোনো বই পাওয়া যায়নি</h3>
                   <p className="text-gray-500 mb-4">আপনার ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন</p>
-                  <button onClick={clearFilters} className="px-6 py-2.5 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition">
+                  <button onClick={clearFilters} className="px-6 py-2.5 bg-green-500 text-white rounded-xl font-medium hover:bg-green-500 transition">
                     ফিল্টার মুছুন
                   </button>
                 </div>
@@ -408,11 +408,11 @@ export default function ProductsPage() {
                             {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
                             {salePrice > 0 && (
                               <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold text-teal-600">৳{currentPrice}</span>
+                                <span className="text-lg font-bold text-green-500">৳{currentPrice}</span>
                                 {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
                               </div>
                             )}
-                            {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
+                            {salePrice === 0 && <p className="text-sm font-bold text-green-500">Free</p>}
                             <button 
                               onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
                               className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg"
@@ -466,7 +466,7 @@ export default function ProductsPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xl font-bold text-teal-600">৳{currentPrice}</span>
+                              <span className="text-xl font-bold text-green-500">৳{currentPrice}</span>
                               {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
                             </div>
                             <button 
@@ -505,7 +505,7 @@ export default function ProductsPage() {
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
                         className={`w-10 h-10 rounded-xl font-medium transition ${
-                          page === pageNum ? 'bg-teal-500 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                          page === pageNum ? 'bg-green-500 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
                         }`}
                       >
                         {pageNum}

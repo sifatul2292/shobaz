@@ -261,7 +261,7 @@ export default function ProductDetailClient({ params }: Props) {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <main className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
         </main>
         <Footer />
       </div>
@@ -275,7 +275,7 @@ export default function ProductDetailClient({ params }: Props) {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-800 mb-2">পণ্য পাওয়া যায়নি</h2>
-            <Link href="/products" className="text-teal-600 hover:underline">সকল বই দেখুন</Link>
+            <Link href="/products" className="text-green-500 hover:underline">সকল বই দেখুন</Link>
           </div>
         </main>
         <Footer />
@@ -315,13 +315,13 @@ export default function ProductDetailClient({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 py-4">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Link href="/" className="hover:text-teal-600">হোম</Link>
+            <Link href="/" className="hover:text-green-500">হোম</Link>
             <span>›</span>
-            <Link href="/products" className="hover:text-teal-600">বই</Link>
+            <Link href="/products" className="hover:text-green-500">বই</Link>
             {product.category?.[0] && (
               <>
                 <span>›</span>
-                <Link href={`/products?category=${product.category[0].slug}`} className="hover:text-teal-600">{product.category[0].name}</Link>
+                <Link href={`/products?category=${product.category[0].slug}`} className="hover:text-green-500">{product.category[0].name}</Link>
               </>
             )}
             <span>›</span>
@@ -338,7 +338,7 @@ export default function ProductDetailClient({ params }: Props) {
                 {previewUrl && (
                   <button 
                     onClick={() => setShowPreviewModal(true)}
-                    className="mb-3 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+                    className="mb-3 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
                   >
                     <HiOutlineEye className="w-3.5 h-3.5" />
                     একটু পড়ে দেখুন
@@ -366,7 +366,7 @@ export default function ProductDetailClient({ params }: Props) {
                   {previewUrl && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg transition-opacity pointer-events-none">
                       <div className="bg-white/90 rounded-full p-3">
-                        <HiOutlineEye className="w-7 h-7 text-teal-600" />
+                        <HiOutlineEye className="w-7 h-7 text-green-500" />
                       </div>
                     </div>
                   )}
@@ -387,7 +387,7 @@ export default function ProductDetailClient({ params }: Props) {
                 {images.length > 1 && (
                   <div className="flex gap-2 justify-center mb-3">
                     {images.map((img, idx) => (
-                      <button key={idx} onClick={() => setActiveImage(idx)} className={`w-12 h-14 rounded border-2 ${idx === activeImage ? 'border-teal-500' : 'border-gray-200'}`}>
+                      <button key={idx} onClick={() => setActiveImage(idx)} className={`w-12 h-14 rounded border-2 ${idx === activeImage ? 'border-green-500' : 'border-gray-200'}`}>
                         <img src={imgUrl(img)!} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
@@ -405,8 +405,8 @@ export default function ProductDetailClient({ params }: Props) {
                 
                 {/* Author, Category, Publisher */}
                 <div className="space-y-2 mb-4">
-                  {authorName && <p className="text-gray-600">লেখক: <Link href={`/products?author=${encodeURIComponent(authorName)}`} className="text-teal-600 hover:underline font-medium">{authorName}</Link></p>}
-                  {product.category?.[0] && <p className="text-gray-600">ক্যাটাগরি: <Link href={`/products?category=${product.category[0].slug}`} className="text-teal-600 hover:underline font-medium">{product.category[0].name}</Link></p>}
+                  {authorName && <p className="text-gray-600">লেখক: <Link href={`/products?author=${encodeURIComponent(authorName)}`} className="text-green-500 hover:underline font-medium">{authorName}</Link></p>}
+                  {product.category?.[0] && <p className="text-gray-600">ক্যাটাগরি: <Link href={`/products?category=${product.category[0].slug}`} className="text-green-500 hover:underline font-medium">{product.category[0].name}</Link></p>}
                   {publisherName && <p className="text-gray-600">প্রকাশনা: <span className="font-medium">{publisherName}</span></p>}
                   {product.weight && <p className="text-gray-500 text-sm">ওজন: {product.weight}g</p>}
                 </div>
@@ -443,7 +443,7 @@ export default function ProductDetailClient({ params }: Props) {
                       {product.shortDescription.replace(/<[^>]*>/g, '')}
                     </p>
                     {product.shortDescription?.length > 150 && (
-                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-teal-600 text-sm font-medium mt-1">
+                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-green-500 text-sm font-medium mt-1">
                         {showFullDescription ? 'আরও কম দেখুন' : 'আরও দেখুন'}
                       </button>
                     )}
@@ -469,7 +469,7 @@ export default function ProductDetailClient({ params }: Props) {
                 <button 
                   onClick={handleBuyNow}
                   disabled={!inStock}
-                  className={`w-full py-4 rounded-lg font-bold text-lg text-white transition-all hover:scale-[1.01] shadow-md ${inStock ? 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800' : 'bg-gray-200 text-gray-400'}`}
+                  className={`w-full py-4 rounded-lg font-bold text-lg text-white transition-all hover:scale-[1.01] shadow-md ${inStock ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' : 'bg-gray-200 text-gray-400'}`}
                 >
                   এখনই অর্ডার করুন
                 </button>
@@ -477,7 +477,7 @@ export default function ProductDetailClient({ params }: Props) {
                 {/* Book Review Video */}
                 {youtubeId && (
                   <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-lg text-teal-700 mb-3">বুক রিভিউ</h3>
+                    <h3 className="font-bold text-lg text-green-600 mb-3">বুক রিভিউ</h3>
                     <div className="aspect-video rounded-lg overflow-hidden shadow-md bg-black">
                       <iframe 
                         src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
@@ -497,12 +497,12 @@ export default function ProductDetailClient({ params }: Props) {
               {/* Delivery Info */}
               <div className="bg-white rounded-xl border border-gray-200 p-3">
                 <h3 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2">
-                  <FaTruck className="text-teal-600 text-xs" /> Delivery
+                  <FaTruck className="text-green-500 text-xs" /> Delivery
                 </h3>
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors cursor-pointer group">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-green-50 hover:bg-green-100 transition-colors cursor-pointer group">
                     <span className="text-gray-600">Inside Dhaka</span>
-                    <span className="font-bold text-teal-700">৳{shippingCharge?.deliveryInDhaka || 60}</span>
+                    <span className="font-bold text-green-600">৳{shippingCharge?.deliveryInDhaka || 60}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group">
                     <span className="text-gray-600">Outside Dhaka</span>
@@ -526,7 +526,7 @@ export default function ProductDetailClient({ params }: Props) {
               {/* Related Books */}
               {relatedProducts.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                  <h3 className="font-bold text-lg text-teal-700 mb-3">Related Books</h3>
+                  <h3 className="font-bold text-lg text-green-600 mb-3">Related Books</h3>
                   <div className="space-y-3">
                     {relatedProducts.slice(0, 6).map((p) => {
                       const pPrice = getCurrentPrice(p);
@@ -543,14 +543,14 @@ export default function ProductDetailClient({ params }: Props) {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-teal-600 transition-colors">{p.name}</p>
+                            <p className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-green-500 transition-colors">{p.name}</p>
                             <div className="flex items-center gap-1 mt-1">
                               <FaStar className="text-yellow-400 text-xs" />
                               <span className="text-xs text-gray-500">{p.ratingAvr?.toFixed(1) || 0}</span>
                             </div>
                             <div className="flex items-center justify-between mt-1">
                               <div>
-                                <p className="text-sm font-bold text-teal-600">৳{pPrice}</p>
+                                <p className="text-sm font-bold text-green-500">৳{pPrice}</p>
                                 {pDiscount > 0 && (
                                   <p className="text-xs text-gray-400 line-through">৳{pOriginalPrice}</p>
                                 )}
@@ -575,12 +575,12 @@ export default function ProductDetailClient({ params }: Props) {
           {/* Bought Together - Modern Card Layout */}
           {bundleProducts.length > 0 && (
             <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-4">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <HiOutlineBookOpen className="w-6 h-6" />
                   পাঠকেরা একসাথে কিনে থাকেন
                 </h2>
-                <p className="text-teal-100 text-sm mt-1">Save 10% when you buy together</p>
+                <p className="text-green-100 text-sm mt-1">Save 10% when you buy together</p>
               </div>
               
               <div className="p-6">
@@ -591,13 +591,13 @@ export default function ProductDetailClient({ params }: Props) {
                       {product?.images?.[0] && <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{product?.name}</p>
-                    <p className="text-sm font-bold text-teal-600 mt-1">৳{getCurrentPrice(product!)}</p>
+                    <p className="text-sm font-bold text-green-500 mt-1">৳{getCurrentPrice(product!)}</p>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <span className="text-2xl text-gray-400">+</span>
-                    <div className="w-28 h-36 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl border-2 border-dashed border-teal-300 flex items-center justify-center">
-                      <span className="text-teal-600 font-medium text-sm px-2">Select Books</span>
+                    <div className="w-28 h-36 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-dashed border-green-300 flex items-center justify-center">
+                      <span className="text-green-500 font-medium text-sm px-2">Select Books</span>
                     </div>
                   </div>
                   
@@ -610,7 +610,7 @@ export default function ProductDetailClient({ params }: Props) {
                     return (
                       <div key={item.product._id} className="text-center group">
                         <div 
-                          className={`relative w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-4 ring-teal-500 ring-offset-2' : ''}`}
+                          className={`relative w-28 h-36 bg-gray-100 rounded-xl overflow-hidden mb-2 shadow-md cursor-pointer transition-all hover:scale-105 ${isSelected ? 'ring-4 ring-green-500 ring-offset-2' : ''}`}
                           onClick={() => handleToggleBundle(item.product._id)}
                         >
                           {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
@@ -621,14 +621,14 @@ export default function ProductDetailClient({ params }: Props) {
                             <FaPlus className="text-white text-2xl" />
                           </div>
                           {isSelected && (
-                            <div className="absolute top-1 left-1 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                            <div className="absolute top-1 left-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                               <FaCheck className="text-white text-xs" />
                             </div>
                           )}
                         </div>
                         <p className="text-xs font-medium text-gray-700 line-clamp-2 max-w-[110px] mx-auto">{item.product.name}</p>
                         <div className="flex items-center justify-center gap-1 mt-1">
-                          <p className="text-sm font-bold text-teal-600">৳{itemPrice}</p>
+                          <p className="text-sm font-bold text-green-500">৳{itemPrice}</p>
                           {itemDiscount > 0 && <p className="text-xs text-gray-400 line-through">৳{itemOriginal}</p>}
                         </div>
                       </div>
@@ -671,7 +671,7 @@ export default function ProductDetailClient({ params }: Props) {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-4 text-base font-medium transition-colors ${activeTab === tab ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                  className={`flex-1 px-4 py-4 text-base font-medium transition-colors ${activeTab === tab ? 'text-green-500 border-b-2 border-green-500 bg-green-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                 >
                   {tab === 'description' ? 'বিবরণ' : tab === 'specifications' ? 'স্পেসিফিকেশন' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
                 </button>
@@ -782,7 +782,7 @@ export default function ProductDetailClient({ params }: Props) {
                       {!showReviewForm ? (
                         <button
                           onClick={() => setShowReviewForm(true)}
-                          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
                           Write a Review
                         </button>
@@ -809,7 +809,7 @@ export default function ProductDetailClient({ params }: Props) {
                               value={newReview.review}
                               onChange={(e) => setNewReview({ ...newReview, review: e.target.value })}
                               placeholder="Share your experience with this book..."
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                               rows={4}
                             />
                           </div>
@@ -817,7 +817,7 @@ export default function ProductDetailClient({ params }: Props) {
                             <button
                               onClick={handleSubmitReview}
                               disabled={submittingReview}
-                              className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                             >
                               {submittingReview ? 'Submitting...' : 'Submit Review'}
                             </button>
@@ -834,11 +834,11 @@ export default function ProductDetailClient({ params }: Props) {
                   ) : (
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
                       <p className="text-gray-600 mb-3">Please login to write a review</p>
-                      <Link href="/login" className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-medium inline-block">
+                      <Link href="/login" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium inline-block">
                         Login
                       </Link>
                       <span className="text-gray-500 mx-2">or</span>
-                      <Link href="/register" className="text-teal-600 hover:underline font-medium">
+                      <Link href="/register" className="text-green-500 hover:underline font-medium">
                         Register
                       </Link>
                     </div>
@@ -847,15 +847,15 @@ export default function ProductDetailClient({ params }: Props) {
                   {/* Reviews List */}
                   {loadingReviews ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
                     </div>
                   ) : reviews.length > 0 ? (
                     <div className="space-y-4">
                       {reviews.map((review) => (
                         <div key={review._id} className="border-b border-gray-100 pb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                              <span className="text-teal-700 font-bold text-sm">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <span className="text-green-600 font-bold text-sm">
                                 {review.user?.name?.[0]?.toUpperCase() || 'A'}
                               </span>
                             </div>
@@ -868,8 +868,8 @@ export default function ProductDetailClient({ params }: Props) {
                           </div>
                           <p className="text-gray-600 text-sm">{review.review}</p>
                           {review.reply && (
-                            <div className="mt-3 pl-4 border-l-2 border-teal-200 bg-teal-50 rounded p-3">
-                              <p className="text-xs text-teal-600 font-medium mb-1">Seller Reply:</p>
+                            <div className="mt-3 pl-4 border-l-2 border-green-200 bg-green-50 rounded p-3">
+                              <p className="text-xs text-green-500 font-medium mb-1">Seller Reply:</p>
                               <p className="text-gray-600 text-sm">{review.reply}</p>
                             </div>
                           )}
@@ -888,29 +888,29 @@ export default function ProductDetailClient({ params }: Props) {
           {relatedProducts.length > 0 && (
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="mt-10">
-                <h2 className="text-xl font-bold text-teal-700 mb-5">সর্বশেষ দেখা বই</h2>
+                <h2 className="text-xl font-bold text-green-600 mb-5">সর্বশেষ দেখা বই</h2>
                 <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
                   {relatedProducts.slice(0, 8).map((p) => (
                     <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
                       <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
                         {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
                       </div>
-                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-teal-600">{p.name}</p>
-                      <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
+                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                      <p className="text-sm font-bold text-green-500">৳{getCurrentPrice(p)}</p>
                     </Link>
                   ))}
                 </div>
               </div>
               <div className="mt-10">
-                <h2 className="text-xl font-bold text-teal-700 mb-5">সর্বাধিক বিক্রিত বই</h2>
+                <h2 className="text-xl font-bold text-green-600 mb-5">সর্বাধিক বিক্রিত বই</h2>
                 <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
                   {relatedProducts.slice(0, 8).map((p) => (
                     <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
                       <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
                         {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
                       </div>
-                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-teal-600">{p.name}</p>
-                      <p className="text-sm font-bold text-teal-600">৳{getCurrentPrice(p)}</p>
+                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                      <p className="text-sm font-bold text-green-500">৳{getCurrentPrice(p)}</p>
                     </Link>
                   ))}
                 </div>
@@ -949,7 +949,7 @@ export default function ProductDetailClient({ params }: Props) {
                 }}
                 loading={
                   <div className="flex items-center justify-center min-h-[50vh]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
                   </div>
                 }
               >

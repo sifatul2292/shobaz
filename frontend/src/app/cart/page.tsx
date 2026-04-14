@@ -32,8 +32,8 @@ export default function CartPage() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="relative mb-8">
-              <div className="w-40 h-40 mx-auto bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center">
-                <FaShoppingCart className="text-6xl text-teal-300" />
+              <div className="w-40 h-40 mx-auto bg-gradient-to-br from-green-100 to-cyan-100 rounded-full flex items-center justify-center">
+                <FaShoppingCart className="text-6xl text-green-300" />
               </div>
               <div className="absolute -top-2 -right-8 w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center animate-bounce">
                 <span className="text-2xl">😢</span>
@@ -41,7 +41,7 @@ export default function CartPage() {
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-3">আপনার কার্ট খালি</h2>
             <p className="text-gray-500 mb-8">মনে করিয়া দেখুন আপনার পছন্দের বইগুলো কোথায় রাখা হয়েছে</p>
-            <Link href="/products" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-bold hover:from-teal-600 hover:to-cyan-600 transition-all hover:scale-105 shadow-lg">
+            <Link href="/products" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-cyan-500 text-white rounded-xl font-bold hover:from-green-500 hover:to-cyan-600 transition-all hover:scale-105 shadow-lg">
               <FaBookmark />
               বই কিনুন
               <FaArrowRight />
@@ -95,12 +95,12 @@ export default function CartPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-4">
                         <div className="min-w-0">
-                          <Link href={`/products/${product.slug}`} className="font-bold text-lg text-gray-800 hover:text-teal-600 line-clamp-2 transition-colors">
+                          <Link href={`/products/${product.slug}`} className="font-bold text-lg text-gray-800 hover:text-green-500 line-clamp-2 transition-colors">
                             {name}
                           </Link>
                           {authorName && (
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                              <span className="w-1 h-1 bg-teal-500 rounded-full"></span>
+                              <span className="w-1 h-1 bg-green-500 rounded-full"></span>
                               {authorName}
                             </p>
                           )}
@@ -116,7 +116,7 @@ export default function CartPage() {
                       
                       {/* Price */}
                       <div className="mt-3 flex items-center gap-3">
-                        <span className="text-2xl font-bold text-teal-600">৳{price}</span>
+                        <span className="text-2xl font-bold text-green-500">৳{price}</span>
                         {product.discountAmount > 0 && (
                           <>
                             <span className="text-sm text-gray-400 line-through">৳{product.salePrice}</span>
@@ -154,7 +154,7 @@ export default function CartPage() {
                   
                   {/* Quick Actions */}
                   <div className="px-4 py-3 bg-slate-50 flex items-center justify-between">
-                    <button className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-2 transition-colors">
+                    <button className="text-sm text-green-500 hover:text-green-600 flex items-center gap-2 transition-colors">
                       <FaHeart className="text-xs" />
                       পছন্দ তালিকায় রাখুন
                     </button>
@@ -179,9 +179,9 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden sticky top-24">
               {/* Header */}
-              <div className="bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-4">
+              <div className="bg-gradient-to-r from-green-500 to-cyan-500 px-6 py-4">
                 <h3 className="font-bold text-white text-lg">অর্ডার সারাংশ</h3>
-                <p className="text-teal-100 text-sm">{items.length}টি পণ্য</p>
+                <p className="text-green-100 text-sm">{items.length}টি পণ্য</p>
               </div>
               
               <div className="p-6">
@@ -193,17 +193,17 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>ডেলিভারি চার্জ</span>
-                    <span className="text-teal-600">ফ্রি</span>
+                    <span className="text-green-500">ফ্রি</span>
                   </div>
                   <div className="h-px bg-slate-100"></div>
                   <div className="flex justify-between text-xl font-bold">
                     <span>মোট</span>
-                    <span className="text-teal-600">৳{subtotal}</span>
+                    <span className="text-green-500">৳{subtotal}</span>
                   </div>
                 </div>
                 
                 {/* Checkout Button */}
-                <Link href="/checkout" className="block w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-center py-4 rounded-xl font-bold hover:from-teal-600 hover:to-cyan-600 transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                <Link href="/checkout" className="block w-full bg-gradient-to-r from-green-500 to-cyan-500 text-white text-center py-4 rounded-xl font-bold hover:from-green-500 hover:to-cyan-600 transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl">
                   চেকআউটে যান
                   <FaArrowRight className="inline-block ml-2" />
                 </Link>
@@ -227,7 +227,7 @@ export default function CartPage() {
             </div>
             
             {/* Continue Shopping */}
-            <Link href="/products" className="block mt-4 text-center text-teal-600 hover:text-teal-700 font-medium transition-colors">
+            <Link href="/products" className="block mt-4 text-center text-green-500 hover:text-green-600 font-medium transition-colors">
               + আরও বই যোগ করুন
             </Link>
           </div>

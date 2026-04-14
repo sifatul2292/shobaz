@@ -213,11 +213,11 @@ export default function HomePage() {
             {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
             {salePrice > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-teal-600">৳{currentPrice}</span>
+                <span className="text-lg font-bold text-green-500">৳{currentPrice}</span>
                 {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
               </div>
             )}
-            {salePrice === 0 && <p className="text-sm font-bold text-teal-600">Free</p>}
+            {salePrice === 0 && <p className="text-sm font-bold text-green-500">Free</p>}
           </Link>
           
           {/* Add to Cart Button - shows on hover */}
@@ -236,11 +236,11 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
     return (
     <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden'>
       <Link href={`/products?category=${cat.slug}`} className='flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all'>
-        <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
+        <div className='w-10 h-10 bg-gradient-to-br from-green-100 to-cyan-100 rounded-full flex items-center justify-center'>
           {cat.image ? (
             <img src={imgUrl(cat.image)!} alt={cat.name} className='w-6 h-6 object-contain' />
           ) : (
-            <HiOutlineBookOpen className="w-5 h-5 text-teal-600" />
+            <HiOutlineBookOpen className="w-5 h-5 text-green-500" />
           )}
         </div>
         <div className='flex-1 min-w-0'>
@@ -275,7 +275,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
         </div>
       )}
       
-      <Link href={`/products?category=${cat.slug}`} className='block text-center py-2 text-teal-600 text-sm font-medium hover:text-teal-700 border-t border-gray-100'>
+      <Link href={`/products?category=${cat.slug}`} className='block text-center py-2 text-green-500 text-sm font-medium hover:text-green-600 border-t border-gray-100'>
         সব বই দেখুন →
       </Link>
     </div>
@@ -328,7 +328,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                         </div>
                       )}
                       {!banner.image && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-green-600 to-green-700" />
                       )}
                       <div className="absolute inset-0 flex items-center">
                         <div className="max-w-7xl mx-auto w-full px-4 md:px-8">
@@ -339,7 +339,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                             <p className="text-sm md:text-lg lg:text-xl text-white/90 mb-6 animate-fadeInUp" style={{ animationDelay: `${index * 100 + 150}ms` }}>
                               {banner.description || 'সেরা বইয়ের সংগ্রহ'}
                             </p>
-                            <span className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-2.5 rounded-full font-semibold text-sm animate-fadeInUp" style={{ animationDelay: `${index * 100 + 300}ms` }}>
+                            <span className="inline-flex items-center gap-2 bg-white text-green-600 px-5 py-2.5 rounded-full font-semibold text-sm animate-fadeInUp" style={{ animationDelay: `${index * 100 + 300}ms` }}>
                               এখনই দেখুন <span className="text-lg">→</span>
                             </span>
                           </div>
@@ -358,9 +358,9 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className='max-w-7xl mx-auto px-4 py-6'>
             <div className='flex items-center justify-between mb-4'>
               <div className='flex items-center gap-3'>
-                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineBookOpen className="w-5 h-5 text-teal-600" /> বইয়ের ক্যাটাগরি</h2>
+                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineBookOpen className="w-5 h-5 text-green-500" /> বইয়ের ক্যাটাগরি</h2>
               </div>
-              <Link href='/products' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
+              <Link href='/products' className='text-green-500 text-sm font-medium hover:underline'>সব দেখুন →</Link>
             </div>
             
             <div className='hidden md:grid md:grid-cols-4 gap-4'>
@@ -389,7 +389,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                 <h2 className='text-2xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineFire className='w-6 h-6 text-orange-500' /> হট ডিল</h2>
                 <span className='bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium'>অফার</span>
               </div>
-              <Link href='/products?sort=discountAmount' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
+              <Link href='/products?sort=discountAmount' className='text-green-500 text-sm font-medium hover:underline'>সব দেখুন →</Link>
             </div>
             <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'>
               {featuredProducts.slice(0, 12).map((product) => (
@@ -404,10 +404,10 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-10 bg-white rounded-2xl mx-4">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineSparkles className="w-6 h-6 text-teal-500" /> নতুন আগমন</h2>
-                <span className="bg-teal-500 text-white text-xs px-3 py-1 rounded-full font-medium">নতুন</span>
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineSparkles className="w-6 h-6 text-green-500" /> নতুন আগমন</h2>
+                <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">নতুন</span>
               </div>
-              <Link href="/products?sort=createdAt" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href="/products?sort=createdAt" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {newProducts.slice(0, 12).map((product) => (
@@ -421,8 +421,8 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
         {products.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 py-10">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineBookOpen className="w-6 h-6 text-teal-600" /> সব বই</h2>
-              <Link href="/products" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineBookOpen className="w-6 h-6 text-green-500" /> সব বই</h2>
+              <Link href="/products" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {products.slice(0, 24).map((product) => (
@@ -441,7 +441,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                 <Link
                   key={tag._id}
                   href={`/products?tag=${tag.slug}`}
-                  className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:shadow-md transition-all"
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-green-500 hover:text-green-500 hover:shadow-md transition-all"
                 >
                   {tag.name}
                 </Link>
@@ -455,20 +455,20 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">✍️ জনপ্রিয় লেখক</h2>
-              <Link href="/authors" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href="/authors" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <Swiper slidesPerView={2} spaceBetween={16} breakpoints={{ 640: { slidesPerView: 4 }, 768: { slidesPerView: 5 }, 1024: { slidesPerView: 8 } }} modules={[Navigation]}>
               {authors.map((author) => (
                 <SwiperSlide key={author._id}>
                   <Link href={`/products?author=${author.slug}`} className="block text-center group">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-100 overflow-hidden mb-2 ring-2 ring-transparent group-hover:ring-teal-500 transition-all">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-100 overflow-hidden mb-2 ring-2 ring-transparent group-hover:ring-green-500 transition-all">
                       {author.image ? (
                         <img src={imgUrl(author.image)!} alt={author.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">{author.name?.charAt(0)}</div>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-teal-600">{author.name}</span>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-green-500">{author.name}</span>
                   </Link>
                 </SwiperSlide>
               ))}
@@ -481,7 +481,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-8 bg-white rounded-2xl mx-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">🏢 জনপ্রিয় প্রকাশনা</h2>
-              <Link href="/publishers" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href="/publishers" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <Swiper slidesPerView={2} spaceBetween={16} breakpoints={{ 640: { slidesPerView: 4 }, 768: { slidesPerView: 5 }, 1024: { slidesPerView: 8 } }} modules={[Navigation]}>
               {publishers.map((pub) => (
@@ -494,7 +494,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                         <span className="text-sm font-medium text-gray-600">{pub.name}</span>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-teal-600">{pub.name}</span>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-green-500">{pub.name}</span>
                   </Link>
                 </SwiperSlide>
               ))}
@@ -507,7 +507,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">📰 ব্লগ</h2>
-              <Link href="/blog" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <Link href="/blog" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {blogs.slice(0, 3).map((blog) => (
@@ -532,28 +532,28 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
         )}
 
         {/* Features Banner */}
-        <section className="bg-teal-600 py-12 mt-8">
+        <section className="bg-green-500 py-12 mt-8">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="text-white">
                 <HiOutlineBookOpen className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">৫০,০০০+ বই</h3>
-                <p className="text-teal-200 text-sm">বিভিন্ন ক্যাটাগরি</p>
+                <p className="text-green-200 text-sm">বিভিন্ন ক্যাটাগরি</p>
               </div>
               <div className="text-white">
                 <HiOutlineTruck className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">ফ্রি ডেলিভারি</h3>
-                <p className="text-teal-200 text-sm">৫০০+ টাকায়</p>
+                <p className="text-green-200 text-sm">৫০০+ টাকায়</p>
               </div>
               <div className="text-white">
                 <HiOutlineSparkles className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">দ্রুত ডেলিভারি</h3>
-                <p className="text-teal-200 text-sm">২-৫ দিনে</p>
+                <p className="text-green-200 text-sm">২-৫ দিনে</p>
               </div>
               <div className="text-white">
                 <HiOutlineShieldCheck className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">গারান্টি</h3>
-                <p className="text-teal-200 text-sm">১০০% সন্তুষ্টি</p>
+                <p className="text-green-200 text-sm">১০০% সন্তুষ্টি</p>
               </div>
             </div>
           </div>
