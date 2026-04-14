@@ -919,20 +919,20 @@ export default function ProductDetailClient({ params }: Props) {
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-start justify-center pt-4 pb-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-start justify-center overflow-y-auto"
           onClick={() => setShowPreviewModal(false)}
         >
           {/* Close Button */}
           <button 
             onClick={() => setShowPreviewModal(false)} 
-            className="fixed top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+            className="fixed top-4 right-4 z-50 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-colors shadow-lg"
           >
-            <FaTimes className="text-white w-5 h-5" />
+            <FaTimes className="text-gray-800 w-5 h-5" />
           </button>
 
           {/* PDF Viewer - Scrollable */}
           <div 
-            className="w-full max-w-3xl mt-12 bg-white rounded-lg shadow-2xl"
+            className="w-full max-w-3xl my-4 md:my-8 bg-white rounded-lg shadow-2xl mx-2"
             onClick={(e) => e.stopPropagation()}
           >
             <Document
@@ -947,12 +947,12 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
               }
             >
-              <div className="flex flex-col items-center gap-6 px-4 py-6">
+              <div className="flex flex-col items-center gap-4 md:gap-6 px-2 md:px-4 py-4 md:py-6">
                 {Array.from(new Array(numPages), (_, index) => (
                   <Page 
                     key={index + 1}
                     pageNumber={index + 1} 
-                    width={Math.min(500, window.innerWidth - 80)}
+                    width={Math.min(500, window.innerWidth - 40)}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
                     className="shadow-lg bg-white"
