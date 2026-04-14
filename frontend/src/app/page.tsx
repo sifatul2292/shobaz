@@ -333,7 +333,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
             
             <div className='hidden md:grid md:grid-cols-4 gap-4'>
               {categories.slice(0, 8).map((cat) => (
-                <CategoryCard cat={cat} />
+                <CategoryCard key={cat._id} cat={cat} />
               ))}
             </div>
             
@@ -341,7 +341,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
               <Swiper slidesPerView={1.2} spaceBetween={12} freeMode={true} modules={[Navigation]}>
                 {categories.slice(0, 8).map((cat) => (
                   <SwiperSlide key={cat._id}>
-                    <CategoryCard cat={cat} />
+<CategoryCard key={cat._id} cat={cat} />
                   </SwiperSlide>
                 ))}
               </Swiper>
