@@ -913,30 +913,20 @@ export default function ProductDetailClient({ params }: Props) {
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div 
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
           onClick={() => setShowPreviewModal(false)}
         >
-          <div 
-            className="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              animation: 'modalSlideIn 0.3s ease-out',
-            }}
+          <button 
+            onClick={() => setShowPreviewModal(false)} 
+            className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-2xl">
-              <h3 className="font-bold text-white text-lg">প্রিভিউ</h3>
-              <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
-                <FaTimes className="text-white w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 bg-gray-100">
-              <iframe 
-                src={previewUrl.includes('drive.google.com') ? previewUrl.replace('/view', '/preview') : previewUrl} 
-                className="w-full h-full rounded-b-2xl"
-                allow="autoplay" 
-              />
-            </div>
-          </div>
+            <FaTimes className="text-white w-5 h-5" />
+          </button>
+          <iframe 
+            src={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(previewUrl)}`}
+            className="w-full max-w-5xl h-[90vh] rounded-lg shadow-2xl"
+            allow="autoplay" 
+          />
         </div>
       )}
 
