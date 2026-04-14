@@ -919,7 +919,7 @@ export default function ProductDetailClient({ params }: Props) {
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm"
           onClick={() => setShowPreviewModal(false)}
         >
           {/* Close Button */}
@@ -932,47 +932,21 @@ export default function ProductDetailClient({ params }: Props) {
 
           {/* PDF Viewer - Scrollable */}
           <div 
-            className="w-full max-w-4xl h-[90vh] bg-white rounded-lg overflow-hidden flex flex-col"
+            className="w-full h-full overflow-y-auto bg-gray-100 pt-16 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <Document
-              file={previewUrl}
-              onLoadSuccess={({ numPages }: { numPages: number }) => {
-                setNumPages(numPages);
-                setPdfLoading(false);
-              }}
-              onLoadError={(error: Error) => {
-                console.error('PDF load error:', error);
-                setPdfLoading(false);
-              }}
-              loading={
-                <div className="flex items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-                </div>
-              }
-              error={
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                  <FaTimes className="w-12 h-12 mb-2" />
-                  <p>Failed to load PDF</p>
-                </div>
-              }
-            >
-              <div className="flex-1 overflow-y-auto overflow-x-auto bg-gray-100 p-8">
-                <div className="flex flex-col items-center gap-6 min-h-full">
-                  {Array.from(new Array(numPages), (_, index) => (
-                    <Page 
-                      key={index + 1}
-                      pageNumber={index + 1} 
-                      width={Math.min(600, window.innerWidth - 80)}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                      className="shadow-xl bg-white"
-                      scale={1}
-                    />
-                  ))}
-                </div>
-              </div>
-            </Document>
+            <div className="flex flex-col items-center gap-6 px-4">
+              {Array.from(new Array(numPages), (_, index) => (
+                <Page 
+                  key={index + 1}
+                  pageNumber={index + 1} 
+                  width={Math.min(600, window.innerWidth - 80)}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  className="shadow-xl bg-white"
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
