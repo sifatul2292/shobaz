@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { HiOutlineBookOpen, HiOutlineFire, HiOutlineSparkles } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -239,7 +240,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           {cat.image ? (
             <img src={imgUrl(cat.image)!} alt={cat.name} className='w-6 h-6 object-contain' />
           ) : (
-            <span className='text-xl'>📚</span>
+            <HiOutlineBookOpen className="w-5 h-5 text-teal-600" />
           )}
         </div>
         <div className='flex-1 min-w-0'>
@@ -355,7 +356,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className='max-w-7xl mx-auto px-4 py-6'>
             <div className='flex items-center justify-between mb-4'>
               <div className='flex items-center gap-3'>
-                <h2 className='text-xl font-bold text-gray-800'>📚 বইয়ের ক্যাটাগরি</h2>
+                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineBookOpen className="w-5 h-5 text-teal-600" /> বইয়ের ক্যাটাগরি</h2>
               </div>
               <Link href='/products' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
             </div>
@@ -383,7 +384,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className='max-w-7xl mx-auto px-4 py-10'>
             <div className='flex items-center justify-between mb-6'>
               <div className='flex items-center gap-3'>
-                <h2 className='text-2xl font-bold text-gray-800'>🔥 হট ডিল</h2>
+                <h2 className='text-2xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineFire className='w-6 h-6 text-orange-500' /> হট ডিল</h2>
                 <span className='bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium'>অফার</span>
               </div>
               <Link href='/products?sort=discountAmount' className='text-teal-600 text-sm font-medium hover:underline'>সব দেখুন →</Link>
@@ -401,7 +402,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-10 bg-white rounded-2xl mx-4">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800">🆕 নতুন আগমন</h2>
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineSparkles className="w-6 h-6 text-teal-500" /> নতুন আগমন</h2>
                 <span className="bg-teal-500 text-white text-xs px-3 py-1 rounded-full font-medium">নতুন</span>
               </div>
               <Link href="/products?sort=createdAt" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
@@ -418,7 +419,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
         {products.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 py-10">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">📚 সব বই</h2>
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineBookOpen className="w-6 h-6 text-teal-600" /> সব বই</h2>
               <Link href="/products" className="text-teal-600 text-sm font-medium hover:underline">সব দেখুন →</Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -531,7 +532,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="text-white">
-                <div className="text-4xl mb-2">📚</div>
+                <HiOutlineBookOpen className="w-10 h-10 mx-auto mb-2 text-white" />
                 <h3 className="text-xl font-bold">৫০,০০০+ বই</h3>
                 <p className="text-teal-200 text-sm">বিভিন্ন ক্যাটাগরি</p>
               </div>

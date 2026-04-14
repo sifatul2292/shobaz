@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -46,7 +47,7 @@ export default function OffersPage() {
                     {product.images?.[0] ? (
                       <img src={imgUrl(product.images[0])!} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">📚</div>
+                      <HiOutlineBookOpen className="w-16 h-16 text-gray-300" />
                     )}
                     {product.discountAmount && <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">-{product.discountAmount}%</span>}
                   </div>

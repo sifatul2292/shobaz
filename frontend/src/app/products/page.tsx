@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -223,8 +224,9 @@ export default function ProductsPage() {
       <main className="flex-1">
         <div className="bg-gradient-to-r from-teal-600 to-teal-800 py-8">
           <div className="max-w-7xl mx-auto px-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              {filters.category ? `${decodeURIComponent(filters.category)}` : '📚 সকল বই'}
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+              <HiOutlineBookOpen className="w-7 h-7" />
+              {filters.category ? `${decodeURIComponent(filters.category)}` : 'সকল বই'}
             </h1>
             <p className="text-teal-100">{filteredProducts.length} টি বই পাওয়া গেছে</p>
           </div>
