@@ -31,6 +31,8 @@ interface Props {
 export default function ProductDetailClient({ params }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
+  const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [bundleProducts, setBundleProducts] = useState<BundleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -81,6 +83,13 @@ export default function ProductDetailClient({ params }: Props) {
           
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 10));
+          
+          // Recently Viewed - newest products (sorted by createdAt or just take from list)
+          setRecentlyViewed(filtered.slice(0, 8));
+          
+          // Best Sellers - products with highest rating/discount
+          const sortedByRating = [...filtered].sort((a, b) => (b.ratingAvr || 0) - (a.ratingAvr || 0));
+          setBestSellers(sortedByRating.slice(0, 8));
           
           // Bundle products from backend
           const backendBoughtTogether = productData.boughtTogetherProducts || [];
@@ -894,36 +903,49 @@ export default function ProductDetailClient({ params }: Props) {
           </div>
 
           {/* Recently Viewed & Best Sellers */}
-          {relatedProducts.length > 0 && (
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="mt-10">
-                <h2 className="text-xl font-bold text-green-600 mb-5">সর্বশেষ দেখা বই</h2>
-                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
-                  {relatedProducts.slice(0, 8).map((p) => (
-                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
-                      <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                      </div>
-                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                      <p className="text-sm font-bold text-green-500">৳{getCurrentPrice(p)}</p>
-                    </Link>
-                  ))}
+          {(recentlyViewed.length > 0 || bestSellers.length > 0) && (
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Recently Viewed */}
+              {recentlyViewed.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
+                    <h2 className="text-base font-bold text-gray-800">সর্বশেষ দেখা বই</h2>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {recentlyViewed.slice(0, 6).map((p) => (
+                      <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-28 group">
+                        <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                          {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
+                        </div>
+                        <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                        <p className="text-xs font-bold text-green-500">৳{getCurrentPrice(p)}</p>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-10">
-                <h2 className="text-xl font-bold text-green-600 mb-5">সর্বাধিক বিক্রিত বই</h2>
-                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
-                  {relatedProducts.slice(0, 8).map((p) => (
-                    <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-36 group">
-                      <div className="w-28 h-40 bg-gray-100 rounded-lg mb-3 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                        {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
-                      </div>
-                      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
-                      <p className="text-sm font-bold text-green-500">৳{getCurrentPrice(p)}</p>
-                    </Link>
-                  ))}
+              )}
+              
+              {/* Best Sellers */}
+              {bestSellers.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
+                    <h2 className="text-base font-bold text-gray-800">সর্বাধিক বিক্রিত বই</h2>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {bestSellers.slice(0, 6).map((p) => (
+                      <Link key={p._id} href={`/products/${p.slug}`} className="flex-shrink-0 w-28 group">
+                        <div className="w-28 h-36 bg-gray-100 rounded-lg mb-2 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                          {p.images?.[0] && <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />}
+                        </div>
+                        <p className="text-xs font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-green-500">{p.name}</p>
+                        <p className="text-xs font-bold text-green-500">৳{getCurrentPrice(p)}</p>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
