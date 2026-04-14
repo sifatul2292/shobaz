@@ -206,8 +206,8 @@ export default function HomePage() {
           </div>
         </Link>
         
-        {/* Text Section - button expands on hover */}
-        <div className="p-4 pb-4 group-hover:pb-16 transition-all duration-300">
+        {/* Text Section with Add to Cart */}
+        <div className="p-4 relative group-hover:pb-20 transition-all duration-300">
           <Link href={`/products/${productSlug}`} className="block cursor-pointer">
             <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
             {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
@@ -220,10 +220,10 @@ export default function HomePage() {
             {salePrice === 0 && <p className="text-sm font-bold text-green-500">Free</p>}
           </Link>
           
-          {/* Add to Cart Button - always visible on mobile, hover on desktop */}
+          {/* Add to Cart Button - always visible on mobile */}
           <button 
             onClick={() => handleAddToCart(product)}
-            className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 shadow-md hover:shadow-lg sm:opacity-0 sm:group-hover:opacity-100"
+            className="w-full mt-3 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-medium text-sm transition-colors lg:opacity-0 lg:group-hover:opacity-100"
           >
             কার্টে যোগ করুন
           </button>
