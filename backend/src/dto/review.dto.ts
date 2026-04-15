@@ -157,28 +157,24 @@ export class GetReviewByIdsDto {
 
 export class FilterAndPaginationReviewDto {
   @IsOptional()
-  @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
   @Type(() => FilterReviewDto)
   filter: FilterReviewDto;
 
   @IsOptional()
-  @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
   @Type(() => FilterReviewGroupDto)
   filterGroup: FilterReviewGroupDto;
 
   @IsOptional()
-  @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
   @Type(() => PaginationDto)
   pagination: PaginationDto;
 
   @IsOptional()
-  @IsNotEmptyObject()
   @IsObject()
   sort: object;
 

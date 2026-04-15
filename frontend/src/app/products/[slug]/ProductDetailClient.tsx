@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -9,7 +10,6 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { HiOutlineBookOpen, HiOutlineEye, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi';
 import { 
   FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes, 
@@ -17,7 +17,7 @@ import {
   FaMinus, FaPlus, FaPlay, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 
 interface BundleItem {
   product: Product;
@@ -952,31 +952,7 @@ export default function ProductDetailClient({ params }: Props) {
               className="w-full max-w-3xl my-4 bg-white rounded-lg shadow-2xl mx-2"
               onClick={(e) => e.stopPropagation()}
             >
-              <Document
-                file={previewUrl}
-                onLoadSuccess={({ numPages }: { numPages: number }) => {
-                  setNumPages(numPages);
-                  setPdfLoading(false);
-                }}
-                loading={
-                  <div className="flex items-center justify-center min-h-[50vh]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>
-                }
-              >
-                <div className="flex flex-col items-center gap-4 md:gap-6 px-2 md:px-4 py-4 md:py-6">
-                  {Array.from(new Array(numPages), (_, index) => (
-                    <Page 
-                      key={index + 1}
-                      pageNumber={index + 1} 
-                      width={Math.min(500, window.innerWidth - 40)}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                      className="shadow-lg bg-white"
-                    />
-                  ))}
-                </div>
-              </Document>
+              <PdfViewer file={previewUrl} />
             </div>
           </div>
         </div>
