@@ -4,6 +4,7 @@ import { Logger, VersioningType } from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { join } from 'path';
 import * as express from 'express';
+import * as compression from 'compression';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -35,6 +36,9 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization,administrator',
     credentials: true,
   });
+  // Gzip compression for all responses
+  app.use(compression());
+
   app.use(
     '/upload/static',
     express.static(join(__dirname, '..', 'upload/static')),

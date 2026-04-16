@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  compress: true,
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -17,10 +19,20 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'api.shobaz.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'api.alambook.com',
         pathname: '/**',
       },
     ],
+    minimumCacheTTL: 3600,
+    formats: ['image/avif', 'image/webp'],
+  },
+  experimental: {
+    optimizePackageImports: ['react-icons'],
   },
 };
 
