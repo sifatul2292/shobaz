@@ -291,33 +291,21 @@ export class OrderService {
     addOrderDto: AddOrderDto,
   ): Promise<void> {
     try {
-      // 1) Fraud Checker Call + Order Update
+      // 1) FraudSpy Check + Order Update
       if (addOrderDto.phoneNo) {
         try {
-          const fraudCheckerData = await this.courierService.checkFraudOrder(
-            addOrderDto.phoneNo,
-          );
-
-          // Validate response structure
-          if (fraudCheckerData && !fraudCheckerData.summary) {
-            this.logger.warn(
-              `Fraud checker response missing summary for phone: ${addOrderDto.phoneNo}`,
-            );
-          }
-
-          // Fraud data পেলে order এ সেট করি
-          if (fraudCheckerData) {
+          const fraudResult = await this.checkFraudSpy(addOrderDto.phoneNo);
+          if (fraudResult.success && fraudResult.data) {
             await this.orderModel.updateOne(
               { _id: saveData._id },
-              { $set: { fraudChecker: fraudCheckerData } },
+              { $set: { fraudChecker: fraudResult.data } },
             );
           }
         } catch (error) {
           this.logger.warn(
-            `Failed to fetch fraud checker data for phone: ${addOrderDto?.phoneNo}`,
+            `FraudSpy check failed for phone: ${addOrderDto?.phoneNo}`,
             error?.message || error,
           );
-          // Fraud checker fail হলেও order ঠিক থাকবে
         }
       }
 
@@ -1066,6 +1054,10 @@ export class OrderService {
 
     if (updateOrderDto?.deliveryDate !== undefined) {
       updatePayload.deliveryDate = updateOrderDto.deliveryDate;
+    }
+
+    if (updateOrderDto?.fraudChecker !== undefined) {
+      updatePayload.fraudChecker = updateOrderDto.fraudChecker;
     }
 
     return {

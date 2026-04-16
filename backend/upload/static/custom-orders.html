@@ -1171,22 +1171,25 @@
   /* ── Fraud cell ── */
   function fraudCell(fraud, mongoId, phone) {
     var html = '<div class="fraud-cell">';
-    // Show stored result if available
-    if (fraud && typeof fraud === 'object') {
-      // FraudSpy result shape: { overall, ... }
-      if (fraud.overall !== undefined) {
-        var lvl = fraud.overall;
-        var cls = lvl === 'safe' ? 'low' : lvl === 'moderate' ? 'mid' : 'high';
-        html += '<span class="fraud-chip ' + cls + '">' + esc(String(lvl)) + '</span>';
-      } else if (fraud.summary) {
-        // BDCourier shape: { summary: { success_ratio } }
-        var ratio = Math.round((fraud.summary.success_ratio || 0) * 100);
-        var cls2 = ratio > 70 ? 'low' : ratio > 30 ? 'mid' : 'high';
-        html += '<span class="fraud-chip ' + cls2 + '">' + ratio + '%</span>';
-      }
+    var hasStored = false;
+    // FraudSpy shape: { overall: { total, delivered, returned, success_ratio } }
+    if (fraud && typeof fraud === 'object' && fraud.overall && typeof fraud.overall === 'object') {
+      var o = fraud.overall;
+      var total = o.total || 0;
+      var delivered = o.delivered || 0;
+      var returned = o.returned || 0;
+      var ratio = typeof o.success_ratio === 'number' ? o.success_ratio : 0;
+      var cls = ratio >= 80 ? 'low' : ratio >= 50 ? 'mid' : 'high';
+      html += '<div class="fraud-chip ' + cls + '" style="font-size:11px;line-height:1.5">' +
+        '<span style="color:#333">All: <strong>' + total + '</strong></span> ' +
+        '<span style="color:green">✓ <strong>' + delivered + '</strong></span> ' +
+        '<span style="color:#c00">✗ <strong>' + returned + '</strong></span><br>' +
+        '<span style="font-weight:700">' + ratio.toFixed(2) + '%</span>' +
+        '</div>';
+      hasStored = true;
     }
-    // Always show Check button
-    html += '<button class="btn-fraud-check" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')">Check</button>';
+    var btnLabel = hasStored ? 'Recheck' : 'Check';
+    html += '<button class="btn-fraud-check" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')">' + btnLabel + '</button>';
     html += '</div>';
     return html;
   }
@@ -1246,6 +1249,13 @@
         btn2.disabled = false;
         var msg = 'Orders: ' + info.total + ' | Success: ' + info.ratio.toFixed(2) + '%';
         showToast(msg, info.ratio >= 80 ? 'success' : 'error');
+
+        // Persist result to the order so it survives page refresh
+        fetch(API + '/api/order/update/' + mongoId, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ fraudChecker: d }),
+        }).catch(function () { /* silent — display already updated */ });
       })
       .catch(function (err) {
         showToast('FraudSpy error: ' + err.message, 'error');

@@ -153,6 +153,9 @@ export class UpdateOrderDto {
 
   @IsOptional()
   deliveryDate: any;
+
+  @IsOptional()
+  fraudChecker: any;
 }
 
 export class UpdateOrderStatusDto {
