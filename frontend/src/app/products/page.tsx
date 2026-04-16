@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
@@ -13,7 +14,7 @@ import toast from 'react-hot-toast';
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'discount';
 
-export default function ProductsPage() {
+function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addItem } = useCartStore();
@@ -529,5 +530,13 @@ export default function ProductsPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }
