@@ -1191,6 +1191,31 @@
     return html;
   }
 
+  /* ── FraudSpy result renderer ── */
+  function renderFraudChip(container, btnEl, overall) {
+    // overall = { total, delivered, returned, success_ratio }
+    var total    = overall.total    || 0;
+    var delivered= overall.delivered|| 0;
+    var returned = overall.returned || 0;
+    var ratio    = typeof overall.success_ratio === 'number' ? overall.success_ratio : 0;
+    var cls = ratio >= 80 ? 'low' : ratio >= 50 ? 'mid' : 'high';
+
+    var old = container.querySelector('.fraud-chip');
+    if (old) old.remove();
+
+    var chip = document.createElement('div');
+    chip.className = 'fraud-chip ' + cls;
+    chip.innerHTML =
+      '<div style="font-size:11px;line-height:1.5">' +
+        '<span style="color:#333">All: <strong>' + total + '</strong></span> ' +
+        '<span style="color:green">✓ <strong>' + delivered + '</strong></span> ' +
+        '<span style="color:#c00">✗ <strong>' + returned + '</strong></span><br>' +
+        '<span style="font-weight:700">' + ratio.toFixed(2) + '%</span>' +
+      '</div>';
+    container.insertBefore(chip, btnEl);
+    return { total: total, ratio: ratio };
+  }
+
   /* ── On-demand FraudSpy check ── */
   window.checkFraud = function (mongoId, phone) {
     var btn = document.getElementById('fc-' + mongoId);
@@ -1203,26 +1228,24 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (resp) {
-        if (!resp.success) { showToast(resp.message || 'FraudSpy failed', 'error'); return; }
+        var btn2 = document.getElementById('fc-' + mongoId);
+        if (!resp.success) {
+          showToast(resp.message || 'FraudSpy failed', 'error');
+          if (btn2) { btn2.textContent = 'Check'; btn2.classList.remove('loading'); btn2.disabled = false; }
+          return;
+        }
         var d = resp.data || {};
-        var cell = document.getElementById('fc-' + mongoId);
-        if (!cell) return;
-        var container = cell.closest('.fraud-cell') || cell.parentElement;
-        // Remove old chip if any
-        var old = container.querySelector('.fraud-chip');
-        if (old) old.remove();
+        var overall = (d.overall && typeof d.overall === 'object') ? d.overall : {};
+        if (!btn2) return;
+        var container = btn2.closest('.fraud-cell') || btn2.parentElement;
 
-        var lvl = d.overall !== undefined ? String(d.overall) : 'unknown';
-        var cls = lvl === 'safe' ? 'low' : lvl === 'moderate' ? 'mid' : 'high';
-        var chip = document.createElement('span');
-        chip.className = 'fraud-chip ' + cls;
-        chip.textContent = lvl;
-        container.insertBefore(chip, cell);
+        var info = renderFraudChip(container, btn2, overall);
 
-        cell.textContent = 'Recheck';
-        cell.classList.remove('loading');
-        cell.disabled = false;
-        showToast('FraudSpy: ' + lvl + ' for ' + phone, lvl === 'safe' ? 'success' : 'error');
+        btn2.textContent = 'Recheck';
+        btn2.classList.remove('loading');
+        btn2.disabled = false;
+        var msg = 'Orders: ' + info.total + ' | Success: ' + info.ratio.toFixed(2) + '%';
+        showToast(msg, info.ratio >= 80 ? 'success' : 'error');
       })
       .catch(function (err) {
         showToast('FraudSpy error: ' + err.message, 'error');

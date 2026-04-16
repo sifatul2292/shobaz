@@ -2597,16 +2597,37 @@ async updateOrderById(
       } as ResponsePayload;
     }
     try {
-      const res = await fetch('https://fraudspy.com.bd/api/v1/search', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ phone }),
+      const https = await import('https');
+      const payload = JSON.stringify({ phone });
+      const data: any = await new Promise((resolve, reject) => {
+        const req = https.request(
+          {
+            hostname: 'fraudspy.com.bd',
+            path: '/api/v1/search',
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(payload),
+              Authorization: `Bearer ${apiKey}`,
+            },
+          },
+          (res) => {
+            let body = '';
+            res.on('data', (chunk) => (body += chunk));
+            res.on('end', () => {
+              try {
+                resolve(JSON.parse(body));
+              } catch {
+                resolve(body);
+              }
+            });
+          },
+        );
+        req.on('error', reject);
+        req.write(payload);
+        req.end();
       });
-      const data: any = await res.json();
       return {
         success: true,
         message: 'FraudSpy result fetched',
@@ -2616,7 +2637,7 @@ async updateOrderById(
       this.logger.error('FraudSpy API error', err);
       return {
         success: false,
-        message: 'Failed to reach FraudSpy API',
+        message: err?.message || String(err),
       } as ResponsePayload;
     }
   }
