@@ -3,6 +3,8 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { Hind_Siliguri, Poppins } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
+import GTMRouteTracker from "@/components/common/GTMRouteTracker";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["latin"],
@@ -58,6 +60,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
+        <Suspense fallback={null}>
+          <GTMRouteTracker />
+        </Suspense>
         <Toaster position="top-right" />
         {children}
       </body>

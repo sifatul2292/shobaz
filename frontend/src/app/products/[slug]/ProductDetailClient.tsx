@@ -71,6 +71,7 @@ export default function ProductDetailClient({ params }: Props) {
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
+        document.title = `${productData.name} | Shobaz`;
         gtmViewItem(productData);
 
         console.log('Product boughtTogetherProducts:', productData.boughtTogetherProducts);

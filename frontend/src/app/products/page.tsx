@@ -54,6 +54,7 @@ function ProductsContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    document.title = 'সকল বই | Shobaz';
     fetchData();
   }, []);
 
@@ -175,6 +176,7 @@ function ProductsContent() {
 
   useEffect(() => {
     if (filters.q && filteredProducts.length >= 0 && !loading) {
+      document.title = `"${filters.q}" সার্চ রেজাল্ট | Shobaz`;
       gtmSearch(filters.q, filteredProducts);
     }
   }, [filters.q, filteredProducts, loading]);
