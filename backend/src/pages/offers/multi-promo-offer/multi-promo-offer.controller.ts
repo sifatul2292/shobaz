@@ -23,7 +23,7 @@ import { AdminPermissionGuard } from '../../../guards/admin-permission.guard';
 import { AdminJwtAuthGuard } from '../../../guards/admin-jwt-auth.guard';
 import { ResponsePayload } from '../../../interfaces/core/response-payload.interface';
 import { MongoIdValidationPipe } from '../../../pipes/mongo-id-validation.pipe';
-import { MultiPromoOfferService } from './multi-promo-offer.service';
+import { MultiPromoOfferService } from './multi-Promo-offer.service';
 import {
   AddMultiPromoOfferDto,
   FilterAndPaginationMultiPromoOfferDto,

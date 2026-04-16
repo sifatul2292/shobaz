@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MultiPromoOfferController } from './multi-promo-offer.controller';
-import { MultiPromoOfferService } from './multi-promo-offer.service';
+import { MultiPromoOfferService } from './multi-Promo-offer.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MultiPromoOfferSchema } from '../../../schema/multi-promo-offer.schema';
 
