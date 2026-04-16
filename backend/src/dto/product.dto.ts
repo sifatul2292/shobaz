@@ -73,49 +73,75 @@ export class OptionProductDto {
 }
 
 export class UpdateProductDto {
-  @IsOptional()
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  nameEn: string;
-
-  @IsOptional()
-  @IsString()
-  slug: string;
-
-  @IsOptional()
-  quantity: number;
-
-  @IsOptional()
-  @IsString()
-  status: string;
-
-  @IsOptional()
-  @IsString()
-  videoUrl: string;
-
-  @IsOptional()
-  @IsString()
-  pdfFile: string;
-
-  @IsOptional()
-  @IsString()
-  previewPdfUrl: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  @ArrayMaxSize(3)
-  boughtTogetherIds: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  @ArrayMinSize(1)
-  @ArrayMaxSize(50)
-  ids: string[];
+  @IsOptional() name: string;
+  @IsOptional() nameEn: string;
+  @IsOptional() slug: string;
+  @IsOptional() description: string;
+  @IsOptional() shortDescription: string;
+  @IsOptional() tagline: string;
+  @IsOptional() taglineEn: string;
+  @IsOptional() featureTitle: string;
+  @IsOptional() costPrice: number;
+  @IsOptional() salePrice: number;
+  @IsOptional() dollarPrice: number;
+  @IsOptional() regularPrice: number;
+  @IsOptional() tax: number;
+  @IsOptional() hasTax: boolean;
+  @IsOptional() sku: string;
+  @IsOptional() isbn: string;
+  @IsOptional() pdfFile: string;
+  @IsOptional() previewPdfUrl: string;
+  @IsOptional() edition: string;
+  @IsOptional() editionEn: string;
+  @IsOptional() emiMonth: number[];
+  @IsOptional() discountType: number;
+  @IsOptional() discountAmount: number;
+  @IsOptional() afterDiscountPrice: number;
+  @IsOptional() emiAmount: number;
+  @IsOptional() images: string[];
+  @IsOptional() quantity: number;
+  @IsOptional() threeMonth: number;
+  @IsOptional() sixMonth: number;
+  @IsOptional() twelveMonth: number;
+  @IsOptional() totalPages: number;
+  @IsOptional() currentVersion: string;
+  @IsOptional() currentVersionEn: string;
+  @IsOptional() publishedDate: Date;
+  @IsOptional() language: string[];
+  @IsOptional() country: string;
+  @IsOptional() translatorName: string[];
+  @IsOptional() translatorNameEn: string[];
+  @IsOptional() cartLimit: number;
+  @IsOptional() weight: number;
+  @IsOptional() trackQuantity: boolean;
+  @IsOptional() isFacebookCatalog: boolean;
+  @IsOptional() status: string;
+  @IsOptional() videoUrl: string;
+  @IsOptional() unit: string;
+  @IsOptional() priority: number;
+  @IsOptional() isPreOrder: boolean;
+  @IsOptional() earnPoint: boolean;
+  @IsOptional() pointType: number;
+  @IsOptional() pointValue: number;
+  @IsOptional() redeemPoint: boolean;
+  @IsOptional() redeemType: number;
+  @IsOptional() redeemValue: number;
+  @IsOptional() seoTitle: string;
+  @IsOptional() seoDescription: string;
+  @IsOptional() seoKeywords: string;
+  @IsOptional() category: any;
+  @IsOptional() subCategory: any;
+  @IsOptional() publisher: any;
+  @IsOptional() author: any;
+  @IsOptional() brand: any;
+  @IsOptional() tags: any[];
+  @IsOptional() specifications: any[];
+  @IsOptional() features: any[];
+  @IsOptional() variations: any[];
+  @IsOptional() variationsOptions: any[];
+  @IsOptional() hasVariations: boolean;
+  @IsOptional() @IsArray() @IsString({ each: true }) @ArrayMaxSize(3) boughtTogetherIds: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) @ArrayMinSize(1) @ArrayMaxSize(50) ids: string[];
 }
 
 export class GetProductByIdsDto {
