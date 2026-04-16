@@ -1,6 +1,0 @@
-{"_id":{"$oid":"698ca4600d6f5e6e26334b4e"},"name":"আমল বুকস","slug":"আমল-বুকস","image":"https://apisub.amolbooks.com/api/upload/images/amolbooks-8f4c.webp","createdAt":{"$date":"2026-02-11T15:46:41.002Z"},"updatedAt":{"$date":"2026-03-01T04:10:18.474Z"}}
-{"_id":{"$oid":"69a545d0b32e6c3db3730fb2"},"name":"দারুল ফালাহ","slug":"দারুল-ফালাহ","image":null,"createdAt":{"$date":"2026-03-02T08:09:52.531Z"},"updatedAt":{"$date":"2026-03-02T08:09:52.531Z"}}
-{"_id":{"$oid":"69a7f0b1b32e6c3db3731c5f"},"name":"সন্দীপন প্রকাশন","slug":"সন্দীপন-প্রকাশন","image":null,"createdAt":{"$date":"2026-03-04T08:43:29.525Z"},"updatedAt":{"$date":"2026-03-04T08:43:29.525Z"}}
-{"_id":{"$oid":"69a7f583b32e6c3db3731d8e"},"name":"সিয়ান পাবলিকেশন","slug":"সিয়ান-পাবলিকেশন","image":null,"createdAt":{"$date":"2026-03-04T09:04:03.351Z"},"updatedAt":{"$date":"2026-03-04T09:04:03.351Z"}}
-{"_id":{"$oid":"69a7f836b32e6c3db3731ecb"},"name":"পথিক প্রকাশন","slug":"পথিক-প্রকাশন","image":null,"createdAt":{"$date":"2026-03-04T09:15:34.066Z"},"updatedAt":{"$date":"2026-03-04T09:15:34.066Z"}}
-{"_id":{"$oid":"69d4aa7ff87b62b239b688ef"},"name":"সমকালীন","slug":"সমকালীন","image":null,"createdAt":{"$date":"2026-04-07T06:55:59.981Z"},"updatedAt":{"$date":"2026-04-07T06:55:59.981Z"}}

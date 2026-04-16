@@ -1,1 +1,0 @@
-{"_id":{"$oid":"699a12810d6f5e6e26335df0"},"name":"Test","image":"https://apisub.amolbooks.com/api/upload/images/desktopcdba2a20-0917-4631-8e58-3b072861b208-e2e4.webp","mobileImage":null,"title":"test","url":"https://uisub.amolbooks.com/product-list","priority":1,"createdAt":{"$date":"2026-02-21T20:16:01.926Z"},"updatedAt":{"$date":"2026-02-21T20:16:01.926Z"}}
