@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  var API = 'https://api.shobaz.com';
+  var API = window.location.hostname==="localhost" ? "http://localhost:4000" : "https://api.shobaz.com";
   var PANEL_ID = 'pm-panel';
   var STYLES_ID = 'pm-styles';
   var ROUTE_MATCHERS = ['additionl-page', 'additional-page'];

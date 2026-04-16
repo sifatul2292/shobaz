@@ -8,7 +8,7 @@
 
   var LINK_ID  = 'co-sidebar-link';
   var STYLE_ID = 'co-sidebar-style';
-  var CUSTOM_PAGE_URL = 'https://api.shobaz.com/upload/static/custom-orders.html';
+  var CUSTOM_PAGE_URL = window.location.hostname==="localhost" ? "http://localhost:4000/upload/static/custom-orders.html" : "https://api.shobaz.com/upload/static/custom-orders.html";
   var injectTimer = null;
 
   /* ── Inject CSS once ── */

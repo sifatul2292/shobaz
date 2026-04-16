@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var API = 'https://api.shobaz.com';
+  var API = window.location.hostname==="localhost" ? "http://localhost:4000" : "https://api.shobaz.com";
   var capturedToken = null;
   var currentProductId = null;   // null on add page
   var isAddPage = false;
