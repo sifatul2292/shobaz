@@ -312,4 +312,15 @@ export class OrderController {
       Boolean(checkUsage),
     );
   }
+
+  /**
+   * checkFraudSpy — public endpoint, no auth required
+   */
+  @Version(VERSION_NEUTRAL)
+  @Post('/check-fraud-spy')
+  async checkFraudSpy(
+    @Body() body: { phone: string },
+  ): Promise<ResponsePayload> {
+    return await this.orderService.checkFraudSpy(body.phone);
+  }
 }

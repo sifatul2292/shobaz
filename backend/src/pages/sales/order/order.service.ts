@@ -2534,4 +2534,41 @@ async updateOrderById(
       }
     }
   }
+
+  /**
+   * checkFraudSpy
+   * Calls the FraudSpy API to check a phone number for fraud reports.
+   */
+  async checkFraudSpy(phone: string): Promise<ResponsePayload> {
+    const apiKey = process.env.FRAUDSPY_API_KEY;
+    if (!apiKey) {
+      return {
+        success: false,
+        message: 'FRAUDSPY_API_KEY is not configured in .env',
+      } as ResponsePayload;
+    }
+    try {
+      const res = await fetch('https://fraudspy.com.bd/api/v1/search', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ phone }),
+      });
+      const data: any = await res.json();
+      return {
+        success: true,
+        message: 'FraudSpy result fetched',
+        data,
+      } as ResponsePayload;
+    } catch (err) {
+      this.logger.error('FraudSpy API error', err);
+      return {
+        success: false,
+        message: 'Failed to reach FraudSpy API',
+      } as ResponsePayload;
+    }
+  }
 }
