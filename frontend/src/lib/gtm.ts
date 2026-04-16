@@ -14,7 +14,7 @@ export const pushEvent = (event: object) => {
 export const gtmViewItem = (product: any) => {
   const price = product.salePrice || product.regularPrice || 0;
   pushEvent({
-    event: 'view_item',
+    event: 'view_item_stape',
     ecommerce: {
       currency: 'BDT',
       value: price,
@@ -31,7 +31,7 @@ export const gtmViewItem = (product: any) => {
 export const gtmAddToCart = (product: any, quantity: number) => {
   const price = product.salePrice || product.regularPrice || 0;
   pushEvent({
-    event: 'add_to_cart',
+    event: 'add_to_cart_stape',
     ecommerce: {
       currency: 'BDT',
       value: price * quantity,
@@ -47,7 +47,7 @@ export const gtmAddToCart = (product: any, quantity: number) => {
 
 export const gtmBeginCheckout = (cartItems: any[], total: number) => {
   pushEvent({
-    event: 'begin_checkout',
+    event: 'begin_checkout_stape',
     ecommerce: {
       currency: 'BDT',
       value: total,
@@ -64,7 +64,7 @@ export const gtmBeginCheckout = (cartItems: any[], total: number) => {
 
 export const gtmPurchase = (order: any) => {
   pushEvent({
-    event: 'purchase',
+    event: 'purchase_stape',
     ecommerce: {
       transaction_id: order.orderId,
       value: order.grandTotal,
