@@ -6,6 +6,7 @@ import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
+import { gtmSearch } from '@/lib/gtm';
 import { Product, Category, Author, Publisher } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
@@ -171,6 +172,12 @@ function ProductsContent() {
 
     return filtered;
   }, [allProducts, filters]);
+
+  useEffect(() => {
+    if (filters.q && filteredProducts.length >= 0 && !loading) {
+      gtmSearch(filters.q, filteredProducts);
+    }
+  }, [filters.q, filteredProducts, loading]);
 
   const paginatedProducts = useMemo(() => {
     const start = (page - 1) * itemsPerPage;

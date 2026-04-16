@@ -62,6 +62,39 @@ export const gtmBeginCheckout = (cartItems: any[], total: number) => {
   });
 };
 
+export const gtmViewCart = (cartItems: any[], total: number) => {
+  pushEvent({
+    event: 'view_cart_stape',
+    ecommerce: {
+      currency: 'BDT',
+      value: total,
+      items: cartItems.map((item, idx) => ({
+        item_id: item._id,
+        item_name: item.name,
+        price: item.salePrice || item.regularPrice || 0,
+        quantity: item.quantity || 1,
+        index: idx,
+      })),
+    },
+  });
+};
+
+export const gtmSearch = (searchTerm: string, results: any[]) => {
+  pushEvent({
+    event: 'search_stape',
+    search_term: searchTerm,
+    ecommerce: {
+      currency: 'BDT',
+      items: results.slice(0, 10).map((item, idx) => ({
+        item_id: item._id,
+        item_name: item.name,
+        price: item.salePrice || item.regularPrice || 0,
+        index: idx,
+      })),
+    },
+  });
+};
+
 export const gtmPurchase = (order: any) => {
   pushEvent({
     event: 'purchase_stape',

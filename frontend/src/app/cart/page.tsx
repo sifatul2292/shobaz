@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import { imgUrl } from '@/lib/api';
+import { gtmViewCart } from '@/lib/gtm';
 import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaArrowRight, FaBookmark, FaHeart } from 'react-icons/fa';
 import { HiOutlineTruck, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
@@ -24,6 +25,12 @@ const getCurrentPrice = (product: any) => {
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
+
+  useEffect(() => {
+    if (items.length > 0) {
+      gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
+    }
+  }, []);
 
   if (items.length === 0) {
     return (
