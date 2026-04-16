@@ -1,0 +1,1 @@
+{"_id":{"$oid":"69a42da1e88e94874ff31540"},"key":"default","createdAt":{"$date":"2026-03-01T12:14:25.319Z"},"isActive":true,"products":[{"$oid":"6993050d0d6f5e6e26335333"},{"$oid":"699308290d6f5e6e263353b9"},{"$oid":"69a7f0d3b32e6c3db3731c6f"}],"updatedAt":{"$date":"2026-03-12T10:09:17.132Z"}}
