@@ -27,7 +27,7 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
 
   useEffect(() => {
-    document.title = 'কার্ট | Shobaz';
+    document.title = 'Cart - Shobaz';
     if (items.length > 0) {
       gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
     }

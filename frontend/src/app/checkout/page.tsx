@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    document.title = 'চেকআউট | Shobaz';
+    document.title = 'Checkout - Shobaz';
     if (items.length > 0) {
       gtmBeginCheckout(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
     }

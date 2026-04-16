@@ -43,6 +43,7 @@ function OrderSuccessContent() {
           const orderData = res.data?.data || res.data;
           if (orderData) {
             setOrder(orderData);
+            document.title = 'Thank you Page - Shobaz';
             gtmPurchase(orderData);
           }
         } catch (err) {

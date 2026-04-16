@@ -54,7 +54,7 @@ function ProductsContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    document.title = 'সকল বই | Shobaz';
+    document.title = 'All Books - Shobaz';
     fetchData();
   }, []);
 
