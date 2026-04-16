@@ -32,7 +32,7 @@ export default function RootLayout({
         {/* Stape.io Custom Loader - improves tracking accuracy */}
         <Script
           id="stape-custom-loader"
-          src="https://server.shobaz.com/stape-custom-loader.js?id=kpblypwe"
+          src="https://server.shobaz.com/stape-custom-loader.js?id=ukeecxgx"
           strategy="beforeInteractive"
         />
         {/* GTM via server-side container */}
