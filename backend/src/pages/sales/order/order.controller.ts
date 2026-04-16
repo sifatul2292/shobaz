@@ -323,4 +323,10 @@ export class OrderController {
   ): Promise<ResponsePayload> {
     return await this.orderService.checkFraudSpy(body.phone);
   }
+
+  @Version(VERSION_NEUTRAL)
+  @Post('/repeat-customers')
+  async getRepeatCustomers(): Promise<ResponsePayload> {
+    return await this.orderService.getRepeatCustomers();
+  }
 }

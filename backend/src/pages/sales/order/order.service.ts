@@ -2579,6 +2579,15 @@ async updateOrderById(
    * checkFraudSpy
    * Calls the FraudSpy API to check a phone number for fraud reports.
    */
+  async getRepeatCustomers(): Promise<ResponsePayload> {
+    const data = await this.orderModel.aggregate([
+      { $group: { _id: '$phoneNo', count: { $sum: 1 } } },
+      { $match: { count: { $gt: 1 } } },
+      { $project: { _id: 0, phoneNo: '$_id', count: 1 } },
+    ]);
+    return { success: true, data, message: 'Success' } as ResponsePayload;
+  }
+
   async checkFraudSpy(phone: string): Promise<ResponsePayload> {
     const apiKey = process.env.FRAUDSPY_API_KEY;
     if (!apiKey) {

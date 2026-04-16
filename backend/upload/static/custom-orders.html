@@ -850,6 +850,7 @@
   /* ── Config ── */
   var API = 'http://localhost:4000';
   var allOrders = []; // cache for export
+  var repeatMap = {}; // phoneNo → total order count
 
   /* ── State ── */
   var state = {
@@ -1327,7 +1328,7 @@
         '<td><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" /></td>',
         '<td>' + sl + '</td>',
         '<td><a href="http://localhost:3007/sales/order-details/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
-        '<td><span class="phone-no">' + esc(o.phoneNo || '—') + '</span></td>',
+        '<td>' + phoneCell(o.phoneNo) + '</td>',
         '<td>' + esc(o.name || '—') + '</td>',
         '<td>' + formatDate(o.createdAt || o.checkoutDate) + '</td>',
         '<td>' + paymentTypeBadge(o.paymentType) + '</td>',
@@ -1485,8 +1486,34 @@
     });
   });
 
+  /* ── Phone cell with repeat-order badge ── */
+  function phoneCell(phone) {
+    if (!phone) return '—';
+    var count = repeatMap[phone] || 0;
+    var html = '<span class="phone-no">' + esc(phone) + '</span>';
+    if (count > 1) {
+      var color = count >= 5 ? '#b91c1c' : count >= 3 ? '#d97706' : '#0369a1';
+      html += ' <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800;color:#fff;background:' + color + '" title="' + count + ' orders">' + count + 'x</span>';
+    }
+    return html;
+  }
+
+  /* ── Load repeat customer counts ── */
+  function loadRepeatCustomers() {
+    fetch(API + '/api/order/repeat-customers', { method: 'POST', headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (resp) {
+        repeatMap = {};
+        if (resp.success && Array.isArray(resp.data)) {
+          resp.data.forEach(function (d) { repeatMap[d.phoneNo] = d.count; });
+        }
+        loadOrders();
+      })
+      .catch(function () { loadOrders(); }); // fallback: load orders even if this fails
+  }
+
   /* ── Init ── */
-  loadOrders();
+  loadRepeatCustomers();
 })();
 </script>
 </body>
