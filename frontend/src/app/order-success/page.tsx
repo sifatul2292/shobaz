@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
+import { gtmPurchase } from '@/lib/gtm';
 import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 
@@ -39,10 +40,10 @@ function OrderSuccessContent() {
           console.log('Fetching order:', orderId);
           const res = await api.get(`/order/${orderId}`);
           console.log('Order response:', res.data);
-          if (res.data?.data) {
-            setOrder(res.data.data);
-          } else if (res.data) {
-            setOrder(res.data);
+          const orderData = res.data?.data || res.data;
+          if (orderData) {
+            setOrder(orderData);
+            gtmPurchase(orderData);
           }
         } catch (err) {
           console.error('Failed to fetch order:', err);

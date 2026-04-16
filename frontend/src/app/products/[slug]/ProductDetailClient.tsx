@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
+import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
 import { Product, ShippingCharge, Review } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -70,7 +71,8 @@ export default function ProductDetailClient({ params }: Props) {
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
-        
+        gtmViewItem(productData);
+
         console.log('Product boughtTogetherProducts:', productData.boughtTogetherProducts);
         console.log('Product boughtTogetherIds:', productData.boughtTogetherIds);
         
@@ -171,6 +173,7 @@ export default function ProductDetailClient({ params }: Props) {
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
+      gtmAddToCart(product, quantity);
       toast.success('কার্টে যোগ হয়েছে');
     }
   };
@@ -178,6 +181,7 @@ export default function ProductDetailClient({ params }: Props) {
   const handleBuyNow = () => {
     if (product) {
       addItem(product, quantity);
+      gtmAddToCart(product, quantity);
       window.location.href = '/checkout';
     }
   };

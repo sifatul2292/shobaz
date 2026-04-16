@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
+import { gtmBeginCheckout } from '@/lib/gtm';
 import toast from 'react-hot-toast';
 import { FaShoppingCart, FaTruck, FaCheckCircle, FaMapMarkerAlt } from 'react-icons/fa';
 
@@ -43,6 +44,12 @@ export default function CheckoutPage() {
     };
     fetchShippingCharge();
   }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      gtmBeginCheckout(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
+    }
+  }, []);
 
   if (items.length === 0) {
     return (
