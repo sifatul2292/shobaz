@@ -123,6 +123,36 @@ export class UpdateOrderDto {
 
   @IsOptional()
   courierMethod: any;
+
+  @IsOptional()
+  orderedItems: any[];
+
+  @IsOptional()
+  subTotal: number;
+
+  @IsOptional()
+  grandTotal: number;
+
+  @IsOptional()
+  deliveryCharge: number;
+
+  @IsOptional()
+  discount: number;
+
+  @IsOptional()
+  note: string;
+
+  @IsOptional()
+  email: string;
+
+  @IsOptional()
+  paymentType: string;
+
+  @IsOptional()
+  paymentStatus: string;
+
+  @IsOptional()
+  deliveryDate: any;
 }
 
 export class UpdateOrderStatusDto {

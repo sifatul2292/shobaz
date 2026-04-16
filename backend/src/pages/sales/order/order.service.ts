@@ -1028,6 +1028,46 @@ export class OrderService {
       updatePayload.orderStatus = normalizedOrderStatus;
     }
 
+    if (updateOrderDto?.orderedItems !== undefined) {
+      updatePayload.orderedItems = updateOrderDto.orderedItems;
+    }
+
+    if (updateOrderDto?.subTotal !== undefined) {
+      updatePayload.subTotal = updateOrderDto.subTotal;
+    }
+
+    if (updateOrderDto?.grandTotal !== undefined) {
+      updatePayload.grandTotal = updateOrderDto.grandTotal;
+    }
+
+    if (updateOrderDto?.deliveryCharge !== undefined) {
+      updatePayload.deliveryCharge = updateOrderDto.deliveryCharge;
+    }
+
+    if (updateOrderDto?.discount !== undefined) {
+      updatePayload.discount = updateOrderDto.discount;
+    }
+
+    if (updateOrderDto?.note !== undefined) {
+      updatePayload.note = updateOrderDto.note;
+    }
+
+    if (updateOrderDto?.email !== undefined) {
+      updatePayload.email = updateOrderDto.email;
+    }
+
+    if (updateOrderDto?.paymentType !== undefined) {
+      updatePayload.paymentType = updateOrderDto.paymentType;
+    }
+
+    if (updateOrderDto?.paymentStatus !== undefined) {
+      updatePayload.paymentStatus = updateOrderDto.paymentStatus;
+    }
+
+    if (updateOrderDto?.deliveryDate !== undefined) {
+      updatePayload.deliveryDate = updateOrderDto.deliveryDate;
+    }
+
     return {
       updatePayload,
       orderStatus: normalizedOrderStatus,
