@@ -776,13 +776,12 @@ export default function ProductDetailClient({ params }: Props) {
                         <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
-                    {product?.slug ? (
-                      <Link href={`/products/${product.slug}`} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors">
-                        {product?.name}
-                      </Link>
-                    ) : (
-                      <p className="text-xs font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{product?.name}</p>
-                    )}
+                    <Link
+                      href={`/products/${product?.slug || product?._id}`}
+                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors"
+                    >
+                      {product?.name}
+                    </Link>
                     <p className="text-xs font-extrabold text-gray-900 mt-1">৳{getCurrentPrice(product!)}</p>
                   </div>
 
@@ -795,6 +794,7 @@ export default function ProductDetailClient({ params }: Props) {
                       <div key={item.product._id} className="flex items-center gap-4">
                         <span className="text-2xl text-gray-300 font-light select-none">+</span>
                         <div className="text-center">
+                          {/* Image — click toggles selection */}
                           <div
                             className={`relative w-20 h-28 bg-gray-100 rounded-2xl overflow-hidden mb-2 cursor-pointer transition-all duration-200 mx-auto
                               ${isSelected ? 'ring-2 ring-emerald-400 ring-offset-2 shadow-md' : 'opacity-55 hover:opacity-80 shadow-sm'}`}
@@ -818,13 +818,13 @@ export default function ProductDetailClient({ params }: Props) {
                               </div>
                             )}
                           </div>
-                          {item.product.slug ? (
-                            <Link href={`/products/${item.product.slug}`} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors">
-                              {item.product.name}
-                            </Link>
-                          ) : (
-                            <p className="text-xs font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{item.product.name}</p>
-                          )}
+                          {/* Title — always a link using slug or _id */}
+                          <Link
+                            href={`/products/${item.product.slug || item.product._id}`}
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors"
+                          >
+                            {item.product.name}
+                          </Link>
                           <p className="text-xs font-extrabold text-gray-900 mt-1">৳{itemPrice}</p>
                         </div>
                       </div>
