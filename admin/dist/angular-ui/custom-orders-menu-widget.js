@@ -8,7 +8,21 @@
 
   var LINK_ID  = 'co-sidebar-link';
   var STYLE_ID = 'co-sidebar-style';
-  var CUSTOM_PAGE_URL = window.location.hostname==="localhost" ? "http://localhost:4000/upload/static/custom-orders.html" : "https://api.shobaz.com/upload/static/custom-orders.html";
+  var CUSTOM_PAGE_BASE = window.location.hostname==="localhost" ? "http://localhost:4000/upload/static/custom-orders.html" : "https://api.shobaz.com/upload/static/custom-orders.html";
+
+  function getAdminToken() {
+    var keys = ['administrator', 'admin_token', 'adminToken', 'token'];
+    for (var i = 0; i < keys.length; i++) {
+      var v = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
+      if (v && v.length > 20 && !v.startsWith('{')) return v;
+    }
+    return '';
+  }
+
+  function buildCustomOrderUrl() {
+    var token = getAdminToken();
+    return token ? CUSTOM_PAGE_BASE + '?token=' + encodeURIComponent(token) : CUSTOM_PAGE_BASE;
+  }
   var injectTimer = null;
 
   /* ── Inject CSS once ── */
@@ -110,7 +124,7 @@
       a.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        window.location.href = CUSTOM_PAGE_URL;
+        window.location.href = buildCustomOrderUrl();
       }, true);
       newEl.appendChild(a);
       newEl.id = LINK_ID + '-wrap';
@@ -120,7 +134,7 @@
       newEl.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        window.location.href = CUSTOM_PAGE_URL;
+        window.location.href = buildCustomOrderUrl();
       }, true);
     }
 
