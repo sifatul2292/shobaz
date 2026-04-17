@@ -6,8 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FaShoppingCart, FaArrowRight, FaTimes } from 'react-icons/fa';
 
 export default function FloatingCart() {
-  const getTotalItems = useCartStore(state => state.getTotalItems);
-  const getTotalPrice = useCartStore(state => state.getTotalPrice);
+  const items = useCartStore(state => state.items);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -35,8 +34,12 @@ export default function FloatingCart() {
     hintTimerRef.current = setTimeout(() => setShowHint(false), duration);
   }, []);
 
-  const totalItems = mounted ? getTotalItems() : 0;
-  const totalPrice = mounted ? getTotalPrice() : 0;
+  // Compute directly from items — re-renders instantly when items change
+  const totalItems = mounted ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
+  const totalPrice = mounted ? items.reduce((sum, i) => {
+    const price = (i.product.salePrice || 0) - (i.product.discountAmount || 0);
+    return sum + price * i.quantity;
+  }, 0) : 0;
 
   // Animate + hint when item count increases
   useEffect(() => {
