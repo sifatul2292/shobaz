@@ -515,9 +515,79 @@
       outline: none;
       box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
+  /* ── Login Overlay ── */
+  #login-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0f172a;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #login-overlay.hidden { display: none; }
+  .login-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%; max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #6c3fc5, #4f46e5);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 26px;
+  }
+  .login-title { font-size: 22px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+  .login-field { margin-bottom: 14px; text-align: left; }
+  .login-field label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .login-field input {
+    width: 100%; padding: 11px 14px;
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #f1f5f9; font-size: 14px;
+    outline: none; transition: border-color .15s;
+  }
+  .login-field input:focus { border-color: #6c3fc5; }
+  .login-btn {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, #6c3fc5, #4f46e5);
+    border: none; border-radius: 8px;
+    color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 6px;
+    transition: opacity .15s;
+  }
+  .login-btn:hover { opacity: .9; }
+  .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .login-error {
+    margin-top: 14px; padding: 10px 14px;
+    background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+    border-radius: 8px; color: #fca5a5; font-size: 13px;
+    display: none;
+  }
   </style>
 </head>
 <body>
+
+<!-- Login Overlay -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">🛒</div>
+    <div class="login-title">Admin Login</div>
+    <div class="login-sub">Sign in to view custom orders</div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" />
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
 
 <div class="layout">
   <!-- Sidebar -->
@@ -566,6 +636,9 @@
         <a href="#" class="btn-add" id="addOrderBtn">
           <i class="fas fa-plus"></i> Add Order
         </a>
+        <button class="btn-add" onclick="doLogout()" style="background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
       </div>
     </div>
 
@@ -755,6 +828,82 @@
   var API = window.location.hostname==="localhost" ? "http://localhost:4000" : "https://api.shobaz.com";
   var allOrders = []; // cache for export
 
+  /* ── Auth ── */
+  function getToken() {
+    return localStorage.getItem('co_admin_token') || null;
+  }
+
+  function saveToken(t) {
+    localStorage.setItem('co_admin_token', t);
+  }
+
+  function clearToken() {
+    localStorage.removeItem('co_admin_token');
+  }
+
+  function showLoginOverlay(msg) {
+    document.getElementById('login-overlay').classList.remove('hidden');
+    if (msg) {
+      var errEl = document.getElementById('login-error');
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function hideLoginOverlay() {
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  window.doLogin = function () {
+    var username = document.getElementById('login-username').value.trim();
+    var password = document.getElementById('login-password').value.trim();
+    var btn = document.getElementById('login-btn');
+    var errEl = document.getElementById('login-error');
+    if (!username || !password) {
+      errEl.textContent = 'Please enter username and password.';
+      errEl.style.display = 'block';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    errEl.style.display = 'none';
+    fetch(API + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.token) {
+        saveToken(data.token);
+        hideLoginOverlay();
+        loadOrders();
+      } else {
+        errEl.textContent = 'Invalid username or password.';
+        errEl.style.display = 'block';
+      }
+    })
+    .catch(function() {
+      errEl.textContent = 'Could not connect. Check your connection.';
+      errEl.style.display = 'block';
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    });
+  };
+
+  // Allow pressing Enter in the password field
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('login-password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.doLogin();
+    });
+    document.getElementById('login-username').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('login-password').focus();
+    });
+  });
+
   /* ── State ── */
   var state = {
     page: 0,
@@ -770,26 +919,6 @@
     totalCount: 0,
     totalAmount: 0,
   };
-
-  /* ── Token helpers ── */
-  function getToken() {
-    // 1. Read from URL ?token= param (passed by admin dashboard on open)
-    var urlToken = new URLSearchParams(window.location.search).get('token');
-    if (urlToken && urlToken.length > 20) {
-      localStorage.setItem('administrator', urlToken);
-      return urlToken;
-    }
-    // 2. Fall back to localStorage (persisted from previous visit)
-    if (window._shobazAdminToken) return window._shobazAdminToken;
-    var keys = ['administrator', 'admin_token', 'adminToken', 'token'];
-    for (var i = 0; i < keys.length; i++) {
-      var v = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
-      if (v && v.length > 20 && !v.startsWith('{')) {
-        return v;
-      }
-    }
-    return null;
-  }
 
   function authHeaders() {
     var h = { 'Content-Type': 'application/json' };
@@ -954,7 +1083,14 @@
       headers: authHeaders(),
       body: JSON.stringify(buildRequestBody()),
     })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (r.status === 401 || r.status === 403) {
+          clearToken();
+          showLoginOverlay('Session expired. Please log in again.');
+          throw new Error('Unauthorized');
+        }
+        return r.json();
+      })
       .then(function (resp) {
         var orders = (resp.data && resp.data.data) ? resp.data.data : (Array.isArray(resp.data) ? resp.data : []);
         var count = (resp.data && resp.data.count !== undefined) ? resp.data.count : resp.count || orders.length;
@@ -1241,8 +1377,19 @@
     });
   });
 
+  /* ── Logout ── */
+  window.doLogout = function () {
+    clearToken();
+    showLoginOverlay();
+  };
+
   /* ── Init ── */
-  loadOrders();
+  if (getToken()) {
+    hideLoginOverlay();
+    loadOrders();
+  } else {
+    showLoginOverlay();
+  }
 })();
 </script>
 </body>

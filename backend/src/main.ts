@@ -5,7 +5,6 @@ import { json, urlencoded } from 'express';
 import { join } from 'path';
 import * as express from 'express';
 import * as compression from 'compression';
-import * as jwt from 'jsonwebtoken';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -39,20 +38,6 @@ async function bootstrap() {
   });
   // Gzip compression for all responses
   app.use(compression());
-
-  // Protect custom-orders.html — requires a valid admin JWT as ?token= query param
-  app.use('/upload/static/custom-orders.html', (req: any, res: any, next: any) => {
-    const token = req.query?.token;
-    if (!token) {
-      return res.status(403).send('<h2>403 Forbidden</h2><p>Access this page from the admin dashboard.</p>');
-    }
-    try {
-      jwt.verify(token, process.env.JWT_PRIVATE_KEY_ADMIN);
-      next();
-    } catch {
-      return res.status(403).send('<h2>403 Forbidden</h2><p>Invalid or expired token. Please log in to the admin dashboard again.</p>');
-    }
-  });
 
   app.use(
     '/upload/static',
