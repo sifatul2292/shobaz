@@ -107,10 +107,10 @@ export default function FloatingCart() {
           </div>
 
           <button
-            onClick={() => router.push('/cart')}
+            onClick={() => router.push('/checkout')}
             className="mt-2 w-full bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
           >
-            কার্ট দেখুন <FaArrowRight className="text-[10px]" />
+            চেকআউট করুন <FaArrowRight className="text-[10px]" />
           </button>
 
           {/* Arrow pointing down to button */}
@@ -120,7 +120,7 @@ export default function FloatingCart() {
 
       {/* Floating cart button */}
       <button
-        onClick={() => router.push('/cart')}
+        onClick={() => router.push('/checkout')}
         className={`
           relative w-16 h-16 bg-emerald-500 hover:bg-emerald-600
           rounded-full shadow-2xl flex items-center justify-center
