@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'shobaz-backend',
-      script: './backend/dist/main.js',
-      cwd: '/var/www/shobaz',
+      script: './dist/main.js',
+      cwd: '/var/www/shobaz/backend',
       instances: 'max',          // use all available CPU cores
       exec_mode: 'cluster',
       watch: false,
