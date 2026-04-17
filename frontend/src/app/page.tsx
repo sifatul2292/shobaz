@@ -187,46 +187,40 @@ export default function HomePage() {
     }
     
     return (
-      <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-        {/* Image Section */}
-        <Link href={`/products/${productSlug}`} className="block">
-          <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
+      <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-green-200 transition-all duration-300 flex flex-col">
+        {/* Image */}
+        <Link href={`/products/${productSlug}`} className="block relative overflow-hidden bg-gray-50">
+          <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">
             {img ? (
-              <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             ) : (
-              <div className="flex items-center justify-center w-full h-full">
-                <HiOutlineBookOpen className="w-20 h-20 text-gray-300" />
-              </div>
-            )}
-            {discountPercent > 0 && (
-              <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-                {discountPercent}% OFF
-              </span>
+              <HiOutlineBookOpen className="w-16 h-16 text-gray-200" />
             )}
           </div>
+          {discountPercent > 0 && (
+            <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              -{discountPercent}%
+            </span>
+          )}
         </Link>
-        
-        {/* Text Section with Add to Cart */}
-        <div className="p-4 relative">
-          <Link href={`/products/${productSlug}`} className="block cursor-pointer">
-            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
-            {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
-            {salePrice > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-green-500">৳{currentPrice}</span>
-                {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
-              </div>
-            )}
-            {salePrice === 0 && <p className="text-sm font-bold text-green-500">Free</p>}
+
+        {/* Info */}
+        <div className="p-3 flex flex-col flex-1">
+          <Link href={`/products/${productSlug}`}>
+            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug hover:text-green-600 transition-colors">{productName}</h3>
           </Link>
-          
-          {/* Add to Cart Button - always visible on mobile */}
-          <div className="mt-3 lg:absolute lg:bottom-3 lg:left-4 lg:right-4">
-            <button 
+          {authorName && <p className="text-xs text-gray-400 mt-0.5 truncate">{authorName}</p>}
+
+          <div className="mt-auto pt-2">
+            <div className="flex items-baseline gap-1.5 mb-2">
+              <span className="text-base font-bold text-gray-900">৳{currentPrice}</span>
+              {discount > 0 && <span className="text-xs text-gray-400 line-through">৳{salePrice}</span>}
+            </div>
+            <button
               onClick={() => handleAddToCart(product)}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-medium text-sm transition-all lg:opacity-0 lg:group-hover:opacity-100"
+              className="w-full bg-green-500 hover:bg-green-600 active:scale-95 text-white py-1.5 rounded-lg text-xs font-semibold transition-all"
             >
-              কার্টে যোগ করুন
+              + কার্টে যোগ করুন
             </button>
           </div>
         </div>
@@ -316,39 +310,18 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
                 fadeEffect={{ crossFade: true }}
                 className="h-full rounded-2xl"
               >
-                {banners.map((banner, index) => (
+                {banners.map((banner) => (
                   <SwiperSlide key={banner._id} className="h-full rounded-2xl">
-                    <Link href={banner.link || '/'}>
-                      <div className="w-full h-full relative">
-                        {banner.image && (
-                          <div className="absolute inset-0">
-                            <img 
-                              src={imgUrl(banner.image)!} 
-                              alt={banner.title || ''} 
-                              className="w-full h-full object-cover transform scale-105" 
-                            />
-                            <div className="absolute inset-0 bg-black/30" />
-                          </div>
-                        )}
-                        {!banner.image && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-green-600 to-green-700" />
-                        )}
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full px-8 md:px-12">
-                            <div className="max-w-lg">
-                              <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
-                                {banner.title || 'বইয়ের জগৎ'}
-                              </h1>
-                              <p className="text-sm md:text-base text-white/90 mb-4">
-                                {banner.description || 'সেরা বইয়ের সংগ্রহ'}
-                              </p>
-                              <span className="inline-flex items-center gap-2 bg-white text-green-600 px-4 py-2 rounded-full font-semibold text-sm">
-                                এখনই দেখুন <span>→</span>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <Link href={banner.link || '/'} className="block w-full h-full">
+                      {banner.image ? (
+                        <img
+                          src={imgUrl(banner.image)!}
+                          alt={banner.title || ''}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-r from-green-500 to-green-700" />
+                      )}
                     </Link>
                   </SwiperSlide>
                 ))}

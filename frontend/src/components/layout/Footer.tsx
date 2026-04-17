@@ -50,12 +50,21 @@ export default function Footer() {
 
   const currentYear = new Date().getFullYear();
 
+  const ColHeading = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-5 pb-2 border-b border-gray-700">
+      {children}
+    </h3>
+  );
+
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand Column */}
+    <footer className="bg-gray-950 text-gray-400">
+      {/* Top accent bar */}
+      <div className="h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-green-600" />
+
+      <div className="max-w-7xl mx-auto px-4 pt-12 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+
+          {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
               {shopInfo?.navLogo ? (
@@ -65,54 +74,48 @@ export default function Footer() {
                   <span className="text-xl font-bold text-white">S</span>
                 </div>
               )}
-              <span className="text-xl font-bold text-white">
-                {shopInfo?.siteName || 'Shobaz'}
-              </span>
+              <span className="text-xl font-bold text-white">{shopInfo?.siteName || 'Shobaz'}</span>
             </div>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm leading-relaxed mb-5">
               {shopInfo?.shortDescription || 'বাংলাদেশের অন্যতম বিশ্বস্ত অনলাইন বইয়ের দোকান'}
             </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm mb-5">
               {getAddress() && (
-                <div className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-green-500 text-xs" />
-                  <span className="text-gray-400">{getAddress()}</span>
+                <div className="flex items-start gap-2">
+                  <FaMapMarkerAlt className="text-green-500 mt-0.5 shrink-0" />
+                  <span>{getAddress()}</span>
                 </div>
               )}
               {getPhone() && (
                 <div className="flex items-center gap-2">
-                  <FaPhone className="text-green-500 text-xs" />
-                  <span className="text-gray-400">{getPhone()}</span>
+                  <FaPhone className="text-green-500 shrink-0" />
+                  <a href={`tel:${getPhone()}`} className="hover:text-green-400 transition-colors">{getPhone()}</a>
                 </div>
               )}
               {getEmail() && (
                 <div className="flex items-center gap-2">
-                  <FaEnvelope className="text-green-500 text-xs" />
-                  <span className="text-gray-400">{getEmail()}</span>
+                  <FaEnvelope className="text-green-500 shrink-0" />
+                  <a href={`mailto:${getEmail()}`} className="hover:text-green-400 transition-colors">{getEmail()}</a>
                 </div>
               )}
             </div>
-
-            {/* Social Links */}
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2">
               {getFacebook() && (
-                <a href={getFacebook()!} target="_blank" rel="noopener noreferrer" 
-                  className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors">
-                  <FaFacebook className="text-sm" />
+                <a href={getFacebook()!} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors">
+                  <FaFacebook />
                 </a>
               )}
               {getYoutube() && (
                 <a href={getYoutube()!} target="_blank" rel="noopener noreferrer"
-                  className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-red-500 transition-colors">
-                  <FaYoutube className="text-sm" />
+                  className="w-9 h-9 bg-gray-800 hover:bg-red-600 rounded-lg flex items-center justify-center transition-colors">
+                  <FaYoutube />
                 </a>
               )}
               {getInstagram() && (
                 <a href={getInstagram()!} target="_blank" rel="noopener noreferrer"
-                  className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors">
-                  <FaInstagram className="text-sm" />
+                  className="w-9 h-9 bg-gray-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors">
+                  <FaInstagram />
                 </a>
               )}
             </div>
@@ -120,24 +123,34 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">দ্রুত লিংক</h3>
-            <ul className="space-y-2">
-              <li><Link href="/products" className="text-sm text-gray-400 hover:text-green-500 transition-colors">সকল বই</Link></li>
-              <li><Link href="/authors" className="text-sm text-gray-400 hover:text-green-500 transition-colors">লেখক</Link></li>
-              <li><Link href="/publishers" className="text-sm text-gray-400 hover:text-green-500 transition-colors">প্রকাশনা</Link></li>
-              <li><Link href="/offers" className="text-sm text-gray-400 hover:text-green-500 transition-colors">অফার</Link></li>
-              <li><Link href="/blog" className="text-sm text-gray-400 hover:text-green-500 transition-colors">ব্লগ</Link></li>
+            <ColHeading>দ্রুত লিংক</ColHeading>
+            <ul className="space-y-2.5">
+              {[
+                { href: '/products', label: 'সকল বই' },
+                { href: '/authors', label: 'লেখক' },
+                { href: '/publishers', label: 'প্রকাশনা' },
+                { href: '/offers', label: 'অফার' },
+                { href: '/blog', label: 'ব্লগ' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
+                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Categories */}
           <div>
-            <h3 className="text-white font-semibold mb-4">ক্যাটাগরি</h3>
-            <ul className="space-y-2">
-              {categories.slice(0, 6).map((category) => (
-                <li key={category._id}>
-                  <Link href={`/products?category=${category.slug}`} className="text-sm text-gray-400 hover:text-green-500 transition-colors">
-                    {category.name}
+            <ColHeading>ক্যাটাগরি</ColHeading>
+            <ul className="space-y-2.5">
+              {categories.slice(0, 6).map((cat) => (
+                <li key={cat._id}>
+                  <Link href={`/products?category=${cat.slug}`} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
+                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
+                    {cat.name}
                   </Link>
                 </li>
               ))}
@@ -146,15 +159,25 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div>
-            <h3 className="text-white font-semibold mb-4">গ্রাহক সেবা</h3>
-            <ul className="space-y-2">
-              <li><Link href="/contact" className="text-sm text-gray-400 hover:text-green-500 transition-colors">যোগাযোগ</Link></li>
-              <li><Link href="/about" className="text-sm text-gray-400 hover:text-green-500 transition-colors">আমাদের সম্পর্কে</Link></li>
-              <li><Link href="/terms" className="text-sm text-gray-400 hover:text-green-500 transition-colors">শর্তাবলী</Link></li>
-              <li><Link href="/privacy-policy" className="text-sm text-gray-400 hover:text-green-500 transition-colors">গোপনীয়তা নীতি</Link></li>
+            <ColHeading>গ্রাহক সেবা</ColHeading>
+            <ul className="space-y-2.5">
+              {[
+                { href: '/contact', label: 'যোগাযোগ' },
+                { href: '/about', label: 'আমাদের সম্পর্কে' },
+                { href: '/terms', label: 'শর্তাবলী' },
+                { href: '/privacy-policy', label: 'গোপনীয়তা নীতি' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
+                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
               {pages.slice(0, 3).map((page) => (
                 <li key={page._id}>
-                  <Link href={`/page/${page.slug}`} className="text-sm text-gray-400 hover:text-green-500 transition-colors">
+                  <Link href={`/page/${page.slug}`} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
+                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
                     {page.title}
                   </Link>
                 </li>
@@ -164,15 +187,14 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 pt-6 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
-              © {currentYear} <span className="text-green-500">{shopInfo?.siteName || 'Shobaz'}</span>. সর্বস্বত্ব সংরক্ষিত।
-            </p>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <Link href="/terms" className="hover:text-green-500 transition-colors">শর্তাবলী</Link>
-              <Link href="/privacy-policy" className="hover:text-green-500 transition-colors">গোপনীয়তা</Link>
-            </div>
+        <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-gray-600">
+            © {currentYear} <span className="text-green-500 font-medium">{shopInfo?.siteName || 'Shobaz'}</span>. সর্বস্বত্ব সংরক্ষিত।
+          </p>
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/terms" className="text-gray-600 hover:text-green-400 transition-colors">শর্তাবলী</Link>
+            <span className="text-gray-700">·</span>
+            <Link href="/privacy-policy" className="text-gray-600 hover:text-green-400 transition-colors">গোপনীয়তা</Link>
           </div>
         </div>
       </div>
