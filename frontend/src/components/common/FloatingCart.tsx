@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FaShoppingCart, FaArrowRight, FaTimes } from 'react-icons/fa';
 
 export default function FloatingCart() {
-  const { getTotalItems, getTotalPrice } = useCartStore();
+  const getTotalItems = useCartStore(state => state.getTotalItems);
+  const getTotalPrice = useCartStore(state => state.getTotalPrice);
   const pathname = usePathname();
   const router = useRouter();
 

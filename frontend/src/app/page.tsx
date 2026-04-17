@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { HiOutlineBookOpen, HiOutlineFire, HiOutlineSparkles, HiOutlineTruck, HiOutlineShieldCheck } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -16,9 +16,137 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+/* ── Helpers (stable, defined once at module level) ── */
+function getCurrentPrice(p: Product) {
+  const salePrice = p.salePrice || 0;
+  const discount = p.discountAmount || 0;
+  return discount > 0 ? salePrice - discount : salePrice;
+}
+function getDiscountPercent(p: Product) {
+  const salePrice = p.salePrice || 0;
+  const discount = p.discountAmount || 0;
+  if (!discount || !salePrice) return 0;
+  return Math.round((discount / salePrice) * 100);
+}
+
+/* ── ProductCard — outside HomePage so React never remounts it ── */
+const ProductCard = memo(function ProductCard({
+  product,
+  onAddToCart,
+}: {
+  product: Product;
+  onAddToCart?: (p: Product) => void;
+}) {
+  const salePrice = product.salePrice || 0;
+  const discount = product.discountAmount || 0;
+  const currentPrice = getCurrentPrice(product);
+  const discountPercent = getDiscountPercent(product);
+  const img = product.images?.[0];
+  const productName = product.name || 'Untitled Book';
+  const productSlug = product.slug || product._id;
+  const authorData = product.author;
+  let authorName = '';
+  if (Array.isArray(authorData)) authorName = authorData[0]?.name || '';
+  else if (typeof authorData === 'object' && authorData) authorName = (authorData as any)?.name || '';
+  else if (typeof authorData === 'string') authorName = authorData;
+
+  return (
+    <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-green-200 transition-all duration-300 flex flex-col">
+      <Link href={`/products/${productSlug}`} className="block relative overflow-hidden bg-gray-50">
+        <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">
+          {img ? (
+            <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          ) : (
+            <HiOutlineBookOpen className="w-16 h-16 text-gray-200" />
+          )}
+        </div>
+        {discountPercent > 0 && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            -{discountPercent}%
+          </span>
+        )}
+      </Link>
+      <div className="p-3 flex flex-col flex-1">
+        <Link href={`/products/${productSlug}`}>
+          <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug hover:text-green-600 transition-colors">{productName}</h3>
+        </Link>
+        {authorName && <p className="text-xs text-gray-400 mt-0.5 truncate">{authorName}</p>}
+        <div className="mt-auto pt-2">
+          <div className="flex items-baseline gap-1.5 mb-2">
+            <span className="text-base font-bold text-gray-900">৳{currentPrice}</span>
+            {discount > 0 && <span className="text-xs text-gray-400 line-through">৳{salePrice}</span>}
+          </div>
+          {onAddToCart && (
+            <button
+              onClick={() => onAddToCart(product)}
+              className="w-full bg-green-500 hover:bg-green-600 active:scale-95 text-white py-1.5 rounded-lg text-xs font-semibold transition-all"
+            >
+              + কার্টে যোগ করুন
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/* ── CategoryCard — outside HomePage ── */
+const CategoryCard = memo(function CategoryCard({
+  cat,
+  categoryProducts,
+}: {
+  cat: Category;
+  categoryProducts: { [key: string]: Product[] };
+}) {
+  return (
+    <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden'>
+      <Link href={`/products?category=${cat.slug}`} className='flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all'>
+        <div className='w-10 h-10 bg-gradient-to-br from-green-100 to-cyan-100 rounded-full flex items-center justify-center'>
+          {cat.image ? (
+            <img src={imgUrl(cat.image)!} alt={cat.name} className='w-6 h-6 object-contain' />
+          ) : (
+            <HiOutlineBookOpen className="w-5 h-5 text-green-500" />
+          )}
+        </div>
+        <div className='flex-1 min-w-0'>
+          <h3 className='text-sm font-semibold text-gray-800 truncate'>{cat.name}</h3>
+          <p className='text-xs text-gray-500'>{categoryProducts[cat.slug]?.length || 0} টি বই</p>
+        </div>
+      </Link>
+      {categoryProducts[cat.slug] && categoryProducts[cat.slug].length > 0 && (
+        <div className='grid grid-cols-4 gap-1 px-2 pb-2'>
+          {categoryProducts[cat.slug].map((product) => {
+            const img = product.images?.[0];
+            const productName = product.name || 'Untitled';
+            const productSlug = product.slug || product._id;
+            return (
+              <Link key={product._id} href={`/products/${productSlug}`} className='group'>
+                <div className='bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-all'>
+                  <div className='aspect-square bg-gray-100 relative overflow-hidden'>
+                    {img ? (
+                      <img src={imgUrl(img)!} alt={productName} className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
+                    ) : (
+                      <div className='w-full h-full flex items-center justify-center'>
+                        <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+      <Link href={`/products?category=${cat.slug}`} className='block text-center py-2 text-green-500 text-sm font-medium hover:text-green-600 border-t border-gray-100'>
+        সব বই দেখুন →
+      </Link>
+    </div>
+  );
+});
+
 export default function HomePage() {
   const router = useRouter();
-  const { addItem } = useCartStore();
+  const addItem = useCartStore(state => state.addItem);
   const [products, setProducts] = useState<Product[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
@@ -30,13 +158,12 @@ export default function HomePage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [categoryProducts, setCategoryProducts] = useState<{ [key: string]: Product[] }>({});
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     addItem(product, 1);
     toast.success('🛒 কার্টে যোগ হয়েছে');
-  };
+  }, [addItem]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,23 +254,6 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  const getCurrentPrice = (p: Product) => {
-    const salePrice = p.salePrice || 0;
-    const discount = p.discountAmount || 0;
-    return discount > 0 ? salePrice - discount : salePrice;
-  };
-
-  const getOriginalPrice = (p: Product) => {
-    return p.salePrice || 0;
-  };
-
-  const getDiscountPercent = (p: Product) => {
-    const salePrice = p.salePrice || 0;
-    const discount = p.discountAmount || 0;
-    if (!discount || !salePrice) return 0;
-    return Math.round((discount / salePrice) * 100);
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -151,132 +261,6 @@ export default function HomePage() {
     }
   };
 
-  const handleCategoryHover = async (categorySlug: string) => {
-    if (categoryProducts[categorySlug]) return;
-    
-    const allProducts = [...products, ...featuredProducts, ...newProducts];
-    const categoryFiltered = allProducts.filter((p: Product) => {
-      const cat = p.category as any;
-      if (Array.isArray(cat)) {
-        return cat.some((c: any) => c.slug === categorySlug);
-      } else if (cat?.slug) {
-        return cat.slug === categorySlug;
-      }
-      return false;
-    }).slice(0, 4);
-    
-    setCategoryProducts(prev => ({ ...prev, [categorySlug]: categoryFiltered }));
-  };
-
-  const ProductCard = ({ product, showAddToCart }: { product: Product; showAddToCart?: boolean }) => {
-    const salePrice = product.salePrice || 0;
-    const discount = product.discountAmount || 0;
-    const currentPrice = getCurrentPrice(product);
-    const discountPercent = getDiscountPercent(product);
-    const img = product.images?.[0];
-    const productName = product.name || 'Untitled Book';
-    const productSlug = product.slug || product._id;
-    const authorData = product.author;
-    let authorName = '';
-    if (Array.isArray(authorData)) {
-      authorName = authorData[0]?.name || '';
-    } else if (typeof authorData === 'object' && authorData) {
-      authorName = (authorData as any)?.name || '';
-    } else if (typeof authorData === 'string') {
-      authorName = authorData;
-    }
-    
-    return (
-      <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-green-200 transition-all duration-300 flex flex-col">
-        {/* Image */}
-        <Link href={`/products/${productSlug}`} className="block relative overflow-hidden bg-gray-50">
-          <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">
-            {img ? (
-              <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            ) : (
-              <HiOutlineBookOpen className="w-16 h-16 text-gray-200" />
-            )}
-          </div>
-          {discountPercent > 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              -{discountPercent}%
-            </span>
-          )}
-        </Link>
-
-        {/* Info */}
-        <div className="p-3 flex flex-col flex-1">
-          <Link href={`/products/${productSlug}`}>
-            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug hover:text-green-600 transition-colors">{productName}</h3>
-          </Link>
-          {authorName && <p className="text-xs text-gray-400 mt-0.5 truncate">{authorName}</p>}
-
-          <div className="mt-auto pt-2">
-            <div className="flex items-baseline gap-1.5 mb-2">
-              <span className="text-base font-bold text-gray-900">৳{currentPrice}</span>
-              {discount > 0 && <span className="text-xs text-gray-400 line-through">৳{salePrice}</span>}
-            </div>
-            <button
-              onClick={() => handleAddToCart(product)}
-              className="w-full bg-green-500 hover:bg-green-600 active:scale-95 text-white py-1.5 rounded-lg text-xs font-semibold transition-all"
-            >
-              + কার্টে যোগ করুন
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-const CategoryCard = ({ cat }: { cat: Category }) => {
-    return (
-    <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden'>
-      <Link href={`/products?category=${cat.slug}`} className='flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all'>
-        <div className='w-10 h-10 bg-gradient-to-br from-green-100 to-cyan-100 rounded-full flex items-center justify-center'>
-          {cat.image ? (
-            <img src={imgUrl(cat.image)!} alt={cat.name} className='w-6 h-6 object-contain' />
-          ) : (
-            <HiOutlineBookOpen className="w-5 h-5 text-green-500" />
-          )}
-        </div>
-        <div className='flex-1 min-w-0'>
-          <h3 className='text-sm font-semibold text-gray-800 truncate'>{cat.name}</h3>
-          <p className='text-xs text-gray-500'>{categoryProducts[cat.slug]?.length || 0} টি বই</p>
-        </div>
-      </Link>
-      
-      {categoryProducts[cat.slug] && categoryProducts[cat.slug].length > 0 && (
-        <div className='grid grid-cols-4 gap-1 px-2 pb-2'>
-          {categoryProducts[cat.slug].map((product) => {
-            const img = product.images?.[0];
-            const productName = product.name || 'Untitled';
-            const productSlug = product.slug || product._id;
-            
-            return (
-              <Link key={product._id} href={`/products/${productSlug}`} className='group'>
-                <div className='bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-all'>
-                  <div className='aspect-square bg-gray-100 relative overflow-hidden'>
-                    {img ? (
-                      <img src={imgUrl(img)!} alt={productName} className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
-                    ) : (
-                      <div className='w-full h-full flex items-center justify-center'>
-                        <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-      
-      <Link href={`/products?category=${cat.slug}`} className='block text-center py-2 text-green-500 text-sm font-medium hover:text-green-600 border-t border-gray-100'>
-        সব বই দেখুন →
-      </Link>
-    </div>
-  );
-};
 
   if (loading) {
     return (
@@ -341,7 +325,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
             
             <div className='hidden md:grid md:grid-cols-4 gap-4'>
               {categories.slice(0, 8).map((cat) => (
-                <CategoryCard key={cat._id} cat={cat} />
+                <CategoryCard key={cat._id} cat={cat} categoryProducts={categoryProducts} />
               ))}
             </div>
             
@@ -349,7 +333,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
               <Swiper slidesPerView={1.2} spaceBetween={12} freeMode={true} modules={[Navigation]}>
                 {categories.slice(0, 8).map((cat) => (
                   <SwiperSlide key={cat._id}>
-<CategoryCard key={cat._id} cat={cat} />
+<CategoryCard key={cat._id} cat={cat} categoryProducts={categoryProducts} />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -369,7 +353,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
             </div>
             <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'>
               {featuredProducts.slice(0, 12).map((product) => (
-                <ProductCard key={product._id} product={product} showAddToCart />
+                <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
               ))}
             </div>
           </section>
@@ -387,7 +371,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {newProducts.slice(0, 12).map((product) => (
-                <ProductCard key={product._id} product={product} showAddToCart />
+                <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
               ))}
             </div>
           </section>
@@ -402,7 +386,7 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {products.slice(0, 24).map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
               ))}
             </div>
           </section>
