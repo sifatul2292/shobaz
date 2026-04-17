@@ -300,9 +300,8 @@ const CategoryCard = ({ cat }: { cat: Category }) => {
           <section className="max-w-7xl mx-auto px-4 py-4">
             <div className="relative h-[200px] md:h-[280px] lg:h-[350px] rounded-2xl overflow-hidden shadow-lg">
               <Swiper
-                modules={[Navigation, Autoplay, Pagination]}
+                modules={[Autoplay, Pagination]}
                 autoplay={{ delay: 5000, disableOnInteraction: false }}
-                navigation
                 pagination={{ clickable: true, dynamicBullets: true }}
                 loop
                 speed={800}
