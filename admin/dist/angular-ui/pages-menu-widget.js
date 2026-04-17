@@ -163,11 +163,16 @@
     bindPanelEvents();
 
     // Mount Redirect URLs panel
+    // Re-find container after the await — Angular may have re-rendered the DOM
+    // during the fetchRedirects() network call, making `container` stale.
+    // Use the already-mounted pm-panel's parentNode as the reliable anchor.
     try { await fetchRedirects(); } catch (e) { console.warn('[Redirects Widget] load failed:', e); redirects = []; }
+    var pPanelEl = document.getElementById(PANEL_ID);
+    var ruContainer = (pPanelEl && pPanelEl.parentNode) ? pPanelEl.parentNode : (findContainer() || container);
     var rPanel = document.createElement('div');
     rPanel.id = RU_PANEL_ID;
     rPanel.innerHTML = buildRuPanelHTML();
-    container.appendChild(rPanel);
+    ruContainer.appendChild(rPanel);
     bindRuEvents();
   }
 
