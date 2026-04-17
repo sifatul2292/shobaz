@@ -9,7 +9,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
 import { gtmBeginCheckout } from '@/lib/gtm';
 import toast from 'react-hot-toast';
-import { FaShoppingCart, FaTruck, FaCheckCircle, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaShoppingCart, FaTruck, FaCheckCircle, FaMapMarkerAlt, FaChevronLeft } from 'react-icons/fa';
+import Link from 'next/link';
 
 interface ShippingCharge {
   deliveryInDhaka: number;
@@ -196,10 +197,10 @@ export default function CheckoutPage() {
         {/* Progress Header */}
         <div className="bg-white border-b py-4">
           <div className="max-w-5xl mx-auto px-4 flex items-center justify-center gap-8">
-            <div className="flex items-center gap-2 text-green-500">
+            <Link href="/cart" className="flex items-center gap-2 text-green-500 hover:text-green-600 transition-colors group">
               <FaShoppingCart />
-              <span className="font-medium">কার্ট</span>
-            </div>
+              <span className="font-medium group-hover:underline">কার্ট</span>
+            </Link>
             <div className="w-8 h-px bg-gray-300"></div>
             <div className="flex items-center gap-2 text-green-500 font-medium">
               <FaTruck />
@@ -371,11 +372,19 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  <Link
+                    href="/cart"
+                    className="flex items-center justify-center gap-2 w-full border-2 border-gray-200 hover:border-green-400 text-gray-600 hover:text-green-600 py-3 px-5 rounded-xl font-medium mt-5 transition-all"
+                  >
+                    <FaChevronLeft className="text-xs" />
+                    কার্ট সম্পাদনা করুন
+                  </Link>
+
                   <button
                     type="submit"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-5 rounded-xl font-bold text-lg mt-5 transition-all hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-5 rounded-xl font-bold text-lg mt-3 transition-all hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100"
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
