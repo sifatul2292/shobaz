@@ -31,12 +31,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn">
-      <head>
-        {/* Stape.io Custom Loader - improves tracking accuracy */}
+      <head />
+      <body className={`${hindSiliguri.variable} ${poppins.variable}`}>
+        {/* Stape.io Custom Loader */}
         <Script
           id="stape-custom-loader"
           src="https://server.shobaz.com/stape-custom-loader.js?id=ukeecxgx"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
         {/* GTM via server-side container */}
         <Script
@@ -50,8 +51,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
           }}
         />
-      </head>
-      <body className={`${hindSiliguri.variable} ${poppins.variable}`}>
         {/* GTM noscript fallback */}
         <noscript>
           <iframe
