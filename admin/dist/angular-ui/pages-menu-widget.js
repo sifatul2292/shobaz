@@ -154,26 +154,33 @@
       return;
     }
 
-    // Mount Pages panel
+    // Fetch pages data first (existing behaviour)
     try { await fetchPages(); } catch (e) { console.warn('[Pages Widget] load failed:', e); pages = []; }
+
+    // Re-find container — Angular may have re-rendered during the await above
+    container = findContainer() || container;
+
+    // ── Mount BOTH panels synchronously in one tick ──
+    // This must happen without any await in between, so Angular's change
+    // detection cannot fire between the two appendChild calls.
     var pPanel = document.createElement('div');
     pPanel.id = PANEL_ID;
     pPanel.innerHTML = buildPanelHTML();
     container.appendChild(pPanel);
-    bindPanelEvents();
 
-    // Mount Redirect URLs panel
-    // Re-find container after the await — Angular may have re-rendered the DOM
-    // during the fetchRedirects() network call, making `container` stale.
-    // Use the already-mounted pm-panel's parentNode as the reliable anchor.
-    try { await fetchRedirects(); } catch (e) { console.warn('[Redirects Widget] load failed:', e); redirects = []; }
-    var pPanelEl = document.getElementById(PANEL_ID);
-    var ruContainer = (pPanelEl && pPanelEl.parentNode) ? pPanelEl.parentNode : (findContainer() || container);
     var rPanel = document.createElement('div');
     rPanel.id = RU_PANEL_ID;
-    rPanel.innerHTML = buildRuPanelHTML();
-    ruContainer.appendChild(rPanel);
+    rPanel.innerHTML = buildRuPanelHTML(); // renders with empty list while data loads
+    container.appendChild(rPanel);
+
+    // Bind events for both panels
+    bindPanelEvents();
     bindRuEvents();
+
+    // Load redirect data in the background — rerender when ready
+    fetchRedirects()
+      .then(function () { rerenderRu(); })
+      .catch(function (e) { console.warn('[Redirects Widget] load failed:', e); });
   }
 
   function removeAll() {
