@@ -777,11 +777,11 @@ export default function ProductDetailClient({ params }: Props) {
                       )}
                     </div>
                     {product?.slug ? (
-                      <Link href={`/products/${product.slug}`} className="text-[10px] font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto block hover:text-emerald-600 transition-colors underline">
+                      <Link href={`/products/${product.slug}`} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors">
                         {product?.name}
                       </Link>
                     ) : (
-                      <p className="text-[10px] font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{product?.name}</p>
+                      <p className="text-xs font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{product?.name}</p>
                     )}
                     <p className="text-xs font-extrabold text-gray-900 mt-1">৳{getCurrentPrice(product!)}</p>
                   </div>
@@ -819,11 +819,11 @@ export default function ProductDetailClient({ params }: Props) {
                             )}
                           </div>
                           {item.product.slug ? (
-                            <Link href={`/products/${item.product.slug}`} className="text-[10px] font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto block hover:text-emerald-600 transition-colors underline">
+                            <Link href={`/products/${item.product.slug}`} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors">
                               {item.product.name}
                             </Link>
                           ) : (
-                            <p className="text-[10px] font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{item.product.name}</p>
+                            <p className="text-xs font-semibold text-gray-700 line-clamp-2 max-w-[80px] mx-auto">{item.product.name}</p>
                           )}
                           <p className="text-xs font-extrabold text-gray-900 mt-1">৳{itemPrice}</p>
                         </div>
