@@ -5,7 +5,6 @@ import {
   IsBoolean,
   IsNotEmpty,
   IsNotEmptyObject,
-  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -19,17 +18,13 @@ export class AddRedirectUrlDto {
   @IsString()
   name: string;
 
-
+  @IsOptional()
+  @IsString()
+  fromUrl: string;
 
   @IsOptional()
   @IsString()
-  bannerImage: string;
-
-  @IsNotEmpty()
-  startDateTime: any;
-
-  @IsNotEmpty()
-  endDateTime: any;
+  toUrl: string;
 }
 
 export class FilterRedirectUrlDto {
@@ -40,14 +35,6 @@ export class FilterRedirectUrlDto {
   @IsOptional()
   @IsBoolean()
   visibility: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  quantity: number;
-
-  @IsOptional()
-  @IsNumber()
-  price: number;
 }
 
 export class OptionRedirectUrlDto {
@@ -57,23 +44,17 @@ export class OptionRedirectUrlDto {
 }
 
 export class UpdateRedirectUrlDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   name: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  redirectUrlCode: string;
+  fromUrl: string;
 
   @IsOptional()
   @IsString()
-  bannerImage: string;
-
-  @IsNotEmpty()
-  startDateTime: any;
-
-  @IsNotEmpty()
-  endDateTime: any;
+  toUrl: string;
 
   @IsOptional()
   @IsArray()
@@ -107,14 +88,4 @@ export class FilterAndPaginationRedirectUrlDto {
   @IsNotEmptyObject()
   @IsObject()
   select: any;
-}
-
-export class CheckRedirectUrlDto {
-  @IsNotEmpty()
-  @IsString()
-  redirectUrlCode: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  subTotal: number;
 }

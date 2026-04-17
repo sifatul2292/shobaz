@@ -1,146 +1,77 @@
 /**
- * Custom Orders Menu Widget
- * Injects a "Custom Orders" link into the Angular admin sidebar under Sales.
+ * Custom Orders + Redirect URLs Menu Widget
+ * Injects sidebar links into the Angular admin sidebar under Sales.
  * Drop this file in /admin/dist/angular-ui/ and include it in index.html.
  */
 (function () {
   'use strict';
 
-  var LINK_ID  = 'co-sidebar-link';
+  var BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4000/upload/static'
+    : 'https://api.shobaz.com/upload/static';
+
   var STYLE_ID = 'co-sidebar-style';
-  var CUSTOM_PAGE_URL = window.location.hostname==="localhost" ? "http://localhost:4000/upload/static/custom-orders.html" : "https://api.shobaz.com/upload/static/custom-orders.html";
   var injectTimer = null;
+
+  var ITEMS = [
+    {
+      id: 'co-sidebar-link',
+      label: 'Custom Orders',
+      url: BASE_URL + '/custom-orders.html',
+      badgeText: 'NEW',
+      badgeColor: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+    },
+    {
+      id: 'ru-sidebar-link',
+      label: 'Redirect URLs',
+      url: BASE_URL + '/redirect-urls.html',
+      badgeText: 'SEO',
+      badgeColor: 'linear-gradient(135deg,#0891b2,#0e7490)',
+    },
+  ];
 
   /* ── Inject CSS once ── */
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = [
-      '#' + LINK_ID + ' {',
-      '  display: flex !important;',
-      '  align-items: center;',
-      '  gap: 6px;',
-      '  cursor: pointer;',
-      '  transition: background .15s, color .15s;',
-      '}',
-      '#' + LINK_ID + ':hover {',
-      '  color: #a78bfa !important;',
-      '  background: rgba(124,58,237,.12) !important;',
-      '}',
-      '#' + LINK_ID + ' .co-badge {',
-      '  font-size: 9px;',
-      '  font-weight: 800;',
-      '  background: linear-gradient(135deg,#7c3aed,#4f46e5);',
-      '  color: #fff;',
-      '  padding: 2px 6px;',
-      '  border-radius: 10px;',
-      '  letter-spacing: .04em;',
-      '  text-transform: uppercase;',
-      '  line-height: 1.4;',
-      '  flex-shrink: 0;',
-      '}',
-    ].join('\n');
+    var css = '';
+    ITEMS.forEach(function (item) {
+      css += [
+        '#' + item.id + ', #' + item.id + '-wrap {',
+        '  display: flex !important;',
+        '  align-items: center;',
+        '  gap: 6px;',
+        '  cursor: pointer;',
+        '  transition: background .15s, color .15s;',
+        '}',
+        '#' + item.id + ':hover, #' + item.id + '-wrap:hover {',
+        '  color: #a78bfa !important;',
+        '  background: rgba(124,58,237,.12) !important;',
+        '}',
+        '.' + item.id + '-badge {',
+        '  font-size: 9px;',
+        '  font-weight: 800;',
+        '  background: ' + item.badgeColor + ';',
+        '  color: #fff;',
+        '  padding: 2px 6px;',
+        '  border-radius: 10px;',
+        '  letter-spacing: .04em;',
+        '  text-transform: uppercase;',
+        '  line-height: 1.4;',
+        '  flex-shrink: 0;',
+        '}',
+      ].join('\n');
+    });
+    style.textContent = css;
     document.head.appendChild(style);
   }
 
-  /* ── Try to inject the sidebar link ── */
-  function tryInject() {
-    if (document.getElementById(LINK_ID)) return; // already injected
-
-    // Find any existing "Orders List" or "Pre Orders" li/a in the sidebar
-    var allLinks = document.querySelectorAll(
-      'mat-nav-list a, mat-list-item a, .mat-list-item a, ' +
-      '[class*="sidebar"] a, [class*="nav"] a, ' +
-      'a[routerlink], a[routerLink], a[ng-reflect-router-link]'
-    );
-
-    var targetEl = null;
-    var parentContainer = null;
-
-    allLinks.forEach(function (el) {
-      var text = (el.textContent || el.innerText || '').trim();
-      if (!targetEl && (text === 'Orders List' || text.includes('Orders List'))) {
-        targetEl = el;
-      }
-    });
-
-    // Fall back: find any <li> containing "Orders List" text
-    if (!targetEl) {
-      var allLi = document.querySelectorAll('li, mat-list-item, .menu-item, [class*="menu-item"]');
-      allLi.forEach(function (el) {
-        var text = (el.textContent || '').trim();
-        if (!targetEl && text.startsWith('Orders List')) {
-          targetEl = el;
-        }
-      });
-    }
-
-    if (!targetEl) return; // sidebar not rendered yet
-
-    // Determine the parent to insert into
-    parentContainer = targetEl.parentElement;
-    if (!parentContainer) return;
-
-    // Create our link element — match the same tag as the sibling
-    var tagName = targetEl.tagName.toLowerCase();
-    var newEl = document.createElement(tagName);
-    newEl.id = LINK_ID;
-
-    // Copy classes from the target so it inherits the same styling
-    if (targetEl.className) {
-      newEl.className = targetEl.className;
-    }
-
-    // Use click handler instead of href — Angular's router intercepts <a href> clicks
-    newEl.style.cssText = targetEl.style.cssText;
-    newEl.style.cursor = 'pointer';
-
-    // Build inner HTML to match style of sibling items
-    var innerA = targetEl.querySelector('a');
-    if (innerA && tagName !== 'a') {
-      // The tag itself is a wrapper (e.g. li) — clone inner element but as a span
-      var a = document.createElement('span');
-      a.id = LINK_ID;
-      a.style.cssText = innerA.style.cssText;
-      a.style.cursor = 'pointer';
-      a.className = innerA.className;
-      a.innerHTML = buildLinkHTML(innerA.innerHTML);
-      // Navigate on click, bypassing Angular router
-      a.addEventListener('click', function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        window.location.href = CUSTOM_PAGE_URL;
-      }, true);
-      newEl.appendChild(a);
-      newEl.id = LINK_ID + '-wrap';
-    } else {
-      newEl.innerHTML = buildLinkHTML(targetEl.innerHTML);
-      // Navigate on click, bypassing Angular router
-      newEl.addEventListener('click', function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        window.location.href = CUSTOM_PAGE_URL;
-      }, true);
-    }
-
-    // Insert immediately after the target
-    if (targetEl.nextSibling) {
-      parentContainer.insertBefore(newEl, targetEl.nextSibling);
-    } else {
-      parentContainer.appendChild(newEl);
-    }
-
-    injectStyles();
-  }
-
-  function buildLinkHTML(originalHTML) {
-    // Try to reuse the icon + structure of the existing item,
-    // then replace the text node with our label.
+  /* ── Build inner HTML for an item, cloning structure from a sibling ── */
+  function buildLinkHTML(originalHTML, item) {
     var tmp = document.createElement('div');
     tmp.innerHTML = originalHTML;
 
-    // Replace text nodes with our label
     var walker = document.createTreeWalker(tmp, NodeFilter.SHOW_TEXT, null, false);
     var textNodes = [];
     var node;
@@ -148,27 +79,117 @@
       if (node.nodeValue && node.nodeValue.trim()) textNodes.push(node);
     }
     if (textNodes.length) {
-      textNodes[textNodes.length - 1].nodeValue = 'Custom Orders';
+      textNodes[textNodes.length - 1].nodeValue = item.label;
     } else {
-      tmp.appendChild(document.createTextNode('Custom Orders'));
+      tmp.appendChild(document.createTextNode(item.label));
     }
 
-    // Append the NEW badge
     var badge = document.createElement('span');
-    badge.className = 'co-badge';
-    badge.textContent = 'NEW';
+    badge.className = item.id + '-badge';
+    badge.textContent = item.badgeText;
     tmp.appendChild(badge);
 
     return tmp.innerHTML;
+  }
+
+  /* ── Inject a single sidebar item after a reference element ── */
+  function injectItem(item, afterEl, parentContainer) {
+    if (document.getElementById(item.id) || document.getElementById(item.id + '-wrap')) return;
+
+    var tagName = afterEl.tagName.toLowerCase();
+    var newEl = document.createElement(tagName);
+    newEl.id = item.id;
+
+    if (afterEl.className) newEl.className = afterEl.className;
+    newEl.style.cssText = afterEl.style.cssText;
+    newEl.style.cursor = 'pointer';
+
+    var pageUrl = item.url;
+    var innerA = afterEl.querySelector('a');
+
+    if (innerA && tagName !== 'a') {
+      var span = document.createElement('span');
+      span.id = item.id;
+      span.style.cssText = innerA.style.cssText;
+      span.style.cursor = 'pointer';
+      span.className = innerA.className;
+      span.innerHTML = buildLinkHTML(innerA.innerHTML, item);
+      span.addEventListener('click', function (e) {
+        e.stopPropagation(); e.preventDefault();
+        window.location.href = pageUrl;
+      }, true);
+      newEl.appendChild(span);
+      newEl.id = item.id + '-wrap';
+    } else {
+      newEl.innerHTML = buildLinkHTML(afterEl.innerHTML, item);
+      newEl.addEventListener('click', function (e) {
+        e.stopPropagation(); e.preventDefault();
+        window.location.href = pageUrl;
+      }, true);
+    }
+
+    if (afterEl.nextSibling) {
+      parentContainer.insertBefore(newEl, afterEl.nextSibling);
+    } else {
+      parentContainer.appendChild(newEl);
+    }
+  }
+
+  /* ── Try to inject all sidebar links ── */
+  function tryInject() {
+    // Check if any item is already missing (prevents duplicate full-runs)
+    var anyMissing = ITEMS.some(function (item) {
+      return !document.getElementById(item.id) && !document.getElementById(item.id + '-wrap');
+    });
+    if (!anyMissing) return;
+
+    // Find the "Orders List" anchor to use as our insertion point
+    var allLinks = document.querySelectorAll(
+      'mat-nav-list a, mat-list-item a, .mat-list-item a, ' +
+      '[class*="sidebar"] a, [class*="nav"] a, ' +
+      'a[routerlink], a[routerLink], a[ng-reflect-router-link]'
+    );
+
+    var targetEl = null;
+    allLinks.forEach(function (el) {
+      var text = (el.textContent || el.innerText || '').trim();
+      if (!targetEl && (text === 'Orders List' || text.includes('Orders List'))) {
+        targetEl = el;
+      }
+    });
+
+    if (!targetEl) {
+      var allLi = document.querySelectorAll('li, mat-list-item, .menu-item, [class*="menu-item"]');
+      allLi.forEach(function (el) {
+        var text = (el.textContent || '').trim();
+        if (!targetEl && text.startsWith('Orders List')) targetEl = el;
+      });
+    }
+
+    if (!targetEl) return;
+
+    var parentContainer = targetEl.parentElement;
+    if (!parentContainer) return;
+
+    injectStyles();
+
+    // Insert items in reverse order so they both end up right after "Orders List"
+    // (each insertion goes to nextSibling of Orders List, pushing the previous one down)
+    var reversedItems = ITEMS.slice().reverse();
+    reversedItems.forEach(function (item) {
+      injectItem(item, targetEl, parentContainer);
+    });
   }
 
   /* ── Watch for Angular to render the sidebar ── */
   function startWatcher() {
     tryInject();
 
-    // MutationObserver fires on every Angular render cycle
     var observer = new MutationObserver(function () {
-      if (!document.getElementById(LINK_ID) && !document.getElementById(LINK_ID + '-wrap')) {
+      var anyMissing = ITEMS.some(function (item) {
+        return !document.getElementById(item.id) && !document.getElementById(item.id + '-wrap');
+      });
+      if (anyMissing) {
         clearTimeout(injectTimer);
         injectTimer = setTimeout(tryInject, 300);
       }
@@ -184,7 +205,6 @@
     startWatcher();
   }
 
-  // Also retry several times during Angular bootstrap (Angular loads async)
   [500, 1000, 2000, 3000, 5000].forEach(function (delay) {
     setTimeout(tryInject, delay);
   });

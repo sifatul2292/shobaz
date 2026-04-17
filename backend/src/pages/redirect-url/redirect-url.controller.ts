@@ -16,7 +16,6 @@ import {
 } from '@nestjs/common';
 import {
   AddRedirectUrlDto,
-  CheckRedirectUrlDto,
   FilterAndPaginationRedirectUrlDto,
   OptionRedirectUrlDto,
   UpdateRedirectUrlDto,
@@ -31,9 +30,6 @@ import { AdminPermissions } from '../../enum/admin-permission.enum';
 import { AdminPermissionGuard } from '../../guards/admin-permission.guard';
 import { AdminJwtAuthGuard } from '../../guards/admin-jwt-auth.guard';
 import { MongoIdValidationPipe } from '../../pipes/mongo-id-validation.pipe';
-import { UserJwtAuthGuard } from '../../guards/user-jwt-auth.guard';
-import { GetTokenUser } from '../../decorator/get-token-user.decorator';
-import { User } from '../../interfaces/user/user.interface';
 
 @Controller('redirect-url')
 export class RedirectUrlController {
@@ -46,12 +42,12 @@ export class RedirectUrlController {
    * insertManyRedirectUrl
    */
   @Post('/add')
-  // @UsePipes(ValidationPipe)
-  // @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
-  // @UseGuards(AdminRolesGuard)
-  // @AdminMetaPermissions(AdminPermissions.CREATE)
-  // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.CREATE)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addRedirectUrl(
     @Body()
     addRedirectUrlDto: AddRedirectUrlDto,
@@ -117,12 +113,12 @@ export class RedirectUrlController {
    */
   @Version(VERSION_NEUTRAL)
   @Put('/update/:id')
-  // @UsePipes(ValidationPipe)
-  // @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
-  // @UseGuards(AdminRolesGuard)
-  // @AdminMetaPermissions(AdminPermissions.EDIT)
-  // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.EDIT)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateRedirectUrlById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateRedirectUrlDto: UpdateRedirectUrlDto,
@@ -156,12 +152,12 @@ export class RedirectUrlController {
    */
   @Version(VERSION_NEUTRAL)
   @Delete('/delete/:id')
-  // @UsePipes(ValidationPipe)
-  // @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
-  // @UseGuards(AdminRolesGuard)
-  // @AdminMetaPermissions(AdminPermissions.DELETE)
-  // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.DELETE)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteRedirectUrlById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,
@@ -187,19 +183,6 @@ export class RedirectUrlController {
     return await this.redirectUrlService.deleteMultipleRedirectUrlById(
       data.ids,
       Boolean(checkUsage),
-    );
-  }
-
-  @Post('/check-redirectUrl-availability')
-  @UsePipes(ValidationPipe)
-  @UseGuards(UserJwtAuthGuard)
-  async checkRedirectUrlAvailability(
-    @GetTokenUser() user: User,
-    @Body() checkRedirectUrlDto: CheckRedirectUrlDto,
-  ): Promise<ResponsePayload> {
-    return await this.redirectUrlService.checkRedirectUrlAvailability(
-      user,
-      checkRedirectUrlDto,
     );
   }
 }
