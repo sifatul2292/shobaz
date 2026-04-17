@@ -4,36 +4,29 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
-import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaFacebook, FaYoutube, FaInstagram, FaTwitter, FaChevronRight } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaFacebook, FaYoutube, FaInstagram, FaChevronRight } from 'react-icons/fa';
 
 interface Page {
   _id: string;
-  title: string;
-  slug: string;
-}
-
-interface Category {
-  _id: string;
   name: string;
   slug: string;
+  menuLabel?: string;
+  footerOrder?: number;
 }
 
 export default function Footer() {
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
-  const [pages, setPages] = useState<Page[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [footerPages, setFooterPages] = useState<Page[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [shopRes, pagesRes, categoriesRes] = await Promise.all([
+        const [shopRes, pagesRes] = await Promise.all([
           api.get('/shop-information/get'),
-          api.get('/additional-page/get-all?includeInactive=false'),
-          api.post('/category/get-all', { filter: { visibility: true }, pagination: { currentPage: 1, pageSize: 6 } }),
+          api.get('/additional-page/get-all?showInFooter=true&includeInactive=false'),
         ]);
         if (shopRes.data?.data) setShopInfo(shopRes.data.data);
-        if (pagesRes.data?.data) setPages(pagesRes.data.data);
-        if (categoriesRes.data?.data) setCategories(categoriesRes.data.data);
+        if (pagesRes.data?.data) setFooterPages(pagesRes.data.data);
       } catch (err: any) {
         console.log('Footer fetch error:', err.message);
       }
@@ -56,19 +49,32 @@ export default function Footer() {
     </h3>
   );
 
+  const NavLink = ({ href, label }: { href: string; label: string }) => (
+    <li>
+      <Link href={href} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
+        <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
+        {label}
+      </Link>
+    </li>
+  );
+
   return (
     <footer className="bg-gray-950 text-gray-400">
       {/* Top accent bar */}
       <div className="h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-green-600" />
 
       <div className="max-w-7xl mx-auto px-4 pt-12 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
 
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
               {shopInfo?.navLogo ? (
-                <img src={imgUrl(shopInfo.navLogo)!} alt="Shobaz" className="h-10 w-auto" />
+                <img
+                  src={imgUrl(shopInfo.navLogo)!}
+                  alt={shopInfo?.siteName || 'Shobaz'}
+                  className="h-10 w-auto brightness-0 invert"
+                />
               ) : (
                 <div className="h-10 w-10 bg-green-500 rounded-lg flex items-center justify-center">
                   <span className="text-xl font-bold text-white">S</span>
@@ -125,65 +131,38 @@ export default function Footer() {
           <div>
             <ColHeading>দ্রুত লিংক</ColHeading>
             <ul className="space-y-2.5">
-              {[
-                { href: '/products', label: 'সকল বই' },
-                { href: '/authors', label: 'লেখক' },
-                { href: '/publishers', label: 'প্রকাশনা' },
-                { href: '/offers', label: 'অফার' },
-                { href: '/blog', label: 'ব্লগ' },
-              ].map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
-                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              <NavLink href="/products" label="সকল বই" />
+              <NavLink href="/authors" label="লেখক" />
+              <NavLink href="/publishers" label="প্রকাশনা" />
+              <NavLink href="/offers" label="অফার" />
+              <NavLink href="/blog" label="ব্লগ" />
             </ul>
           </div>
 
-          {/* Categories */}
-          <div>
-            <ColHeading>ক্যাটাগরি</ColHeading>
-            <ul className="space-y-2.5">
-              {categories.slice(0, 6).map((cat) => (
-                <li key={cat._id}>
-                  <Link href={`/products?category=${cat.slug}`} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
-                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
-                    {cat.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Customer Service */}
+          {/* Customer Service — fully from backend */}
           <div>
             <ColHeading>গ্রাহক সেবা</ColHeading>
             <ul className="space-y-2.5">
-              {[
-                { href: '/contact', label: 'যোগাযোগ' },
-                { href: '/about', label: 'আমাদের সম্পর্কে' },
-                { href: '/terms', label: 'শর্তাবলী' },
-                { href: '/privacy-policy', label: 'গোপনীয়তা নীতি' },
-              ].map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
-                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-              {pages.slice(0, 3).map((page) => (
-                <li key={page._id}>
-                  <Link href={`/page/${page.slug}`} className="text-sm flex items-center gap-1.5 hover:text-green-400 transition-colors group">
-                    <FaChevronRight className="text-[8px] text-gray-600 group-hover:text-green-400 transition-colors" />
-                    {page.title}
-                  </Link>
-                </li>
-              ))}
+              {footerPages.length > 0 ? (
+                footerPages.map((page) => (
+                  <NavLink
+                    key={page._id}
+                    href={`/page/${page.slug}`}
+                    label={page.menuLabel || page.name}
+                  />
+                ))
+              ) : (
+                /* Fallback if no pages configured in backend yet */
+                <>
+                  <NavLink href="/contact" label="যোগাযোগ" />
+                  <NavLink href="/about" label="আমাদের সম্পর্কে" />
+                  <NavLink href="/terms" label="শর্তাবলী" />
+                  <NavLink href="/privacy-policy" label="গোপনীয়তা নীতি" />
+                </>
+              )}
             </ul>
           </div>
+
         </div>
 
         {/* Bottom Bar */}
@@ -191,10 +170,12 @@ export default function Footer() {
           <p className="text-sm text-gray-600">
             © {currentYear} <span className="text-green-500 font-medium">{shopInfo?.siteName || 'Shobaz'}</span>. সর্বস্বত্ব সংরক্ষিত।
           </p>
-          <div className="flex items-center gap-4 text-sm">
-            <Link href="/terms" className="text-gray-600 hover:text-green-400 transition-colors">শর্তাবলী</Link>
-            <span className="text-gray-700">·</span>
-            <Link href="/privacy-policy" className="text-gray-600 hover:text-green-400 transition-colors">গোপনীয়তা</Link>
+          <div className="flex items-center gap-4 text-sm flex-wrap justify-center">
+            {footerPages.map((page) => (
+              <Link key={page._id} href={`/page/${page.slug}`} className="text-gray-600 hover:text-green-400 transition-colors">
+                {page.menuLabel || page.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
