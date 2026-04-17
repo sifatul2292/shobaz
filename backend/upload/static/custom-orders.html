@@ -1066,6 +1066,11 @@
       ];
     }
 
+    // API requires a non-empty filter object
+    if (Object.keys(filter).length === 0) {
+      filter.orderStatus = { $gte: 0 };
+    }
+
     return {
       filter: filter,
       pagination: { pageSize: state.pageSize, currentPage: state.page },
