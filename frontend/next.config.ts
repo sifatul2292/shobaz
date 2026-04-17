@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // Example: /product/edventure → /edventure
+      // Add more rows here following the same pattern
+      {
+        source: '/product/:slug',
+        destination: '/:slug',
+        permanent: true, // 301 redirect (good for SEO)
+      },
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
