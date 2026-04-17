@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Orders — Amolbooks Admin</title>
+  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple:    #6c3fc5;
+      --purple-dark: #5530a0;
+      --blue:      #0284c7;
+      --blue-dark: #0369a1;
+      --orange:    #f59e0b;
+      --green:     #10b981;
+      --red:       #ef4444;
+      --cyan:      #06b6d4;
+      --gray-50:   #f8fafc;
+      --gray-100:  #f1f5f9;
+      --gray-200:  #e2e8f0;
+      --gray-300:  #cbd5e1;
+      --gray-500:  #64748b;
+      --gray-700:  #334155;
+      --gray-900:  #0f172a;
+      --sidebar-w: 220px;
+    }
+    html, body { height: 100%; font-family: 'Nunito Sans', 'Segoe UI', sans-serif; background: #f0f2f5; color: #1e293b; }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: #1a1a2e;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo img { width: 44px; height: 44px; object-fit: contain; border-radius: 8px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 800; color: #fff; }
+    .sidebar-nav { padding: 12px 0; flex: 1; }
+    .nav-section { padding: 6px 0; }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #64748b;
+      padding: 8px 18px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-decoration: none;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #e2e8f0; }
+    .nav-item.active { background: rgba(108,63,197,.18); color: #a78bfa; border-left-color: #7c3aed; }
+    .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+    .nav-back {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .nav-back a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .nav-back a:hover { color: #e2e8f0; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 12px rgba(108,63,197,.3);
+    }
+    .topbar-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; }
+    .topbar-title i { font-size: 22px; opacity: .85; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 24px;
+      padding: 7px 16px;
+      gap: 8px;
+      min-width: 260px;
+      transition: background .15s;
+    }
+    .search-box:focus-within { background: rgba(255,255,255,.22); }
+    .search-box i { color: rgba(255,255,255,.7); font-size: 13px; }
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+      width: 100%;
+    }
+    .search-box input::placeholder { color: rgba(255,255,255,.6); }
+    .btn-add {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s;
+      text-decoration: none;
+    }
+    .btn-add:hover { background: rgba(255,255,255,.28); }
+
+    /* ── Content ── */
+    .content { padding: 24px 28px; }
+
+    /* ── Date Filters ── */
+    .date-filters {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .date-filter-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 10px 16px;
+      flex: 1;
+      min-width: 240px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .date-filter-box i { color: var(--purple); font-size: 16px; }
+    .date-filter-box label { font-size: 11px; font-weight: 700; color: var(--gray-500); margin-bottom: 2px; display: block; }
+    .date-range { display: flex; align-items: center; gap: 8px; }
+    .date-range input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      color: #1e293b;
+      background: none;
+      cursor: pointer;
+      width: 120px;
+    }
+    .date-range span { color: var(--gray-300); font-size: 12px; }
+
+    /* ── Stats Cards ── */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.1);
+      color: #fff;
+    }
+    .stat-card.blue  { background: linear-gradient(135deg, #0284c7, #0369a1); }
+    .stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .stat-icon {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .stat-info label { font-size: 12px; font-weight: 700; opacity: .85; text-transform: uppercase; letter-spacing: .04em; }
+    .stat-info .stat-value { font-size: 28px; font-weight: 800; line-height: 1.1; margin-top: 2px; }
+
+    /* ── Filter Bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      transition: all .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .filter-btn:hover { border-color: var(--purple); color: var(--purple); }
+    .filter-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .filter-btn i { font-size: 12px; }
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      z-index: 200;
+      display: none;
+      overflow: hidden;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .12s;
+    }
+    .dropdown-item:hover { background: var(--gray-50); }
+    .dropdown-item.selected { color: var(--purple); }
+    .dropdown-item .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .spacer { flex: 1; }
+    .btn-export {
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    }
+    .btn-export:hover { background: #2d2d4e; }
+
+    /* ── Table Card ── */
+    .table-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 1100px;
+    }
+    thead {
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      color: #fff;
+    }
+    thead th {
+      padding: 12px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      text-align: left;
+    }
+    thead th:first-child { padding-left: 16px; width: 36px; }
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; }
+    tbody tr:hover { background: #f8f7ff; }
+    tbody td {
+      padding: 10px 10px;
+      vertical-align: middle;
+      color: #334155;
+      font-weight: 500;
+    }
+    tbody td:first-child { padding-left: 16px; }
+    .order-no {
+      font-weight: 700;
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .order-no:hover { text-decoration: underline; }
+    .phone-no { font-weight: 600; font-size: 12px; white-space: nowrap; }
+    .date-cell { font-size: 11px; line-height: 1.5; white-space: nowrap; }
+    .date-cell .time { color: var(--gray-500); }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      white-space: nowrap;
+    }
+    .badge-unpaid    { background: #fef3c7; color: #b45309; }
+    .badge-paid      { background: #d1fae5; color: #065f46; }
+    .badge-cod       { background: #e0f2fe; color: #0369a1; }
+    .badge-pending   { background: #fef3c7; color: #b45309; }
+    .badge-confirm   { background: #dbeafe; color: #1d4ed8; }
+    .badge-processing { background: #ede9fe; color: #6d28d9; }
+    .badge-shipping  { background: #cffafe; color: #0e7490; }
+    .badge-delivered { background: #d1fae5; color: #065f46; }
+    .badge-cancel    { background: #fee2e2; color: #b91c1c; }
+    .badge-courier   { background: #cffafe; color: #0e7490; }
+    .badge-refund    { background: #fce7f3; color: #9d174d; }
+    .badge-return    { background: #fef9c3; color: #854d0e; }
+    .badge-hold      { background: #f3f4f6; color: #374151; }
+    .courier-cell { font-size: 11px; line-height: 1.6; }
+    .courier-cell .courier-name { font-weight: 700; color: #334155; }
+    .courier-cell .tracking-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+    .courier-cell .tracking-link:hover { text-decoration: underline; }
+    .btn-courier {
+      background: var(--cyan);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-courier:hover { background: #0891b2; }
+    .fraud-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+    .fraud-chip.low  { background: #d1fae5; color: #065f46; }
+    .fraud-chip.mid  { background: #fef3c7; color: #b45309; }
+    .fraud-chip.high { background: #fee2e2; color: #b91c1c; }
+    .action-cell { display: flex; gap: 6px; align-items: center; }
+    .btn-action {
+      border: none;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .btn-action:hover { opacity: .8; }
+    .btn-invoice { background: #ede9fe; color: #6d28d9; }
+    .btn-status  { background: #dbeafe; color: #1d4ed8; }
+
+    /* ── Status Change Select ── */
+    .status-select {
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .status-select:focus { border-color: var(--purple); }
+
+    /* ── Pagination ── */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--gray-100);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .pagination-info { font-size: 13px; color: var(--gray-500); font-weight: 500; }
+    .pagination-controls { display: flex; gap: 6px; align-items: center; }
+    .page-btn {
+      border: 1px solid var(--gray-200);
+      background: #fff;
+      border-radius: 7px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all .12s;
+      min-width: 36px;
+      text-align: center;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+    .page-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Loading / Empty ── */
+    .loading-row td, .empty-row td {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--gray-500);
+      font-size: 14px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 24px; height: 24px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      z-index: 9999;
+      display: none;
+      max-width: 320px;
+    }
+    #toast.success { border-left: 4px solid var(--green); }
+    #toast.error   { border-left: 4px solid var(--red); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .content { padding: 16px; }
+      .topbar { padding: 12px 16px; }
+      .search-box { min-width: 160px; }
+    }
+
+    /* ── Checkbox ── */
+    input[type="checkbox"] { accent-color: var(--purple); width: 15px; height: 15px; cursor: pointer; }
+
+    /* ── Per Page Select ── */
+    .per-page-select {
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="favicon.png" alt="Amolbooks" onerror="this.style.display='none'">
+      <span>Amolbooks</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label">Sales</div>
+        <a href="javascript:history.back()" class="nav-item">
+          <i class="fas fa-list-ul"></i> Orders List (Angular)
+        </a>
+        <a href="custom-orders.html" class="nav-item active">
+          <i class="fas fa-sliders-h"></i> Custom Orders
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Navigation</div>
+        <a href="javascript:history.back()" class="nav-item">
+          <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+      </div>
+    </nav>
+    <div class="nav-back">
+      <a href="javascript:history.back()">
+        <i class="fas fa-home"></i> Return to Dashboard
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-title">
+        <i class="fas fa-shopping-cart"></i>
+        Custom Order List
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search Order No or Phone No or Name" />
+        </div>
+        <a href="#" class="btn-add" id="addOrderBtn">
+          <i class="fas fa-plus"></i> Add Order
+        </a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Date Filters -->
+      <div class="date-filters">
+        <div class="date-filter-box">
+          <i class="fas fa-calendar-alt"></i>
+          <div style="flex:1">
+            <label>Filter Created Date Range</label>
+            <div class="date-range">
+              <input type="date" id="createdFrom" />
+              <span>—</span>
+              <input type="date" id="createdTo" />
+            </div>
+          </div>
+          <button onclick="clearDateFilter('created')" style="border:none;background:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:4px">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="date-filter-box">
+          <i class="fas fa-truck" style="color:#f59e0b"></i>
+          <div style="flex:1">
+            <label>Filter Delivery Date Range</label>
+            <div class="date-range">
+              <input type="date" id="deliveryFrom" />
+              <span>—</span>
+              <input type="date" id="deliveryTo" />
+            </div>
+          </div>
+          <button onclick="clearDateFilter('delivery')" style="border:none;background:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:4px">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+          <div class="stat-info">
+            <label>Total Order</label>
+            <div class="stat-value" id="totalOrders">—</div>
+          </div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="stat-info">
+            <label>Total Amount</label>
+            <div class="stat-value" id="totalAmount">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <!-- Payment Status -->
+        <div style="position:relative">
+          <button class="filter-btn" id="paymentStatusBtn" onclick="toggleDropdown('paymentStatusDropdown')">
+            <i class="fas fa-credit-card"></i>
+            Payment Status
+            <span id="paymentStatusLabel"></span>
+            <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px"></i>
+          </button>
+          <div class="dropdown" id="paymentStatusDropdown">
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', '', 'Payment Status')"><span class="dot" style="background:#64748b"></span> All</div>
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', 'paid', 'Paid')"><span class="dot" style="background:#10b981"></span> Paid</div>
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', 'unpaid', 'Unpaid')"><span class="dot" style="background:#f59e0b"></span> Unpaid</div>
+          </div>
+        </div>
+
+        <!-- Payment Type -->
+        <div style="position:relative">
+          <button class="filter-btn" id="paymentTypeBtn" onclick="toggleDropdown('paymentTypeDropdown')">
+            <i class="fas fa-wallet"></i>
+            Payment Type
+            <span id="paymentTypeLabel"></span>
+            <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px"></i>
+          </button>
+          <div class="dropdown" id="paymentTypeDropdown">
+            <div class="dropdown-item" onclick="setFilter('paymentType', '', 'Payment Type')"> All</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'cash_on_delivery', 'COD')"> Cash on Delivery</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'card', 'Card')"> Card</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'bkash', 'bKash')"> bKash</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'nagad', 'Nagad')"> Nagad</div>
+          </div>
+        </div>
+
+        <!-- Order Status -->
+        <div style="position:relative">
+          <button class="filter-btn" id="orderStatusBtn" onclick="toggleDropdown('orderStatusDropdown')">
+            <i class="fas fa-truck"></i>
+            Order Status
+            <span id="orderStatusLabel"></span>
+            <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px"></i>
+          </button>
+          <div class="dropdown" id="orderStatusDropdown">
+            <div class="dropdown-item" onclick="setFilter('orderStatus', '', 'Order Status')"> All</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 1, 'Pending')"> Pending</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 2, 'Confirm')"> Confirm</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 3, 'Processing')"> Processing</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 4, 'Shipping')"> Shipping</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 5, 'Delivered')"> Delivered</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 6, 'Cancel')"> Cancel</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 7, 'Refund')"> Refund</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 8, 'Courier')"> Courier</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 9, 'Return')"> Return</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 10, 'Hold')"> Hold</div>
+          </div>
+        </div>
+
+        <!-- Per Page -->
+        <select class="per-page-select" id="perPageSelect" onchange="changePageSize()">
+          <option value="10">10 per page</option>
+          <option value="25" selected>25 per page</option>
+          <option value="50">50 per page</option>
+          <option value="100">100 per page</option>
+        </select>
+
+        <div class="spacer"></div>
+
+        <!-- Reset Filters -->
+        <button class="filter-btn" onclick="resetAllFilters()" title="Reset all filters">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+
+        <!-- Export Excel -->
+        <button class="btn-export" onclick="exportToCSV()">
+          <i class="fas fa-file-excel"></i> Export as Excel
+        </button>
+      </div>
+
+      <!-- Table Card -->
+      <div class="table-card">
+        <div class="table-wrap">
+          <table id="ordersTable">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" /></th>
+                <th>SL</th>
+                <th>ORDER NO</th>
+                <th>PHONE NO</th>
+                <th>NAME</th>
+                <th>ORDER DATE &amp; TIME</th>
+                <th>PAYMENT TYPE</th>
+                <th>PAYMENT STATUS</th>
+                <th>ORDER STATUS</th>
+                <th>COURIER</th>
+                <th>FRAUD CHECKER</th>
+                <th>ORDER BY</th>
+                <th>SHIPPING ADDRESS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr class="loading-row">
+                <td colspan="14">
+                  <div class="spinner"></div>
+                  <div>Loading orders...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+          <div class="pagination-info" id="paginationInfo">Loading...</div>
+          <div class="pagination-controls" id="paginationControls"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Auth Guard — redirect to admin login if no valid token ── */
+  (function authGuard() {
+    var keys = ['admin_token', 'adminToken', 'token', 'administrator'];
+    var hasToken = keys.some(function (k) {
+      var v = localStorage.getItem(k) || sessionStorage.getItem(k);
+      return v && v.length > 20 && !v.startsWith('{');
+    });
+    if (!hasToken) {
+      window.location.replace('/');
+    }
+  })();
+
+  /* ── Config ── */
+  var API = window.location.hostname==="localhost" ? "http://localhost:4000" : "https://api.shobaz.com";
+  var allOrders = []; // cache for export
+
+  /* ── State ── */
+  var state = {
+    page: 0,
+    pageSize: 25,
+    search: '',
+    paymentStatus: '',
+    paymentType: '',
+    orderStatus: '',
+    createdFrom: '',
+    createdTo: '',
+    deliveryFrom: '',
+    deliveryTo: '',
+    totalCount: 0,
+    totalAmount: 0,
+  };
+
+  /* ── Token helpers ── */
+  function getToken() {
+    if (window._shobazAdminToken) return window._shobazAdminToken;
+    var keys = ['admin_token', 'adminToken', 'token', 'administrator'];
+    for (var i = 0; i < keys.length; i++) {
+      var v = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
+      if (v && v.length > 20 && !v.startsWith('{')) {
+        return v;
+      }
+    }
+    return null;
+  }
+
+  function authHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    var t = getToken();
+    if (t) h.administrator = t;
+    return h;
+  }
+
+  /* ── Toast ── */
+  var toastTimer;
+  function showToast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = type || 'success';
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.style.display = 'none'; }, 3500);
+  }
+
+  /* ── Dropdown ── */
+  window.toggleDropdown = function (id) {
+    var dd = document.getElementById(id);
+    var wasOpen = dd.classList.contains('open');
+    closeAllDropdowns();
+    if (!wasOpen) dd.classList.add('open');
+  };
+
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown').forEach(function (d) { d.classList.remove('open'); });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.filter-btn') && !e.target.closest('.dropdown')) {
+      closeAllDropdowns();
+    }
+  });
+
+  /* ── Filter setters ── */
+  window.setFilter = function (key, value, label) {
+    state[key] = value;
+    state.page = 0;
+    closeAllDropdowns();
+
+    // Update button label
+    var labelMap = { paymentStatus: 'paymentStatusLabel', paymentType: 'paymentTypeLabel', orderStatus: 'orderStatusLabel' };
+    var defaultLabels = { paymentStatus: 'Payment Status', paymentType: 'Payment Type', orderStatus: 'Order Status' };
+    if (labelMap[key]) {
+      var labelEl = document.getElementById(labelMap[key]);
+      if (labelEl) {
+        labelEl.textContent = value ? (' · ' + label) : '';
+      }
+      var btnEl = document.getElementById(key + 'Btn');
+      if (btnEl) btnEl.classList.toggle('active', !!value);
+    }
+    loadOrders();
+  };
+
+  window.changePageSize = function () {
+    state.pageSize = parseInt(document.getElementById('perPageSelect').value, 10);
+    state.page = 0;
+    loadOrders();
+  };
+
+  window.clearDateFilter = function (type) {
+    if (type === 'created') {
+      document.getElementById('createdFrom').value = '';
+      document.getElementById('createdTo').value = '';
+      state.createdFrom = '';
+      state.createdTo = '';
+    } else {
+      document.getElementById('deliveryFrom').value = '';
+      document.getElementById('deliveryTo').value = '';
+      state.deliveryFrom = '';
+      state.deliveryTo = '';
+    }
+    state.page = 0;
+    loadOrders();
+  };
+
+  window.resetAllFilters = function () {
+    state.paymentStatus = '';
+    state.paymentType = '';
+    state.orderStatus = '';
+    state.createdFrom = '';
+    state.createdTo = '';
+    state.deliveryFrom = '';
+    state.deliveryTo = '';
+    state.search = '';
+    state.page = 0;
+    document.getElementById('searchInput').value = '';
+    document.getElementById('createdFrom').value = '';
+    document.getElementById('createdTo').value = '';
+    document.getElementById('deliveryFrom').value = '';
+    document.getElementById('deliveryTo').value = '';
+    ['paymentStatusLabel', 'paymentTypeLabel', 'orderStatusLabel'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
+    ['paymentStatusBtn', 'paymentTypeBtn', 'orderStatusBtn'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    loadOrders();
+  };
+
+  /* ── Select All ── */
+  window.toggleSelectAll = function (cb) {
+    document.querySelectorAll('.row-check').forEach(function (c) { c.checked = cb.checked; });
+  };
+
+  /* ── Build request body ── */
+  function buildRequestBody() {
+    var filter = {};
+
+    if (state.paymentStatus) filter.paymentStatus = state.paymentStatus;
+    if (state.paymentType)   filter.paymentType   = state.paymentType;
+    if (state.orderStatus !== '') filter.orderStatus = Number(state.orderStatus);
+
+    // Date range filters
+    if (state.createdFrom || state.createdTo) {
+      filter.createdAt = {};
+      if (state.createdFrom) filter.createdAt.$gte = new Date(state.createdFrom).toISOString();
+      if (state.createdTo) {
+        var to = new Date(state.createdTo);
+        to.setDate(to.getDate() + 1);
+        filter.createdAt.$lt = to.toISOString();
+      }
+    }
+    if (state.deliveryFrom || state.deliveryTo) {
+      filter.deliveryDate = {};
+      if (state.deliveryFrom) filter.deliveryDate.$gte = new Date(state.deliveryFrom).toISOString();
+      if (state.deliveryTo) {
+        var tod = new Date(state.deliveryTo);
+        tod.setDate(tod.getDate() + 1);
+        filter.deliveryDate.$lt = tod.toISOString();
+      }
+    }
+
+    // Search
+    if (state.search) {
+      filter.$or = [
+        { orderId: { $regex: state.search, $options: 'i' } },
+        { phoneNo: { $regex: state.search, $options: 'i' } },
+        { name:    { $regex: state.search, $options: 'i' } },
+      ];
+    }
+
+    return {
+      filter: filter,
+      pagination: { pageSize: state.pageSize, currentPage: state.page },
+      sort: { createdAt: -1 },
+    };
+  }
+
+  /* ── Load Orders ── */
+  function loadOrders() {
+    document.getElementById('ordersBody').innerHTML =
+      '<tr class="loading-row"><td colspan="14"><div class="spinner"></div><div>Loading orders...</div></td></tr>';
+
+    fetch(API + '/api/order/get-all', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(buildRequestBody()),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (resp) {
+        var orders = (resp.data && resp.data.data) ? resp.data.data : (Array.isArray(resp.data) ? resp.data : []);
+        var count = (resp.data && resp.data.count !== undefined) ? resp.data.count : resp.count || orders.length;
+        var grandTotal = 0;
+        if (resp.data && resp.data.calculation && resp.data.calculation.grandTotal) {
+          grandTotal = resp.data.calculation.grandTotal;
+        } else if (resp.calculation && resp.calculation.grandTotal) {
+          grandTotal = resp.calculation.grandTotal;
+        }
+
+        state.totalCount = count;
+        state.totalAmount = grandTotal;
+        allOrders = orders;
+
+        renderStats(count, grandTotal);
+        renderTable(orders, count);
+        renderPagination(count);
+      })
+      .catch(function (err) {
+        document.getElementById('ordersBody').innerHTML =
+          '<tr class="empty-row"><td colspan="14"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:20px;margin-bottom:8px"></i><br>Failed to load orders: ' + err.message + '<br><small>Make sure the backend is running at ' + API + '</small></td></tr>';
+        document.getElementById('totalOrders').textContent = '—';
+        document.getElementById('totalAmount').textContent = '—';
+        document.getElementById('paginationInfo').textContent = '';
+      });
+  }
+
+  /* ── Render Stats ── */
+  function renderStats(count, grandTotal) {
+    document.getElementById('totalOrders').textContent = count.toLocaleString();
+    document.getElementById('totalAmount').textContent = '৳' + Number(grandTotal).toLocaleString('en-BD', { maximumFractionDigits: 0 });
+  }
+
+  /* ── Order Status helpers ── */
+  var STATUS_NAMES = {
+    0: 'None', 1: 'Pending', 2: 'Confirm', 3: 'Processing',
+    4: 'Shipping', 5: 'Delivered', 6: 'Cancel', 7: 'Refund',
+    8: 'Courier', 9: 'Return', 10: 'Hold',
+  };
+  var STATUS_CLASSES = {
+    1: 'pending', 2: 'confirm', 3: 'processing', 4: 'shipping',
+    5: 'delivered', 6: 'cancel', 7: 'refund', 8: 'courier',
+    9: 'return', 10: 'hold',
+  };
+
+  function statusBadge(code) {
+    var name = STATUS_NAMES[code] || String(code);
+    var cls  = STATUS_CLASSES[code] || 'pending';
+    return '<span class="badge badge-' + cls + '">' + name + '</span>';
+  }
+
+  function paymentStatusBadge(ps) {
+    var p = (ps || '').toLowerCase();
+    return '<span class="badge badge-' + (p === 'paid' ? 'paid' : 'unpaid') + '">' + (p || 'Unpaid') + '</span>';
+  }
+
+  function paymentTypeBadge(pt) {
+    var label = (pt || 'COD').replace('cash_on_delivery', 'COD').replace(/_/g, ' ');
+    return '<span class="badge badge-cod">' + label + '</span>';
+  }
+
+  /* ── Format Date ── */
+  function formatDate(val) {
+    if (!val) return '—';
+    var d = new Date(val);
+    if (isNaN(d)) return String(val);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var day   = d.getDate();
+    var mon   = months[d.getMonth()];
+    var yr    = d.getFullYear();
+    var hr    = d.getHours();
+    var mn    = String(d.getMinutes()).padStart(2, '0');
+    var ampm  = hr >= 12 ? 'PM' : 'AM';
+    hr = hr % 12 || 12;
+    return '<div class="date-cell">' + day + ' ' + mon + ', ' + yr + '<br><span class="time">' + hr + ':' + mn + ' ' + ampm + '</span></div>';
+  }
+
+  /* ── Fraud Chip ── */
+  function fraudChip(fraud) {
+    if (!fraud && fraud !== 0) return '<span class="fraud-chip">—</span>';
+    var pct = typeof fraud === 'object' ? (fraud.fraudPercent || 0) : Number(fraud);
+    var cls = pct < 30 ? 'low' : pct < 70 ? 'mid' : 'high';
+    return '<span class="fraud-chip ' + cls + '">' + Math.round(pct) + '%</span>';
+  }
+
+  /* ── Status Change dropdown ── */
+  function statusSelect(orderId, mongoId, current) {
+    var opts = Object.entries(STATUS_NAMES).map(function (entry) {
+      var val = entry[0], name = entry[1];
+      return '<option value="' + val + '"' + (Number(val) === current ? ' selected' : '') + '>' + name + '</option>';
+    }).join('');
+    return '<select class="status-select" onchange="changeStatus(\'' + mongoId + '\', this.value)">' + opts + '</select>';
+  }
+
+  /* ── Render Table ── */
+  function renderTable(orders, total) {
+    var tbody = document.getElementById('ordersBody');
+    if (!orders.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="14"><i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;margin-bottom:8px"></i><br>No orders found</td></tr>';
+      return;
+    }
+
+    var offset = state.page * state.pageSize;
+    var rows = orders.map(function (o, i) {
+      var sl = offset + i + 1;
+      var courierCell = '';
+      if (o.courierData && o.courierData.providerName) {
+        courierCell = '<div class="courier-cell"><span class="courier-name">' + esc(o.courierData.providerName) + '</span>';
+        if (o.courierData.consignmentId) {
+          courierCell += '<br><small>' + esc(o.courierData.consignmentId) + '</small>';
+        }
+        if (o.courierLink) {
+          courierCell += '<br><a href="' + esc(o.courierLink) + '" target="_blank" class="tracking-link">Tracking Link</a>';
+        }
+        courierCell += '</div>';
+      } else if (o.orderStatus !== 8) {
+        courierCell = '<button class="btn-courier" onclick="sendToCourier(\'' + o._id + '\')">Send To Courier</button>';
+      } else {
+        courierCell = '<span style="color:#94a3b8;font-size:11px">—</span>';
+      }
+
+      var orderBy = (o.admin && o.admin.name) ? esc(o.admin.name) : (o.user ? 'User' : '—');
+
+      return [
+        '<tr>',
+        '<td><input type="checkbox" class="row-check" value="' + o._id + '" /></td>',
+        '<td>' + sl + '</td>',
+        '<td><a href="' + API + '/api/order/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
+        '<td><span class="phone-no">' + esc(o.phoneNo || '—') + '</span></td>',
+        '<td>' + esc(o.name || '—') + '</td>',
+        '<td>' + formatDate(o.createdAt || o.checkoutDate) + '</td>',
+        '<td>' + paymentTypeBadge(o.paymentType) + '</td>',
+        '<td>' + paymentStatusBadge(o.paymentStatus) + '</td>',
+        '<td>' + statusSelect(o.orderId, o._id, o.orderStatus) + '</td>',
+        '<td>' + courierCell + '</td>',
+        '<td>' + fraudChip(o.fraudChecker) + '</td>',
+        '<td><small>' + orderBy + '</small></td>',
+        '<td><small style="max-width:140px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(o.shippingAddress || '') + '">' + esc(o.shippingAddress || '—') + '</small></td>',
+        '<td>',
+        '  <div class="action-cell">',
+        '    <a href="' + API + '/invoice/' + o._id + '.pdf" target="_blank" class="btn-action btn-invoice" title="Invoice">',
+        '      <i class="fas fa-file-invoice"></i>',
+        '    </a>',
+        '  </div>',
+        '</td>',
+        '</tr>',
+      ].join('');
+    });
+
+    tbody.innerHTML = rows.join('');
+  }
+
+  /* ── Pagination ── */
+  function renderPagination(total) {
+    var pageCount = Math.ceil(total / state.pageSize);
+    var from = state.page * state.pageSize + 1;
+    var to   = Math.min((state.page + 1) * state.pageSize, total);
+
+    document.getElementById('paginationInfo').textContent =
+      total ? 'Showing ' + from + ' – ' + to + ' of ' + total.toLocaleString() + ' orders' : 'No orders';
+
+    var ctrl = document.getElementById('paginationControls');
+    var html = '';
+
+    // Prev
+    html += '<button class="page-btn" onclick="goPage(' + (state.page - 1) + ')"' + (state.page === 0 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i></button>';
+
+    // Page numbers (show up to 7 around current)
+    var start = Math.max(0, state.page - 3);
+    var end   = Math.min(pageCount - 1, state.page + 3);
+    if (start > 0) html += '<button class="page-btn" onclick="goPage(0)">1</button>' + (start > 1 ? '<span style="padding:0 4px;color:#94a3b8">…</span>' : '');
+    for (var p = start; p <= end; p++) {
+      html += '<button class="page-btn' + (p === state.page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + (p + 1) + '</button>';
+    }
+    if (end < pageCount - 1) html += (end < pageCount - 2 ? '<span style="padding:0 4px;color:#94a3b8">…</span>' : '') + '<button class="page-btn" onclick="goPage(' + (pageCount - 1) + ')">' + pageCount + '</button>';
+
+    // Next
+    html += '<button class="page-btn" onclick="goPage(' + (state.page + 1) + ')"' + (state.page >= pageCount - 1 ? ' disabled' : '') + '><i class="fas fa-chevron-right"></i></button>';
+
+    ctrl.innerHTML = html;
+  }
+
+  window.goPage = function (p) {
+    if (p < 0) return;
+    state.page = p;
+    loadOrders();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  /* ── Change Status ── */
+  window.changeStatus = function (id, newStatus) {
+    fetch(API + '/api/order/change-status/' + id, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ orderStatus: Number(newStatus) }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () {
+        showToast('Order status updated to ' + STATUS_NAMES[newStatus], 'success');
+      })
+      .catch(function (err) {
+        showToast('Failed: ' + err.message, 'error');
+        loadOrders(); // revert UI
+      });
+  };
+
+  /* ── Send to Courier ── */
+  window.sendToCourier = function (id) {
+    if (!confirm('Send this order to courier?')) return;
+    fetch(API + '/api/order/send-to-courier/' + id, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (resp) {
+        if (resp && resp.success) {
+          showToast('Order sent to courier successfully!', 'success');
+          loadOrders();
+        } else {
+          showToast(resp && resp.message ? resp.message : 'Could not send to courier.', 'error');
+        }
+      })
+      .catch(function (err) {
+        showToast('Error: ' + err.message, 'error');
+      });
+  };
+
+  /* ── Export CSV ── */
+  window.exportToCSV = function () {
+    if (!allOrders.length) { showToast('No orders to export.', 'error'); return; }
+    var headers = ['SL', 'Order No', 'Phone', 'Name', 'Date', 'Payment Type', 'Payment Status', 'Order Status', 'Grand Total', 'Shipping Address'];
+    var rows = allOrders.map(function (o, i) {
+      return [
+        i + 1,
+        o.orderId || '',
+        o.phoneNo || '',
+        o.name || '',
+        o.createdAt ? new Date(o.createdAt).toLocaleString() : '',
+        o.paymentType || '',
+        o.paymentStatus || '',
+        STATUS_NAMES[o.orderStatus] || o.orderStatus,
+        o.grandTotal || 0,
+        '"' + (o.shippingAddress || '').replace(/"/g, '""') + '"',
+      ].join(',');
+    });
+    var csv = [headers.join(',')].concat(rows).join('\n');
+    var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url;
+    a.download = 'orders-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported ' + allOrders.length + ' orders.', 'success');
+  };
+
+  /* ── Escape HTML ── */
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── Search debounce ── */
+  var searchTimer;
+  document.getElementById('searchInput').addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    var v = this.value.trim();
+    searchTimer = setTimeout(function () {
+      state.search = v;
+      state.page = 0;
+      loadOrders();
+    }, 400);
+  });
+
+  /* ── Date filter change ── */
+  ['createdFrom', 'createdTo', 'deliveryFrom', 'deliveryTo'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', function () {
+      state[id] = this.value;
+      state.page = 0;
+      loadOrders();
+    });
+  });
+
+  /* ── Init ── */
+  loadOrders();
+})();
+</script>
+</body>
+</html>
