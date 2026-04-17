@@ -119,6 +119,7 @@
         }
       }
     }).observe(document.body, { childList: true, subtree: true });
+    startRuWatcher();
   });
 
   /* ─────────────────── API helpers ─────────────────── */
@@ -154,33 +155,85 @@
       return;
     }
 
-    // Fetch pages data first (existing behaviour)
+    // Fetch pages data
     try { await fetchPages(); } catch (e) { console.warn('[Pages Widget] load failed:', e); pages = []; }
 
-    // Re-find container — Angular may have re-rendered during the await above
+    // Re-find container after await — Angular may have re-rendered
     container = findContainer() || container;
 
-    // ── Mount BOTH panels synchronously in one tick ──
-    // This must happen without any await in between, so Angular's change
-    // detection cannot fire between the two appendChild calls.
+    // Mount pages panel
     var pPanel = document.createElement('div');
     pPanel.id = PANEL_ID;
     pPanel.innerHTML = buildPanelHTML();
     container.appendChild(pPanel);
-
-    var rPanel = document.createElement('div');
-    rPanel.id = RU_PANEL_ID;
-    rPanel.innerHTML = buildRuPanelHTML(); // renders with empty list while data loads
-    container.appendChild(rPanel);
-
-    // Bind events for both panels
     bindPanelEvents();
-    bindRuEvents();
 
-    // Load redirect data in the background — rerender when ready
-    fetchRedirects()
-      .then(function () { rerenderRu(); })
-      .catch(function (e) { console.warn('[Redirects Widget] load failed:', e); });
+    // Redirect panel is mounted by its own independent watcher (startRuWatcher)
+    // which fires as soon as pm-panel appears in the DOM.
+  }
+
+  /* ── Independent watcher for the Redirect URLs panel ──────────────────
+     Completely decoupled from mountAll(). Watches for pm-panel to exist
+     on the correct route and inserts ru-panel right after it.
+     Retries automatically if Angular removes it.                         */
+  function startRuWatcher() {
+    var ruTimer = null;
+
+    function tryMountRu() {
+      if (!isPagesRoute()) return;
+
+      var pmPanel = document.getElementById(PANEL_ID);
+      var ruPanel = document.getElementById(RU_PANEL_ID);
+
+      if (!pmPanel) {
+        // Pages panel not ready yet — retry shortly
+        ruTimer = setTimeout(tryMountRu, 300);
+        return;
+      }
+
+      if (ruPanel) return; // already mounted
+
+      console.log('[Redirects Widget] mounting ru-panel…');
+      try {
+        injectStyles();
+        var rPanel = document.createElement('div');
+        rPanel.id = RU_PANEL_ID;
+        rPanel.innerHTML = buildRuPanelHTML();
+        // Insert immediately after pm-panel (not inside a container that may re-render)
+        pmPanel.insertAdjacentElement('afterend', rPanel);
+        bindRuEvents();
+        console.log('[Redirects Widget] ru-panel mounted, loading data…');
+        fetchRedirects()
+          .then(function () { rerenderRu(); console.log('[Redirects Widget] data loaded'); })
+          .catch(function (e) { console.warn('[Redirects Widget] data load failed:', e); });
+      } catch (e) {
+        console.error('[Redirects Widget] mount error:', e);
+      }
+    }
+
+    // Watch for DOM changes — re-mount ru-panel whenever pm-panel exists without it
+    var obs = new MutationObserver(function () {
+      if (!isPagesRoute()) return;
+      var pmPanel = document.getElementById(PANEL_ID);
+      var ruPanel = document.getElementById(RU_PANEL_ID);
+      if (pmPanel && !ruPanel) {
+        clearTimeout(ruTimer);
+        ruTimer = setTimeout(tryMountRu, 150);
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+
+    // Also try on route changes
+    ['pushState', 'replaceState'].forEach(function (fn) {
+      var orig = history[fn];
+      history[fn] = function () {
+        orig.apply(this, arguments);
+        setTimeout(tryMountRu, 600);
+      };
+    });
+
+    // Initial attempt
+    setTimeout(tryMountRu, 800);
   }
 
   function removeAll() {
