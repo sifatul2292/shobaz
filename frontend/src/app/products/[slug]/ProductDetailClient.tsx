@@ -101,10 +101,14 @@ export default function ProductDetailClient({ params }: Props) {
           const bundleDiscount = 10;
 
           if (backendBoughtTogether?.length > 0) {
-            bundleItems = backendBoughtTogether.map((p: any) => ({
-              product: { ...p, slug: p.slug || '' },
-              discount: bundleDiscount
-            }));
+            bundleItems = backendBoughtTogether.map((p: any) => {
+              // If backend didn't return slug, look it up from allProducts
+              const fullProduct = allProducts.find((fp: Product) => fp._id === p._id);
+              return {
+                product: { ...p, slug: p.slug || fullProduct?.slug || '' },
+                discount: bundleDiscount
+              };
+            });
           } else {
             bundleItems = filtered.slice(0, 3).map((p: Product) => ({
               product: p,
