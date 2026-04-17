@@ -751,6 +751,18 @@
 (function () {
   'use strict';
 
+  /* ── Auth Guard — redirect to admin login if no valid token ── */
+  (function authGuard() {
+    var keys = ['admin_token', 'adminToken', 'token', 'administrator'];
+    var hasToken = keys.some(function (k) {
+      var v = localStorage.getItem(k) || sessionStorage.getItem(k);
+      return v && v.length > 20 && !v.startsWith('{');
+    });
+    if (!hasToken) {
+      window.location.replace('/');
+    }
+  })();
+
   /* ── Config ── */
   var API = window.location.hostname==="localhost" ? "http://localhost:4000" : "https://api.shobaz.com";
   var allOrders = []; // cache for export
