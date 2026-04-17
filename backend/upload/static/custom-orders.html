@@ -773,8 +773,15 @@
 
   /* ── Token helpers ── */
   function getToken() {
+    // 1. Read from URL ?token= param (passed by admin dashboard on open)
+    var urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken && urlToken.length > 20) {
+      localStorage.setItem('administrator', urlToken);
+      return urlToken;
+    }
+    // 2. Fall back to localStorage (persisted from previous visit)
     if (window._shobazAdminToken) return window._shobazAdminToken;
-    var keys = ['admin_token', 'adminToken', 'token', 'administrator'];
+    var keys = ['administrator', 'admin_token', 'adminToken', 'token'];
     for (var i = 0; i < keys.length; i++) {
       var v = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
       if (v && v.length > 20 && !v.startsWith('{')) {
