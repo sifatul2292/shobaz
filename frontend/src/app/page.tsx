@@ -412,23 +412,32 @@ export default function HomePage() {
 
         {/* Authors */}
         {authors.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 py-8">
+          <section className="max-w-7xl mx-auto px-4 py-10">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-800">✍️ জনপ্রিয় লেখক</h2>
-              <Link href="/authors" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">জনপ্রিয় লেখক</h2>
+                <p className="text-sm text-gray-500 mt-0.5">আপনার পছন্দের লেখকের বই খুঁজুন</p>
+              </div>
+              <Link href="/authors" className="text-green-600 text-sm font-semibold hover:underline">সব দেখুন →</Link>
             </div>
-            <Swiper slidesPerView={2} spaceBetween={16} breakpoints={{ 640: { slidesPerView: 4 }, 768: { slidesPerView: 5 }, 1024: { slidesPerView: 8 } }} modules={[Navigation]}>
+            <Swiper
+              slidesPerView={3} spaceBetween={12}
+              breakpoints={{ 480: { slidesPerView: 4 }, 640: { slidesPerView: 5 }, 768: { slidesPerView: 6 }, 1024: { slidesPerView: 8 } }}
+              modules={[Navigation]}
+            >
               {authors.map((author) => (
                 <SwiperSlide key={author._id}>
-                  <Link href={`/products?author=${author.slug}`} className="block text-center group">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-100 overflow-hidden mb-2 ring-2 ring-transparent group-hover:ring-green-500 transition-all">
+                  <Link href={`/products?author=${author.slug}`} className="block text-center group py-2">
+                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full overflow-hidden mb-2 shadow-sm border-2 border-transparent group-hover:border-green-400 transition-all duration-200">
                       {author.image ? (
                         <img src={imgUrl(author.image)!} alt={author.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">{author.name?.charAt(0)}</div>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-200 text-xl font-bold text-green-700">
+                          {author.name?.charAt(0)}
+                        </div>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-green-500">{author.name}</span>
+                    <p className="text-xs font-medium text-gray-700 group-hover:text-green-600 transition-colors line-clamp-2 leading-snug px-1">{author.name}</p>
                   </Link>
                 </SwiperSlide>
               ))}
@@ -438,27 +447,38 @@ export default function HomePage() {
 
         {/* Publishers */}
         {publishers.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 py-8 bg-white rounded-2xl mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-800">🏢 জনপ্রিয় প্রকাশনা</h2>
-              <Link href="/publishers" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
+          <section className="bg-white py-10">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">জনপ্রিয় প্রকাশনা</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">দেশের সেরা প্রকাশনীর বই</p>
+                </div>
+                <Link href="/publishers" className="text-green-600 text-sm font-semibold hover:underline">সব দেখুন →</Link>
+              </div>
+              <Swiper
+                slidesPerView={3} spaceBetween={12}
+                breakpoints={{ 480: { slidesPerView: 4 }, 640: { slidesPerView: 5 }, 768: { slidesPerView: 6 }, 1024: { slidesPerView: 8 } }}
+                modules={[Navigation]}
+              >
+                {publishers.map((pub) => (
+                  <SwiperSlide key={pub._id}>
+                    <Link href={`/products?publisher=${pub.slug}`} className="block group">
+                      <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex flex-col items-center gap-2 hover:border-green-300 hover:shadow-md transition-all duration-200 min-h-[90px] justify-center">
+                        {pub.image ? (
+                          <img src={imgUrl(pub.image)!} alt={pub.name} className="h-10 max-w-full object-contain" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center">
+                            <span className="text-green-700 font-bold text-sm">{pub.name?.charAt(0)}</span>
+                          </div>
+                        )}
+                        <p className="text-xs font-semibold text-gray-700 group-hover:text-green-600 transition-colors text-center line-clamp-1">{pub.name}</p>
+                      </div>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
-            <Swiper slidesPerView={2} spaceBetween={16} breakpoints={{ 640: { slidesPerView: 4 }, 768: { slidesPerView: 5 }, 1024: { slidesPerView: 8 } }} modules={[Navigation]}>
-              {publishers.map((pub) => (
-                <SwiperSlide key={pub._id}>
-                  <Link href={`/products?publisher=${pub.slug}`} className="block text-center group">
-                    <div className="h-16 mx-auto rounded-lg bg-gray-50 overflow-hidden mb-2 flex items-center justify-center px-4">
-                      {pub.image ? (
-                        <img src={imgUrl(pub.image)!} alt={pub.name} className="max-w-full max-h-full object-contain" />
-                      ) : (
-                        <span className="text-sm font-medium text-gray-600">{pub.name}</span>
-                      )}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-green-500">{pub.name}</span>
-                  </Link>
-                </SwiperSlide>
-              ))}
-            </Swiper>
           </section>
         )}
 
@@ -492,28 +512,40 @@ export default function HomePage() {
         )}
 
         {/* Features Banner */}
-        <section className="bg-green-500 py-12 mt-8">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div className="text-white">
-                <HiOutlineBookOpen className="w-10 h-10 mx-auto mb-2 text-white" />
-                <h3 className="text-xl font-bold">৫০,০০০+ বই</h3>
-                <p className="text-green-200 text-sm">বিভিন্ন ক্যাটাগরি</p>
-              </div>
-              <div className="text-white">
-                <HiOutlineTruck className="w-10 h-10 mx-auto mb-2 text-white" />
-                <h3 className="text-xl font-bold">ফ্রি ডেলিভারি</h3>
-                <p className="text-green-200 text-sm">৫০০+ টাকায়</p>
-              </div>
-              <div className="text-white">
-                <HiOutlineSparkles className="w-10 h-10 mx-auto mb-2 text-white" />
-                <h3 className="text-xl font-bold">দ্রুত ডেলিভারি</h3>
-                <p className="text-green-200 text-sm">২-৫ দিনে</p>
-              </div>
-              <div className="text-white">
-                <HiOutlineShieldCheck className="w-10 h-10 mx-auto mb-2 text-white" />
-                <h3 className="text-xl font-bold">গারান্টি</h3>
-                <p className="text-green-200 text-sm">১০০% সন্তুষ্টি</p>
+        <section className="relative mt-10 overflow-hidden">
+          <div className="bg-gradient-to-br from-emerald-600 via-green-500 to-teal-600 py-12">
+            {/* subtle pattern overlay */}
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+            <div className="relative max-w-7xl mx-auto px-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-white/20">
+                <div className="flex flex-col items-center text-center text-white px-6 py-2">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mb-3 shadow-inner">
+                    <HiOutlineBookOpen className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold tracking-tight">বিভিন্ন বই</h3>
+                  <p className="text-green-100 text-sm mt-1 font-medium">সব ধরনের ক্যাটাগরি</p>
+                </div>
+                <div className="flex flex-col items-center text-center text-white px-6 py-2">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mb-3 shadow-inner">
+                    <HiOutlineSparkles className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold tracking-tight">৫০০০+ গ্রাহক</h3>
+                  <p className="text-green-100 text-sm mt-1 font-medium">সন্তুষ্ট ক্রেতা</p>
+                </div>
+                <div className="flex flex-col items-center text-center text-white px-6 py-2">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mb-3 shadow-inner">
+                    <HiOutlineTruck className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold tracking-tight">কম খরচে ডেলিভারি</h3>
+                  <p className="text-green-100 text-sm mt-1 font-medium">৬০ টাকা থেকে শুরু</p>
+                </div>
+                <div className="flex flex-col items-center text-center text-white px-6 py-2">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mb-3 shadow-inner">
+                    <HiOutlineShieldCheck className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold tracking-tight">১০০% গ্যারান্টি</h3>
+                  <p className="text-green-100 text-sm mt-1 font-medium">সন্তুষ্টি নিশ্চিত</p>
+                </div>
               </div>
             </div>
           </div>
