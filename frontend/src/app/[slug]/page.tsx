@@ -20,15 +20,19 @@ function stripHtml(html: string): string {
 }
 
 async function getProduct(slug: string) {
-  try {
-    const res = await fetch(`${API_BASE}/api/product/get-by-slug/${slug}`, {
-      cache: 'no-store',
-    });
-    const data = await res.json();
-    return data?.data ?? null;
-  } catch {
-    return null;
+  // Try the slug as-is first, then try lowercase — handles mixed-case slugs
+  for (const s of [slug, slug.toLowerCase(), slug.charAt(0).toUpperCase() + slug.slice(1)]) {
+    try {
+      const res = await fetch(`${API_BASE}/api/product/get-by-slug/${s}`, {
+        cache: 'no-store',
+      });
+      const data = await res.json();
+      if (data?.data) return data.data;
+    } catch {
+      // continue to next variant
+    }
   }
+  return null;
 }
 
 export async function generateMetadata(
@@ -86,5 +90,9 @@ export default async function Page({
   // If no product found for this slug, show 404
   if (!product) notFound();
 
-  return <ProductDetailPage params={params} />;
+  // Pass the actual stored slug to the client so it fetches correctly
+  const resolvedSlug = product.slug || slug;
+  const resolvedParams = Promise.resolve({ slug: resolvedSlug });
+
+  return <ProductDetailPage params={resolvedParams} />;
 }
