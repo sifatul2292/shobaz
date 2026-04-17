@@ -5,10 +5,15 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
-import { imgUrl } from '@/lib/api';
+import api, { imgUrl } from '@/lib/api';
 import { gtmViewCart } from '@/lib/gtm';
 import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaArrowRight, FaBookmark, FaHeart } from 'react-icons/fa';
 import { HiOutlineTruck, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
+
+interface ShippingCharge {
+  deliveryInDhaka: number;
+  deliveryOutsideDhaka: number;
+}
 
 const getAuthorName = (author: any) => {
   if (!author) return '';
@@ -25,12 +30,16 @@ const getCurrentPrice = (product: any) => {
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
+  const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
 
   useEffect(() => {
     document.title = 'Cart - Shobaz';
     if (items.length > 0) {
       gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
     }
+    api.get('/shipping-charge/get').then(res => {
+      if (res.data?.data) setShippingCharge(res.data.data);
+    }).catch(() => {});
   }, []);
 
   if (items.length === 0) {
@@ -200,12 +209,17 @@ export default function CartPage() {
                     <span>৳{subtotal}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>ডেলিভারি চার্জ</span>
-                    <span className="text-green-500">ফ্রি</span>
+                    <span>ঢাকার ভেতরে</span>
+                    <span className="font-medium">৳{shippingCharge?.deliveryInDhaka ?? '—'}</span>
                   </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>ঢাকার বাইরে</span>
+                    <span className="font-medium">৳{shippingCharge?.deliveryOutsideDhaka ?? '—'}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">* চেকআউটে সঠিক চার্জ নির্বাচন করুন</p>
                   <div className="h-px bg-slate-100"></div>
                   <div className="flex justify-between text-xl font-bold">
-                    <span>মোট</span>
+                    <span>সাব-টোটাল</span>
                     <span className="text-green-500">৳{subtotal}</span>
                   </div>
                 </div>
@@ -222,7 +236,7 @@ export default function CartPage() {
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                       <HiOutlineTruck className="text-green-600 text-xs" />
                     </div>
-                    <span>ফ্রি ডেলিভারি</span>
+                    <span>দ্রুত ডেলিভারি</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
