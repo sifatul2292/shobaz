@@ -67,17 +67,23 @@ export default function ProductDetailClient({ params }: Props) {
   const fetchProduct = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/product/get-by-slug/${slug}`);
+      // Run all three requests in parallel instead of sequentially
+      const [res, relatedRes, shipRes] = await Promise.all([
+        api.get(`/product/get-by-slug/${slug}`),
+        api.get('/product/get-all-data'),
+        api.get('/shipping-charge/get').catch(() => null),
+      ]);
+
+      if (shipRes?.data?.data) {
+        setShippingCharge(shipRes.data.data);
+      }
+
       if (res.data?.data) {
         const productData = res.data.data;
         setProduct(productData);
         document.title = `${productData.name} | Shobaz`;
         gtmViewItem(productData);
 
-        console.log('Product boughtTogetherProducts:', productData.boughtTogetherProducts);
-        console.log('Product boughtTogetherIds:', productData.boughtTogetherIds);
-
-        const relatedRes = await api.get('/product/get-all-data');
         if (relatedRes.data?.data) {
           let allProducts = relatedRes.data.data;
           if (allProducts.items) allProducts = allProducts.items;
@@ -90,7 +96,6 @@ export default function ProductDetailClient({ params }: Props) {
           setBestSellers(sortedByRating.slice(0, 8));
 
           const backendBoughtTogether = productData.boughtTogetherProducts || [];
-          console.log('Backend bought together:', backendBoughtTogether);
 
           let bundleItems: BundleItem[] = [];
           const bundleDiscount = 10;
@@ -111,16 +116,10 @@ export default function ProductDetailClient({ params }: Props) {
           setSelectedBundle(bundleItems.map(b => b.product._id));
         }
 
+        // Fetch reviews in background — doesn't block page render
         fetchReviews(productData._id);
       }
     } catch (err) { console.error(err); }
-
-    try {
-      const shipRes = await api.get('/shipping-charge/get');
-      if (shipRes.data?.data) {
-        setShippingCharge(shipRes.data.data);
-      }
-    } catch (shipErr) { console.error('Failed to fetch shipping charge:', shipErr); }
 
     setLoading(false);
   };

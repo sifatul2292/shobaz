@@ -18,11 +18,11 @@ module.exports = {
     },
     {
       name: 'shobaz-frontend',
-      script: 'npm',
-      args: 'start',
+      script: 'node_modules/.bin/next',
+      args: 'start -p 3003',
       cwd: '/var/www/shobaz/frontend',
-      instances: 2,              // 2 Next.js workers
-      exec_mode: 'cluster',
+      instances: 1,              // Next.js manages its own internal threading
+      exec_mode: 'fork',
       watch: false,
       max_memory_restart: '768M',
       env: {
