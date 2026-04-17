@@ -5,6 +5,7 @@ import { Hind_Siliguri, Poppins } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import GTMRouteTracker from "@/components/common/GTMRouteTracker";
+import FloatingCart from "@/components/common/FloatingCart";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["latin"],
@@ -65,6 +66,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </Suspense>
         <Toaster position="top-right" />
         {children}
+        <FloatingCart />
       </body>
     </html>
   );
