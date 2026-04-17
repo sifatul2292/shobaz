@@ -909,7 +909,7 @@ export class ProductService {
         const mIds = productIds.slice(0, 3).map((id: string) => new ObjectId(id));
         boughtTogetherProducts = await this.productModel
           .find({ _id: { $in: mIds } })
-          .select('_id name images salePrice discountAmount')
+          .select('_id name slug images salePrice discountAmount')
           .limit(3);
       } else {
         // Otherwise, use global default
@@ -919,7 +919,7 @@ export class ProductService {
           // Exclude current product
           boughtTogetherProducts = await this.productModel
             .find({ _id: { $in: mIds, $ne: data._id } })
-            .select('_id name images salePrice discountAmount')
+            .select('_id name slug images salePrice discountAmount')
             .limit(3);
         }
       }
