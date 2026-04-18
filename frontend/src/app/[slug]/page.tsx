@@ -90,9 +90,40 @@ export default async function Page({
   // If no product found for this slug, show 404
   if (!product) notFound();
 
-  // Pass the actual stored slug to the client so it fetches correctly
+  // Build JSON-LD using the already-fetched product data
+  const image = product.images?.[0] || '';
+  const imageUrl = image.startsWith('http') ? image : `${API_BASE}/api/upload/images/${image}`;
   const resolvedSlug = product.slug || slug;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: product.name,
+    url: `${SITE_URL}/${resolvedSlug}`,
+    description: stripHtml(product.shortDescription || product.description || ''),
+    ...(imageUrl ? { image: imageUrl } : {}),
+    ...(product.author?.name ? { author: { '@type': 'Person', name: product.author.name } } : {}),
+    ...(product.publisher?.name ? { publisher: { '@type': 'Organization', name: product.publisher.name } } : {}),
+    ...(product.totalPages ? { numberOfPages: product.totalPages } : {}),
+    inLanguage: 'bn',
+    offers: {
+      '@type': 'Offer',
+      price: product.salePrice || product.price,
+      priceCurrency: 'BDT',
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/${resolvedSlug}`,
+    },
+  };
+
   const resolvedParams = Promise.resolve({ slug: resolvedSlug });
 
-  return <ProductDetailPage params={resolvedParams} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailPage params={resolvedParams} />
+    </>
+  );
 }
