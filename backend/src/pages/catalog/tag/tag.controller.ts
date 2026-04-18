@@ -98,6 +98,11 @@ export class TagController {
     return await this.tagService.getAllTagsBasic();
   }
 
+  @Get('/get-homepage-sections')
+  async getHomepageSections(): Promise<ResponsePayload> {
+    return await this.tagService.getHomepageSections();
+  }
+
   @Version(VERSION_NEUTRAL)
   @Get('/:id')
   @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)

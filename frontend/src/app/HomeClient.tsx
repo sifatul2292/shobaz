@@ -18,6 +18,16 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+/* ── Types ── */
+interface HomepageSection {
+  _id: string;
+  name: string;
+  slug: string;
+  priority?: number;
+  image?: string;
+  products: Product[];
+}
+
 /* ── Helpers (stable, defined once at module level) ── */
 function getCurrentPrice(p: Product) {
   const salePrice = p.salePrice || 0;
@@ -158,6 +168,7 @@ export default function HomePage() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryProducts, setCategoryProducts] = useState<{ [key: string]: Product[] }>({});
@@ -174,7 +185,7 @@ export default function HomePage() {
         const cachedAuthors = getCached<Author[]>('authors');
         const cachedPublishers = getCached<Publisher[]>('publishers');
 
-        const [productsRes, categoriesRes, tagsRes, bannersRes, authorsRes, publishersRes, blogsRes] = await Promise.allSettled([
+        const [productsRes, categoriesRes, tagsRes, bannersRes, authorsRes, publishersRes, blogsRes, sectionsRes] = await Promise.allSettled([
           api.get('/product/get-all-data'),
           cachedCategories ? Promise.resolve({ data: { data: cachedCategories } }) : api.post('/category/get-all'),
           api.get('/tag/get-all-basic'),
@@ -182,6 +193,7 @@ export default function HomePage() {
           cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
           cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
           api.get('/blog/get-all-basic'),
+          api.get('/tag/get-homepage-sections'),
         ]);
         
         if (productsRes.status === 'fulfilled' && productsRes.value.data?.data) {
@@ -254,6 +266,9 @@ export default function HomePage() {
         }
         if (blogsRes.status === 'fulfilled' && blogsRes.value.data?.data) {
           setBlogs(blogsRes.value.data.data.slice(0, 3));
+        }
+        if (sectionsRes.status === 'fulfilled' && Array.isArray(sectionsRes.value.data?.data)) {
+          setHomepageSections(sectionsRes.value.data.data);
         }
       } catch (err: any) {
         console.error('Home page fetch error:', err);
@@ -351,40 +366,60 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Featured Products - Hot Deals */}
-        {featuredProducts.length > 0 && (
-          <section className='max-w-7xl mx-auto px-4 py-10'>
-            <div className='flex items-center justify-between mb-6'>
-              <div className='flex items-center gap-3'>
-                <h2 className='text-2xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineFire className='w-6 h-6 text-orange-500' /> হট ডিল</h2>
-                <span className='bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium'>অফার</span>
-              </div>
-              <Link href='/products?sort=discountAmount' className='text-green-500 text-sm font-medium hover:underline'>সব দেখুন →</Link>
-            </div>
-            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'>
-              {featuredProducts.slice(0, 12).map((product) => (
-                <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* New Arrivals */}
-        {newProducts.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 py-10 bg-white rounded-2xl mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineSparkles className="w-6 h-6 text-green-500" /> নতুন আগমন</h2>
-                <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">নতুন</span>
-              </div>
-              <Link href="/products?sort=createdAt" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {newProducts.slice(0, 12).map((product) => (
-                <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
-              ))}
-            </div>
-          </section>
+        {/* ── Dynamic Tag Sections (admin-managed via Tags → Show on Homepage) ── */}
+        {homepageSections.length > 0 ? (
+          homepageSections.map((section) =>
+            section.products.length > 0 ? (
+              <section key={section._id} className="max-w-7xl mx-auto px-4 py-10">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">{section.name}</h2>
+                  <Link href={`/products?tag=${section.slug}`} className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {section.products.slice(0, 12).map((product) => (
+                    <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
+                  ))}
+                </div>
+              </section>
+            ) : null
+          )
+        ) : (
+          <>
+            {/* Fallback: Hot Deals — shown only when no homepage sections are configured */}
+            {featuredProducts.length > 0 && (
+              <section className='max-w-7xl mx-auto px-4 py-10'>
+                <div className='flex items-center justify-between mb-6'>
+                  <div className='flex items-center gap-3'>
+                    <h2 className='text-2xl font-bold text-gray-800 flex items-center gap-2'><HiOutlineFire className='w-6 h-6 text-orange-500' /> হট ডিল</h2>
+                    <span className='bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium'>অফার</span>
+                  </div>
+                  <Link href='/products?sort=discountAmount' className='text-green-500 text-sm font-medium hover:underline'>সব দেখুন →</Link>
+                </div>
+                <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'>
+                  {featuredProducts.slice(0, 12).map((product) => (
+                    <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {/* Fallback: New Arrivals */}
+            {newProducts.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 py-10 bg-white rounded-2xl mx-4">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><HiOutlineSparkles className="w-6 h-6 text-green-500" /> নতুন আগমন</h2>
+                    <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">নতুন</span>
+                  </div>
+                  <Link href="/products?sort=createdAt" className="text-green-500 text-sm font-medium hover:underline">সব দেখুন →</Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {newProducts.slice(0, 12).map((product) => (
+                    <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
 
         {/* All Products */}

@@ -132,6 +132,40 @@ export class TagService {
    * getAllTags
    * getTagById
    */
+  /**
+   * getHomepageSections
+   * Returns tags with showOnHomepage:true, sorted by priority,
+   * each with its associated products populated.
+   */
+  async getHomepageSections(): Promise<ResponsePayload> {
+    try {
+      const tags = await this.tagModel
+        .find({ showOnHomepage: true })
+        .sort({ priority: 1 })
+        .select('name slug priority image')
+        .lean();
+
+      const sections = await Promise.all(
+        tags.map(async (tag) => {
+          const products = await this.productModel
+            .find({ 'tags.slug': tag.slug })
+            .select('name slug images price salePrice discountAmount discountType author')
+            .limit(20)
+            .lean();
+          return { ...tag, products };
+        }),
+      );
+
+      return {
+        success: true,
+        message: 'Success',
+        data: sections,
+      } as ResponsePayload;
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  }
+
   async getAllTagsBasic() {
     try {
       const pageSize = 10;

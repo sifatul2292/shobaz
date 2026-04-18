@@ -23,6 +23,11 @@ export const TagSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    showOnHomepage: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     slug: {
       type: String,
       required: true,
