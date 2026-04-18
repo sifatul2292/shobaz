@@ -124,10 +124,33 @@
 
 <script>
   const API = window.location.origin;
-  let token = localStorage.getItem('co_admin_token');
+
+  // ── Token helpers — try multiple keys (Angular admin + custom pages) ──
+  var TOKEN_KEYS = ['co_admin_token', 'admin_token', 'adminToken', 'token'];
+  function getToken() {
+    for (var k of TOKEN_KEYS) {
+      var v = localStorage.getItem(k);
+      if (v) return v;
+    }
+    return null;
+  }
+  function saveToken(t) { localStorage.setItem('co_admin_token', t); }
+  function clearAllTokens() { TOKEN_KEYS.forEach(k => localStorage.removeItem(k)); }
+
+  let token = getToken();
 
   // ── Auth ──────────────────────────────────────────────────
+  function showLoginOverlay(msg) {
+    token = null;
+    clearAllTokens();
+    document.getElementById('login-overlay').classList.remove('hidden');
+    const errEl = document.getElementById('login-error');
+    if (msg) { errEl.textContent = msg; }
+    else { errEl.textContent = ''; }
+  }
+
   function checkAuth() {
+    token = getToken();
     if (token) {
       document.getElementById('login-overlay').classList.add('hidden');
       loadTags();
@@ -138,6 +161,9 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     document.getElementById('login-error').textContent = '';
+    const btn = document.querySelector('.btn-login');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
     try {
       const res = await fetch(`${API}/api/admin/login`, {
         method: 'POST',
@@ -147,32 +173,42 @@
       const data = await res.json();
       if (data?.token) {
         token = data.token;
-        localStorage.setItem('co_admin_token', token);
+        saveToken(token);
         document.getElementById('login-overlay').classList.add('hidden');
         loadTags();
       } else {
-        document.getElementById('login-error').textContent = data?.message || 'Login failed';
+        document.getElementById('login-error').textContent = data?.message || 'Login failed. Check credentials.';
       }
     } catch {
-      document.getElementById('login-error').textContent = 'Connection error';
+      document.getElementById('login-error').textContent = 'Connection error — is the server running?';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
     }
   }
 
   function logout() {
-    localStorage.removeItem('co_admin_token');
-    token = null;
-    document.getElementById('login-overlay').classList.remove('hidden');
+    showLoginOverlay();
+  }
+
+  // ── Auth guard for responses ───────────────────────────────
+  function handleResponse(res) {
+    if (res.status === 401 || res.status === 403) {
+      showLoginOverlay('Session expired. Please sign in again.');
+      throw new Error('Unauthorized');
+    }
+    return res;
   }
 
   // ── Load tags ──────────────────────────────────────────────
   async function loadTags() {
     document.getElementById('table-wrap').innerHTML = '<div class="loading">Loading tags…</div>';
     try {
-      const res = await fetch(`${API}/api/tag/get-all`, {
+      const res = handleResponse(await fetch(`${API}/api/tag/get-all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ pagination: { pageSize: 200, currentPage: 0 }, sort: { priority: 1 } }),
-      });
+        body: JSON.stringify({ pagination: { pageSize: 200, currentPage: 0 }, sort: { priority: 1 }, select: { name: 1, slug: 1, showOnHomepage: 1, priority: 1 } }),
+      }));
       const data = await res.json();
       const tags = data?.data || [];
       if (!tags.length) {
@@ -181,7 +217,9 @@
       }
       renderTable(tags);
     } catch (e) {
-      document.getElementById('table-wrap').innerHTML = `<div class="empty">Error loading tags: ${e.message}</div>`;
+      if (e.message !== 'Unauthorized') {
+        document.getElementById('table-wrap').innerHTML = `<div class="empty">Error loading tags: ${e.message}</div>`;
+      }
     }
   }
 
@@ -191,7 +229,7 @@
       <tr id="row-${tag._id}">
         <td>
           <div class="tag-name">${tag.name}</div>
-          <div class="tag-slug">${tag.slug}</div>
+          <div class="tag-slug">${tag.slug || ''}</div>
         </td>
         <td>
           <div class="toggle-wrap">
@@ -206,7 +244,7 @@
           <input class="priority-input" type="number" id="pri-${tag._id}" value="${tag.priority ?? ''}" min="1" placeholder="—" />
         </td>
         <td>
-          <button class="btn-save" id="btn-${tag._id}" onclick="saveTag('${tag._id}', '${tag.name}', '${tag.slug}')">Save</button>
+          <button class="btn-save" id="btn-${tag._id}" onclick="saveTag('${tag._id}', '${(tag.name||'').replace(/'/g,"\\'")}', '${(tag.slug||'').replace(/'/g,"\\'")}')">Save</button>
         </td>
       </tr>
     `).join('');
@@ -227,7 +265,8 @@
 
     // Update toggle label live
     tags.forEach(tag => {
-      document.getElementById(`chk-${tag._id}`).addEventListener('change', function() {
+      const chk = document.getElementById(`chk-${tag._id}`);
+      if (chk) chk.addEventListener('change', function() {
         const wrap = this.closest('.toggle-wrap');
         wrap.querySelector('span').textContent = this.checked ? 'On' : 'Off';
       });
@@ -248,11 +287,11 @@
     if (priority !== null && !isNaN(priority)) body.priority = priority;
 
     try {
-      const res = await fetch(`${API}/api/tag/update/${id}`, {
+      const res = handleResponse(await fetch(`${API}/api/tag/update/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
-      });
+      }));
       const data = await res.json();
       if (data?.success) {
         btn.textContent = '✓ Saved';
@@ -264,9 +303,14 @@
         throw new Error(data?.message || 'Save failed');
       }
     } catch (e) {
-      btn.textContent = 'Save';
-      btn.classList.remove('saving');
-      showToast(e.message, true);
+      if (e.message !== 'Unauthorized') {
+        btn.textContent = 'Save';
+        btn.classList.remove('saving');
+        showToast(e.message, true);
+      } else {
+        btn.textContent = 'Save';
+        btn.classList.remove('saving');
+      }
     }
   }
 
