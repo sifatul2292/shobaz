@@ -193,7 +193,7 @@ export default function HomePage() {
           cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
           cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
           api.get('/blog/get-all-basic'),
-          api.get('/tag/get-homepage-sections'),
+          api.get('/tag/get-homepage-sections').catch(() => ({ data: { data: [] } })),
         ]);
         
         if (productsRes.status === 'fulfilled' && productsRes.value.data?.data) {

@@ -98,6 +98,7 @@ export class TagController {
     return await this.tagService.getAllTagsBasic();
   }
 
+  @Version(VERSION_NEUTRAL)
   @Get('/get-homepage-sections')
   async getHomepageSections(): Promise<ResponsePayload> {
     return await this.tagService.getHomepageSections();
