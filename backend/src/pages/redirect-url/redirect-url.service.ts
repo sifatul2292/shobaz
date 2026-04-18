@@ -14,7 +14,6 @@ import { User } from '../../interfaces/user/user.interface';
 import { ResponsePayload } from '../../interfaces/core/response-payload.interface';
 import {
   AddRedirectUrlDto,
-  CheckRedirectUrlDto,
   FilterAndPaginationRedirectUrlDto,
   OptionRedirectUrlDto,
   UpdateRedirectUrlDto,
@@ -367,7 +366,7 @@ export class RedirectUrlService {
    */
   async checkRedirectUrlAvailability(
     user: User,
-    checkRedirectUrlDto: CheckRedirectUrlDto,
+    checkRedirectUrlDto: any,
   ): Promise<ResponsePayload> {
     try {
       const { redirectUrlCode, subTotal } = checkRedirectUrlDto;
