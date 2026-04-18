@@ -22,6 +22,14 @@ export class AddTagDto {
   @IsNotEmpty()
   @IsString()
   slug: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showOnHomepage?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  priority?: number;
 }
 
 export class FilterTagDto {
@@ -49,13 +57,21 @@ export class OptionTagDto {
 }
 
 export class UpdateTagDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   name: string;
 
   @IsOptional()
   @IsString()
   slug: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showOnHomepage?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  priority?: number;
 
   @IsOptional()
   @IsArray()

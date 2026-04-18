@@ -28,6 +28,13 @@
       badgeText: 'SEO',
       badgeColor: 'linear-gradient(135deg,#0891b2,#0e7490)',
     },
+    {
+      id: 'hs-sidebar-link',
+      label: 'Homepage Sections',
+      url: BASE_URL + '/homepage-sections.html',
+      badgeText: 'HOME',
+      badgeColor: 'linear-gradient(135deg,#16a34a,#15803d)',
+    },
   ];
 
   /* ── Inject CSS once ── */
