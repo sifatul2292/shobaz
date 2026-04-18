@@ -41,6 +41,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
+  const [logoLoading, setLogoLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ products: Product[] } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -57,6 +58,7 @@ export default function Header() {
         const res = await api.get('/shop-information/get');
         if (res.data?.data) setShopInfo(res.data.data);
       } catch (err) { console.error(err); }
+      finally { setLogoLoading(false); }
     };
     const fetchPages = async () => {
       try {
@@ -135,6 +137,9 @@ export default function Header() {
                 alt="Logo"
                 className="w-[125px] h-10 rounded-xl object-contain"
               />
+            ) : logoLoading ? (
+              /* invisible placeholder — same size, no flash */
+              <div className="w-[125px] h-10 rounded-xl" />
             ) : (
               <div className="w-[125px] h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
                 <span className="text-white font-black text-xl">শ</span>
@@ -266,9 +271,17 @@ export default function Header() {
       <div className={`fixed top-0 left-0 h-full w-72 bg-white z-[70] shadow-2xl flex flex-col transition-transform duration-300 md:hidden ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700">
           <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2.5">
-            <div className="w-[125px] h-9 rounded-xl bg-white/20 flex items-center justify-center">
-              <span className="text-white font-black text-lg">শ</span>
-            </div>
+            {shopInfo?.navLogo || shopInfo?.siteLogo ? (
+              <img
+                src={imgUrl(shopInfo?.navLogo || shopInfo?.siteLogo) || ''}
+                alt="Logo"
+                className="w-[125px] h-9 rounded-xl object-contain brightness-0 invert"
+              />
+            ) : (
+              <div className="w-[125px] h-9 rounded-xl bg-white/20 flex items-center justify-center">
+                <span className="text-white font-black text-lg">শ</span>
+              </div>
+            )}
           </Link>
           <button onClick={() => setDrawerOpen(false)} className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
