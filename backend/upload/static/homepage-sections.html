@@ -302,22 +302,17 @@
       }));
       const data = await res.json();
       if (data?.success) {
-        btn.textContent = '✓ Saved';
-        btn.classList.remove('saving');
-        btn.classList.add('saved');
-        showToast(`"${name}" updated`);
-        setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('saved'); }, 2000);
+        showToast(`"${name}" saved ✓`);
+        // Reload the table to confirm the save actually persisted
+        await loadTags();
       } else {
-        throw new Error(data?.message || 'Save failed');
+        throw new Error(data?.message || 'Save failed — server returned success:false');
       }
     } catch (e) {
+      btn.textContent = 'Save';
+      btn.classList.remove('saving');
       if (e.message !== 'Unauthorized') {
-        btn.textContent = 'Save';
-        btn.classList.remove('saving');
         showToast(e.message, true);
-      } else {
-        btn.textContent = 'Save';
-        btn.classList.remove('saving');
       }
     }
   }

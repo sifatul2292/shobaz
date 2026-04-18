@@ -139,21 +139,36 @@ export class TagService {
    */
   async getHomepageSections(): Promise<ResponsePayload> {
     try {
-      const tags = await this.tagModel
-        .find({ showOnHomepage: true })
-        .sort({ priority: 1 })
-        .select('name slug priority image')
-        .lean();
+      // Sort nulls-last: tags with no priority appear after numbered ones
+      const tags = await this.tagModel.aggregate([
+        { $match: { showOnHomepage: true } },
+        {
+          $addFields: {
+            sortPriority: { $ifNull: ['$priority', 999999] },
+          },
+        },
+        { $sort: { sortPriority: 1 } },
+        {
+          $project: { name: 1, slug: 1, priority: 1, image: 1 },
+        },
+      ]);
 
-      const sections = await Promise.all(
+      const sectionsWithProducts = await Promise.all(
         tags.map(async (tag) => {
           const products = await this.productModel
             .find({ 'tags.slug': tag.slug })
-            .select('name slug images price salePrice discountAmount discountType author')
+            .select(
+              'name slug images price salePrice discountAmount discountType author',
+            )
             .limit(20)
             .lean();
           return { ...tag, products };
         }),
+      );
+
+      // Only return sections that actually have products
+      const sections = sectionsWithProducts.filter(
+        (s) => s.products.length > 0,
       );
 
       return {

@@ -267,8 +267,11 @@ export default function HomePage() {
         if (blogsRes.status === 'fulfilled' && blogsRes.value.data?.data) {
           setBlogs(blogsRes.value.data.data.slice(0, 3));
         }
-        if (sectionsRes.status === 'fulfilled' && Array.isArray(sectionsRes.value.data?.data)) {
-          setHomepageSections(sectionsRes.value.data.data);
+        if (sectionsRes.status === 'fulfilled') {
+          // API returns { success, data: [...] } — axios wraps it as response.data
+          const raw = sectionsRes.value?.data;
+          const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+          setHomepageSections(list);
         }
       } catch (err: any) {
         console.error('Home page fetch error:', err);
@@ -367,9 +370,10 @@ export default function HomePage() {
         )}
 
         {/* ── Dynamic Tag Sections (admin-managed via Tags → Show on Homepage) ── */}
-        {homepageSections.length > 0 ? (
-          homepageSections.map((section) =>
-            section.products.length > 0 ? (
+        {(() => {
+          const activeSections = homepageSections.filter(s => s.products && s.products.length > 0);
+          if (activeSections.length > 0) {
+            return activeSections.map((section) => (
               <section key={section._id} className="max-w-7xl mx-auto px-4 py-10">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">{section.name}</h2>
@@ -381,9 +385,9 @@ export default function HomePage() {
                   ))}
                 </div>
               </section>
-            ) : null
-          )
-        ) : (
+            ));
+          }
+          return (
           <>
             {/* Fallback: Hot Deals — shown only when no homepage sections are configured */}
             {featuredProducts.length > 0 && (
@@ -420,7 +424,8 @@ export default function HomePage() {
               </section>
             )}
           </>
-        )}
+          );
+        })()}
 
         {/* All Products */}
         {products.length > 0 && (
