@@ -104,6 +104,13 @@ export class BlogController {
     return await this.blogService.blogViewCount(data?.id, data?.user);
   }
 
+  @Get('/get-by-slug/:slug')
+  async getBlogBySlug(
+    @Param('slug') slug: string,
+  ): Promise<ResponsePayload> {
+    return await this.blogService.getBlogBySlug(slug);
+  }
+
   @Version(VERSION_NEUTRAL)
   @Get('/:id')
   async getBlogById(

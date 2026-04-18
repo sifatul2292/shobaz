@@ -241,6 +241,18 @@ export class BlogService {
     }
   }
 
+  async getBlogBySlug(slug: string): Promise<ResponsePayload> {
+    try {
+      const data = await this.blogModel.findOne({ slug });
+      if (!data) {
+        return { success: false, message: 'Blog not found', data: null } as ResponsePayload;
+      }
+      return { success: true, message: 'Success', data } as ResponsePayload;
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  }
+
   async getBlogById(id: string, select: string): Promise<ResponsePayload> {
     try {
       const data = await this.blogModel.findById(id).select(select);
