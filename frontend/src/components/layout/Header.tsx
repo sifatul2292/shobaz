@@ -40,13 +40,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  // Read logo URL injected server-side by layout.tsx — available before first render, no flash
-  const [shopInfo, setShopInfo] = useState<ShopInfo | null>(() => {
-    if (typeof window !== 'undefined' && (window as any).__SHOBAZ_LOGO__) {
-      return { navLogo: (window as any).__SHOBAZ_LOGO__, siteLogo: '' } as any;
-    }
-    return null;
-  });
+  const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ products: Product[] } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -272,17 +266,9 @@ export default function Header() {
       <div className={`fixed top-0 left-0 h-full w-72 bg-white z-[70] shadow-2xl flex flex-col transition-transform duration-300 md:hidden ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700">
           <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2.5">
-            {shopInfo?.navLogo || shopInfo?.siteLogo ? (
-              <img
-                src={imgUrl(shopInfo?.navLogo || shopInfo?.siteLogo) || ''}
-                alt="Logo"
-                className="w-[125px] h-9 rounded-xl object-contain brightness-0 invert"
-              />
-            ) : (
-              <div className="w-[125px] h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                <span className="text-white font-black text-lg">শ</span>
-              </div>
-            )}
+            <div className="w-[125px] h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <span className="text-white font-black text-lg">শ</span>
+            </div>
           </Link>
           <button onClick={() => setDrawerOpen(false)} className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
