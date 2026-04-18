@@ -137,6 +137,14 @@
   function saveToken(t) { localStorage.setItem('co_admin_token', t); }
   function clearAllTokens() { TOKEN_KEYS.forEach(k => localStorage.removeItem(k)); }
 
+  // ── Build auth headers (token goes in 'administrator' header, not Bearer) ──
+  function authHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    var t = getToken();
+    if (t) h['administrator'] = t;
+    return h;
+  }
+
   let token = getToken();
 
   // ── Auth ──────────────────────────────────────────────────
@@ -172,8 +180,8 @@
       });
       const data = await res.json();
       if (data?.token) {
+        saveToken(data.token);
         token = data.token;
-        saveToken(token);
         document.getElementById('login-overlay').classList.add('hidden');
         loadTags();
       } else {
@@ -206,7 +214,7 @@
     try {
       const res = handleResponse(await fetch(`${API}/api/tag/get-all`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: authHeaders(),
         body: JSON.stringify({ pagination: { pageSize: 200, currentPage: 0 }, sort: { priority: 1 }, select: { name: 1, slug: 1, showOnHomepage: 1, priority: 1 } }),
       }));
       const data = await res.json();
@@ -289,7 +297,7 @@
     try {
       const res = handleResponse(await fetch(`${API}/api/tag/update/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       }));
       const data = await res.json();
