@@ -8,15 +8,17 @@ import GTMRouteTracker from "@/components/common/GTMRouteTracker";
 import FloatingCart from "@/components/common/FloatingCart";
 
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["latin"],
+  subsets: ["latin", "bengali"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-bengali",
+  display: "swap",
 });
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-english",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

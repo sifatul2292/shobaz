@@ -6,6 +6,8 @@ import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
+import { getCached, setCached } from '@/lib/cache';
+import LazyImage from '@/components/ui/LazyImage';
 import { gtmSearch } from '@/lib/gtm';
 import { Product, Category, Author, Publisher } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
@@ -61,11 +63,15 @@ function ProductsContent() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const cachedCategories = getCached<Category[]>('categories');
+      const cachedAuthors = getCached<Author[]>('authors');
+      const cachedPublishers = getCached<Publisher[]>('publishers');
+
       const [productsRes, categoriesRes, authorsRes, publishersRes] = await Promise.allSettled([
         api.get('/product/get-all-data'),
-        api.post('/category/get-all', { filter: {}, pagination: {} }),
-        api.get('/author/get-all-basic'),
-        api.get('/publisher/get-all-basic'),
+        cachedCategories ? Promise.resolve({ data: { data: cachedCategories } }) : api.post('/category/get-all', { filter: {}, pagination: {} }),
+        cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
+        cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
       ]);
 
       if (productsRes.status === 'fulfilled' && productsRes.value.data?.data) {
@@ -83,14 +89,19 @@ function ProductsContent() {
           catsData = categoriesRes.value.data.data.items;
         }
         if (Array.isArray(catsData)) {
+          if (!cachedCategories) setCached('categories', catsData);
           setCategories(catsData);
         }
       }
       if (authorsRes.status === 'fulfilled' && authorsRes.value.data?.data) {
-        setAuthors(authorsRes.value.data.data);
+        const authorsData = authorsRes.value.data.data;
+        if (!cachedAuthors && Array.isArray(authorsData)) setCached('authors', authorsData);
+        setAuthors(authorsData);
       }
       if (publishersRes.status === 'fulfilled' && publishersRes.value.data?.data) {
-        setPublishers(publishersRes.value.data.data);
+        const publishersData = publishersRes.value.data.data;
+        if (!cachedPublishers && Array.isArray(publishersData)) setCached('publishers', publishersData);
+        setPublishers(publishersData);
       }
     } catch (err: any) {
       console.error('Fetch error:', err);
@@ -401,7 +412,7 @@ function ProductsContent() {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
                           <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
                             {img ? (
-                              <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <LazyImage src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             ) : (
                               <div className="flex items-center justify-center w-full h-full">
                                 <HiOutlineBookOpen className="w-20 h-20 text-gray-300" />
@@ -458,7 +469,7 @@ function ProductsContent() {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-2xl transition-all duration-300 flex gap-4">
                           <div className="w-24 h-32 md:w-32 md:h-44 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
                             {img ? (
-                              <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover" />
+                              <LazyImage src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover" />
                             ) : (
                               <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
                             )}

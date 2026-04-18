@@ -5,6 +5,8 @@ import { HiOutlineBookOpen, HiOutlineFire, HiOutlineSparkles, HiOutlineTruck, Hi
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
+import { getCached, setCached } from '@/lib/cache';
+import LazyImage from '@/components/ui/LazyImage';
 import { Product, Category, Author, Publisher, Blog, Tag } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
@@ -55,7 +57,7 @@ const ProductCard = memo(function ProductCard({
       <Link href={`/products/${productSlug}`} className="block relative overflow-hidden bg-gray-50">
         <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">
           {img ? (
-            <img src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <LazyImage src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           ) : (
             <HiOutlineBookOpen className="w-16 h-16 text-gray-200" />
           )}
@@ -168,13 +170,17 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const cachedCategories = getCached<Category[]>('categories');
+        const cachedAuthors = getCached<Author[]>('authors');
+        const cachedPublishers = getCached<Publisher[]>('publishers');
+
         const [productsRes, categoriesRes, tagsRes, bannersRes, authorsRes, publishersRes, blogsRes] = await Promise.allSettled([
           api.get('/product/get-all-data'),
-          api.post('/category/get-all'),
+          cachedCategories ? Promise.resolve({ data: { data: cachedCategories } }) : api.post('/category/get-all'),
           api.get('/tag/get-all-basic'),
           api.get('/banner-carousel/get-all-basic'),
-          api.get('/author/get-all-basic'),
-          api.get('/publisher/get-all-basic'),
+          cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
+          cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
           api.get('/blog/get-all-basic'),
         ]);
         
@@ -195,7 +201,7 @@ export default function HomePage() {
             catsData = categoriesRes.value.data.data.items;
           }
           if (Array.isArray(catsData)) {
-            console.log('Categories fetched:', catsData.length, catsData);
+            if (!cachedCategories) setCached('categories', catsData);
             setCategories(catsData);
             
             if (productsRes.status === 'fulfilled' && productsRes.value.data?.data) {
@@ -237,10 +243,14 @@ export default function HomePage() {
           setBanners(Array.isArray(bannerData) ? bannerData : []);
         }
         if (authorsRes.status === 'fulfilled' && authorsRes.value.data?.data) {
-          setAuthors(authorsRes.value.data.data.slice(0, 10));
+          const authorsData = authorsRes.value.data.data;
+          if (!cachedAuthors && Array.isArray(authorsData)) setCached('authors', authorsData);
+          setAuthors(authorsData.slice(0, 10));
         }
         if (publishersRes.status === 'fulfilled' && publishersRes.value.data?.data) {
-          setPublishers(publishersRes.value.data.data.slice(0, 10));
+          const publishersData = publishersRes.value.data.data;
+          if (!cachedPublishers && Array.isArray(publishersData)) setCached('publishers', publishersData);
+          setPublishers(publishersData.slice(0, 10));
         }
         if (blogsRes.status === 'fulfilled' && blogsRes.value.data?.data) {
           setBlogs(blogsRes.value.data.data.slice(0, 3));
