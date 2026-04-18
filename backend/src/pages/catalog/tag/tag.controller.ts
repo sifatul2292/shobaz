@@ -123,7 +123,7 @@ export class TagController {
   @Version(VERSION_NEUTRAL)
   @Put('/update/:id')
   @UsePipes(ValidationPipe)
-  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
   @UseGuards(AdminRolesGuard)
   @AdminMetaPermissions(AdminPermissions.EDIT)
   @UseGuards(AdminPermissionGuard)

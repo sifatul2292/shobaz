@@ -201,9 +201,13 @@
 
   // ── Auth guard for responses ───────────────────────────────
   function handleResponse(res) {
-    if (res.status === 401 || res.status === 403) {
+    if (res.status === 401) {
       showLoginOverlay('Session expired. Please sign in again.');
       throw new Error('Unauthorized');
+    }
+    if (res.status === 403) {
+      showToast('Permission denied — your account needs ADMIN or SUPER_ADMIN role.', true);
+      throw new Error('Forbidden');
     }
     return res;
   }
@@ -311,7 +315,7 @@
     } catch (e) {
       btn.textContent = 'Save';
       btn.classList.remove('saving');
-      if (e.message !== 'Unauthorized') {
+      if (e.message !== 'Unauthorized' && e.message !== 'Forbidden') {
         showToast(e.message, true);
       }
     }

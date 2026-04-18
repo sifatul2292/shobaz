@@ -70,7 +70,7 @@ import { PreOrderModule } from './pages/pre-order/pre-order.module';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'upload', 'invoice'),
-      serveRoot: '/invoice', // This is the route prefix for serving your static files
+      serveRoot: '/invoice',
     }),
     ConfigModule.forRoot({
       load: [configuration],

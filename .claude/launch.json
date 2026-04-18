@@ -19,8 +19,9 @@
     {
       "name": "Admin",
       "runtimeExecutable": "serve",
-      "runtimeArgs": ["/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/admin/dist/angular-ui", "-p", "3007", "--single"],
-      "port": 3007
+      "runtimeArgs": [".", "-p", "3007", "--single"],
+      "port": 3007,
+      "cwd": "/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/admin/dist/angular-ui"
     }
   ]
 }

@@ -5,6 +5,7 @@ import { json, urlencoded } from 'express';
 import { join } from 'path';
 import * as express from 'express';
 import * as compression from 'compression';
+import { SpaFilter } from './spa.filter';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -53,7 +54,22 @@ async function bootstrap() {
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
 
+  // Serve Angular admin SPA — must be registered BEFORE setGlobalPrefix/NestJS router
+  // so these middleware run first and non-API paths never reach NestJS's 404 handler.
+  const adminDist = join(__dirname, '..', '..', 'admin', 'dist', 'angular-ui');
+  app.use(express.static(adminDist));
+  app.use((req: any, res: any, next: any) => {
+    const p: string = req.path;
+    if (p.startsWith('/api') || p.startsWith('/upload') || p.startsWith('/invoice') || /\.\w+$/.test(p)) {
+      return next();
+    }
+    res.sendFile(join(adminDist, 'index.html'), (err) => {
+      if (err) next(err);
+    });
+  });
+
   app.setGlobalPrefix('api');
+  app.useGlobalFilters(new SpaFilter());
   const port = process.env.PORT || 3000;
   await app.listen(port);
   logger.log(`Application is running on port ${port}`);
