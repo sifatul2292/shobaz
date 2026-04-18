@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shobaz.com';
 
 async function getHomeSeo() {
   try {
-    const res = await fetch(`${API_BASE}/api/seoPage/get-by/home`, {
+    const res = await fetch(`${API_BASE}/api/seoPage/get-by/home_page`, {
       next: { revalidate: 3600 }, // cache for 1 hour
     });
     const data = await res.json();
