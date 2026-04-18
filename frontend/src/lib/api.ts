@@ -26,8 +26,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        const token = localStorage.getItem('token');
+        // Only redirect to login if the user had an active session that got rejected.
+        // Anonymous users hitting a protected endpoint should NOT be redirected.
+        if (token) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
