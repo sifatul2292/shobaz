@@ -40,8 +40,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
-  const [logoLoading, setLogoLoading] = useState(true);
+  // Read logo URL injected server-side by layout.tsx — available before first render, no flash
+  const [shopInfo, setShopInfo] = useState<ShopInfo | null>(() => {
+    if (typeof window !== 'undefined' && (window as any).__SHOBAZ_LOGO__) {
+      return { navLogo: (window as any).__SHOBAZ_LOGO__, siteLogo: '' } as any;
+    }
+    return null;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ products: Product[] } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -58,7 +63,6 @@ export default function Header() {
         const res = await api.get('/shop-information/get');
         if (res.data?.data) setShopInfo(res.data.data);
       } catch (err) { console.error(err); }
-      finally { setLogoLoading(false); }
     };
     const fetchPages = async () => {
       try {
@@ -137,9 +141,6 @@ export default function Header() {
                 alt="Logo"
                 className="w-[125px] h-10 rounded-xl object-contain"
               />
-            ) : logoLoading ? (
-              /* invisible placeholder — same size, no flash */
-              <div className="w-[125px] h-10 rounded-xl" />
             ) : (
               <div className="w-[125px] h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
                 <span className="text-white font-black text-xl">শ</span>

@@ -24,14 +24,43 @@ export const metadata: Metadata = {
   description: "Buy books online from Shobaz - Bangladesh's trusted online bookstore",
 };
 
-export default function RootLayout({
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+
+async function getLogoUrl(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/shop-information/get`, {
+      next: { revalidate: 300 }, // cache for 5 minutes server-side
+    });
+    const data = await res.json();
+    const info = data?.data;
+    const raw = info?.navLogo || info?.siteLogo || null;
+    if (!raw) return null;
+    if (raw.startsWith('http')) return raw;
+    return `${API_BASE}/api/upload/images/${raw}`;
+  } catch {
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const logoUrl = await getLogoUrl();
+
   return (
     <html lang="bn">
-      <head />
+      <head>
+        {/* Inject logo URL before React hydrates so Header reads it synchronously — no flash */}
+        {logoUrl && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.__SHOBAZ_LOGO__=${JSON.stringify(logoUrl)};`,
+            }}
+          />
+        )}
+      </head>
       <body className={`${hindSiliguri.variable} ${poppins.variable}`}>
         {/* Stape.io Custom Loader */}
         <Script
