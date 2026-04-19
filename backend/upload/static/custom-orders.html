@@ -635,7 +635,7 @@
           <i class="fas fa-search"></i>
           <input type="text" id="searchInput" placeholder="Search Order No or Phone No or Name" />
         </div>
-        <a href="http://localhost:3007/sales/add-order" target="_blank" class="btn-add">
+        <a href="#" onclick="this.href=ADMIN_URL+'/sales/add-order'" target="_blank" class="btn-add">
           <i class="fas fa-plus"></i> Add Order
         </a>
         <button class="btn-add" onclick="doLogout()" style="background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);">
@@ -879,6 +879,7 @@
 
   /* ── Config ── */
   var API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://api.shobaz.com';
+  var ADMIN_URL = window.location.hostname === 'localhost' ? 'http://localhost:3007' : 'https://admin.shobaz.com';
   var allOrders = []; // cache for export
   var repeatMap = {}; // phoneNo → total order count
 
@@ -1420,7 +1421,7 @@
         '<tr style="background:' + rowBg + '">',
         '<td><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" /></td>',
         '<td>' + sl + '</td>',
-        '<td><a href="http://localhost:3007/sales/order-details/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
+        '<td><a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
         '<td>' + phoneCell(o.phoneNo) + '</td>',
         '<td>' + esc(o.name || '—') + '</td>',
         '<td>' + formatDate(o.createdAt || o.checkoutDate) + '</td>',
