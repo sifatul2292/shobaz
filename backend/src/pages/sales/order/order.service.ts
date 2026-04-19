@@ -732,8 +732,8 @@ export class OrderService {
             metadata: [{ $count: 'total' }],
             data: [
               {
-                $skip: pagination.pageSize * pagination.currentPage,
-              } /* IF PAGE START FROM 0 OR (pagination.currentPage - 1) IF PAGE 1*/,
+                $skip: pagination.pageSize * (pagination.currentPage - 1),
+              },
               { $limit: pagination.pageSize },
               { $project: mSelect },
             ],
@@ -745,8 +745,8 @@ export class OrderService {
             metadata: [{ $count: 'total' }],
             data: [
               {
-                $skip: pagination.pageSize * pagination.currentPage,
-              } /* IF PAGE START FROM 0 OR (pagination.currentPage - 1) IF PAGE 1*/,
+                $skip: pagination.pageSize * (pagination.currentPage - 1),
+              },
               { $limit: pagination.pageSize },
             ],
           },
