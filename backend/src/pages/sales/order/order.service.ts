@@ -732,7 +732,7 @@ export class OrderService {
             metadata: [{ $count: 'total' }],
             data: [
               {
-                $skip: pagination.pageSize * (pagination.currentPage - 1),
+                $skip: pagination.pageSize * pagination.currentPage,
               },
               { $limit: pagination.pageSize },
               { $project: mSelect },
@@ -745,7 +745,7 @@ export class OrderService {
             metadata: [{ $count: 'total' }],
             data: [
               {
-                $skip: pagination.pageSize * (pagination.currentPage - 1),
+                $skip: pagination.pageSize * pagination.currentPage,
               },
               { $limit: pagination.pageSize },
             ],
