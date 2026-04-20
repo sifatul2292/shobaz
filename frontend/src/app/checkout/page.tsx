@@ -113,7 +113,9 @@ export default function CheckoutPage() {
       // Build orderedItems with full product data to bypass database fetch
       const orderedItems = items.map(item => {
         const salePrice = item.product.salePrice || item.product.price || 0;
-        const regularPrice = item.product.price || item.product.salePrice || salePrice;
+        const discountAmt = item.product.discountAmount || 0;
+        const afterDiscountPrice = discountAmt > 0 ? salePrice - discountAmt : salePrice;
+        const regularPrice = item.product.price || salePrice;
         return {
           _id: item.product._id,
           name: item.product.name,
@@ -125,11 +127,11 @@ export default function CheckoutPage() {
           publisher: item.product.publisher,
           subCategory: null,
           brand: null,
-          discountType: 0,
-          discountAmount: regularPrice - salePrice,
-          regularPrice: regularPrice,
-          unitPrice: salePrice,
-          salePrice: salePrice,
+          discountType: item.product.discountType ?? 0,
+          discountAmount: discountAmt,
+          regularPrice: salePrice,
+          unitPrice: afterDiscountPrice,
+          salePrice: afterDiscountPrice,
           quantity: item.quantity,
           selectedQty: item.quantity,
           orderType: 'regular',
@@ -351,7 +353,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
                           <p className="text-xs text-gray-500">পরিমাণ: {item.quantity}</p>
-                          <p className="text-sm font-bold text-green-500 mt-1">৳{((item.product.salePrice || item.product.price) * item.quantity).toFixed(0)}</p>
+                          <p className="text-sm font-bold text-green-500 mt-1">৳{(((item.product.discountAmount && item.product.discountAmount > 0 ? (item.product.salePrice || 0) - item.product.discountAmount : item.product.salePrice) || item.product.price || 0) * item.quantity).toFixed(0)}</p>
                         </div>
                       </div>
                     ))}
