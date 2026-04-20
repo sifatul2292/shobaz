@@ -474,23 +474,23 @@
       font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
       color: var(--gray-500); padding: 16px 20px 8px;
     }
-    .product-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .product-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    .product-table col.col-product { width: auto; }
+    .product-table col.col-price  { width: 80px; }
+    .product-table col.col-qty    { width: 48px; }
+    .product-table col.col-total  { width: 80px; }
     .product-table th {
-      padding: 8px 20px; font-size: 11px; font-weight: 700; color: var(--gray-500);
+      padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--gray-500);
       text-transform: uppercase; letter-spacing: .04em; background: #f8fafc;
       border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; text-align: left;
     }
-    .product-table th:nth-child(2) { text-align: center; }
-    .product-table th:nth-child(3) { text-align: right; }
-    .product-table td { padding: 12px 20px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+    .product-table th.th-price, .product-table th.th-total { text-align: right; }
+    .product-table th.th-qty { text-align: center; }
+    .product-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; overflow: hidden; }
     .product-table tbody tr:last-child td { border-bottom: none; }
     .product-table tbody tr:hover td { background: #fafbff; }
-    .product-img {
-      width: 42px; height: 42px; object-fit: cover; border-radius: 8px;
-      background: #f1f5f9; flex-shrink: 0;
-    }
-    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
-    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; white-space: nowrap; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Footer */
     .modal-footer {
@@ -948,12 +948,18 @@
       <!-- Products -->
       <div class="modal-section-title">Ordered Items</div>
       <table class="product-table">
+        <colgroup>
+          <col class="col-product">
+          <col class="col-price">
+          <col class="col-qty">
+          <col class="col-total">
+        </colgroup>
         <thead>
           <tr>
             <th>Product</th>
-            <th style="text-align:right">Price</th>
-            <th style="text-align:center">Qty</th>
-            <th style="text-align:right">Total</th>
+            <th class="th-price">Price</th>
+            <th class="th-qty">Qty</th>
+            <th class="th-total">Total</th>
           </tr>
         </thead>
         <tbody id="modalProductsBody"></tbody>
@@ -1486,18 +1492,15 @@
       body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:#94a3b8"><i class="fas fa-box-open" style="font-size:24px;display:block;margin-bottom:8px"></i>No product data available</td></tr>';
     } else {
       body.innerHTML = items.map(function (item) {
-        var imgSrc = item.image ? API + '/upload/images/' + item.image : '';
-        var img = imgSrc
-          ? '<img src="' + esc(imgSrc) + '" class="product-img" onerror="this.style.display=\'none\'">'
-          : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:18px"><i class="fas fa-book"></i></div>';
-        var unitPrice = item.unitPrice || item.salePrice || item.regularPrice || 0;
+        var salePrice = item.salePrice || item.regularPrice || 0;
+        var discountAmt = item.discountAmount || 0;
+        var unitPrice = item.unitPrice || (discountAmt > 0 ? salePrice - discountAmt : salePrice);
         var qty = item.quantity || item.selectedQty || 1;
         var subtotal = unitPrice * qty;
         var author = item.author && item.author.name
           ? '<div class="product-author">' + esc(item.author.name) + '</div>' : '';
         return '<tr>' +
-          '<td><div style="display:flex;align-items:center;gap:12px">' + img +
-            '<div><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown') + '</div>' + author + '</div></div></td>' +
+          '<td><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown') + '</div>' + author + '</td>' +
           '<td style="text-align:right;color:#334155;white-space:nowrap">৳' + Number(unitPrice).toLocaleString() + '</td>' +
           '<td style="text-align:center;font-weight:700;color:#334155">' + qty + '</td>' +
           '<td style="text-align:right;font-weight:700;color:#334155;white-space:nowrap">৳' + Number(subtotal).toLocaleString() + '</td>' +
