@@ -21,10 +21,27 @@ const poppins = Poppins({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Shobaz - Online Bookstore",
-  description: "Buy books online from Shobaz - Bangladesh's trusted online bookstore",
-};
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const res = await fetch(`${API_BASE}/api/shop-information/get`, { next: { revalidate: 3600 } });
+    const data = await res.json();
+    const shop = data?.data ?? data;
+    const siteName = shop?.siteName || 'Shobaz';
+    const shortDescription = shop?.shortDescription || 'জনপ্রিয় সকল বই এক প্ল্যাটফর্ম';
+    return {
+      title: `${siteName} - ${shortDescription}`,
+      description: shortDescription,
+    };
+  } catch {
+    return {
+      title: 'Shobaz',
+      description: 'জনপ্রিয় সকল বই এক প্ল্যাটফর্ম',
+    };
+  }
+}
 
 export default function RootLayout({
   children,

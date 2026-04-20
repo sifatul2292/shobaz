@@ -7,7 +7,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shobaz.com';
 async function getHomeSeo() {
   try {
     const res = await fetch(`${API_BASE}/api/seoPage/get-by/home_page`, {
-      next: { revalidate: 3600 }, // cache for 1 hour
+      next: { revalidate: 3600 },
     });
     const data = await res.json();
     return data?.success ? data.data : null;
@@ -16,13 +16,26 @@ async function getHomeSeo() {
   }
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getHomeSeo();
+async function getShopInfo() {
+  try {
+    const res = await fetch(`${API_BASE}/api/shop-information/get`, {
+      next: { revalidate: 3600 },
+    });
+    const data = await res.json();
+    return data?.data ?? data ?? null;
+  } catch {
+    return null;
+  }
+}
 
-  const title = seo?.name || 'Shobaz - অনলাইন বইয়ের দোকান';
+export async function generateMetadata(): Promise<Metadata> {
+  const [seo, shop] = await Promise.all([getHomeSeo(), getShopInfo()]);
+
+  const siteName = shop?.siteName || 'Shobaz';
+  const shortDescription = shop?.shortDescription || 'জনপ্রিয় সকল বই এক প্ল্যাটফর্ম';
+  const title = `${siteName} - ${shortDescription}`;
   const description =
-    seo?.seoDescription ||
-    'শোবাজ — বাংলাদেশের বিশ্বস্ত অনলাইন বইয়ের দোকান। সেরা বাংলা বই, ইসলামিক বই ও পাঠ্যবই অর্ডার করুন।';
+    seo?.seoDescription || shortDescription;
   const keywords = seo?.keyWord || 'বাংলা বই, অনলাইন বইয়ের দোকান, ইসলামিক বই, shobaz';
   const imageUrl = seo?.image
     ? seo.image.startsWith('http')
