@@ -489,8 +489,8 @@
       width: 42px; height: 42px; object-fit: cover; border-radius: 8px;
       background: #f1f5f9; flex-shrink: 0;
     }
-    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; }
-    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; white-space: nowrap; }
 
     /* Footer */
     .modal-footer {
@@ -951,8 +951,9 @@
         <thead>
           <tr>
             <th>Product</th>
-            <th>Qty</th>
-            <th>Total</th>
+            <th style="text-align:right">Price</th>
+            <th style="text-align:center">Qty</th>
+            <th style="text-align:right">Total</th>
           </tr>
         </thead>
         <tbody id="modalProductsBody"></tbody>
@@ -1482,7 +1483,7 @@
     var items = order.orderedItems || [];
     var body = document.getElementById('modalProductsBody');
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:32px;color:#94a3b8"><i class="fas fa-box-open" style="font-size:24px;display:block;margin-bottom:8px"></i>No product data available</td></tr>';
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:#94a3b8"><i class="fas fa-box-open" style="font-size:24px;display:block;margin-bottom:8px"></i>No product data available</td></tr>';
     } else {
       body.innerHTML = items.map(function (item) {
         var imgSrc = item.image ? API + '/upload/images/' + item.image : '';
@@ -1497,8 +1498,9 @@
         return '<tr>' +
           '<td><div style="display:flex;align-items:center;gap:12px">' + img +
             '<div><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown') + '</div>' + author + '</div></div></td>' +
+          '<td style="text-align:right;color:#334155;white-space:nowrap">৳' + Number(unitPrice).toLocaleString() + '</td>' +
           '<td style="text-align:center;font-weight:700;color:#334155">' + qty + '</td>' +
-          '<td style="text-align:right;font-weight:700;color:#334155">৳' + Number(subtotal).toLocaleString() + '</td>' +
+          '<td style="text-align:right;font-weight:700;color:#334155;white-space:nowrap">৳' + Number(subtotal).toLocaleString() + '</td>' +
           '</tr>';
       }).join('');
     }
@@ -1724,7 +1726,7 @@
   function phoneCell(phone) {
     if (!phone) return '—';
     var count = repeatMap[phone] || 0;
-    var html = '<span class="phone-no">' + esc(phone) + '</span>';
+    var html = '<a href="tel:' + esc(phone) + '" class="phone-no" style="color:#0284c7;text-decoration:none"><i class="fas fa-phone" style="font-size:9px;margin-right:3px"></i>' + esc(phone) + '</a>';
     if (count > 1) {
       var color = count >= 5 ? '#b91c1c' : count >= 3 ? '#d97706' : '#0369a1';
       html += ' <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800;color:#fff;background:' + color + '" title="' + count + ' orders">' + count + 'x</span>';
