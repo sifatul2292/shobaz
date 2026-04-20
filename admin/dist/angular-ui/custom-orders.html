@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Custom Orders — Amolbooks Admin</title>
+  <title>Custom Orders — Shobaz Admin</title>
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
@@ -523,8 +523,8 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <img src="favicon.png" alt="Amolbooks" onerror="this.style.display='none'">
-      <span>Amolbooks</span>
+      <img src="favicon.png" alt="Shobaz" onerror="this.style.display='none'">
+      <span>Shobaz</span>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">
@@ -707,24 +707,25 @@
             <thead>
               <tr>
                 <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" /></th>
-                <th>SL</th>
                 <th>ORDER NO</th>
                 <th>PHONE NO</th>
                 <th>NAME</th>
+                <th>ADDRESS</th>
                 <th>ORDER DATE &amp; TIME</th>
+                <th>PRICE</th>
+                <th>COURIER</th>
+                <th>FRAUD CHECKER</th>
+                <th>VIEW</th>
                 <th>PAYMENT TYPE</th>
                 <th>PAYMENT STATUS</th>
                 <th>ORDER STATUS</th>
-                <th>COURIER</th>
-                <th>FRAUD CHECKER</th>
                 <th>ORDER BY</th>
-                <th>SHIPPING ADDRESS</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
             <tbody id="ordersBody">
               <tr class="loading-row">
-                <td colspan="14">
+                <td colspan="15">
                   <div class="spinner"></div>
                   <div>Loading orders...</div>
                 </td>
@@ -940,7 +941,7 @@
   /* ── Load Orders ── */
   function loadOrders() {
     document.getElementById('ordersBody').innerHTML =
-      '<tr class="loading-row"><td colspan="14"><div class="spinner"></div><div>Loading orders...</div></td></tr>';
+      '<tr class="loading-row"><td colspan="15"><div class="spinner"></div><div>Loading orders...</div></td></tr>';
 
     fetch(API + '/api/order/get-all', {
       method: 'POST',
@@ -968,7 +969,7 @@
       })
       .catch(function (err) {
         document.getElementById('ordersBody').innerHTML =
-          '<tr class="empty-row"><td colspan="14"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:20px;margin-bottom:8px"></i><br>Failed to load orders: ' + err.message + '<br><small>Make sure the backend is running at ' + API + '</small></td></tr>';
+          '<tr class="empty-row"><td colspan="15"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:20px;margin-bottom:8px"></i><br>Failed to load orders: ' + err.message + '<br><small>Make sure the backend is running at ' + API + '</small></td></tr>';
         document.getElementById('totalOrders').textContent = '—';
         document.getElementById('totalAmount').textContent = '—';
         document.getElementById('paginationInfo').textContent = '';
@@ -1046,13 +1047,11 @@
   function renderTable(orders, total) {
     var tbody = document.getElementById('ordersBody');
     if (!orders.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="14"><i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;margin-bottom:8px"></i><br>No orders found</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="15"><i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;margin-bottom:8px"></i><br>No orders found</td></tr>';
       return;
     }
 
-    var offset = state.page * state.pageSize;
-    var rows = orders.map(function (o, i) {
-      var sl = offset + i + 1;
+    var rows = orders.map(function (o) {
       var courierCell = '';
       if (o.courierData && o.courierData.providerName) {
         courierCell = '<div class="courier-cell"><span class="courier-name">' + esc(o.courierData.providerName) + '</span>';
@@ -1070,22 +1069,30 @@
       }
 
       var orderBy = (o.admin && o.admin.name) ? esc(o.admin.name) : (o.user ? 'User' : '—');
+      var phone = o.phoneNo || '—';
+      var phoneCell = phone !== '—'
+        ? '<a href="tel:' + esc(phone) + '" class="phone-no" style="color:#0284c7;text-decoration:none" title="Call ' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:3px"></i>' + esc(phone) + '</a>'
+        : '<span class="phone-no">—</span>';
+      var price = o.grandTotal != null ? '&#2547;' + Number(o.grandTotal).toLocaleString('en-BD', { maximumFractionDigits: 0 }) : '—';
+      var adminUrl = window.location.hostname === 'localhost' ? 'http://localhost:3007' : 'https://admin.shobaz.com';
+      var viewCell = '<a href="' + adminUrl + '/sales/order-details/' + o._id + '" target="_blank" class="btn-action btn-status" title="View Order"><i class="fas fa-eye"></i> View</a>';
 
       return [
         '<tr>',
         '<td><input type="checkbox" class="row-check" value="' + o._id + '" /></td>',
-        '<td>' + sl + '</td>',
         '<td><a href="' + API + '/api/order/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
-        '<td><span class="phone-no">' + esc(o.phoneNo || '—') + '</span></td>',
+        '<td>' + phoneCell + '</td>',
         '<td>' + esc(o.name || '—') + '</td>',
+        '<td><small style="max-width:150px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(o.shippingAddress || '') + '">' + esc(o.shippingAddress || '—') + '</small></td>',
         '<td>' + formatDate(o.createdAt || o.checkoutDate) + '</td>',
+        '<td style="font-weight:700;color:#16a34a;white-space:nowrap">' + price + '</td>',
+        '<td>' + courierCell + '</td>',
+        '<td>' + fraudChip(o.fraudChecker) + '</td>',
+        '<td>' + viewCell + '</td>',
         '<td>' + paymentTypeBadge(o.paymentType) + '</td>',
         '<td>' + paymentStatusBadge(o.paymentStatus) + '</td>',
         '<td>' + statusSelect(o.orderId, o._id, o.orderStatus) + '</td>',
-        '<td>' + courierCell + '</td>',
-        '<td>' + fraudChip(o.fraudChecker) + '</td>',
         '<td><small>' + orderBy + '</small></td>',
-        '<td><small style="max-width:140px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(o.shippingAddress || '') + '">' + esc(o.shippingAddress || '—') + '</small></td>',
         '<td>',
         '  <div class="action-cell">',
         '    <a href="' + API + '/invoice/' + o._id + '.pdf" target="_blank" class="btn-action btn-invoice" title="Invoice">',
