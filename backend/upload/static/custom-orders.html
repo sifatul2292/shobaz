@@ -419,23 +419,45 @@
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: #fff; border-radius: 16px; width: 90%; max-width: 700px;
-      max-height: 85vh; overflow: hidden; display: flex; flex-direction: column;
+      background: #fff; border-radius: 16px; width: 90%; max-width: 780px;
+      max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;
       box-shadow: 0 24px 60px rgba(0,0,0,.2);
     }
     .modal-header {
-      background: linear-gradient(135deg, var(--purple), #4f46e5);
-      color: #fff; padding: 16px 20px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px; border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .modal-header h3 { font-size: 16px; font-weight: 800; }
-    .modal-header .modal-meta { font-size: 12px; opacity: .8; margin-top: 2px; }
+    .modal-header h3 { font-size: 18px; font-weight: 800; color: #0f172a; }
     .modal-close {
-      border: none; background: rgba(255,255,255,.2); color: #fff;
-      width: 30px; height: 30px; border-radius: 50%; font-size: 16px;
+      border: none; background: var(--gray-100); color: var(--gray-700);
+      width: 32px; height: 32px; border-radius: 8px; font-size: 18px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    /* Order details two-column */
+    .order-details-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;
+    }
+    .detail-section h4 {
+      font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 10px;
+      padding-bottom: 6px; border-bottom: 2px solid var(--gray-200);
+    }
+    .detail-section p { font-size: 13px; color: #334155; line-height: 1.7; margin: 0; }
+    .detail-section .detail-label {
+      font-size: 11px; font-weight: 800; color: var(--gray-500);
+      text-transform: uppercase; letter-spacing: .04em; margin-top: 10px; display: block;
+    }
+    .detail-section a { color: var(--blue); text-decoration: none; font-weight: 600; }
+    .detail-section a:hover { text-decoration: underline; }
+    .payment-row {
+      background: var(--gray-50); border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: #334155; margin-bottom: 20px;
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .payment-row strong { color: #0f172a; }
+    /* Product table */
     .product-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .product-table th {
       background: #f8fafc; text-align: left; padding: 10px 12px;
@@ -449,12 +471,24 @@
     .product-name { font-weight: 700; color: #1e293b; line-height: 1.4; }
     .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
     .modal-footer {
-      padding: 14px 20px; border-top: 1px solid var(--gray-100);
+      padding: 14px 24px; border-top: 1px solid var(--gray-100);
       display: flex; justify-content: space-between; align-items: center;
-      background: var(--gray-50);
+      background: var(--gray-50); gap: 12px; flex-wrap: wrap;
     }
-    .modal-footer .total-row { font-size: 14px; font-weight: 700; color: #1e293b; }
-    .modal-footer .total-row span { color: var(--purple); font-size: 16px; }
+    .modal-footer .total-row { font-size: 13px; font-weight: 600; color: #334155; }
+    .modal-footer .total-row strong { color: var(--purple); font-size: 15px; }
+    .modal-footer .footer-actions { display: flex; gap: 8px; }
+    .btn-modal-invoice {
+      background: #ede9fe; color: #6d28d9; border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; text-decoration: none;
+    }
+    .btn-modal-invoice:hover { background: #ddd6fe; }
+    .btn-modal-close {
+      background: #1a1a2e; color: #fff; border: none; border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .btn-modal-close:hover { background: #2d2d4e; }
 
     /* ── Status Change Select ── */
     .status-select {
@@ -847,20 +881,40 @@
 <div class="modal-overlay" id="productsModal" onclick="closeModal(event)">
   <div class="modal-box">
     <div class="modal-header">
-      <div>
-        <h3 id="modalTitle">Ordered Products</h3>
-        <div class="modal-meta" id="modalMeta"></div>
+      <h3 id="modalTitle">Order Details</h3>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="modalStatusBadge"></span>
+        <button class="modal-close" onclick="document.getElementById('productsModal').classList.remove('open')">&times;</button>
       </div>
-      <button class="modal-close" onclick="document.getElementById('productsModal').classList.remove('open')">&times;</button>
     </div>
     <div class="modal-body">
+      <!-- Billing + Shipping -->
+      <div class="order-details-grid">
+        <div class="detail-section">
+          <h4>Billing details</h4>
+          <p id="modalBillingName"></p>
+          <p id="modalBillingAddress"></p>
+          <span class="detail-label">Phone</span>
+          <p id="modalBillingPhone"></p>
+          <span class="detail-label">Payment via</span>
+          <p id="modalPaymentType"></p>
+        </div>
+        <div class="detail-section">
+          <h4>Shipping details</h4>
+          <p id="modalShippingAddress"></p>
+          <span class="detail-label">Phone</span>
+          <p id="modalShippingPhone"></p>
+          <span class="detail-label">Shipping method</span>
+          <p id="modalShippingMethod"></p>
+        </div>
+      </div>
+      <!-- Products -->
       <table class="product-table">
         <thead>
           <tr>
             <th>Product</th>
-            <th>Unit Price</th>
-            <th>Qty</th>
-            <th>Subtotal</th>
+            <th style="text-align:center">Quantity</th>
+            <th style="text-align:right">Total</th>
           </tr>
         </thead>
         <tbody id="modalProductsBody"></tbody>
@@ -868,7 +922,12 @@
     </div>
     <div class="modal-footer">
       <div class="total-row" id="modalTotals"></div>
-      <button class="btn-export" onclick="document.getElementById('productsModal').classList.remove('open')">Close</button>
+      <div class="footer-actions">
+        <a id="modalInvoiceLink" href="#" target="_blank" class="btn-modal-invoice">
+          <i class="fas fa-file-invoice"></i> Invoice
+        </a>
+        <button class="btn-modal-close" onclick="document.getElementById('productsModal').classList.remove('open')">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1330,30 +1389,63 @@
     var order = allOrders.find(function (o) { return o._id === mongoId; });
     if (!order) return;
 
+    // Header
     document.getElementById('modalTitle').textContent = 'Order #' + (order.orderId || mongoId.slice(-6));
-    document.getElementById('modalMeta').textContent =
-      (order.name || '') + (order.phoneNo ? ' · ' + order.phoneNo : '');
 
+    // Status badge
+    var statusName = STATUS_NAMES[order.orderStatus] || 'Unknown';
+    var statusCls  = STATUS_CLASSES[order.orderStatus] || 'pending';
+    document.getElementById('modalStatusBadge').innerHTML =
+      '<span class="badge badge-' + statusCls + '" style="font-size:12px;padding:5px 12px">' + statusName + '</span>';
+
+    // Billing
+    document.getElementById('modalBillingName').textContent = order.name || '—';
+    document.getElementById('modalBillingAddress').textContent = order.shippingAddress || order.address || '—';
+    var phone = order.phoneNo || '';
+    document.getElementById('modalBillingPhone').innerHTML = phone
+      ? '<a href="tel:' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:4px"></i>' + esc(phone) + '</a>'
+      : '—';
+
+    // Payment
+    var ptLabel = (order.paymentType || 'cash_on_delivery')
+      .replace('cash_on_delivery', 'Cash on delivery')
+      .replace(/_/g, ' ');
+    document.getElementById('modalPaymentType').textContent = ptLabel;
+
+    // Shipping (same address/phone in this system)
+    document.getElementById('modalShippingAddress').textContent = order.shippingAddress || order.address || '—';
+    document.getElementById('modalShippingPhone').innerHTML = phone
+      ? '<a href="tel:' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:4px"></i>' + esc(phone) + '</a>'
+      : '—';
+
+    // Shipping method from delivery charge amount
+    var deliveryCharge = Number(order.deliveryCharge || 0);
+    var shippingMethod = order.shippingMethod || order.deliveryZone ||
+      (deliveryCharge <= 60 ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে');
+    document.getElementById('modalShippingMethod').textContent = shippingMethod;
+
+    // Invoice link
+    document.getElementById('modalInvoiceLink').href = API + '/invoice/' + mongoId + '.pdf';
+
+    // Products table
     var items = order.orderedItems || [];
     var body = document.getElementById('modalProductsBody');
-
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#94a3b8">No product data available</td></tr>';
+      body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:24px;color:#94a3b8">No product data available</td></tr>';
     } else {
       body.innerHTML = items.map(function (item) {
         var img = item.image
           ? '<img src="' + API + '/upload/images/' + esc(item.image) + '" class="product-img" onerror="this.style.display=\'none\'">'
           : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#cbd5e1"><i class="fas fa-book"></i></div>';
         var unitPrice = item.unitPrice || item.salePrice || item.regularPrice || 0;
-        var qty = item.quantity || 1;
+        var qty = item.quantity || item.selectedQty || 1;
         var subtotal = unitPrice * qty;
         var author = item.author && item.author.name ? '<div class="product-author">' + esc(item.author.name) + '</div>' : '';
         return [
           '<tr>',
-          '<td style="display:flex;align-items:center;gap:10px">' + img + '<div><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown Product') + '</div>' + author + '</div></td>',
-          '<td>৳' + Number(unitPrice).toLocaleString() + '</td>',
-          '<td>' + qty + '</td>',
-          '<td><strong>৳' + Number(subtotal).toLocaleString() + '</strong></td>',
+          '<td><div style="display:flex;align-items:center;gap:10px">' + img + '<div><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown Product') + '</div>' + author + '</div></div></td>',
+          '<td style="text-align:center;font-weight:600">' + qty + '</td>',
+          '<td style="text-align:right"><strong>৳' + Number(subtotal).toLocaleString() + '</strong></td>',
           '</tr>',
         ].join('');
       }).join('');
@@ -1362,8 +1454,8 @@
     // Footer totals
     document.getElementById('modalTotals').innerHTML =
       'Subtotal: ৳' + Number(order.subTotal || 0).toLocaleString() +
-      ' &nbsp;|&nbsp; Delivery: ৳' + Number(order.deliveryCharge || 0).toLocaleString() +
-      ' &nbsp;|&nbsp; <strong>Total: <span>৳' + Number(order.grandTotal || 0).toLocaleString() + '</span></strong>';
+      ' &nbsp;|&nbsp; Delivery: ৳' + deliveryCharge.toLocaleString() +
+      ' &nbsp;|&nbsp; Total: <strong>৳' + Number(order.grandTotal || 0).toLocaleString() + '</strong>';
 
     document.getElementById('productsModal').classList.add('open');
   };
