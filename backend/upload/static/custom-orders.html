@@ -1612,7 +1612,7 @@
       body.innerHTML = items.map(function (item) {
         // Mirror backend utilsService.transform(product, 'salePrice') logic exactly
         var listPrice = item.regularPrice || item.salePrice || 0;
-        var discountType = (item.discountType || '').toUpperCase();
+        var discountType = String(item.discountType || '').toUpperCase();
         var discountAmt = item.discountAmount || 0;
         var unitPrice;
         if (discountType === 'PERCENTAGE' && discountAmt > 0 && listPrice > 0) {
