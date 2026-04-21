@@ -323,7 +323,7 @@
       text-align: left;
     }
     thead th:first-child { padding-left: 16px; width: 36px; }
-    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; }
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; touch-action: manipulation; }
     tbody tr:hover { background: #f8f7ff; }
     tbody td {
       padding: 10px 10px;
@@ -1632,7 +1632,14 @@
     document.getElementById('modalDelivery').textContent  = '৳' + deliveryCharge.toLocaleString();
     document.getElementById('modalGrandTotal').textContent = '৳' + Number(order.grandTotal || 0).toLocaleString();
 
-    document.getElementById('productsModal').classList.add('open');
+    var overlay = document.getElementById('productsModal');
+    overlay.classList.add('open');
+    // iOS sends a ghost click ~300ms after touchend at the same coordinates.
+    // If the user tapped near the top of the screen (first rows), that ghost
+    // click lands on the dark backdrop and immediately triggers closeModal.
+    // Block pointer events for 350ms to swallow the ghost click.
+    overlay.style.pointerEvents = 'none';
+    setTimeout(function () { overlay.style.pointerEvents = ''; }, 350);
   };
 
   window.closeModal = function (e) {
