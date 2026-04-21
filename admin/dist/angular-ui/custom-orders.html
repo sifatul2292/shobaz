@@ -323,7 +323,7 @@
       text-align: left;
     }
     thead th:first-child { padding-left: 16px; width: 36px; }
-    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; }
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; touch-action: manipulation; }
     tbody tr:hover { background: #f8f7ff; }
     tbody td {
       padding: 10px 10px;
@@ -410,7 +410,7 @@
     }
     .btn-action:hover { opacity: .8; }
     .btn-invoice { background: #ede9fe; color: #6d28d9; }
-    .btn-view    { background: #dbeafe; color: #1d4ed8; }
+    .btn-view    { background: #dbeafe; color: #1d4ed8; touch-action: manipulation; }
 
     /* ── Order Modal ── */
     .modal-overlay {
@@ -445,7 +445,7 @@
     .modal-close:hover { background: #e2e8f0; color: #334155; }
 
     /* Body */
-    .modal-body { padding: 0; overflow-y: auto; flex: 1; }
+    .modal-body { padding: 0; overflow-y: auto; overflow-x: hidden; flex: 1; }
 
     /* Info cards row */
     .modal-info-row {
@@ -475,10 +475,11 @@
       color: var(--gray-500); padding: 16px 20px 8px;
     }
     .product-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    /* pixel widths on fixed cols; product col gets all remaining space automatically */
     .product-table col.col-product { width: auto; }
-    .product-table col.col-price  { width: 80px; }
-    .product-table col.col-qty    { width: 48px; }
-    .product-table col.col-total  { width: 80px; }
+    .product-table col.col-price   { width: 78px; }
+    .product-table col.col-qty     { width: 44px; }
+    .product-table col.col-total   { width: 82px; }
     .product-table th {
       padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--gray-500);
       text-transform: uppercase; letter-spacing: .04em; background: #f8fafc;
@@ -486,11 +487,11 @@
     }
     .product-table th.th-price, .product-table th.th-total { text-align: right; }
     .product-table th.th-qty { text-align: center; }
-    .product-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; overflow: hidden; }
+    .product-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
     .product-table tbody tr:last-child td { border-bottom: none; }
     .product-table tbody tr:hover td { background: #fafbff; }
-    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; word-break: break-word; }
+    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
 
     /* Footer */
     .modal-footer {
@@ -598,11 +599,119 @@
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
+      /* Layout */
       .sidebar { display: none; }
       .main { margin-left: 0; }
-      .content { padding: 16px; }
-      .topbar { padding: 12px 16px; }
-      .search-box { min-width: 160px; }
+      .content { padding: 10px; }
+
+      /* Topbar: row1 = title + icon buttons, row2 = full-width search */
+      .topbar { flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
+      .topbar-title { font-size: 15px; flex: 1; }
+      .topbar-right { width: 100%; gap: 6px; }
+      .search-box { flex: 1; min-width: 0; padding: 7px 12px; }
+      .btn-add .btn-text { display: none; }
+      .btn-add { padding: 7px 12px; border-radius: 50%; width: 36px; height: 36px; justify-content: center; }
+
+      /* Date filters: stack vertically so nothing overflows */
+      .date-filters { flex-direction: column; gap: 8px; }
+      .date-filter-box { min-width: 0; width: 100%; padding: 9px 12px; }
+      .date-range input { width: 110px; font-size: 12px; }
+
+      /* Stats: side by side, more compact */
+      .stats-row { gap: 8px; }
+      .stat-card { padding: 12px 14px; gap: 10px; min-width: 0; border-radius: 12px; }
+      .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 10px; }
+      .stat-info label { font-size: 10px; }
+      .stat-info .stat-value { font-size: 22px; }
+
+      /* Filter bar: wrap tightly */
+      .filter-bar { gap: 6px; }
+      .filter-btn { padding: 7px 10px; font-size: 12px; }
+      .per-page-select { padding: 6px 8px; font-size: 12px; }
+      .btn-export { padding: 7px 12px; font-size: 12px; }
+
+      /* ── Table: show only 6 key columns ── */
+      /* Visible: checkbox(1) ORDER_NO(2) PHONE(3) NAME(4) PRICE(7) VIEW(10) */
+      /* Hidden:  ADDRESS(5) DATE(6) COURIER(8) FRAUD(9) PAYTYPE(11) PAYSTATUS(12) STATUS(13) ORDERBY(14) ACTIONS(15) */
+      table { min-width: 0; font-size: 12px; width: 100%; }
+      table thead th:nth-child(5), table thead th:nth-child(6),
+      table thead th:nth-child(8), table thead th:nth-child(9),
+      table thead th:nth-child(11),table thead th:nth-child(12),
+      table thead th:nth-child(13),table thead th:nth-child(14),
+      table thead th:nth-child(15),
+      table tbody td:nth-child(5), table tbody td:nth-child(6),
+      table tbody td:nth-child(8), table tbody td:nth-child(9),
+      table tbody td:nth-child(11),table tbody td:nth-child(12),
+      table tbody td:nth-child(13),table tbody td:nth-child(14),
+      table tbody td:nth-child(15) { display: none; }
+
+      /* Name: single line, truncate */
+      table tbody td:nth-child(4) {
+        max-width: 80px; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+      }
+      /* VIEW button: larger tap target, icon-only */
+      table tbody td:nth-child(10) .btn-view {
+        font-size: 0; padding: 0;
+        width: 36px; height: 36px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 8px;
+      }
+      table tbody td:nth-child(10) .btn-view .fa-eye { font-size: 16px; }
+
+      thead th { padding: 10px 8px; font-size: 10px; }
+      tbody td { padding: 10px 8px; }
+      thead th:first-child, tbody td:first-child { padding-left: 12px; width: 28px; }
+
+      /* Pagination */
+      .pagination-bar { padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .pagination-info { font-size: 12px; }
+      .page-btn { padding: 5px 9px; font-size: 12px; min-width: 30px; }
+
+      /* ── Modal: bottom sheet ── */
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal-box {
+        width: 100%; max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+      }
+      /* Drag handle hint */
+      .modal-box::before {
+        content: ''; display: block;
+        width: 36px; height: 4px;
+        background: #e2e8f0; border-radius: 2px;
+        margin: 10px auto 0;
+      }
+      .modal-header { padding: 12px 18px 12px; }
+      .modal-order-id { font-size: 17px; }
+      .modal-order-date { font-size: 11px; }
+
+      /* Info cards: 2-up then full-width third */
+      .modal-info-row { grid-template-columns: 1fr 1fr; }
+      .modal-info-card { padding: 12px 14px; }
+      .modal-info-card:nth-child(3) {
+        grid-column: 1 / -1;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+      }
+      .mic-icon { width: 28px; height: 28px; font-size: 11px; margin-bottom: 6px; }
+      .mic-value { font-size: 12px; }
+
+      /* Product table in modal */
+      .modal-section-title { padding: 12px 14px 6px; font-size: 10px; }
+      .product-table { font-size: 12px; }
+      .product-table th { padding: 7px 6px; }
+      .product-table td { padding: 8px 6px; }
+      .product-name { font-size: 12px; }
+      .product-author { font-size: 10px; }
+
+      /* Modal footer */
+      .modal-footer { padding: 12px 16px; }
+      .modal-totals { gap: 14px; }
+      .modal-total-item { font-size: 11px; }
+      .modal-total-item span { font-size: 13px; }
+      .modal-total-item.grand span { font-size: 15px; }
+      .btn-modal-invoice, .btn-modal-close { padding: 8px 14px; font-size: 12px; }
     }
 
     /* ── Checkbox ── */
@@ -697,10 +806,10 @@
           <input type="text" id="searchInput" placeholder="Search Order No or Phone No or Name" />
         </div>
         <a href="#" onclick="this.href=ADMIN_URL+'/sales/add-order'" target="_blank" class="btn-add">
-          <i class="fas fa-plus"></i> Add Order
+          <i class="fas fa-plus"></i><span class="btn-text"> Add Order</span>
         </a>
         <button class="btn-add" onclick="doLogout()" style="background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);">
-          <i class="fas fa-sign-out-alt"></i> Logout
+          <i class="fas fa-sign-out-alt"></i><span class="btn-text"> Logout</span>
         </button>
       </div>
     </div>
@@ -997,6 +1106,7 @@
   var API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://api.shobaz.com';
   var ADMIN_URL = window.location.hostname === 'localhost' ? 'http://localhost:3007' : 'https://admin.shobaz.com';
   var allOrders = []; // cache for export
+  var allOrdersById = {}; // string _id → order  (O(1) lookup, avoids type mismatch)
   var repeatMap = {}; // phoneNo → total order count
 
   /* ── State ── */
@@ -1281,6 +1391,11 @@
         state.totalCount = count;
         state.totalAmount = grandTotal;
         allOrders = orders;
+        allOrdersById = {};
+        orders.forEach(function (o) {
+          allOrdersById[String(o._id)] = o;
+          if (o.id) allOrdersById[String(o.id)] = o; // Mongoose virtual 'id' alias
+        });
 
         renderStats(count, grandTotal);
         renderTable(orders, count);
@@ -1443,8 +1558,9 @@
 
   /* ── Products modal ── */
   window.openProducts = function (mongoId) {
-    var order = allOrders.find(function (o) { return o._id === mongoId; });
-    if (!order) return;
+    try {
+    var order = allOrdersById[String(mongoId)];
+    if (!order) { showToast('Order not found — please refresh and try again.', 'error'); return; }
 
     // Header
     document.getElementById('modalTitle').textContent = 'Order #' + (order.orderId || mongoId.slice(-6));
@@ -1473,10 +1589,12 @@
     document.getElementById('modalShippingMethod').textContent = shippingMethod;
 
     // Payment card
-    var ptLabel = (order.paymentType || 'cash_on_delivery')
-      .replace('cash_on_delivery', 'Cash on Delivery')
-      .replace('bkash', 'bKash').replace('nagad', 'Nagad')
-      .replace(/_/g, ' ');
+    var _pt = (order.paymentType || '').toLowerCase().replace(/_/g, '');
+    var ptLabel = _pt === 'cashondelivery' || _pt === 'cod' ? 'Cash on Delivery'
+      : _pt === 'bkash' ? 'bKash'
+      : _pt === 'nagad' ? 'Nagad'
+      : _pt === 'card' ? 'Card'
+      : (order.paymentType || 'Cash on Delivery');
     document.getElementById('modalPaymentType').textContent = ptLabel;
     var ps = (order.paymentStatus || 'unpaid');
     document.getElementById('modalPaymentStatus').innerHTML =
@@ -1492,9 +1610,18 @@
       body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:#94a3b8"><i class="fas fa-box-open" style="font-size:24px;display:block;margin-bottom:8px"></i>No product data available</td></tr>';
     } else {
       body.innerHTML = items.map(function (item) {
-        var salePrice = item.salePrice || item.regularPrice || 0;
+        // Mirror backend utilsService.transform(product, 'salePrice') logic exactly
+        var listPrice = item.regularPrice || item.salePrice || 0;
+        var discountType = String(item.discountType || '').toUpperCase();
         var discountAmt = item.discountAmount || 0;
-        var unitPrice = item.unitPrice || (discountAmt > 0 ? salePrice - discountAmt : salePrice);
+        var unitPrice;
+        if (discountType === 'PERCENTAGE' && discountAmt > 0 && listPrice > 0) {
+          unitPrice = Math.floor(listPrice - (discountAmt / 100) * listPrice);
+        } else if (discountType === 'CASH' && discountAmt > 0) {
+          unitPrice = Math.floor(listPrice - discountAmt);
+        } else {
+          unitPrice = item.unitPrice || listPrice;
+        }
         var qty = item.quantity || item.selectedQty || 1;
         var subtotal = unitPrice * qty;
         var author = item.author && item.author.name
@@ -1513,7 +1640,18 @@
     document.getElementById('modalDelivery').textContent  = '৳' + deliveryCharge.toLocaleString();
     document.getElementById('modalGrandTotal').textContent = '৳' + Number(order.grandTotal || 0).toLocaleString();
 
-    document.getElementById('productsModal').classList.add('open');
+    var overlay = document.getElementById('productsModal');
+    overlay.classList.add('open');
+    // iOS sends a ghost click ~300ms after touchend at the same coordinates.
+    // If the user tapped near the top of the screen (first rows), that ghost
+    // click lands on the dark backdrop and immediately triggers closeModal.
+    // Block pointer events for 350ms to swallow the ghost click.
+    overlay.style.pointerEvents = 'none';
+    setTimeout(function () { overlay.style.pointerEvents = ''; }, 350);
+    } catch (err) {
+      console.error('openProducts error:', err);
+      showToast('Error opening order: ' + err.message, 'error');
+    }
   };
 
   window.closeModal = function (e) {

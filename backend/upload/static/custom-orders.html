@@ -1089,6 +1089,9 @@
         </div>
       </div>
       <div class="footer-actions">
+        <button id="modalCourierBtn" class="btn-courier" onclick="modalSendToCourier()" style="display:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;touch-action:manipulation">
+          <i class="fas fa-truck"></i> Send to Courier
+        </button>
         <a id="modalInvoiceLink" href="#" target="_blank" class="btn-modal-invoice">
           <i class="fas fa-file-invoice"></i> Invoice
         </a>
@@ -1108,6 +1111,7 @@
   var allOrders = []; // cache for export
   var allOrdersById = {}; // string _id → order  (O(1) lookup, avoids type mismatch)
   var repeatMap = {}; // phoneNo → total order count
+  var currentModalOrderId = null; // tracks which order the modal is showing
 
   /* ── State ── */
   var state = {
@@ -1603,6 +1607,12 @@
     // Invoice link
     document.getElementById('modalInvoiceLink').href = API + '/invoice/' + mongoId + '.pdf';
 
+    // Courier button — show if order hasn't been sent to courier yet
+    currentModalOrderId = mongoId;
+    var courierBtn = document.getElementById('modalCourierBtn');
+    var hasCourier = order.courierData && order.courierData.providerName;
+    courierBtn.style.display = (!hasCourier && order.orderStatus !== 8) ? '' : 'none';
+
     // Products table
     var items = order.orderedItems || [];
     var body = document.getElementById('modalProductsBody');
@@ -1652,6 +1662,11 @@
       console.error('openProducts error:', err);
       showToast('Error opening order: ' + err.message, 'error');
     }
+  };
+
+  window.modalSendToCourier = function () {
+    document.getElementById('productsModal').classList.remove('open');
+    if (currentModalOrderId) sendToCourier(currentModalOrderId);
   };
 
   window.closeModal = function (e) {
@@ -1709,7 +1724,7 @@
         '<td><a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" class="order-no">' + esc(o.orderId || o._id.slice(-6)) + '</a></td>',
         '<td>' + phoneCell(o.phoneNo) + '</td>',
         '<td>' + esc(o.name || '—') + '</td>',
-        '<td><small style="max-width:130px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(o.shippingAddress || '') + '">' + esc(o.shippingAddress || '—') + '</small></td>',
+        '<td><div style="max-width:220px;word-break:break-word;line-height:1.5;font-size:12px">' + esc(o.shippingAddress || '—') + '</div></td>',
         '<td>' + formatDate(o.createdAt || o.checkoutDate) + '</td>',
         '<td><strong style="color:var(--purple);font-size:13px">৳' + Number(o.grandTotal || 0).toLocaleString() + '</strong></td>',
         '<td>' + courierCell + '</td>',
