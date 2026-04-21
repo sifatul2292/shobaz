@@ -410,7 +410,7 @@
     }
     .btn-action:hover { opacity: .8; }
     .btn-invoice { background: #ede9fe; color: #6d28d9; }
-    .btn-view    { background: #dbeafe; color: #1d4ed8; }
+    .btn-view    { background: #dbeafe; color: #1d4ed8; touch-action: manipulation; }
 
     /* ── Order Modal ── */
     .modal-overlay {
@@ -475,10 +475,10 @@
       color: var(--gray-500); padding: 16px 20px 8px;
     }
     .product-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-    .product-table col.col-product { width: auto; }
-    .product-table col.col-price  { width: 80px; }
-    .product-table col.col-qty    { width: 48px; }
-    .product-table col.col-total  { width: 80px; }
+    .product-table col.col-product { width: 54%; }
+    .product-table col.col-price  { width: 18%; }
+    .product-table col.col-qty    { width: 9%; }
+    .product-table col.col-total  { width: 19%; }
     .product-table th {
       padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--gray-500);
       text-transform: uppercase; letter-spacing: .04em; background: #f8fafc;
@@ -486,11 +486,11 @@
     }
     .product-table th.th-price, .product-table th.th-total { text-align: right; }
     .product-table th.th-qty { text-align: center; }
-    .product-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; overflow: hidden; }
+    .product-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
     .product-table tbody tr:last-child td { border-bottom: none; }
     .product-table tbody tr:hover td { background: #fafbff; }
-    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; word-break: break-word; }
+    .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
 
     /* Footer */
     .modal-footer {
@@ -696,12 +696,9 @@
       .mic-icon { width: 28px; height: 28px; font-size: 11px; margin-bottom: 6px; }
       .mic-value { font-size: 12px; }
 
-      /* Product table in modal — narrow fixed cols so product name gets space */
+      /* Product table in modal */
       .modal-section-title { padding: 12px 14px 6px; font-size: 10px; }
       .product-table { font-size: 12px; }
-      .product-table col.col-price { width: 56px; }
-      .product-table col.col-qty   { width: 28px; }
-      .product-table col.col-total { width: 62px; }
       .product-table th { padding: 7px 6px; }
       .product-table td { padding: 8px 6px; }
       .product-name { font-size: 12px; }
@@ -1554,8 +1551,8 @@
 
   /* ── Products modal ── */
   window.openProducts = function (mongoId) {
-    var order = allOrders.find(function (o) { return o._id === mongoId; });
-    if (!order) return;
+    var order = allOrders.find(function (o) { return String(o._id) === String(mongoId); });
+    if (!order) { showToast('Order not found. Please refresh the page.', 'error'); return; }
 
     // Header
     document.getElementById('modalTitle').textContent = 'Order #' + (order.orderId || mongoId.slice(-6));
