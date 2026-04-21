@@ -598,83 +598,114 @@
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
+      /* Layout */
       .sidebar { display: none; }
       .main { margin-left: 0; }
-      .content { padding: 12px; }
+      .content { padding: 10px; }
 
-      /* Topbar: stack into 2 rows */
-      .topbar {
-        flex-wrap: wrap;
-        padding: 10px 14px;
-        gap: 8px;
-      }
-      .topbar-title { font-size: 15px; white-space: nowrap; }
+      /* Topbar: row1 = title + icon buttons, row2 = full-width search */
+      .topbar { flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
+      .topbar-title { font-size: 15px; flex: 1; }
       .topbar-right { width: 100%; gap: 6px; }
-      .search-box { flex: 1; min-width: 0; padding: 6px 12px; }
-      /* Hide button text — show icon only */
+      .search-box { flex: 1; min-width: 0; padding: 7px 12px; }
       .btn-add .btn-text { display: none; }
-      .btn-add { padding: 7px 11px; }
+      .btn-add { padding: 7px 12px; border-radius: 50%; width: 36px; height: 36px; justify-content: center; }
 
-      /* Stats side-by-side */
+      /* Date filters: stack vertically so nothing overflows */
+      .date-filters { flex-direction: column; gap: 8px; }
+      .date-filter-box { min-width: 0; width: 100%; padding: 9px 12px; }
+      .date-range input { width: 110px; font-size: 12px; }
+
+      /* Stats: side by side, more compact */
       .stats-row { gap: 8px; }
-      .stat-card { padding: 14px 12px; gap: 10px; min-width: 0; }
-      .stat-icon { width: 38px; height: 38px; font-size: 17px; flex-shrink: 0; }
+      .stat-card { padding: 12px 14px; gap: 10px; min-width: 0; border-radius: 12px; }
+      .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 10px; }
       .stat-info label { font-size: 10px; }
-      .stat-info .stat-value { font-size: 20px; }
+      .stat-info .stat-value { font-size: 22px; }
 
-      /* Date filters compact */
-      .date-filters { gap: 8px; }
-      .date-filter-box { padding: 8px 10px; min-width: 0; }
-      .date-range input { width: 96px; }
-
-      /* Filter bar compact */
+      /* Filter bar: wrap tightly */
       .filter-bar { gap: 6px; }
       .filter-btn { padding: 7px 10px; font-size: 12px; }
+      .per-page-select { padding: 6px 8px; font-size: 12px; }
       .btn-export { padding: 7px 12px; font-size: 12px; }
 
-      /* Table: remove forced min-width, hide non-essential columns */
-      table { min-width: 0; font-size: 12px; }
-      /* Keep: checkbox(1) ORDER NO(2) PHONE(3) NAME(4) PRICE(7) VIEW(10) STATUS(13) */
-      /* Hide: ADDRESS(5) DATE(6) COURIER(8) FRAUD(9) PAYTYPE(11) PAYSTATUS(12) ORDERBY(14) ACTIONS(15) */
-      table thead th:nth-child(5),
-      table thead th:nth-child(6),
-      table thead th:nth-child(8),
-      table thead th:nth-child(9),
-      table thead th:nth-child(11),
-      table thead th:nth-child(12),
-      table thead th:nth-child(14),
+      /* ── Table: show only 6 key columns ── */
+      /* Visible: checkbox(1) ORDER_NO(2) PHONE(3) NAME(4) PRICE(7) VIEW(10) */
+      /* Hidden:  ADDRESS(5) DATE(6) COURIER(8) FRAUD(9) PAYTYPE(11) PAYSTATUS(12) STATUS(13) ORDERBY(14) ACTIONS(15) */
+      table { min-width: 0; font-size: 12px; width: 100%; }
+      table thead th:nth-child(5), table thead th:nth-child(6),
+      table thead th:nth-child(8), table thead th:nth-child(9),
+      table thead th:nth-child(11),table thead th:nth-child(12),
+      table thead th:nth-child(13),table thead th:nth-child(14),
       table thead th:nth-child(15),
-      table tbody td:nth-child(5),
-      table tbody td:nth-child(6),
-      table tbody td:nth-child(8),
-      table tbody td:nth-child(9),
-      table tbody td:nth-child(11),
-      table tbody td:nth-child(12),
-      table tbody td:nth-child(14),
+      table tbody td:nth-child(5), table tbody td:nth-child(6),
+      table tbody td:nth-child(8), table tbody td:nth-child(9),
+      table tbody td:nth-child(11),table tbody td:nth-child(12),
+      table tbody td:nth-child(13),table tbody td:nth-child(14),
       table tbody td:nth-child(15) { display: none; }
 
-      /* Name cell: single line */
+      /* Name: single line, truncate */
       table tbody td:nth-child(4) {
-        max-width: 90px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: 80px; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
       }
+      /* VIEW button: icon-only on mobile */
+      table tbody td:nth-child(10) .btn-view { font-size: 0; padding: 6px 9px; }
+      table tbody td:nth-child(10) .btn-view .fa-eye { font-size: 14px; }
 
-      /* Tighter cell padding */
-      thead th { padding: 10px 8px; }
-      tbody td { padding: 8px 8px; }
+      thead th { padding: 10px 8px; font-size: 10px; }
+      tbody td { padding: 10px 8px; }
+      thead th:first-child, tbody td:first-child { padding-left: 12px; width: 28px; }
 
-      /* Pagination compact */
-      .pagination-bar { padding: 10px 12px; gap: 8px; }
+      /* Pagination */
+      .pagination-bar { padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .pagination-info { font-size: 12px; }
       .page-btn { padding: 5px 9px; font-size: 12px; min-width: 30px; }
-      .per-page-select { padding: 6px 8px; font-size: 12px; }
 
-      /* Modal full-screen on mobile */
+      /* ── Modal: bottom sheet ── */
       .modal-overlay { padding: 0; align-items: flex-end; }
-      .modal-box { border-radius: 20px 20px 0 0; max-height: 88vh; max-width: 100%; }
+      .modal-box {
+        width: 100%; max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+      }
+      /* Drag handle hint */
+      .modal-box::before {
+        content: ''; display: block;
+        width: 36px; height: 4px;
+        background: #e2e8f0; border-radius: 2px;
+        margin: 10px auto 0;
+      }
+      .modal-header { padding: 12px 18px 12px; }
+      .modal-order-id { font-size: 17px; }
+      .modal-order-date { font-size: 11px; }
+
+      /* Info cards: 2-up then full-width third */
       .modal-info-row { grid-template-columns: 1fr 1fr; }
-      .modal-info-card:nth-child(3) { grid-column: 1 / -1; border-right: none; border-top: 1px solid #f1f5f9; }
+      .modal-info-card { padding: 12px 14px; }
+      .modal-info-card:nth-child(3) {
+        grid-column: 1 / -1;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+      }
+      .mic-icon { width: 28px; height: 28px; font-size: 11px; margin-bottom: 6px; }
+      .mic-value { font-size: 12px; }
+
+      /* Product table in modal */
+      .modal-section-title { padding: 12px 14px 6px; font-size: 10px; }
+      .product-table { font-size: 12px; }
+      .product-table th { padding: 7px 10px; }
+      .product-table td { padding: 8px 10px; }
+      .product-name { font-size: 12px; }
+      .product-author { font-size: 10px; }
+
+      /* Modal footer */
+      .modal-footer { padding: 12px 16px; }
+      .modal-totals { gap: 14px; }
+      .modal-total-item { font-size: 11px; }
+      .modal-total-item span { font-size: 13px; }
+      .modal-total-item.grand span { font-size: 15px; }
+      .btn-modal-invoice, .btn-modal-close { padding: 8px 14px; font-size: 12px; }
     }
 
     /* ── Checkbox ── */
