@@ -649,9 +649,14 @@
         max-width: 80px; white-space: nowrap;
         overflow: hidden; text-overflow: ellipsis;
       }
-      /* VIEW button: icon-only on mobile */
-      table tbody td:nth-child(10) .btn-view { font-size: 0; padding: 6px 9px; }
-      table tbody td:nth-child(10) .btn-view .fa-eye { font-size: 14px; }
+      /* VIEW button: larger tap target, icon-only */
+      table tbody td:nth-child(10) .btn-view {
+        font-size: 0; padding: 0;
+        width: 36px; height: 36px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 8px;
+      }
+      table tbody td:nth-child(10) .btn-view .fa-eye { font-size: 16px; }
 
       thead th { padding: 10px 8px; font-size: 10px; }
       tbody td { padding: 10px 8px; }
@@ -691,11 +696,14 @@
       .mic-icon { width: 28px; height: 28px; font-size: 11px; margin-bottom: 6px; }
       .mic-value { font-size: 12px; }
 
-      /* Product table in modal */
+      /* Product table in modal — narrow fixed cols so product name gets space */
       .modal-section-title { padding: 12px 14px 6px; font-size: 10px; }
       .product-table { font-size: 12px; }
-      .product-table th { padding: 7px 10px; }
-      .product-table td { padding: 8px 10px; }
+      .product-table col.col-price { width: 56px; }
+      .product-table col.col-qty   { width: 28px; }
+      .product-table col.col-total { width: 62px; }
+      .product-table th { padding: 7px 6px; }
+      .product-table td { padding: 8px 6px; }
       .product-name { font-size: 12px; }
       .product-author { font-size: 10px; }
 
@@ -1576,10 +1584,12 @@
     document.getElementById('modalShippingMethod').textContent = shippingMethod;
 
     // Payment card
-    var ptLabel = (order.paymentType || 'cash_on_delivery')
-      .replace('cash_on_delivery', 'Cash on Delivery')
-      .replace('bkash', 'bKash').replace('nagad', 'Nagad')
-      .replace(/_/g, ' ');
+    var _pt = (order.paymentType || '').toLowerCase().replace(/_/g, '');
+    var ptLabel = _pt === 'cashondelivery' || _pt === 'cod' ? 'Cash on Delivery'
+      : _pt === 'bkash' ? 'bKash'
+      : _pt === 'nagad' ? 'Nagad'
+      : _pt === 'card' ? 'Card'
+      : (order.paymentType || 'Cash on Delivery');
     document.getElementById('modalPaymentType').textContent = ptLabel;
     var ps = (order.paymentStatus || 'unpaid');
     document.getElementById('modalPaymentStatus').innerHTML =
