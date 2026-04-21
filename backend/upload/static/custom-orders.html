@@ -475,10 +475,11 @@
       color: var(--gray-500); padding: 16px 20px 8px;
     }
     .product-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-    .product-table col.col-product { width: 54%; }
-    .product-table col.col-price  { width: 18%; }
-    .product-table col.col-qty    { width: 9%; }
-    .product-table col.col-total  { width: 19%; }
+    /* pixel widths on fixed cols; product col gets all remaining space automatically */
+    .product-table col.col-product { width: auto; }
+    .product-table col.col-price   { width: 78px; }
+    .product-table col.col-qty     { width: 44px; }
+    .product-table col.col-total   { width: 82px; }
     .product-table th {
       padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--gray-500);
       text-transform: uppercase; letter-spacing: .04em; background: #f8fafc;
@@ -1105,6 +1106,7 @@
   var API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://api.shobaz.com';
   var ADMIN_URL = window.location.hostname === 'localhost' ? 'http://localhost:3007' : 'https://admin.shobaz.com';
   var allOrders = []; // cache for export
+  var allOrdersById = {}; // string _id → order  (O(1) lookup, avoids type mismatch)
   var repeatMap = {}; // phoneNo → total order count
 
   /* ── State ── */
@@ -1389,6 +1391,11 @@
         state.totalCount = count;
         state.totalAmount = grandTotal;
         allOrders = orders;
+        allOrdersById = {};
+        orders.forEach(function (o) {
+          allOrdersById[String(o._id)] = o;
+          if (o.id) allOrdersById[String(o.id)] = o; // Mongoose virtual 'id' alias
+        });
 
         renderStats(count, grandTotal);
         renderTable(orders, count);
@@ -1551,8 +1558,9 @@
 
   /* ── Products modal ── */
   window.openProducts = function (mongoId) {
-    var order = allOrders.find(function (o) { return String(o._id) === String(mongoId); });
-    if (!order) { showToast('Order not found. Please refresh the page.', 'error'); return; }
+    try {
+    var order = allOrdersById[String(mongoId)];
+    if (!order) { showToast('Order not found — please refresh and try again.', 'error'); return; }
 
     // Header
     document.getElementById('modalTitle').textContent = 'Order #' + (order.orderId || mongoId.slice(-6));
@@ -1640,6 +1648,10 @@
     // Block pointer events for 350ms to swallow the ghost click.
     overlay.style.pointerEvents = 'none';
     setTimeout(function () { overlay.style.pointerEvents = ''; }, 350);
+    } catch (err) {
+      console.error('openProducts error:', err);
+      showToast('Error opening order: ' + err.message, 'error');
+    }
   };
 
   window.closeModal = function (e) {
