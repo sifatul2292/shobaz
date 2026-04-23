@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>My Islamic Daily Tracker</title>
+<style>
+  :root{
+    --green:#1a7a4a;--green-l:#22a160;--green-ll:#d4f0e2;
+    --gold:#c9922a;--gold-l:#f0c060;--gold-ll:#fff8e6;
+    --bg:#f5f7f2;--card:#fff;--text:#1a2e1a;--muted:#6b7c6b;
+    --border:#dde8dd;--shadow:0 2px 12px rgba(0,0,0,.08);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  /* ── HEADER ── */
+  .header{background:linear-gradient(135deg,#0f4f2f 0%,#1a7a4a 60%,#c9922a 100%);color:#fff;padding:20px 24px 24px;position:relative;overflow:hidden}
+  .header::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.05);border-radius:50%}
+  .header::after{content:'بسم الله الرحمن الرحيم';position:absolute;bottom:10px;right:20px;font-size:13px;opacity:.3;font-family:serif}
+  .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .greeting{font-size:20px;font-weight:700;letter-spacing:.02em}
+  .hijri{font-size:12px;opacity:.8;margin-top:2px}
+  .streak-badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
+
+  /* ── DAILY GOAL BAR ── */
+  .goal-section{background:rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;margin-top:8px}
+  .goal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .goal-title{font-size:13px;font-weight:600;opacity:.9}
+  .goal-pct{font-size:22px;font-weight:800}
+  .goal-bar-bg{background:rgba(255,255,255,.2);border-radius:99px;height:10px;overflow:hidden}
+  .goal-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#f0c060,#22a160);transition:width .6s ease;min-width:2px}
+  .goal-tasks{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .goal-dot{font-size:10px;opacity:.75;display:flex;align-items:center;gap:3px}
+  .goal-dot.done{opacity:1;font-weight:600}
+  .goal-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);flex-shrink:0}
+  .goal-dot.done::before{background:#f0c060}
+
+  /* ── LAYOUT ── */
+  .main{padding:16px;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+  /* ── CARDS ── */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px}
+  .card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+  .card-title .icon{font-size:18px}
+
+  /* ── SALAH ── */
+  .salah-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 14px 16px}
+  .salah-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .salah-name{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .salah-btn{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--border);background:#fff;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative;-webkit-tap-highlight-color:transparent}
+  .salah-btn:hover{border-color:var(--green-l);background:var(--green-ll)}
+  .salah-btn.done{border-color:var(--green);background:var(--green);color:#fff;box-shadow:0 3px 12px rgba(26,122,74,.35)}
+  .salah-btn.done::after{content:'✓';position:absolute;font-size:20px;font-weight:700;color:#fff}
+  .salah-btn.done .prayer-emoji{display:none}
+  .salah-time{font-size:9px;color:var(--muted)}
+  .salah-progress{display:flex;gap:4px;align-items:center;padding:0 18px 14px}
+  .salah-bar-bg{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+  .salah-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-l),var(--green));border-radius:99px;transition:width .4s}
+  .salah-count{font-size:11px;font-weight:700;color:var(--green);min-width:32px;text-align:right}
+
+  /* ── QURAN ── */
+  .quran-section{padding:0 18px 16px}
+  .quran-suggestion{background:var(--gold-ll);border:1px solid #f0d090;border-radius:12px;padding:14px;margin-bottom:14px}
+  .quran-sug-label{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .quran-sug-text{font-size:14px;font-weight:600;color:#7a4a00}
+  .quran-sug-sub{font-size:11px;color:#a07030;margin-top:2px}
+  .quran-progress-wrap{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+  .quran-progress-label{font-size:12px;color:var(--muted);min-width:60px}
+  .quran-progress-bar-bg{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+  .quran-progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),#22a160);border-radius:99px;transition:width .4s}
+  .quran-progress-val{font-size:11px;font-weight:700;color:var(--green);min-width:30px;text-align:right}
+  .quran-controls{display:flex;gap:8px}
+  .quran-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;transition:border .2s}
+  .quran-input:focus{border-color:var(--green-l)}
+  .btn-sm{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-green:hover{background:var(--green-l)}
+  .btn-gold{background:var(--gold);color:#fff}
+  .btn-gold:hover{background:#e0a030}
+  .juz-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:10px}
+  .juz-cell{aspect-ratio:1;border-radius:6px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;border:none}
+  .juz-cell.done{background:var(--green);color:#fff}
+  .juz-cell.current{background:var(--gold);color:#fff;box-shadow:0 2px 6px rgba(201,146,42,.4)}
+  .juz-cell:hover:not(.done){background:var(--green-ll);color:var(--green)}
+
+  /* ── CALENDAR ── */
+  .cal-nav{display:flex;align-items:center;gap:0;padding:0 18px 12px}
+  .cal-nav-btn{background:none;border:1.5px solid var(--border);border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);transition:all .2s}
+  .cal-nav-btn:hover{border-color:var(--green);color:var(--green)}
+  .cal-month{flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--text)}
+  .cal-grid{padding:0 14px 16px}
+  .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+  .cal-day-label{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:2px 0}
+  .cal-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;position:relative}
+  .cal-cell.empty{background:transparent;cursor:default}
+  .cal-cell.today{border:2.5px solid var(--green)!important;font-weight:800}
+  .cal-cell.score-0{background:#f0f0f0;color:#aaa}
+  .cal-cell.score-1{background:#d4f0e2;color:var(--green)}
+  .cal-cell.score-2{background:#a8e0c4;color:var(--green)}
+  .cal-cell.score-3{background:#7ccfa6;color:var(--green)}
+  .cal-cell.score-4{background:#50be88;color:#fff}
+  .cal-cell.score-5{background:var(--green);color:#fff;box-shadow:0 2px 6px rgba(26,122,74,.3)}
+  .cal-cell.future{background:#f8f8f8;color:#ccc;cursor:default}
+  .cal-cell .cal-num{font-size:11px;line-height:1}
+  .cal-cell .cal-dot{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.6;margin-top:2px}
+  .cal-legend{display:flex;gap:8px;justify-content:center;padding:0 14px 14px;flex-wrap:wrap}
+  .cal-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+  .cal-legend-dot{width:10px;height:10px;border-radius:3px}
+
+  /* ── DHIKR ── */
+  .dhikr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+  .dhikr-card{background:var(--bg);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border:1.5px solid var(--border)}
+  .dhikr-arabic{font-size:16px;font-family:serif;color:var(--green);text-align:center;line-height:1.4}
+  .dhikr-name{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .dhikr-counter{font-size:28px;font-weight:800;color:var(--text)}
+  .dhikr-target{font-size:10px;color:var(--muted)}
+  .dhikr-ring{width:56px;height:56px;position:relative;cursor:pointer;margin:4px 0;-webkit-tap-highlight-color:transparent}
+  .dhikr-ring svg{transform:rotate(-90deg)}
+  .dhikr-ring-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--green)}
+  .dhikr-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;width:100%;transition:all .2s}
+  .dhikr-btn:hover{background:var(--green-l)}
+  .dhikr-btn:active{transform:scale(.97)}
+  .dhikr-reset{background:none;border:1.5px solid var(--border);color:var(--muted);font-size:10px;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:2px}
+
+  /* ── EXTRA DEEDS ── */
+  .deeds-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 16px}
+  .deed-item{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:10px;padding:10px 12px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+  .deed-item.done{background:var(--green-ll);border-color:var(--green-l)}
+  .deed-item:hover{border-color:var(--green-l)}
+  .deed-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:13px}
+  .deed-item.done .deed-check{background:var(--green);border-color:var(--green);color:#fff}
+  .deed-text{font-size:12px;font-weight:600;color:var(--text)}
+  .deed-sub{font-size:10px;color:var(--muted)}
+
+  /* ── HADITH CARD ── */
+  .hadith-card{padding:16px 18px;border-top:3px solid var(--gold)}
+  .hadith-label{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .hadith-text{font-size:13px;line-height:1.6;color:var(--text);font-style:italic}
+  .hadith-source{font-size:11px;color:var(--muted);margin-top:6px;font-style:normal;font-weight:600}
+  .hadith-refresh{background:none;border:1.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px;transition:all .2s}
+  .hadith-refresh:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* ── STATS ── */
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 16px}
+  .stat-box{background:var(--bg);border-radius:12px;padding:12px;text-align:center;border:1.5px solid var(--border)}
+  .stat-val{font-size:24px;font-weight:800;color:var(--green)}
+  .stat-label{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .week-bars{display:flex;gap:6px;align-items:flex-end;padding:0 18px 16px;height:60px}
+  .week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .week-bar-bg{flex:1;width:100%;background:var(--border);border-radius:4px;overflow:hidden;position:relative}
+  .week-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,var(--green),var(--green-l));border-radius:4px;transition:height .5s ease}
+  .week-day-label{font-size:9px;color:var(--muted);font-weight:700}
+
+  /* ── FASTING ── */
+  .fast-row{display:flex;align-items:center;justify-content:space-between;padding:0 18px 16px}
+  .fast-info{display:flex;flex-direction:column;gap:2px}
+  .fast-label{font-size:13px;font-weight:700;color:var(--text)}
+  .fast-sub{font-size:11px;color:var(--muted)}
+  .toggle-wrap{display:flex;gap:8px}
+  .toggle-btn{padding:8px 18px;border-radius:99px;border:2px solid var(--border);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--muted);transition:all .2s}
+  .toggle-btn.active-yes{background:var(--green);border-color:var(--green);color:#fff}
+  .toggle-btn.active-no{background:#fee2e2;border-color:#fca5a5;color:#dc2626}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2e1a;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  /* ── TABS ── */
+  .tabs{display:flex;background:var(--card);border-bottom:1.5px solid var(--border);padding:0 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .tab-btn{flex:1;padding:12px 4px;border:none;background:none;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;text-transform:uppercase;letter-spacing:.04em}
+  .tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="greeting" id="greeting">السلام عليكم 🌙</div>
+      <div class="hijri" id="hijriDate">Loading date...</div>
+    </div>
+    <div class="streak-badge">🔥 <span id="streakCount">0</span> day streak</div>
+  </div>
+  <div class="goal-section">
+    <div class="goal-header">
+      <span class="goal-title">Today's Ibadah Goal</span>
+      <span class="goal-pct" id="goalPct">0%</span>
+    </div>
+    <div class="goal-bar-bg">
+      <div class="goal-bar-fill" id="goalBar" style="width:0%"></div>
+    </div>
+    <div class="goal-tasks" id="goalTasks"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('today')">Today</button>
+  <button class="tab-btn" onclick="switchTab('quran')">Quran</button>
+  <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+  <button class="tab-btn" onclick="switchTab('stats')">Stats</button>
+</div>
+
+<div class="main">
+
+  <!-- ═══ TAB: TODAY ═══ -->
+  <div class="tab-content active" id="tab-today">
+
+    <!-- SALAH -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon">🕌</span> Daily Prayers</div>
+        <span id="salahDoneCount" style="font-size:12px;font-weight:700;color:var(--green)">0/5</span>
+      </div>
+      <div class="salah-grid" id="salahGrid"></div>
+      <div class="salah-progress">
+        <div class="salah-bar-bg"><div class="salah-bar-fill" id="salahBar" style="width:0%"></div></div>
+        <div class="salah-count" id="salahPct">0%</div>
+      </div>
+    </div>
+
+    <!-- FASTING -->
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">🌙</span> Fasting Today</div></div>
+      <div class="fast-row">
+        <div class="fast-info">
+          <div class="fast-label" id="fastLabel">Are you fasting today?</div>
+          <div class="fast-sub" id="fastSub">Voluntary or obligatory fast</div>
+        </div>
+        <div class="toggle-wrap">
+          <button class="toggle-btn" id="fastYes" onclick="setFast(true)">Yes</button>
+          <button class="toggle-btn" id="fastNo" onclick="setFast(false)">No</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXTRA DEEDS -->
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">✨</span> Extra Deeds</div></div>
+      <div class="deeds-grid" id="deedsGrid"></div>
+    </div>
+
+    <!-- DHIKR -->
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">📿</span> Dhikr Counter</div></div>
+      <div class="dhikr-grid" id="dhikrGrid"></div>
+    </div>
+
+    <!-- HADITH -->
+    <div class="card">
+      <div class="hadith-card">
+        <div class="hadith-label">✦ Hadith of the Day</div>
+        <div class="hadith-text" id="hadithText"></div>
+        <div class="hadith-source" id="hadithSource"></div>
+        <button class="hadith-refresh" onclick="nextHadith()">Next Hadith →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: QURAN ═══ -->
+  <div class="tab-content" id="tab-quran">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">📖</span> Quran Journey</div></div>
+      <div class="quran-section">
+        <div class="quran-suggestion" id="quranSuggestion">
+          <div class="quran-sug-label">📌 Suggested Reading</div>
+          <div class="quran-sug-text" id="sugText">Loading...</div>
+          <div class="quran-sug-sub" id="sugSub"></div>
+        </div>
+        <div class="quran-progress-wrap">
+          <div class="quran-progress-label">Overall</div>
+          <div class="quran-progress-bar-bg"><div class="quran-progress-bar" id="quranOverallBar" style="width:0%"></div></div>
+          <div class="quran-progress-val" id="quranOverallPct">0%</div>
+        </div>
+        <div class="quran-progress-wrap">
+          <div class="quran-progress-label">Today</div>
+          <div class="quran-progress-bar-bg"><div class="quran-progress-bar" id="quranTodayBar" style="width:0%"></div></div>
+          <div class="quran-progress-val" id="quranTodayPct">0/20</div>
+        </div>
+        <div class="quran-controls">
+          <input class="quran-input" id="quranPages" type="number" min="1" max="604" placeholder="Pages read today"/>
+          <button class="btn-sm btn-green" onclick="logQuranPages()">Log</button>
+          <button class="btn-sm btn-gold" onclick="resetTodayQuran()">Reset</button>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Juz Completion (1–30)</div>
+          <div class="juz-grid" id="juzGrid"></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px">Tap a Juz to mark complete · <span style="color:var(--gold)">■</span> Current · <span style="color:var(--green)">■</span> Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: CALENDAR ═══ -->
+  <div class="tab-content" id="tab-calendar">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon">📅</span> Monthly Overview</div>
+      </div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="cal-month" id="calMonthLabel"></div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-days-header">
+          <div class="cal-day-label">Sun</div><div class="cal-day-label">Mon</div>
+          <div class="cal-day-label">Tue</div><div class="cal-day-label">Wed</div>
+          <div class="cal-day-label">Thu</div><div class="cal-day-label">Fri</div>
+          <div class="cal-day-label">Sat</div>
+        </div>
+        <div class="cal-cells" id="calCells"></div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#d4f0e2"></div> 1 prayer</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#7ccfa6"></div> 3 prayers</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--green)"></div> Full day ✓</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f0f0f0"></div> Missed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: STATS ═══ -->
+  <div class="tab-content" id="tab-stats">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">📊</span> This Week</div></div>
+      <div class="week-bars" id="weekBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">🏆</span> All-Time Stats</div></div>
+      <div class="stats-row" id="statsRow"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span class="icon">📖</span> Quran Stats</div></div>
+      <div class="stats-row" id="quranStats"></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   DATA LAYER — localStorage
+   ════════════════════════════════════════════ */
+var TODAY = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem('islamicTracker') || '{}'); } catch { return {}; }
+}
+function setState(s) { localStorage.setItem('islamicTracker', JSON.stringify(s)); }
+
+function getTodayData() {
+  var s = getState();
+  if (!s[TODAY]) s[TODAY] = { salah: [false,false,false,false,false], fast: null, deeds: {}, dhikr: {}, quranPages: 0 };
+  return s;
+}
+function saveTodayData(dayData) {
+  var s = getState(); s[TODAY] = dayData[TODAY]; setState(s);
+}
+
+/* ════════════════════════════════════════════
+   SALAH DATA
+   ════════════════════════════════════════════ */
+var PRAYERS = [
+  { name: 'Fajr',    emoji: '🌅', time: 'Dawn'   },
+  { name: 'Dhuhr',   emoji: '☀️',  time: 'Noon'   },
+  { name: 'Asr',     emoji: '🌤',  time: 'Aft.'   },
+  { name: 'Maghrib', emoji: '🌇',  time: 'Suns.'  },
+  { name: 'Isha',    emoji: '🌙',  time: 'Night'  },
+];
+
+function renderSalah() {
+  var s = getTodayData(); var td = s[TODAY];
+  var grid = document.getElementById('salahGrid');
+  grid.innerHTML = PRAYERS.map(function(p,i){
+    var done = td.salah[i];
+    return '<div class="salah-item">' +
+      '<div class="salah-name">' + p.name + '</div>' +
+      '<button class="salah-btn' + (done?' done':'') + '" onclick="toggleSalah(' + i + ')" title="' + p.name + '">' +
+        '<span class="prayer-emoji">' + p.emoji + '</span>' +
+      '</button>' +
+      '<div class="salah-time">' + p.time + '</div>' +
+    '</div>';
+  }).join('');
+  var count = td.salah.filter(Boolean).length;
+  var pct = count * 20;
+  document.getElementById('salahBar').style.width = pct + '%';
+  document.getElementById('salahPct').textContent = pct + '%';
+  document.getElementById('salahDoneCount').textContent = count + '/5';
+  updateGoal();
+}
+
+window.toggleSalah = function(i) {
+  var s = getTodayData(); s[TODAY].salah[i] = !s[TODAY].salah[i];
+  saveTodayData(s); renderSalah();
+  var done = s[TODAY].salah[i];
+  if (done) showToast(PRAYERS[i].name + ' ✓ Recorded');
+};
+
+/* ════════════════════════════════════════════
+   EXTRA DEEDS
+   ════════════════════════════════════════════ */
+var DEEDS = [
+  { id: 'tahajjud',   label: 'Tahajjud',      sub: 'Night prayer',        icon: '🌌', weight: 15 },
+  { id: 'sadaqah',    label: 'Sadaqah',        sub: 'Give charity',        icon: '💝', weight: 10 },
+  { id: 'sunnah',     label: 'Sunnah Prayers', sub: '12 rakat/day',        icon: '🕌', weight: 10 },
+  { id: 'istighfar',  label: 'Istighfar',      sub: '100x daily',          icon: '🤲', weight: 5  },
+  { id: 'durood',     label: 'Durood Sharif',  sub: 'Blessings on Prophet',icon: '💚', weight: 5  },
+  { id: 'gooddeed',   label: 'Good Deed',      sub: 'Help someone',        icon: '🌟', weight: 10 },
+];
+
+function renderDeeds() {
+  var s = getTodayData(); var td = s[TODAY];
+  var grid = document.getElementById('deedsGrid');
+  grid.innerHTML = DEEDS.map(function(d){
+    var done = td.deeds[d.id];
+    return '<div class="deed-item' + (done?' done':'') + '" onclick="toggleDeed(\'' + d.id + '\')">' +
+      '<div class="deed-check">' + (done ? '✓' : '') + '</div>' +
+      '<div><div class="deed-text">' + d.icon + ' ' + d.label + '</div><div class="deed-sub">' + d.sub + '</div></div>' +
+    '</div>';
+  }).join('');
+  updateGoal();
+}
+
+window.toggleDeed = function(id) {
+  var s = getTodayData(); s[TODAY].deeds[id] = !s[TODAY].deeds[id];
+  saveTodayData(s); renderDeeds();
+  var deed = DEEDS.find(function(d){ return d.id === id; });
+  if (s[TODAY].deeds[id] && deed) showToast(deed.label + ' ✓ +' + deed.weight + ' pts');
+};
+
+/* ════════════════════════════════════════════
+   DHIKR
+   ════════════════════════════════════════════ */
+var DHIKRS = [
+  { id: 'subhanallah', arabic: 'سُبْحَانَ اللّه', name: 'Subhanallah',   target: 33 },
+  { id: 'alhamdulillah',arabic:'الْحَمْدُ لله',   name: 'Alhamdulillah', target: 33 },
+  { id: 'allahuakbar', arabic: 'اللَّهُ أَكْبَرُ',name: 'Allahu Akbar',  target: 34 },
+  { id: 'astaghfirullah',arabic:'أسْتَغْفِرُ اللّٰه',name:"Astaghfirullah",target:100},
+];
+
+function renderDhikr() {
+  var s = getTodayData(); var td = s[TODAY];
+  var grid = document.getElementById('dhikrGrid');
+  grid.innerHTML = DHIKRS.map(function(d){
+    var count = td.dhikr[d.id] || 0;
+    var pct = Math.min(100, Math.round((count / d.target) * 100));
+    var r = 22; var circ = 2 * Math.PI * r;
+    var offset = circ * (1 - pct / 100);
+    return '<div class="dhikr-card">' +
+      '<div class="dhikr-arabic">' + d.arabic + '</div>' +
+      '<div class="dhikr-name">' + d.name + '</div>' +
+      '<div class="dhikr-ring" onclick="incrementDhikr(\'' + d.id + '\',' + d.target + ')">' +
+        '<svg width="56" height="56" viewBox="0 0 56 56">' +
+          '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="#e5e7eb" stroke-width="5"/>' +
+          '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="' + (pct>=100?'#c9922a':'#1a7a4a') + '" stroke-width="5"' +
+            ' stroke-dasharray="' + circ.toFixed(1) + '"' +
+            ' stroke-dashoffset="' + offset.toFixed(1) + '"' +
+            ' stroke-linecap="round"/>' +
+        '</svg>' +
+        '<div class="dhikr-ring-label">' + count + '</div>' +
+      '</div>' +
+      '<div class="dhikr-target">Goal: ' + d.target + '</div>' +
+      '<button class="dhikr-btn" onclick="incrementDhikr(\'' + d.id + '\',' + d.target + '\')">+ Count</button>' +
+      '<button class="dhikr-reset" onclick="resetDhikr(\'' + d.id + '\')">Reset</button>' +
+    '</div>';
+  }).join('');
+}
+
+window.incrementDhikr = function(id, target) {
+  var s = getTodayData();
+  s[TODAY].dhikr[id] = (s[TODAY].dhikr[id] || 0) + 1;
+  if (s[TODAY].dhikr[id] === target) showToast('🎉 ' + id + ' completed!');
+  saveTodayData(s); renderDhikr();
+};
+window.resetDhikr = function(id) {
+  var s = getTodayData(); s[TODAY].dhikr[id] = 0;
+  saveTodayData(s); renderDhikr();
+};
+
+/* ════════════════════════════════════════════
+   FASTING
+   ════════════════════════════════════════════ */
+window.setFast = function(val) {
+  var s = getTodayData(); s[TODAY].fast = val; saveTodayData(s);
+  document.getElementById('fastYes').className = 'toggle-btn' + (val ? ' active-yes' : '');
+  document.getElementById('fastNo').className  = 'toggle-btn' + (!val && val !== null ? ' active-no' : '');
+  document.getElementById('fastLabel').textContent = val ? '✅ Fasting today — MashaAllah!' : 'Not fasting today';
+  document.getElementById('fastSub').textContent   = val ? 'May Allah accept your fast' : '';
+  if (val) showToast('🌙 Fast recorded — JazakAllah Khair');
+  updateGoal();
+};
+function renderFast() {
+  var s = getTodayData(); var val = s[TODAY].fast;
+  document.getElementById('fastYes').className = 'toggle-btn' + (val === true  ? ' active-yes' : '');
+  document.getElementById('fastNo').className  = 'toggle-btn' + (val === false ? ' active-no'  : '');
+  if (val === true)  { document.getElementById('fastLabel').textContent = '✅ Fasting today — MashaAllah!'; document.getElementById('fastSub').textContent = 'May Allah accept your fast'; }
+  if (val === false) { document.getElementById('fastLabel').textContent = 'Not fasting today'; document.getElementById('fastSub').textContent = ''; }
+}
+
+/* ════════════════════════════════════════════
+   GOAL CALCULATION
+   ════════════════════════════════════════════ */
+var GOAL_WEIGHTS = {
+  salah:    { label: 'Salah',    maxPts: 100, icon: '🕌' },
+  quran:    { label: 'Quran',    maxPts: 20,  icon: '📖' },
+  fast:     { label: 'Fast',     maxPts: 20,  icon: '🌙' },
+  tahajjud: { label: 'Tahajjud', maxPts: 15,  icon: '🌌' },
+  sadaqah:  { label: 'Sadaqah',  maxPts: 10,  icon: '💝' },
+  dhikr:    { label: 'Dhikr',    maxPts: 10,  icon: '📿' },
+};
+var MAX_TOTAL = 175;
+
+function calcGoal() {
+  var s = getTodayData(); var td = s[TODAY];
+  var pts = 0;
+  pts += td.salah.filter(Boolean).length * 20;
+  var todayPages = td.quranPages || 0;
+  pts += Math.min(20, Math.round((todayPages / 20) * 20));
+  if (td.fast === true) pts += 20;
+  if (td.deeds.tahajjud) pts += 15;
+  if (td.deeds.sadaqah)  pts += 10;
+  var dhikrDone = DHIKRS.filter(function(d){ return (td.dhikr[d.id] || 0) >= d.target; }).length;
+  pts += dhikrDone * 2.5;
+  return Math.min(100, Math.round((pts / MAX_TOTAL) * 100));
+}
+
+function updateGoal() {
+  var pct = calcGoal();
+  document.getElementById('goalPct').textContent = pct + '%';
+  document.getElementById('goalBar').style.width = pct + '%';
+  var s = getTodayData(); var td = s[TODAY];
+  var tasks = [
+    { label: 'Salah ' + td.salah.filter(Boolean).length + '/5', done: td.salah.filter(Boolean).length === 5 },
+    { label: 'Quran ' + (td.quranPages||0) + 'p',               done: (td.quranPages||0) >= 1 },
+    { label: 'Fasting',                                          done: td.fast === true },
+    { label: 'Tahajjud',                                         done: !!td.deeds.tahajjud },
+    { label: 'Dhikr',                                            done: DHIKRS.some(function(d){ return (td.dhikr[d.id]||0) >= d.target; }) },
+  ];
+  document.getElementById('goalTasks').innerHTML = tasks.map(function(t){
+    return '<div class="goal-dot' + (t.done?' done':'') + '">' + t.label + '</div>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════════
+   QURAN TRACKER
+   ════════════════════════════════════════════ */
+var JUZ_NAMES = ['Al-Fatihah','Al-Baqarah','Al-Baqarah (2)','Al-Baqarah (3)','An-Nisa','An-Nisa (2)',
+  'Al-Maidah','Al-Anam','Al-Araf','Al-Anfal','At-Tawbah','Hud','Yusuf','Ibrahim','Al-Kahf',
+  'Maryam','Al-Anbiya','Al-Muminun','Al-Furqan','An-Naml','Luqman','Al-Ahzab','Yasin',
+  'Az-Zumar','Fussilat','Al-Hujurat','Adh-Dhariyat','Al-Qamar','Al-Haqqah','An-Naba'];
+var JUZ_SURAHS = ['Fatihah','Baqarah','Baqarah','Baqarah','Nisa','Nisa','Maidah','Anam','Araf',
+  'Anfal','Tawbah','Hud','Yusuf','Ibrahim','Kahf','Maryam','Anbiya','Muminun','Furqan',
+  'Naml','Luqman','Ahzab','Yasin','Zumar','Fussilat','Hujurat','Dhariyat','Qamar','Haqqah','Naba'];
+
+function getQuranState() {
+  var s = getState();
+  if (!s._quran) s._quran = { juzDone: [], totalPages: 0, dailyLog: {} };
+  return s;
+}
+function saveQuranState(s) { setState(s); }
+
+function renderJuzGrid() {
+  var s = getQuranState(); var q = s._quran;
+  var doneSet = new Set(q.juzDone || []);
+  var nextJuz = -1;
+  for (var i = 1; i <= 30; i++) { if (!doneSet.has(i)) { nextJuz = i; break; } }
+  var grid = document.getElementById('juzGrid');
+  grid.innerHTML = '';
+  for (var j = 1; j <= 30; j++) {
+    var btn = document.createElement('button');
+    btn.className = 'juz-cell' + (doneSet.has(j) ? ' done' : j === nextJuz ? ' current' : '');
+    btn.textContent = j;
+    btn.title = 'Juz ' + j + ': ' + (JUZ_NAMES[j-1] || '');
+    btn.onclick = (function(juz){ return function(){ toggleJuz(juz); }; })(j);
+    grid.appendChild(btn);
+  }
+  var totalDone = doneSet.size;
+  var overallPct = Math.round((totalDone / 30) * 100);
+  document.getElementById('quranOverallBar').style.width = overallPct + '%';
+  document.getElementById('quranOverallPct').textContent = overallPct + '%';
+  renderQuranSuggestion(nextJuz, totalDone);
+}
+
+function toggleJuz(j) {
+  var s = getQuranState(); var q = s._quran;
+  var set = new Set(q.juzDone || []);
+  if (set.has(j)) set.delete(j); else { set.add(j); showToast('Juz ' + j + ' completed! 🎉'); }
+  q.juzDone = Array.from(set);
+  saveQuranState(s); renderJuzGrid(); renderTodayQuran();
+}
+
+function renderTodayQuran() {
+  var s = getTodayData(); var pages = s[TODAY].quranPages || 0;
+  var goal = 20; var pct = Math.min(100, Math.round((pages / goal) * 100));
+  document.getElementById('quranTodayBar').style.width = pct + '%';
+  document.getElementById('quranTodayPct').textContent = pages + '/' + goal + 'p';
+  updateGoal();
+}
+
+window.logQuranPages = function() {
+  var val = parseInt(document.getElementById('quranPages').value);
+  if (!val || val < 1) { showToast('Enter pages read', 'warn'); return; }
+  var s = getTodayData(); s[TODAY].quranPages = (s[TODAY].quranPages || 0) + val;
+  saveTodayData(s); document.getElementById('quranPages').value = '';
+  renderTodayQuran(); showToast('📖 +' + val + ' pages logged');
+  var qs = getQuranState();
+  qs._quran.totalPages = (qs._quran.totalPages || 0) + val;
+  saveQuranState(qs);
+};
+window.resetTodayQuran = function() {
+  var s = getTodayData(); s[TODAY].quranPages = 0; saveTodayData(s); renderTodayQuran();
+};
+
+function renderQuranSuggestion(nextJuz, totalDone) {
+  var txt, sub;
+  if (totalDone >= 30) {
+    txt = '🎉 Quran Complete! Start again from Juz 1'; sub = 'MashaAllah — complete the Quran again';
+  } else if (nextJuz > 0) {
+    txt = 'Continue with Juz ' + nextJuz + ' — ' + (JUZ_NAMES[nextJuz-1] || '');
+    var pages = 20; var days = Math.ceil(pages / 4);
+    sub = '~20 pages · read ~4 pages/day to finish in ' + days + ' days';
+  } else {
+    txt = 'Start your Quran journey from Juz 1'; sub = 'Begin with Al-Fatihah';
+  }
+  document.getElementById('sugText').textContent = txt;
+  document.getElementById('sugSub').textContent = sub;
+}
+
+/* ════════════════════════════════════════════
+   CALENDAR
+   ════════════════════════════════════════════ */
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+
+window.changeMonth = function(dir) { calMonth += dir; if (calMonth < 0) { calMonth = 11; calYear--; } if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); };
+
+function renderCalendar() {
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthLabel').textContent = months[calMonth] + ' ' + calYear;
+  var firstDay = new Date(calYear, calMonth, 1).getDay();
+  var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  var cells = document.getElementById('calCells');
+  cells.innerHTML = '';
+  var todayFull = new Date(); var todayD = todayFull.getDate(), todayM = todayFull.getMonth(), todayY = todayFull.getFullYear();
+  var s = getState();
+  for (var i = 0; i < firstDay; i++) { var e = document.createElement('div'); e.className = 'cal-cell empty'; cells.appendChild(e); }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cell = document.createElement('div');
+    var dateStr = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var isFuture = new Date(calYear, calMonth, d) > new Date(todayY, todayM, todayD);
+    var isToday  = d === todayD && calMonth === todayM && calYear === todayY;
+    var dayData  = s[dateStr];
+    var score    = 0;
+    if (dayData) { score = dayData.salah ? dayData.salah.filter(Boolean).length : 0; }
+    cell.className = 'cal-cell ' + (isFuture ? 'future' : ('score-' + score)) + (isToday ? ' today' : '');
+    cell.innerHTML = '<div class="cal-num">' + d + '</div>' + (!isFuture && score > 0 ? '<div class="cal-dot"></div>' : '');
+    cell.title = dateStr + ': ' + score + '/5 prayers';
+    cells.appendChild(cell);
+  }
+}
+
+/* ════════════════════════════════════════════
+   HADITH OF THE DAY
+   ════════════════════════════════════════════ */
+var HADITHS = [
+  { text: '"The best of you are those who learn the Quran and teach it."', source: 'Sahih al-Bukhari 5027' },
+  { text: '"None of you truly believes until he loves for his brother what he loves for himself."', source: 'Sahih al-Bukhari & Muslim' },
+  { text: '"Whoever believes in Allah and the Last Day, let him speak good or remain silent."', source: 'Sahih al-Bukhari 6018' },
+  { text: '"Take up good deeds only as much as you are able, for the best deeds are those done regularly even if they are few."', source: 'Ibn Majah 4240' },
+  { text: '"Make things easy, do not make things difficult. Give good tidings; do not create hatred."', source: 'Sahih al-Bukhari 69' },
+  { text: '"The most beloved of deeds to Allah are those that are most consistent, even if they are small."', source: 'Sahih al-Bukhari 6464' },
+  { text: '"Charity does not decrease wealth."', source: 'Sahih Muslim 2588' },
+  { text: '"Whoever removes a worldly hardship from a believer, Allah will remove one of the hardships of the Day of Resurrection from him."', source: 'Sahih Muslim 2699' },
+  { text: '"The strong person is not the one who can wrestle someone else down. The strong person is the one who can control himself when he is angry."', source: 'Sahih al-Bukhari 6114' },
+  { text: '"A good word is a charity."', source: 'Sahih al-Bukhari 2989' },
+  { text: '"Smiling at your brother is a charity."', source: 'Tirmidhi 1956' },
+  { text: '"The world is a prison for the believer and a paradise for the disbeliever."', source: 'Sahih Muslim 2956' },
+];
+var currentHadith = 0;
+function initHadith() {
+  var d = new Date(); currentHadith = d.getDate() % HADITHS.length; showHadith();
+}
+function showHadith() {
+  document.getElementById('hadithText').textContent   = HADITHS[currentHadith].text;
+  document.getElementById('hadithSource').textContent = '— ' + HADITHS[currentHadith].source;
+}
+window.nextHadith = function() { currentHadith = (currentHadith + 1) % HADITHS.length; showHadith(); };
+
+/* ════════════════════════════════════════════
+   STREAK
+   ════════════════════════════════════════════ */
+function calcStreak() {
+  var s = getState(); var streak = 0;
+  var d = new Date();
+  for (var i = 0; i < 365; i++) {
+    var ds = d.toISOString().split('T')[0];
+    var dd = s[ds];
+    if (!dd || !dd.salah || dd.salah.filter(Boolean).length < 1) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+/* ════════════════════════════════════════════
+   STATS
+   ════════════════════════════════════════════ */
+function renderStats() {
+  // Week bars
+  var wbEl = document.getElementById('weekBars');
+  wbEl.innerHTML = '';
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var now = new Date();
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date(now); d.setDate(d.getDate() - i);
+    var ds = d.toISOString().split('T')[0];
+    var s = getState(); var dd = s[ds];
+    var score = dd && dd.salah ? dd.salah.filter(Boolean).length : 0;
+    var pct = Math.round((score / 5) * 100);
+    var dayName = days[d.getDay()];
+    var isToday = i === 0;
+    wbEl.innerHTML += '<div class="week-bar-wrap">' +
+      '<div class="week-bar-bg"><div class="week-bar-fill" style="height:' + pct + '%;background:' + (isToday ? 'linear-gradient(0deg,#c9922a,#f0c060)' : 'linear-gradient(0deg,var(--green),var(--green-l))') + '"></div></div>' +
+      '<div class="week-day-label" style="color:' + (isToday ? 'var(--gold)' : 'var(--muted)') + '">' + dayName + '</div>' +
+    '</div>';
+  }
+
+  // All-time
+  var allS = getState(); var totalDays = 0; var totalPrayers = 0; var fullDays = 0;
+  Object.keys(allS).forEach(function(k){
+    if (!k.startsWith('_') && k.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      totalDays++;
+      var count = allS[k].salah ? allS[k].salah.filter(Boolean).length : 0;
+      totalPrayers += count;
+      if (count === 5) fullDays++;
+    }
+  });
+  document.getElementById('statsRow').innerHTML =
+    stat(totalPrayers, 'Prayers Prayed') +
+    stat(fullDays, 'Full Days') +
+    stat(calcStreak() + '🔥', 'Day Streak');
+
+  // Quran stats
+  var qs = getQuranState()._quran;
+  var juzDone = (qs.juzDone || []).length;
+  var totalPages = qs.totalPages || 0;
+  document.getElementById('quranStats').innerHTML =
+    stat(juzDone + '/30', 'Juz Done') +
+    stat(totalPages, 'Pages Read') +
+    stat(Math.round((juzDone/30)*100) + '%', 'Complete');
+}
+function stat(val, label) {
+  return '<div class="stat-box"><div class="stat-val">' + val + '</div><div class="stat-label">' + label + '</div></div>';
+}
+
+/* ════════════════════════════════════════════
+   GREETING & HIJRI DATE
+   ════════════════════════════════════════════ */
+function setGreeting() {
+  var h = new Date().getHours();
+  var g = h < 5 ? 'Tahajjud Time 🌌' : h < 7 ? 'Fajr Time 🌅' : h < 12 ? 'Good Morning ☀️' : h < 15 ? 'Dhuhr Time ☀️' : h < 18 ? 'Asr Time 🌤' : h < 20 ? 'Maghrib Time 🌇' : 'Isha Time 🌙';
+  document.getElementById('greeting').textContent = 'السلام عليكم — ' + g;
+  // Approximate Hijri date
+  var jd = Math.floor((new Date().getTime() / 86400000) + 2440587.5);
+  var l = jd - 1948440 + 10632; var n = Math.floor((l - 1) / 10631);
+  l = l - 10631 * n + 354;
+  var j = (Math.floor((10985 - l) / 5316)) * (Math.floor((50 * l) / 17719)) + (Math.floor(l / 5670)) * (Math.floor((43 * l) / 15238));
+  l = l - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50)) - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+  var hMonth = Math.floor((24 * l) / 709); var hDay = l - Math.floor((709 * hMonth) / 24); var hYear = 30 * n + j - 30;
+  var hMonthNames = ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Awwal','Jumada al-Thani','Rajab','Shaban','Ramadan','Shawwal','Dhul Qadah','Dhul Hijjah'];
+  document.getElementById('hijriDate').textContent = hDay + ' ' + (hMonthNames[hMonth-1]||'') + ' ' + hYear + ' AH · ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+/* ════════════════════════════════════════════
+   TABS
+   ════════════════════════════════════════════ */
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'calendar') renderCalendar();
+  if (tab === 'stats')    renderStats();
+  if (tab === 'quran')    { renderJuzGrid(); renderTodayQuran(); }
+};
+
+/* ════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════ */
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+/* ════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════ */
+function init() {
+  setGreeting();
+  renderSalah();
+  renderDeeds();
+  renderDhikr();
+  renderFast();
+  updateGoal();
+  initHadith();
+  document.getElementById('streakCount').textContent = calcStreak();
+}
+init();
+</script>
+</body>
+</html>

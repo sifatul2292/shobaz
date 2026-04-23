@@ -243,7 +243,7 @@ export class OrderService {
         orderId: orderIdUnique,
         month: this.utilsService.getDateMonth(false, new Date()),
         year: this.utilsService.getDateYear(new Date()),
-        orderStatus: OrderStatus.PENDING,
+        orderStatus: OrderStatus.PROCESSING,
         paymentStatus: 'unpaid',
         discount: 0,
       };
@@ -661,6 +661,21 @@ export class OrderService {
     // Match
     if (filter) {
       mFilter = { ...mFilter, ...filter };
+      // Convert ISO string date values to proper Date objects so MongoDB
+      // can compare them against the Date-typed createdAt/deliveryDate fields.
+      const dateFields = ['createdAt', 'deliveryDate', 'checkoutDate'];
+      dateFields.forEach((field) => {
+        if (mFilter[field] && typeof mFilter[field] === 'object') {
+          ['$gte', '$gt', '$lte', '$lt'].forEach((op) => {
+            if (mFilter[field][op] && typeof mFilter[field][op] === 'string') {
+              const parsed = new Date(mFilter[field][op]);
+              if (!isNaN(parsed.getTime())) {
+                mFilter[field][op] = parsed;
+              }
+            }
+          });
+        }
+      });
     }
 
     if (searchQuery) {
