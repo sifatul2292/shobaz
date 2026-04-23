@@ -551,7 +551,7 @@
     .product-table td.td-qty { text-align: center; white-space: nowrap; }
     .product-table tbody tr:last-child td { border-bottom: none; }
     .product-table tbody tr:hover td { background: #f8faff; }
-    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.5; word-break: break-word; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.5; overflow-wrap: break-word; word-break: normal; hyphens: auto; }
     .product-author { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
 
     /* Footer */
@@ -758,12 +758,36 @@
       .mic-icon { width: 28px; height: 28px; font-size: 11px; margin-bottom: 6px; }
       .mic-value { font-size: 12px; }
 
-      /* Product table in modal */
+      /* Product table → card layout on mobile */
       .modal-section-title { padding: 12px 14px 6px; font-size: 10px; }
-      .product-table { font-size: 12px; }
-      .product-table th { padding: 7px 6px; }
-      .product-table td { padding: 8px 6px; }
-      .product-name { font-size: 12px; }
+      .product-table { table-layout: auto; }
+      /* Hide the thead — we'll show labels inline */
+      .product-table thead { display: none; }
+      /* Each row becomes a card */
+      .product-table tbody tr {
+        display: flex; flex-direction: column;
+        padding: 12px 14px; border-bottom: 1px solid #f1f5f9;
+      }
+      .product-table tbody tr:last-child { border-bottom: none; }
+      /* All cells become block, full width */
+      .product-table td {
+        display: block; width: 100% !important;
+        padding: 0; border: none; white-space: normal;
+        text-align: left !important;
+      }
+      /* Product name first, full width */
+      .product-table td.td-product { margin-bottom: 6px; }
+      /* Price / Qty / Total on one line below */
+      .product-table td.td-price,
+      .product-table td.td-qty,
+      .product-table td.td-total {
+        display: inline-block; width: auto !important;
+        font-size: 12px; margin-right: 12px;
+      }
+      .product-table td.td-price::before  { content: 'Price: '; font-size: 10px; color: #94a3b8; font-weight: 600; }
+      .product-table td.td-qty::before    { content: 'Qty: ';   font-size: 10px; color: #94a3b8; font-weight: 600; }
+      .product-table td.td-total::before  { content: 'Total: '; font-size: 10px; color: #94a3b8; font-weight: 600; }
+      .product-name { font-size: 13px; }
       .product-author { font-size: 10px; }
 
       /* Modal footer */
