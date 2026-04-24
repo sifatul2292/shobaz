@@ -673,23 +673,29 @@
       .btn-add .btn-text { display: none; }
       .btn-add { padding: 7px 12px; border-radius: 50%; width: 36px; height: 36px; justify-content: center; }
 
-      /* Date filters: stack vertically so nothing overflows */
-      .date-filters { flex-direction: column; gap: 8px; }
-      .date-filter-box { min-width: 0; width: 100%; padding: 9px 12px; }
-      .date-range input { width: 110px; font-size: 12px; }
+      /* Date filters: both boxes side-by-side in a 2-col grid, Today button full-width below */
+      .date-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .date-filters .btn-today { grid-column: 1 / -1; padding: 9px 12px; font-size: 12px; border-radius: 8px; }
+      .date-filter-box { min-width: 0; padding: 8px 10px; }
+      .date-filter-box > i { display: none; } /* hide the icon to save space */
+      .date-filter-box label { font-size: 9px; letter-spacing: .04em; margin-bottom: 3px; }
+      .date-range { flex-direction: column; gap: 3px; align-items: stretch; }
+      .date-range input { width: 100%; min-width: 0; font-size: 11px; }
+      .date-range span { display: none; } /* hide the dash, inputs are stacked */
 
-      /* Stats: side by side, more compact */
-      .stats-row { gap: 8px; }
-      .stat-card { padding: 12px 14px; gap: 10px; min-width: 0; border-radius: 12px; }
-      .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 10px; }
-      .stat-info label { font-size: 10px; }
-      .stat-info .stat-value { font-size: 22px; }
+      /* Stats: always 2x2 grid, compact cards */
+      .stats-row { grid-template-columns: repeat(2,1fr) !important; gap: 8px; }
+      .stat-card { padding: 10px 12px; gap: 8px; min-width: 0; border-radius: 12px; }
+      .stat-icon { width: 34px; height: 34px; font-size: 15px; border-radius: 8px; flex-shrink: 0; }
+      .stat-card-sub { font-size: 9px; margin-bottom: 2px; }
+      .stat-info .stat-value { font-size: 18px; }
 
-      /* Filter bar: wrap tightly */
+      /* Filter bar: 2 per row, compact */
       .filter-bar { gap: 6px; }
-      .filter-btn { padding: 7px 10px; font-size: 12px; }
-      .per-page-select { padding: 6px 8px; font-size: 12px; }
-      .btn-export { padding: 7px 12px; font-size: 12px; }
+      .filter-bar > div, .filter-bar > select, .filter-bar > button { flex: 1 1 calc(50% - 6px); min-width: 0; }
+      .filter-btn { padding: 8px 8px; font-size: 12px; width: 100%; justify-content: space-between; }
+      .per-page-select { padding: 8px 6px; font-size: 12px; width: 100%; }
+      .btn-export { padding: 8px 10px; font-size: 12px; }
 
       /* ── Table: show only 6 key columns ── */
       /* Visible: checkbox(1) ORDER_NO(2) PHONE(3) NAME(4) PRICE(7) VIEW(10) */
@@ -861,6 +867,9 @@
         </a>
         <a href="custom-orders.html" class="nav-item active">
           <i class="fas fa-sliders-h"></i> Custom Orders
+        </a>
+        <a href="import-woo-orders.html" class="nav-item">
+          <i class="fas fa-file-import"></i> Import WooCommerce
         </a>
       </div>
       <div class="nav-section">

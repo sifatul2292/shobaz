@@ -637,6 +637,59 @@ export class OrderService {
   }
 
   /**
+   * importWooCommerceOrders
+   * Bulk-import pre-mapped orders exported from WooCommerce.
+   * Assigns new sequential orderIds continuing from the current max.
+   */
+  async importWooCommerceOrders(orders: any[]): Promise<ResponsePayload> {
+    if (!orders || orders.length === 0) {
+      return { success: false, message: 'No orders provided' } as ResponsePayload;
+    }
+
+    // Reserve N orderIds in one atomic increment
+    const count = orders.length;
+    const incOrder = await this.uniqueIdModel.findOneAndUpdate(
+      {},
+      { $inc: { orderId: count } },
+      { new: true, upsert: true },
+    );
+    // The new value after increment is incOrder.orderId.
+    // The reserved block is: (incOrder.orderId - count + 1) … incOrder.orderId
+    const startId = incOrder.orderId - count + 1;
+
+    const mData = orders.map((order, idx) => {
+      const orderIdUnique = this.utilsService.padLeadingZeros(startId + idx);
+      // Preserve the original WooCommerce order date as createdAt so the
+      // order appears with the correct date instead of the import timestamp.
+      const originalDate = order.checkoutDate ? new Date(order.checkoutDate) : null;
+      const extra: any = {
+        orderId: orderIdUnique,
+        orderFrom: 'woocommerce',
+        paymentStatus: order.paymentStatus || 'unpaid',
+        discount: order.discount ?? 0,
+      };
+      if (originalDate && !isNaN(originalDate.getTime())) {
+        extra.createdAt = originalDate;
+      }
+      return { ...order, ...extra };
+    });
+
+    try {
+      const saved = await this.orderModel.insertMany(mData, { ordered: false } as any) as unknown as any[];
+      return {
+        success: true,
+        message: `${(saved?.length ?? count)} of ${count} orders imported successfully`,
+      } as ResponsePayload;
+    } catch (error) {
+      // ordered:false — partial inserts still go through; error contains writeErrors
+      const inserted = (error as any)?.insertedDocs?.length ?? 0;
+      throw new InternalServerErrorException(
+        `Import partially failed. ${inserted} inserted. Error: ${error?.message}`,
+      );
+    }
+  }
+
+  /**
    * getAllOrders
    * getOrderById
    */

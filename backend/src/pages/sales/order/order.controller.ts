@@ -109,6 +109,18 @@ export class OrderController {
     }
   }
 
+  @Post('/import-woocommerce')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.CREATE)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async importWooCommerce(
+    @Body() body: { orders: any[] },
+  ): Promise<ResponsePayload> {
+    return await this.orderService.importWooCommerceOrders(body.orders);
+  }
+
   @Post('/insert-many')
   @UsePipes(ValidationPipe)
   @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
