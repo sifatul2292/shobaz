@@ -2018,7 +2018,7 @@
   window.sendToCourier = function (id) {
     if (!confirm('Send this order to courier?')) return;
     // Step 1: Always update status to Confirmed (8) immediately
-    fetch(API + '/api/order/change-status/' + id, {
+    fetch(API + '/api/order/update/' + id, {
       method: 'PUT',
       headers: authHeaders(),
       body: JSON.stringify({ orderStatus: 8 }),
