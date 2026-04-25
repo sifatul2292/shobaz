@@ -2017,17 +2017,31 @@
   /* ── Send to Courier ── */
   window.sendToCourier = function (id) {
     if (!confirm('Send this order to courier?')) return;
-    fetch(API + '/api/order/send-to-courier/' + id, {
-      method: 'POST',
+    // Step 1: Always update status to Confirmed (8) immediately
+    fetch(API + '/api/order/change-status/' + id, {
+      method: 'PUT',
       headers: authHeaders(),
+      body: JSON.stringify({ orderStatus: 8 }),
     })
       .then(function (r) { return r.json(); })
       .then(function (resp) {
         if (resp && resp.success) {
-          showToast('Order sent to courier successfully!', 'success');
+          showToast('Order marked as Confirmed!', 'success');
           loadOrders();
+          // Step 2: Also try courier API in background (optional, won't block status change)
+          fetch(API + '/api/order/send-to-courier/' + id, {
+            method: 'POST',
+            headers: authHeaders(),
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (cr) {
+              if (cr && cr.success && cr.message) {
+                showToast(cr.message, 'success');
+              }
+            })
+            .catch(function () { /* courier API optional */ });
         } else {
-          showToast(resp && resp.message ? resp.message : 'Could not send to courier.', 'error');
+          showToast(resp && resp.message ? resp.message : 'Could not update status.', 'error');
         }
       })
       .catch(function (err) {
