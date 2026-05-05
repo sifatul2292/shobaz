@@ -8,6 +8,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
 import { gtmBeginCheckout } from '@/lib/gtm';
+import { capiInitiateCheckout } from '@/lib/capi';
 import toast from 'react-hot-toast';
 import { FaShoppingCart, FaTruck, FaCheckCircle, FaMapMarkerAlt, FaChevronLeft } from 'react-icons/fa';
 import Link from 'next/link';
@@ -49,7 +50,10 @@ export default function CheckoutPage() {
   useEffect(() => {
     document.title = 'Checkout - Shobaz';
     if (items.length > 0) {
-      gtmBeginCheckout(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
+      const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
+      const total = getTotalPrice();
+      gtmBeginCheckout(cartProducts, total);
+      capiInitiateCheckout(cartProducts, total);
     }
   }, []);
 

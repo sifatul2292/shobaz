@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmPurchase } from '@/lib/gtm';
+import { capiPurchase } from '@/lib/capi';
 import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 
@@ -45,6 +46,7 @@ function OrderSuccessContent() {
             setOrder(orderData);
             document.title = 'Thank you Page - Shobaz';
             gtmPurchase(orderData);
+            capiPurchase(orderData);
           }
         } catch (err) {
           console.error('Failed to fetch order:', err);
