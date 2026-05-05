@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Custom Orders — Shobaz Admin</title>
   <link rel="icon" type="image/x-icon" href="favicon.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --purple:    #6c3fc5;
-      --purple-dark: #5530a0;
+      --purple:    #059669;
+      --purple-dark: #047857;
       --blue:      #0284c7;
       --blue-dark: #0369a1;
       --orange:    #f59e0b;
@@ -77,7 +77,7 @@
       transition: all .15s;
     }
     .nav-item:hover { background: rgba(255,255,255,.05); color: #e2e8f0; }
-    .nav-item.active { background: rgba(108,63,197,.18); color: #a78bfa; border-left-color: #7c3aed; }
+    .nav-item.active { background: rgba(5,150,105,.18); color: #6ee7b7; border-left-color: #059669; }
     .nav-item i { width: 18px; text-align: center; font-size: 14px; }
     .nav-back {
       padding: 14px 18px;
@@ -99,7 +99,7 @@
 
     /* ── Top Bar ── */
     .topbar {
-      background: linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, var(--purple) 0%, #047857 100%);
       color: #fff;
       padding: 16px 28px;
       display: flex;
@@ -109,7 +109,7 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      box-shadow: 0 2px 12px rgba(108,63,197,.3);
+      box-shadow: 0 2px 12px rgba(5,150,105,.3);
     }
     .topbar-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; }
     .topbar-title i { font-size: 22px; opacity: .85; }
@@ -177,7 +177,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,.05);
       transition: border-color .2s;
     }
-    .date-filter-box:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,63,197,.08); }
+    .date-filter-box:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(5,150,105,.08); }
     .date-filter-box i { color: var(--purple); font-size: 15px; flex-shrink: 0; }
     .date-filter-box label { font-size: 10px; font-weight: 800; color: var(--gray-500); margin-bottom: 3px; display: block; text-transform: uppercase; letter-spacing: .04em; }
     .date-range { display: flex; align-items: center; gap: 6px; }
@@ -196,7 +196,7 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      background: linear-gradient(135deg, #6c3fc5, #4f46e5);
+      background: linear-gradient(135deg, #059669, #047857);
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -205,7 +205,7 @@
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(108,63,197,.3);
+      box-shadow: 0 2px 8px rgba(5,150,105,.3);
       transition: opacity .15s;
     }
     .btn-today:hover { opacity: .88; }
@@ -242,7 +242,7 @@
     .stat-card.blue   { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
     .stat-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     .stat-card.green  { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .stat-card.purple { background: linear-gradient(135deg, #8b5cf6 0%, #6c3fc5 100%); }
+    .stat-card.purple { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
     .stat-card-divider {
       width: 1.5px; height: 36px;
       background: rgba(255,255,255,.25);
@@ -351,7 +351,7 @@
       min-width: 1100px;
     }
     thead {
-      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      background: linear-gradient(135deg, var(--purple), #047857);
       color: #fff;
     }
     thead th {
@@ -365,7 +365,7 @@
     }
     thead th:first-child { padding-left: 16px; width: 36px; }
     tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .12s; touch-action: manipulation; }
-    tbody tr:hover { background: #f8f7ff; }
+    tbody tr:hover { background: #f0fdf4; }
     tbody td {
       padding: 10px 10px;
       vertical-align: middle;
@@ -407,7 +407,7 @@
     .badge-return     { background: #fef9c3; color: #854d0e; }
     .badge-hold       { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: 800; }
     /* Row status accent border */
-    tr.row-processing { border-left: 3px solid #7c3aed !important; }
+    tr.row-processing { border-left: 3px solid #0891b2 !important; }
     tr.row-completed  { border-left: 3px solid #059669 !important; background: #f0fdf4 !important; }
     tr.row-cancelled  { border-left: 3px solid #dc2626 !important; background: #fff5f5 !important; }
     tr.row-trash      { border-left: 3px solid #94a3b8 !important; background: #f8fafc !important; opacity: .75; }
@@ -661,7 +661,6 @@
     /* ── Responsive ── */
     @media (max-width: 768px) {
       /* Layout */
-      .sidebar { display: none; }
       .main { margin-left: 0; }
       .content { padding: 10px; }
 
@@ -705,12 +704,14 @@
       table thead th:nth-child(8), table thead th:nth-child(9),
       table thead th:nth-child(11),table thead th:nth-child(12),
       table thead th:nth-child(13),table thead th:nth-child(14),
-      table thead th:nth-child(15),
+      table thead th:nth-child(15),table thead th:nth-child(16),
+      table thead th:nth-child(17),
       table tbody td:nth-child(5), table tbody td:nth-child(6),
       table tbody td:nth-child(8), table tbody td:nth-child(9),
       table tbody td:nth-child(11),table tbody td:nth-child(12),
       table tbody td:nth-child(13),table tbody td:nth-child(14),
-      table tbody td:nth-child(15) { display: none; }
+      table tbody td:nth-child(15),table tbody td:nth-child(16),
+      table tbody td:nth-child(17) { display: none; }
 
       /* Name: single line, truncate */
       table tbody td:nth-child(4) {
@@ -825,16 +826,62 @@
   #login-overlay { position:fixed;inset:0;z-index:9999;background:#0f172a;display:flex;align-items:center;justify-content:center; }
   #login-overlay.hidden { display:none; }
   .login-box { background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center; }
-  .login-logo { width:56px;height:56px;background:linear-gradient(135deg,#6c3fc5,#4f46e5);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px; }
+  .login-logo { width:56px;height:56px;background:linear-gradient(135deg,#059669,#047857);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px; }
   .login-title { font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:4px; }
   .login-sub { font-size:13px;color:#64748b;margin-bottom:28px; }
   .login-field { margin-bottom:14px;text-align:left; }
   .login-field label { display:block;font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em; }
+  .login-input-wrap { position:relative; }
   .login-field input { width:100%;padding:11px 14px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .15s; }
-  .login-field input:focus { border-color:#6c3fc5; }
-  .login-btn { width:100%;padding:12px;background:linear-gradient(135deg,#6c3fc5,#4f46e5);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s; }
+  .login-field input:focus { border-color:#059669; }
+  .pw-toggle { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:14px; }
+  .login-btn { width:100%;padding:12px;background:linear-gradient(135deg,#059669,#047857);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s; }
   .login-btn:hover { opacity:.9; } .login-btn:disabled { opacity:.5;cursor:not-allowed; }
   .login-error { margin-top:14px;padding:10px 14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#fca5a5;font-size:13px;display:none; }
+
+  /* ── Mobile sidebar overlay ── */
+  .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:199;backdrop-filter:blur(2px); }
+  .sidebar-overlay.open { display:block; }
+  @media(max-width:768px) {
+    .sidebar { transform:translateX(-100%);transition:transform .25s ease; }
+    .sidebar.open { transform:translateX(0); }
+  }
+
+  /* ── Hamburger ── */
+  .hamburger { display:none;background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:6px;border-radius:6px;transition:background .15s;flex-shrink:0; }
+  .hamburger:hover { background:rgba(255,255,255,.12); }
+  @media(max-width:768px) { .hamburger { display:flex;align-items:center;justify-content:center; } }
+
+  /* ── Topbar icon btn (refresh/add/logout) ── */
+  .topbar-icon-btn { background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;text-decoration:none; }
+  .topbar-icon-btn:hover { background:rgba(255,255,255,.28); }
+  .topbar-icon-btn.danger { background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4); }
+
+  /* ── Status tabs ── */
+  .status-tabs { display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px;flex-wrap:wrap;background:#fff;border-radius:10px 10px 0 0;padding:0 4px; }
+  .status-tab { padding:10px 14px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;white-space:nowrap;user-select:none; }
+  .status-tab:hover { color:var(--purple); }
+  .status-tab.active { color:var(--purple);border-bottom-color:var(--purple); }
+  .status-tab .tab-count { font-size:11px;font-weight:700;background:#f1f5f9;color:#64748b;border-radius:10px;padding:1px 7px;margin-left:5px;transition:background .15s,color .15s; }
+  .status-tab.active .tab-count { background:var(--purple);color:#fff; }
+
+  /* ── Admin note ── */
+  .note-cell { max-width:160px;font-size:12px;color:#334155;line-height:1.5;word-break:break-word; }
+  .customer-note-text { display:block; }
+  .admin-note-cell { min-width:140px;max-width:180px; }
+  .admin-note-text { display:block;font-size:12px;color:#1e40af;cursor:pointer;line-height:1.5;word-break:break-word;padding:3px 6px;border-radius:5px;background:#eff6ff; }
+  .admin-note-text:hover { background:#dbeafe; }
+  .btn-add-note { font-size:11px;color:#6366f1;background:none;border:1px dashed #a5b4fc;border-radius:5px;padding:3px 8px;cursor:pointer; }
+  .btn-add-note:hover { background:#eef2ff; }
+  .admin-note-input { width:100%;font-size:12px;border:1px solid #a5b4fc;border-radius:5px;padding:5px 7px;resize:vertical;font-family:inherit;outline:none;box-sizing:border-box; }
+  .admin-note-input:focus { border-color:#6366f1;box-shadow:0 0 0 2px #eef2ff; }
+  .btn-note-save { margin-top:4px;margin-right:4px;font-size:11px;background:#6366f1;color:#fff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer; }
+  .btn-note-save:hover { background:#4f46e5; }
+  .btn-note-cancel { margin-top:4px;font-size:11px;background:none;color:#64748b;border:1px solid #e2e8f0;border-radius:5px;padding:3px 8px;cursor:pointer; }
+
+  /* ── btn-reset distinct ── */
+  .btn-reset { background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .btn-reset:hover { border-color:#ef4444;color:#ef4444; }
   </style>
 </head>
 <body>
@@ -846,15 +893,18 @@
     <div class="login-title">Admin Login</div>
     <div class="login-sub">Sign in to view custom orders</div>
     <div class="login-field"><label>Username</label><input type="text" id="login-username" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()" /></div>
-    <div class="login-field"><label>Password</label><input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')window.doLogin()" /></div>
+    <div class="login-field"><label>Password</label><div class="login-input-wrap"><input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')window.doLogin()" /><button class="pw-toggle" type="button" onclick="togglePw()" id="pw-eye" tabindex="-1"><i class="fas fa-eye" id="pw-eye-icon"></i></button></div></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
+<!-- Sidebar mobile overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <div class="layout">
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <img src="favicon.png" alt="Shobaz" onerror="this.style.display='none'">
       <span>Shobaz</span>
@@ -890,6 +940,7 @@
   <div class="main">
     <!-- Top Bar -->
     <div class="topbar">
+      <button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
       <div class="topbar-title">
         <i class="fas fa-shopping-cart"></i>
         Custom Order List
@@ -902,6 +953,9 @@
         <a href="#" onclick="this.href=ADMIN_URL+'/sales/add-order'" target="_blank" class="btn-add">
           <i class="fas fa-plus"></i><span class="btn-text"> Add Order</span>
         </a>
+        <button class="topbar-icon-btn" onclick="loadRepeatCustomers();loadTodayStats();loadStatusCounts();" title="Refresh">
+          <i class="fas fa-sync-alt"></i>
+        </button>
         <button class="btn-add" onclick="doLogout()" style="background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);">
           <i class="fas fa-sign-out-alt"></i><span class="btn-text"> Logout</span>
         </button>
@@ -1040,7 +1094,7 @@
         <div class="spacer"></div>
 
         <!-- Reset Filters -->
-        <button class="filter-btn" onclick="resetAllFilters()" title="Reset all filters">
+        <button class="btn-reset" onclick="resetAllFilters()" title="Reset all filters">
           <i class="fas fa-undo"></i> Reset
         </button>
 
@@ -1064,6 +1118,15 @@
         <button onclick="clearSelection()" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:7px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer">Clear</button>
       </div>
 
+      <!-- Status Tabs -->
+      <div class="status-tabs" id="statusTabs">
+        <div class="status-tab active" id="tab-all" onclick="setStatusTab('all')">All <span class="tab-count" id="tabCount-all">—</span></div>
+        <div class="status-tab" id="tab-processing" onclick="setStatusTab('processing')">Processing <span class="tab-count" id="tabCount-processing">—</span></div>
+        <div class="status-tab" id="tab-8" onclick="setStatusTab(8)">Confirmed <span class="tab-count" id="tabCount-8">—</span></div>
+        <div class="status-tab" id="tab-6" onclick="setStatusTab(6)">Cancelled <span class="tab-count" id="tabCount-6">—</span></div>
+        <div class="status-tab" id="tab-10" onclick="setStatusTab(10)">Trash <span class="tab-count" id="tabCount-10">—</span></div>
+      </div>
+
       <!-- Table Card -->
       <div class="table-card">
         <div class="table-wrap">
@@ -1085,11 +1148,13 @@
                 <th>ORDER STATUS</th>
                 <th>ORDER BY</th>
                 <th>ACTIONS</th>
+                <th>CUSTOMER NOTE</th>
+                <th>ADMIN NOTE</th>
               </tr>
             </thead>
             <tbody id="ordersBody">
               <tr class="loading-row">
-                <td colspan="15">
+                <td colspan="17">
                   <div class="spinner"></div>
                   <div>Loading orders...</div>
                 </td>
@@ -1237,6 +1302,25 @@
     deliveryTo: '',
     totalCount: 0,
     totalAmount: 0,
+    activeTab: 'all',
+  };
+
+  /* ── Sidebar mobile ── */
+  window.openSidebar = function () {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+  };
+  window.closeSidebar = function () {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  };
+
+  /* ── Password toggle ── */
+  window.togglePw = function () {
+    var inp = document.getElementById('login-password');
+    var ico = document.getElementById('pw-eye-icon');
+    if (inp.type === 'password') { inp.type = 'text'; ico.className = 'fas fa-eye-slash'; }
+    else { inp.type = 'password'; ico.className = 'fas fa-eye'; }
   };
 
   /* ── Auth ── */
@@ -1268,7 +1352,7 @@
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data && data.token) { saveToken(data.token); hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); }
+      if (data && data.token) { saveToken(data.token); hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
       else { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; }
     })
     .catch(function() { errEl.textContent = 'Connection error. Try again.'; errEl.style.display = 'block'; })
@@ -1432,12 +1516,22 @@
   };
 
   /* ── Build request body ── */
+  var PROCESSING_STATUSES = [0, 1, 3, 4, 8];
   function buildRequestBody() {
     var filter = {};
 
     if (state.paymentStatus) filter.paymentStatus = state.paymentStatus;
     if (state.paymentType)   filter.paymentType   = state.paymentType;
-    if (state.orderStatus !== '') filter.orderStatus = Number(state.orderStatus);
+    // Tab-driven status filter takes precedence over dropdown
+    if (state.activeTab === 'processing') {
+      filter.orderStatus = { $in: PROCESSING_STATUSES };
+    } else if (state.activeTab === '6') {
+      filter.orderStatus = { $in: [6, 7, 9] };
+    } else if (state.activeTab !== 'all' && state.activeTab !== '') {
+      filter.orderStatus = Number(state.activeTab);
+    } else if (state.orderStatus !== '') {
+      filter.orderStatus = Number(state.orderStatus);
+    }
 
     // Date range — use createdAt (Mongoose timestamp, always a proper Date).
     // Parse with 'T00:00:00' (no Z) so JS uses LOCAL timezone, matching Bangladesh time.
@@ -1463,7 +1557,7 @@
         createdAt: 1, checkoutDate: 1, shippingAddress: 1,
         courierData: 1, courierLink: 1, fraudChecker: 1,
         admin: 1, user: 1, deliveryDate: 1,
-        orderedItems: 1,
+        orderedItems: 1, note: 1, adminNote: 1,
       },
     };
     if (Object.keys(filter).length) body.filter = filter;
@@ -1511,7 +1605,7 @@
       })
       .catch(function (err) {
         document.getElementById('ordersBody').innerHTML =
-          '<tr class="empty-row"><td colspan="15"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:20px;margin-bottom:8px"></i><br>Failed to load orders: ' + err.message + '<br><small>Make sure the backend is running at ' + API + '</small></td></tr>';
+          '<tr class="empty-row"><td colspan="17"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:20px;margin-bottom:8px"></i><br>Failed to load orders: ' + err.message + '<br><small>Make sure the backend is running at ' + API + '</small></td></tr>';
         document.getElementById('totalOrders').textContent = '—';
         document.getElementById('totalAmount').textContent = '—';
         document.getElementById('paginationInfo').textContent = '';
@@ -1906,7 +2000,7 @@
   function renderTable(orders, total) {
     var tbody = document.getElementById('ordersBody');
     if (!orders.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="15"><i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;margin-bottom:8px"></i><br>No orders found</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="17"><i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;margin-bottom:8px"></i><br>No orders found</td></tr>';
       return;
     }
 
@@ -1953,6 +2047,8 @@
         '<td><div class="action-cell">',
         '  <a href="' + API + '/invoice/invoice-' + o.orderId + '.pdf" target="_blank" class="btn-action btn-invoice" title="Invoice"><i class="fas fa-file-invoice"></i></a>',
         '</div></td>',
+        '<td><div class="note-cell">' + (o.note ? '<span class="customer-note-text">' + esc(o.note) + '</span>' : '<span style="color:#94a3b8;font-size:11px">—</span>') + '</div></td>',
+        '<td><div class="admin-note-cell" data-id="' + o._id + '">' + (o.adminNote ? '<span class="admin-note-text" onclick="editAdminNote(\'' + o._id + '\',this)">' + esc(o.adminNote) + '</span>' : '<button class="btn-add-note" onclick="editAdminNote(\'' + o._id + '\',this)">+ Add</button>') + '</div></td>',
         '</tr>',
       ].join('');
     });
@@ -2049,6 +2145,96 @@
       });
   };
 
+  /* ── Status tab counts ── */
+  function fetchCount(filter, onCount) {
+    var body = { pagination: { pageSize: 1, currentPage: 0 }, sort: { createdAt: -1 }, select: { orderId: 1 } };
+    if (filter) body.filter = filter;
+    fetch(API + '/api/order/get-all', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (resp) { onCount(resp.count || 0); })
+      .catch(function () { onCount(0); });
+  }
+  function loadStatusCounts() {
+    fetchCount(null, function (n) {
+      var el = document.getElementById('tabCount-all');
+      if (el) el.textContent = n.toLocaleString();
+    });
+    fetchCount({ orderStatus: { $in: PROCESSING_STATUSES } }, function (n) {
+      var el = document.getElementById('tabCount-processing');
+      if (el) el.textContent = n.toLocaleString();
+    });
+    fetchCount({ orderStatus: 8 }, function (n) {
+      var el = document.getElementById('tabCount-8');
+      if (el) el.textContent = n.toLocaleString();
+    });
+    fetchCount({ orderStatus: { $in: [6, 7, 9] } }, function (n) {
+      var el = document.getElementById('tabCount-6');
+      if (el) el.textContent = n.toLocaleString();
+    });
+    fetchCount({ orderStatus: 10 }, function (n) {
+      var el = document.getElementById('tabCount-10');
+      if (el) el.textContent = n.toLocaleString();
+    });
+  }
+
+  /* ── Status tab click ── */
+  window.setStatusTab = function (tab) {
+    state.activeTab = tab;
+    state.page = 0;
+    document.querySelectorAll('.status-tab').forEach(function (t) { t.classList.remove('active'); });
+    var el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('active');
+    loadOrders();
+  };
+
+  /* ── Admin Note inline edit ── */
+  window.editAdminNote = function (mongoId, triggerEl) {
+    var cell = document.querySelector('.admin-note-cell[data-id="' + mongoId + '"]');
+    if (!cell) return;
+    var order = allOrdersById[String(mongoId)];
+    var current = (order && order.adminNote) || '';
+    var textarea = document.createElement('textarea');
+    textarea.className = 'admin-note-input';
+    textarea.value = current;
+    textarea.placeholder = 'Add admin note…';
+    textarea.rows = 3;
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-note-save';
+    saveBtn.textContent = 'Save';
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-note-cancel';
+    cancelBtn.textContent = 'Cancel';
+    cell.innerHTML = '';
+    cell.appendChild(textarea);
+    cell.appendChild(saveBtn);
+    cell.appendChild(cancelBtn);
+    textarea.focus();
+    saveBtn.onclick = function () {
+      var val = textarea.value.trim();
+      saveBtn.disabled = true; saveBtn.textContent = '…';
+      fetch(API + '/api/order/update/' + mongoId, {
+        method: 'PUT', headers: authHeaders(),
+        body: JSON.stringify({ adminNote: val }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (resp) {
+          if (resp && resp.success === false) { showToast(resp.message || 'Failed to save note', 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
+          if (order) order.adminNote = val;
+          cell.innerHTML = val
+            ? '<span class="admin-note-text" onclick="editAdminNote(\'' + mongoId + '\',this)">' + esc(val) + '</span>'
+            : '<button class="btn-add-note" onclick="editAdminNote(\'' + mongoId + '\',this)">+ Add</button>';
+          showToast('Note saved', 'success');
+        })
+        .catch(function (err) { showToast('Error: ' + err.message, 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; });
+    };
+    cancelBtn.onclick = function () {
+      var cur = (order && order.adminNote) || '';
+      cell.innerHTML = cur
+        ? '<span class="admin-note-text" onclick="editAdminNote(\'' + mongoId + '\',this)">' + esc(cur) + '</span>'
+        : '<button class="btn-add-note" onclick="editAdminNote(\'' + mongoId + '\',this)">+ Add</button>';
+    };
+  };
+
   /* ── Export CSV ── */
   window.exportToCSV = function () {
     if (!allOrders.length) { showToast('No orders to export.', 'error'); return; }
@@ -2135,7 +2321,7 @@
   }
 
   /* ── Init ── */
-  if (getToken()) { hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); }
+  if (getToken()) { hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
   else { showLoginOverlay(); }
 })();
 </script>
