@@ -4,6 +4,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { createHash } from 'crypto';
+
+function hashPii(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim().toLowerCase();
+  return createHash('sha256').update(normalized).digest('hex');
+}
 import {
   AddGtmThemePageViewDto,
   AddGtmThemeViewContentDto,
@@ -357,14 +364,16 @@ export class GtmService {
         // Ensure user_data exists
         fbApiPayload.user_data = fbApiPayload.user_data || {};
 
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
-            : undefined;
+        const icRawPh = fbApiPayload.user_data.ph;
+        const icRawEm = fbApiPayload.user_data.em;
+        const icRawFn = fbApiPayload.user_data.fn;
+        const icRawLn = fbApiPayload.user_data.ln;
+
+        fbApiPayload.user_data.ph = hashPii(icRawPh && icRawPh !== 'null' ? icRawPh : undefined);
+        fbApiPayload.user_data.em = hashPii(icRawEm && icRawEm !== 'null' ? icRawEm : undefined);
+        fbApiPayload.user_data.fn = hashPii(icRawFn && icRawFn !== 'null' ? icRawFn : undefined);
+        fbApiPayload.user_data.ln = hashPii(icRawLn && icRawLn !== 'null' ? icRawLn : undefined);
+        fbApiPayload.user_data.country = hashPii('bd');
 
         fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;
         fbApiPayload.user_data.client_user_agent = clientUserAgent || undefined;
@@ -443,13 +452,19 @@ export class GtmService {
         // Ensure user_data exists
         fbApiPayload.user_data = fbApiPayload.user_data || {};
 
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
+        const rawPh = fbApiPayload.user_data.ph;
+        const rawEm = fbApiPayload.user_data.em;
+        const rawFn = fbApiPayload.user_data.fn;
+        const rawLn = fbApiPayload.user_data.ln;
+
+        fbApiPayload.user_data.ph = hashPii(rawPh && rawPh !== 'null' ? rawPh : undefined);
+        fbApiPayload.user_data.em = hashPii(rawEm && rawEm !== 'null' ? rawEm : undefined);
+        fbApiPayload.user_data.fn = hashPii(rawFn && rawFn !== 'null' ? rawFn : undefined);
+        fbApiPayload.user_data.ln = hashPii(rawLn && rawLn !== 'null' ? rawLn : undefined);
+        fbApiPayload.user_data.country = hashPii('bd');
+        fbApiPayload.user_data.external_id =
+          fbApiPayload.user_data.external_id && fbApiPayload.user_data.external_id !== 'null'
+            ? fbApiPayload.user_data.external_id
             : undefined;
 
         fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;

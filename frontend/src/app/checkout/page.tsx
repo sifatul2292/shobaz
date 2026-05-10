@@ -53,7 +53,7 @@ export default function CheckoutPage() {
       const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
       const total = getTotalPrice();
       gtmBeginCheckout(cartProducts, total);
-      capiInitiateCheckout(cartProducts, total);
+      capiInitiateCheckout(cartProducts, total, formData.phone, formData.name);
     }
   }, []);
 
