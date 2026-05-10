@@ -10,9 +10,12 @@ const buildEvent = (eventName: string, userData: Record<string, any>, customData
 });
 
 export const capiPurchase = (order: any) => {
+  const nameParts = (order.name || '').trim().split(/\s+/);
   const userData = {
     ph: order.phoneNo || undefined,
-    em: order.email || undefined,
+    fn: nameParts[0] || undefined,
+    ln: nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined,
+    external_id: order.orderId || undefined,
   };
   const customData = {
     currency: 'BDT',
@@ -55,7 +58,7 @@ export const capiAddToCart = (product: any, quantity: number) => {
   return api.post('/gtag/track-theme-add-to-cart', buildEvent('AddToCart', {}, customData)).catch(() => null);
 };
 
-export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: string) => {
+export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: string, name?: string) => {
   const customData = {
     currency: 'BDT',
     value: total,
@@ -68,6 +71,11 @@ export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: st
     })),
     num_items: cartItems.length,
   };
-  const userData = { ph: phone || undefined };
+  const nameParts = (name || '').trim().split(/\s+/);
+  const userData = {
+    ph: phone || undefined,
+    fn: nameParts[0] || undefined,
+    ln: nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined,
+  };
   return api.post('/gtag/track-theme-initial-checkout', buildEvent('InitiateCheckout', userData, customData)).catch(() => null);
 };
