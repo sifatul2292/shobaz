@@ -84,7 +84,7 @@ export default function FloatingCart() {
   if (isHidden) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2">
 
       {/* Hint bubble */}
       <div
@@ -126,7 +126,7 @@ export default function FloatingCart() {
       <button
         onClick={() => router.push('/checkout')}
         className={`
-          relative w-16 h-16 bg-emerald-500 hover:bg-emerald-600
+          relative w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500 hover:bg-emerald-600
           rounded-full shadow-2xl flex items-center justify-center
           transition-all duration-200 hover:scale-110 active:scale-95
           ${bounce ? 'animate-bounce' : ''}
@@ -137,7 +137,7 @@ export default function FloatingCart() {
           <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60" />
         )}
 
-        <FaShoppingCart className="text-white text-2xl" />
+        <FaShoppingCart className="text-white text-lg sm:text-xl" />
 
         <span
           className={`

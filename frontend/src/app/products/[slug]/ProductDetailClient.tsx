@@ -810,7 +810,7 @@ export default function ProductDetailClient({ params }: Props) {
               boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>📚 একসাথে কিনুন</h3>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>একসাথে কিনুন</h3>
                 {bundleSavings > 0 && (
                   <span style={{ background: '#dcfce7', color: PRIMARY, padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800 }}>
                     ৳{bundleSavings.toFixed(0)} সাশ্রয়
@@ -818,7 +818,7 @@ export default function ProductDetailClient({ params }: Props) {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: 10, alignItems: 'stretch', overflowX: 'auto' }}>
+              <div className="pd-bundle-items">
                 {/* Current book */}
                 <div style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative' }}>
                   <span style={{ position: 'absolute', top: 8, right: 8, background: PRIMARY, color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>✓</span>
@@ -845,7 +845,7 @@ export default function ProductDetailClient({ params }: Props) {
                   const itemAuthorName = getAuthorName(item.product.author);
                   return (
                     <div key={item.product._id} style={{ display: 'contents' }}>
-                      <div style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>+</div>
+                      <div className="pd-bundle-connector" style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>+</div>
                       <div
                         onClick={() => handleToggleBundle(item.product._id)}
                         style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative', cursor: 'pointer', opacity: isSelected ? 1 : 0.55, transition: 'opacity .2s' }}
@@ -870,8 +870,8 @@ export default function ProductDetailClient({ params }: Props) {
                   );
                 })}
 
-                <div style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>=</div>
-                <div style={{ flexShrink: 0, minWidth: 130, background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div className="pd-bundle-connector" style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>=</div>
+                <div className="pd-bundle-total" style={{ flexShrink: 0, minWidth: 130, background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px' }}>
                   <div style={{ ...tinyLabel, color: '#9ca3af' }}>মোট</div>
                   <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706', lineHeight: 1.1, marginTop: 4 }}>৳{bundleTotal.toFixed(0)}</div>
                   {bundleSavings > 0 && <div style={{ fontSize: 12.5, color: PRIMARY, marginTop: 4, fontWeight: 700 }}>সাশ্রয় ৳{bundleSavings.toFixed(0)}</div>}
@@ -1147,7 +1147,7 @@ export default function ProductDetailClient({ params }: Props) {
 
         {/* ── Bestsellers carousel ── */}
         {bestSellers.length > 0 && (
-          <section style={{ maxWidth: 1280, margin: '40px auto 0', padding: '0 24px' }}>
+          <section style={{ maxWidth: 1280, margin: '40px auto 56px', padding: '0 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <IcFlame /> সর্বাধিক বিক্রিত বই

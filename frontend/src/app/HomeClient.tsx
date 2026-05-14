@@ -28,6 +28,11 @@ interface HomepageSection {
 const PRIMARY = '#16a34a';
 const AMBER = '#f59e0b';
 
+const IcDelivery = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 1 3 3v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>;
+const IcPayment = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>;
+const IcReturn = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+const IcReaders = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>;
+
 const CAT_PALETTES = [
   { bg: '#fef3c7', accent: '#92400e' },
   { bg: '#dcfce7', accent: '#166534' },
@@ -480,14 +485,14 @@ export default function HomePage() {
             }}
           >
             {[
-              { icon: '🚚', label: 'সারাদেশে ডেলিভারি' },
-              { icon: '💳', label: 'bKash / Nagad / কার্ড' },
-              { icon: '🔄', label: 'সহজ রিটার্ন' },
-              { icon: '⭐', label: '১০,০০০+ সন্তুষ্ট পাঠক' },
+              { icon: <IcDelivery />, label: 'সারাদেশে ডেলিভারি' },
+              { icon: <IcPayment />, label: 'bKash / Nagad / কার্ড' },
+              { icon: <IcReturn />, label: 'সহজ রিটার্ন' },
+              { icon: <IcReaders />, label: '১০,০০০+ সন্তুষ্ট পাঠক' },
             ].map((it, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
-                <span style={{ fontSize: 24 }}>{it.icon}</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#166534', fontFamily: 'var(--bn)' }}>{it.label}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center' }}>{it.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#166534', fontFamily: 'var(--bn)' }}>{it.label}</span>
               </div>
             ))}
           </div>
@@ -499,7 +504,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
               <div>
                 <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>
-                  📚 বিভাগসমূহ
+                  বিভাগসমূহ
                 </h2>
                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>
                   যে কোনো বিভাগে ক্লিক করে বইয়ের পুরো কালেকশন দেখুন
@@ -701,7 +706,7 @@ export default function HomePage() {
         <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 32px' }}>
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>
-              💬 পাঠকদের অভিজ্ঞতা
+              পাঠকদের অভিজ্ঞতা
             </h2>
             <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>
               আমাদের কাস্টমারদের সাথে যা শেয়ার করেছেন
