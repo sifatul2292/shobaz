@@ -588,11 +588,22 @@ export default function HomePage() {
           activeSections.map((section) => (
             <section key={section._id} style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
               <SectionHeader title={section.name} linkHref={`/products?tag=${section.slug}`} linkLabel="সব বই দেখুন →" />
-              <div className="nh-book-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 22 }}>
-                {section.products.slice(0, 8).map((product) => (
-                  <NewBookCard key={product._id} product={product} onAdd={handleAddToCart} />
+              <Swiper
+                modules={[Navigation]}
+                navigation
+                slidesPerView={2}
+                spaceBetween={14}
+                breakpoints={{
+                  640: { slidesPerView: 3, spaceBetween: 18 },
+                  1024: { slidesPerView: 5, spaceBetween: 22 },
+                }}
+              >
+                {section.products.map((product) => (
+                  <SwiperSlide key={product._id}>
+                    <NewBookCard product={product} onAdd={handleAddToCart} />
+                  </SwiperSlide>
                 ))}
-              </div>
+              </Swiper>
             </section>
           ))
         ) : (
@@ -600,21 +611,43 @@ export default function HomePage() {
             {featuredProducts.length > 0 && (
               <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
                 <SectionHeader title="🔥 হট ডিল" linkHref="/products?sort=discountAmount" linkLabel="সব দেখুন →" />
-                <div className="nh-book-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 22 }}>
-                  {featuredProducts.slice(0, 8).map((product) => (
-                    <NewBookCard key={product._id} product={product} onAdd={handleAddToCart} />
+                <Swiper
+                  modules={[Navigation]}
+                  navigation
+                  slidesPerView={2}
+                  spaceBetween={14}
+                  breakpoints={{
+                    640: { slidesPerView: 3, spaceBetween: 18 },
+                    1024: { slidesPerView: 5, spaceBetween: 22 },
+                  }}
+                >
+                  {featuredProducts.map((product) => (
+                    <SwiperSlide key={product._id}>
+                      <NewBookCard product={product} onAdd={handleAddToCart} />
+                    </SwiperSlide>
                   ))}
-                </div>
+                </Swiper>
               </section>
             )}
             {newProducts.length > 0 && (
               <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
                 <SectionHeader title="✨ নতুন আগমন" linkHref="/products?sort=createdAt" linkLabel="সব দেখুন →" />
-                <div className="nh-book-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 22 }}>
-                  {newProducts.slice(0, 8).map((product) => (
-                    <NewBookCard key={product._id} product={product} onAdd={handleAddToCart} />
+                <Swiper
+                  modules={[Navigation]}
+                  navigation
+                  slidesPerView={2}
+                  spaceBetween={14}
+                  breakpoints={{
+                    640: { slidesPerView: 3, spaceBetween: 18 },
+                    1024: { slidesPerView: 5, spaceBetween: 22 },
+                  }}
+                >
+                  {newProducts.map((product) => (
+                    <SwiperSlide key={product._id}>
+                      <NewBookCard product={product} onAdd={handleAddToCart} />
+                    </SwiperSlide>
                   ))}
-                </div>
+                </Swiper>
               </section>
             )}
           </>
