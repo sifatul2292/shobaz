@@ -509,77 +509,86 @@ export default function HomePage() {
                 সব বিভাগ দেখুন →
               </Link>
             </div>
-            <div
-              className="nh-cat-grid"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}
+            <Swiper
+              modules={[]}
+              slidesPerView={1.2}
+              spaceBetween={14}
+              breakpoints={{
+                480: { slidesPerView: 2.1, spaceBetween: 16 },
+                768: { slidesPerView: 3.1, spaceBetween: 16 },
+                1024: { slidesPerView: 4, spaceBetween: 18 },
+              }}
             >
               {categories.slice(0, 8).map((cat, i) => {
                 const pal = CAT_PALETTES[i % CAT_PALETTES.length];
-                const catImg = (cat as any).image ? imgUrl((cat as any).image) : null;
                 const count = (cat as any).productCount;
+                const catProducts = allProducts.filter(p => {
+                  const catField = (p as any).category;
+                  if (Array.isArray(catField)) {
+                    return catField.some((c: any) => (typeof c === 'object' ? c?._id : c) === cat._id);
+                  }
+                  const catId = typeof catField === 'object' ? catField?._id : catField;
+                  return catId === cat._id;
+                }).slice(0, 4);
                 return (
-                  <Link
-                    key={cat._id}
-                    href={`/products?category=${cat.slug}`}
-                    style={{
-                      background: pal.bg, borderRadius: 18, padding: '22px 22px 20px',
-                      display: 'flex', flexDirection: 'column', textDecoration: 'none',
-                      color: pal.accent, border: '1px solid rgba(0,0,0,0.04)',
-                      transition: 'transform .15s ease, box-shadow .15s ease',
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-3px)';
-                      (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 24px 36px -22px rgba(15,23,42,0.18)';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
-                      (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
-                    }}
-                  >
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1.25, fontFamily: 'var(--bn)' }}>
-                      {cat.name}
-                    </div>
-                    {count > 0 && (
-                      <div style={{ fontSize: 13, color: pal.accent, fontWeight: 600, marginTop: 4, fontFamily: 'var(--sans)' }}>
-                        {count}+ বই
+                  <SwiperSlide key={cat._id}>
+                    <Link
+                      href={`/products?category=${cat.slug}`}
+                      style={{
+                        background: pal.bg, borderRadius: 18, padding: '22px 18px 20px',
+                        display: 'flex', flexDirection: 'column', textDecoration: 'none',
+                        color: pal.accent, border: '1px solid rgba(0,0,0,0.04)',
+                        transition: 'transform .15s ease, box-shadow .15s ease',
+                        height: '100%',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-3px)';
+                        (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 24px 36px -22px rgba(15,23,42,0.18)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
+                        (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.25, fontFamily: 'var(--bn)' }}>
+                        {cat.name}
                       </div>
-                    )}
-                    {(() => {
-                      const catProducts = allProducts.filter(p => {
-                        const catId = typeof (p as any).category === 'object'
-                          ? (p as any).category?._id
-                          : (p as any).category;
-                        return catId === cat._id;
-                      }).slice(0, 4);
-                      if (catProducts.length === 0) return null;
-                      return (
-                        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                          {catProducts.map((cp, ci) => {
-                            const cpImg = imgUrl(cp.images?.[0]);
-                            return (
-                              <div key={ci} style={{ borderRadius: 6, overflow: 'hidden', aspectRatio: '3/4', boxShadow: '0 6px 10px rgba(15,23,42,0.18)' }}>
-                                {cpImg
-                                  ? <img src={cpImg} alt={cp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  : <div style={{ width: '100%', height: '100%', background: '#1e3a8a' }} />
-                                }
-                              </div>
-                            );
-                          })}
+                      {count > 0 && (
+                        <div style={{ fontSize: 13, color: pal.accent, fontWeight: 600, marginTop: 4, fontFamily: 'var(--sans)' }}>
+                          {count}+ বই
                         </div>
-                      );
-                    })()}
-                    <div style={{
-                      marginTop: 16, fontSize: 13, color: pal.accent, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      fontFamily: 'var(--bn)',
-                    }}>
-                      <span>সব বই দেখুন</span>
-                      <span>→</span>
-                    </div>
-                  </Link>
+                      )}
+                      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5, flex: 1 }}>
+                        {catProducts.length > 0
+                          ? catProducts.map((cp, ci) => {
+                              const cpImg = imgUrl(cp.images?.[0]);
+                              return (
+                                <div key={ci} style={{ borderRadius: 5, overflow: 'hidden', aspectRatio: '3/4', boxShadow: '0 4px 8px rgba(15,23,42,0.18)' }}>
+                                  {cpImg
+                                    ? <img src={cpImg} alt={cp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : <div style={{ width: '100%', height: '100%', background: pal.accent, opacity: 0.35 }} />
+                                  }
+                                </div>
+                              );
+                            })
+                          : Array.from({ length: 4 }).map((_, ci) => (
+                              <div key={ci} style={{ borderRadius: 5, aspectRatio: '3/4', background: pal.accent, opacity: 0.2 }} />
+                            ))
+                        }
+                      </div>
+                      <div style={{
+                        marginTop: 14, fontSize: 13, color: pal.accent, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        fontFamily: 'var(--bn)',
+                      }}>
+                        <span>সব বই দেখুন</span>
+                        <span>→</span>
+                      </div>
+                    </Link>
+                  </SwiperSlide>
                 );
               })}
-            </div>
+            </Swiper>
           </section>
         )}
 
