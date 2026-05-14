@@ -1,23 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
 import { capiViewContent, capiAddToCart } from '@/lib/capi';
+import posthog from 'posthog-js';
 import { Product, ShippingCharge, Review } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { HiOutlineBookOpen, HiOutlineEye, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi';
-import {
-  FaChevronLeft, FaChevronRight, FaShoppingCart, FaBoxOpen, FaTimes,
-  FaCheck, FaTruck, FaUndo, FaShieldAlt, FaMoneyBillWave, FaStar,
-  FaMinus, FaPlus, FaPlay, FaChevronDown, FaChevronUp
-} from 'react-icons/fa';
+import { HiOutlineBookOpen } from 'react-icons/hi';
+import { FaTimes, FaStar } from 'react-icons/fa';
 
 const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 
@@ -28,6 +25,141 @@ interface BundleItem {
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+const CV_CLASSES = ['cv-1','cv-2','cv-3','cv-4','cv-5','cv-6','cv-7','cv-8','cv-9','cv-10','cv-11','cv-12'];
+function cvClass(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return CV_CLASSES[Math.abs(h) % 12];
+}
+
+const PRIMARY = '#16a34a';
+const ORANGE = '#ea580c';
+const PARCHMENT = '#f5f0e8';
+
+// SVG Icon components
+const IcRefresh = () => (
+  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 0 1 15.5-6.36L21 8"/><polyline points="21 3 21 8 16 8"/>
+    <path d="M21 12a9 9 0 0 1-15.5 6.36L3 16"/><polyline points="3 21 3 16 8 16"/>
+  </svg>
+);
+const IcShield = () => (
+  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5l-8-3z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </svg>
+);
+const IcBookCheck = () => (
+  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h6a3 3 0 0 1 3 3v14"/><path d="M20 4h-6a3 3 0 0 0-3 3"/>
+    <polyline points="14 14 16 16 20 12"/>
+  </svg>
+);
+const IcTruck = () => (
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="6" width="14" height="11" rx="1.5"/>
+    <path d="M15 9h4l3 4v4h-7"/>
+    <circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>
+  </svg>
+);
+const IcClock = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>
+  </svg>
+);
+const IcCart = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/>
+    <path d="M3 4h2l2.6 12.2a1.8 1.8 0 0 0 1.8 1.5h7.5a1.8 1.8 0 0 0 1.8-1.4L21 9H6"/>
+  </svg>
+);
+const IcBolt = () => (
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="white" stroke="none">
+    <path d="M13 2 4 14h6l-1 8 9-12h-6z"/>
+  </svg>
+);
+const IcWhatsApp = () => (
+  <svg width={20} height={20} viewBox="0 0 32 32" fill="#25D366">
+    <path d="M16.003 3C9.376 3 4 8.377 4 15.005c0 2.367.685 4.585 1.873 6.451L4 28l6.713-1.83a11.94 11.94 0 0 0 5.29 1.244C22.63 27.414 28 22.038 28 15.41 28 8.783 22.624 3 16.003 3zm0 22.117a9.962 9.962 0 0 1-5.083-1.393l-.364-.216-3.985 1.087 1.066-3.892-.237-.4a9.946 9.946 0 0 1-1.52-5.298c0-5.51 4.483-9.994 9.993-9.994 5.508 0 9.994 4.484 9.994 9.994 0 5.51-4.486 9.994-9.864 10.112z"/>
+    <path d="M21.55 17.92c-.302-.151-1.79-.883-2.066-.983-.277-.1-.479-.151-.68.151-.201.302-.78.983-.957 1.184-.176.202-.353.227-.655.075-.302-.151-1.276-.47-2.43-1.498-.899-.802-1.504-1.79-1.68-2.092-.176-.302-.019-.466.132-.617.135-.135.302-.353.453-.529.151-.176.201-.302.302-.504.1-.202.05-.378-.025-.529-.075-.151-.68-1.64-.932-2.247-.246-.59-.495-.51-.68-.52l-.58-.01a1.115 1.115 0 0 0-.806.378c-.277.302-1.058 1.034-1.058 2.522 0 1.488 1.083 2.925 1.234 3.127.151.202 2.134 3.257 5.169 4.566.722.312 1.286.498 1.726.638.725.23 1.385.197 1.906.12.582-.087 1.79-.731 2.042-1.437.252-.706.252-1.31.176-1.437-.075-.126-.277-.202-.579-.353z"/>
+  </svg>
+);
+const IcFlame = () => (
+  <svg width={22} height={22} viewBox="0 0 24 24" fill="#ea580c">
+    <path d="M12 2c-1 4-5 5-5 10a5 5 0 0 0 10 0c0-2-1-3-2-4 0 2-1 3-2 3 0-4 1-6-1-9z"/>
+  </svg>
+);
+const IcChevL = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 6 9 12 15 18"/>
+  </svg>
+);
+const IcChevR = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 6 15 12 9 18"/>
+  </svg>
+);
+const IcChevDown = ({ color = PRIMARY }: { color?: string }) => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+const IcEye = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const IcMinus = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={PRIMARY} strokeWidth="2.4" strokeLinecap="round">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+const IcPlus = ({ color = PRIMARY }: { color?: string }) => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
+const dividerStyle: React.CSSProperties = { border: 0, borderTop: '1px solid #f1f5f9', margin: '20px 0' };
+const tinyLabel: React.CSSProperties = { fontSize: 12, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' };
+const sideCardStyle: React.CSSProperties = {
+  background: 'white', borderRadius: 20, padding: 20,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9'
+};
+
+function CTAButton({ onClick, style, hoverShadow, hoverBg, children }: {
+  onClick: () => void;
+  style: React.CSSProperties;
+  hoverShadow?: string;
+  hoverBg?: string;
+  children: React.ReactNode;
+}) {
+  const baseShadow = style.boxShadow || 'none';
+  const baseBg = style.background as string;
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-1px)';
+        if (hoverShadow) e.currentTarget.style.boxShadow = hoverShadow;
+        if (hoverBg) e.currentTarget.style.background = hoverBg;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = baseShadow;
+        if (hoverBg && baseBg) e.currentTarget.style.background = baseBg;
+      }}
+      style={{
+        ...style,
+        border: style.border || 'none', borderRadius: 14, height: 56,
+        fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        transition: 'transform .15s ease, box-shadow .2s ease, background .2s ease'
+      }}
+    >{children}</button>
+  );
 }
 
 export default function ProductDetailClient({ params }: Props) {
@@ -53,6 +185,7 @@ export default function ProductDetailClient({ params }: Props) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, review: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const bestsellerScrollRef = useRef<HTMLDivElement>(null);
 
   const { addItem, items } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
@@ -68,16 +201,13 @@ export default function ProductDetailClient({ params }: Props) {
   const fetchProduct = async () => {
     setLoading(true);
     try {
-      // Run all three requests in parallel instead of sequentially
       const [res, relatedRes, shipRes] = await Promise.all([
         api.get(`/product/get-by-slug/${slug}`),
         api.get('/product/get-all-data'),
         api.get('/shipping-charge/get').catch(() => null),
       ]);
 
-      if (shipRes?.data?.data) {
-        setShippingCharge(shipRes.data.data);
-      }
+      if (shipRes?.data?.data) setShippingCharge(shipRes.data.data);
 
       if (res.data?.data) {
         const productData = res.data.data;
@@ -85,6 +215,12 @@ export default function ProductDetailClient({ params }: Props) {
         document.title = `${productData.name} | Shobaz`;
         gtmViewItem(productData);
         capiViewContent(productData);
+        posthog.capture('product_viewed', {
+          product_id: productData._id,
+          product_name: productData.name,
+          price: productData.salePrice,
+          slug: productData.slug,
+        });
 
         if (relatedRes.data?.data) {
           let allProducts = relatedRes.data.data;
@@ -94,39 +230,29 @@ export default function ProductDetailClient({ params }: Props) {
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 10));
 
-          const sortedByRating = [...filtered].sort((a, b) => (b.ratingAvr || 0) - (a.ratingAvr || 0));
-          setBestSellers(sortedByRating.slice(0, 8));
+          const sortedByRating = [...filtered].sort((a: Product, b: Product) => (b.ratingAvr || 0) - (a.ratingAvr || 0));
+          setBestSellers(sortedByRating.slice(0, 10));
 
           const backendBoughtTogether = productData.boughtTogetherProducts || [];
-
-          let bundleItems: BundleItem[] = [];
           const bundleDiscount = 10;
+          let bundleItems: BundleItem[] = [];
 
           if (backendBoughtTogether?.length > 0) {
             bundleItems = backendBoughtTogether.map((p: any) => {
-              // If backend didn't return slug, look it up from allProducts
               const fullProduct = allProducts.find((fp: Product) => fp._id === p._id);
-              return {
-                product: { ...p, slug: p.slug || fullProduct?.slug || '' },
-                discount: bundleDiscount
-              };
+              return { product: { ...p, slug: p.slug || fullProduct?.slug || '' }, discount: bundleDiscount };
             });
           } else {
-            bundleItems = filtered.slice(0, 3).map((p: Product) => ({
-              product: p,
-              discount: bundleDiscount
-            }));
+            bundleItems = filtered.slice(0, 3).map((p: Product) => ({ product: p, discount: bundleDiscount }));
           }
 
           setBundleProducts(bundleItems);
-          setSelectedBundle(bundleItems.map(b => b.product._id));
+          setSelectedBundle(bundleItems.map((b: BundleItem) => b.product._id));
         }
 
-        // Fetch reviews in background — doesn't block page render
         fetchReviews(productData._id);
       }
     } catch (err) { console.error(err); }
-
     setLoading(false);
   };
 
@@ -141,25 +267,17 @@ export default function ProductDetailClient({ params }: Props) {
       if (res.data?.data) {
         const allReviews = res.data.data;
         const productReviews = allReviews.filter((r: any) => r.product?._id === productId || r.product === productId);
-        const approvedReviews = productReviews.filter((r: Review) => r.status === true);
-        setReviews(approvedReviews);
+        setReviews(productReviews.filter((r: Review) => r.status === true));
       }
     } catch (err) { console.error('Failed to fetch reviews:', err); }
     setLoadingReviews(false);
   };
 
   const handleSubmitReview = async () => {
-    if (!product || !newReview.review.trim()) {
-      toast.error('Please write a review');
-      return;
-    }
+    if (!product || !newReview.review.trim()) { toast.error('Please write a review'); return; }
     setSubmittingReview(true);
     try {
-      const res = await api.post('/review/add', {
-        product: product._id,
-        rating: newReview.rating,
-        review: newReview.review
-      });
+      const res = await api.post('/review/add', { product: product._id, rating: newReview.rating, review: newReview.review });
       if (res.data?.success) {
         toast.success('Review submitted! It will be visible after approval.');
         setShowReviewForm(false);
@@ -176,6 +294,14 @@ export default function ProductDetailClient({ params }: Props) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
       capiAddToCart(product, quantity);
+      const price = (product.salePrice || 0) - (product.discountAmount || 0);
+      posthog.capture('product_added_to_cart', {
+        product_id: product._id,
+        product_name: product.name,
+        price,
+        quantity,
+        source: 'product_detail',
+      });
       toast.success('কার্টে যোগ হয়েছে');
     }
   };
@@ -185,15 +311,21 @@ export default function ProductDetailClient({ params }: Props) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
       capiAddToCart(product, quantity);
+      const price = (product.salePrice || 0) - (product.discountAmount || 0);
+      posthog.capture('product_added_to_cart', {
+        product_id: product._id,
+        product_name: product.name,
+        price,
+        quantity,
+        source: 'buy_now',
+      });
       window.location.href = '/checkout';
     }
   };
 
   const handleToggleBundle = (productId: string) => {
     setSelectedBundle(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
+      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
     );
   };
 
@@ -213,31 +345,44 @@ export default function ProductDetailClient({ params }: Props) {
     const discount = p.discountAmount || 0;
     return discount > 0 ? salePrice - discount : salePrice;
   };
-
   const getOriginalPrice = (p: Product) => p.salePrice || 0;
-
   const getDiscountPercent = (p: Product) => {
     const salePrice = p.salePrice || 0;
     const discount = p.discountAmount || 0;
     if (!discount || !salePrice) return 0;
     return Math.round((discount / salePrice) * 100);
   };
-
   const getAuthorName = (author: any) => {
     if (!author) return '';
     if (Array.isArray(author)) return author[0]?.name || '';
     if (typeof author === 'object') return author.name || '';
     return author as string;
   };
-
   const getPublisherName = (publisher: any) => {
     if (!publisher) return '';
     if (Array.isArray(publisher)) return publisher[0]?.name || '';
     if (typeof publisher === 'object') return publisher.name || '';
     return publisher as string;
   };
+  const getCategorySlug = (cat: any) => {
+    if (!cat) return '';
+    if (Array.isArray(cat)) return cat[0]?.slug || '';
+    if (typeof cat === 'object') return cat.slug || '';
+    return '';
+  };
+  const getCategoryName = (cat: any) => {
+    if (!cat) return '';
+    if (Array.isArray(cat)) return cat[0]?.name || '';
+    if (typeof cat === 'object') return cat.name || '';
+    return '';
+  };
+  const getAuthorSlug = (author: any) => {
+    if (!author) return '';
+    if (Array.isArray(author)) return author[0]?.slug || '';
+    if (typeof author === 'object') return author.slug || '';
+    return '';
+  };
 
-  const isInCart = items.some(item => item.product._id === product?._id);
   const previewUrl = product?.pdfFile || product?.previewPdfUrl;
 
   const getYoutubeId = (url?: string): string | null => {
@@ -254,53 +399,25 @@ export default function ProductDetailClient({ params }: Props) {
     return null;
   };
 
-  const youtubeId = getYoutubeId(product?.videoUrl);
+  const starStr = (n: number) => '★'.repeat(Math.min(5, Math.max(0, Math.round(n)))) + '☆'.repeat(5 - Math.min(5, Math.max(0, Math.round(n))));
 
-  // --- Loading skeleton ---
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Header />
-        <main className="flex-1 w-full">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="flex gap-2 mb-6">
-              {[80, 50, 90, 140].map((w, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="h-3 bg-gray-200 rounded-full animate-pulse" style={{ width: w }} />
-                  {i < 3 && <div className="w-1.5 h-3 bg-gray-200 rounded-full animate-pulse" />}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-4">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
-                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl animate-pulse mb-4" />
-                  <div className="flex gap-2 justify-center">
-                    {[0,1,2].map(i => <div key={i} className="w-12 h-16 bg-gray-200 rounded-xl animate-pulse" />)}
-                  </div>
-                </div>
+        <main style={{ flex: 1, maxWidth: 1280, margin: '0 auto', padding: '24px 24px 80px', width: '100%' }}>
+          <div style={{ height: 14, width: 240, background: '#e5e7eb', borderRadius: 4, marginBottom: 24 }} />
+          <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28% minmax(0,44%) 28%', gap: 32 }}>
+              <div style={{ aspectRatio: '2/3', background: '#f1f5f9', borderRadius: 12 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[80, 320, 200, 60, '100%', '100%', '100%'].map((w, i) => (
+                  <div key={i} style={{ height: i === 1 ? 52 : i > 3 ? 52 : 18, width: typeof w === 'number' ? w : w, background: '#f1f5f9', borderRadius: 6 }} />
+                ))}
               </div>
-              <div className="lg:col-span-5 space-y-4">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-7 space-y-5">
-                  <div className="h-5 w-24 bg-gray-200 rounded-full animate-pulse" />
-                  <div className="h-9 bg-gray-200 rounded-xl animate-pulse" />
-                  <div className="h-4 w-48 bg-gray-200 rounded-full animate-pulse" />
-                  <div className="h-px bg-gray-100" />
-                  <div className="h-12 w-44 bg-gray-200 rounded-xl animate-pulse" />
-                  <div className="space-y-2.5">
-                    <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
-                    <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
-                    <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-4/6" />
-                  </div>
-                  <div className="h-14 bg-gray-200 rounded-2xl animate-pulse" />
-                  <div className="h-16 bg-gray-200 rounded-2xl animate-pulse" />
-                </div>
-              </div>
-              <div className="lg:col-span-3 space-y-4">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 space-y-3">
-                  <div className="h-5 w-32 bg-gray-200 rounded-full animate-pulse" />
-                  {[0,1,2].map(i => <div key={i} className="h-12 bg-gray-200 rounded-xl animate-pulse" />)}
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ height: 160, background: '#f1f5f9', borderRadius: 12 }} />
+                <div style={{ height: 240, background: '#f1f5f9', borderRadius: 12 }} />
               </div>
             </div>
           </div>
@@ -312,15 +429,13 @@ export default function ProductDetailClient({ params }: Props) {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center p-8">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">পণ্য পাওয়া যায়নি</h2>
-            <Link href="/products" className="text-emerald-500 hover:text-emerald-600 font-medium hover:underline">সকল বই দেখুন</Link>
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <HiOutlineBookOpen style={{ width: 48, height: 48, color: '#9ca3af', margin: '0 auto 16px' }} />
+            <h2 style={{ fontFamily: 'var(--bn)', fontSize: 22, marginBottom: 12 }}>পণ্য পাওয়া যায়নি</h2>
+            <Link href="/products" style={{ color: PRIMARY, fontWeight: 600 }}>সকল বই দেখুন →</Link>
           </div>
         </main>
         <Footer />
@@ -335,433 +450,370 @@ export default function ProductDetailClient({ params }: Props) {
   const savings = originalPrice - currentPrice;
   const authorName = getAuthorName(product.author);
   const publisherName = getPublisherName(product.publisher);
+  const categoryName = getCategoryName(product.category);
+  const categorySlug = getCategorySlug(product.category);
+  const authorSlug = getAuthorSlug(product.author);
   const inStock = product.quantity === undefined || product.quantity > 0;
   const rating = product.ratingAvr || 0;
-  const bundleDiscount = 10;
-
-  const nextImage = () => product?.images && setActiveImage((prev) => (prev + 1) % product.images!.length);
-  const prevImage = () => product?.images && setActiveImage((prev) => (prev - 1 + product.images!.length) % product.images!.length);
+  const youtubeId = getYoutubeId(product?.videoUrl);
 
   const bundleTotal = currentPrice + selectedBundle.reduce((sum, id) => {
     const item = bundleProducts.find(b => b.product._id === id);
     return sum + (item ? getCurrentPrice(item.product) * 0.9 : 0);
   }, 0);
-
   const bundleSavings = selectedBundle.reduce((sum, id) => {
     const item = bundleProducts.find(b => b.product._id === id);
     return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
   }, 0);
 
+  const sideRelated = relatedProducts.slice(0, 6);
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
       <Header />
 
-      <main className="flex-1 w-full">
-        <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+      <main style={{ flex: 1 }}>
+        {/* Breadcrumb */}
+        <nav style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 24px 6px' }}>
+          <div style={{ fontSize: 13, color: '#9ca3af' }}>
+            {[
+              { label: 'হোম', href: '/' },
+              { label: 'বই', href: '/products' },
+              ...(categoryName ? [{ label: categoryName, href: `/products?category=${categorySlug}` }] : []),
+              { label: product.name, href: '#' },
+            ].map((item, i, arr) => {
+              const last = i === arr.length - 1;
+              return (
+                <span key={i}>
+                  <Link href={item.href} style={{ color: last ? PRIMARY : '#9ca3af', textDecoration: 'none', fontWeight: last ? 700 : 500 }}>
+                    {item.label}
+                  </Link>
+                  {!last && <span style={{ margin: '0 8px', color: '#cbd5e1' }}>›</span>}
+                </span>
+              );
+            })}
+          </div>
+        </nav>
 
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6 flex-wrap">
-            <Link href="/" className="hover:text-emerald-600 transition-colors font-medium">হোম</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/products" className="hover:text-emerald-600 transition-colors font-medium">বই</Link>
-            {product.category?.[0] && (
-              <>
-                <span className="text-gray-300">›</span>
-                <Link href={`/products?category=${product.category[0].slug}`} className="hover:text-emerald-600 transition-colors font-medium">{product.category[0].name}</Link>
-              </>
-            )}
-            <span className="text-gray-300">›</span>
-            <span className="text-gray-600 truncate max-w-[200px] font-medium">{product.name}</span>
-          </nav>
-
-          {/* Main 3-Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
-
-            {/* ─────────────── LEFT: Image Panel ─────────────── */}
-            <div className="md:col-span-1 lg:col-span-4">
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sticky top-4">
-
-                {/* Main image */}
-                <div className="relative bg-gradient-to-b from-slate-50 to-gray-100 rounded-2xl overflow-hidden aspect-[3/4] mb-4 group">
-                  {/* Discount badge */}
-                  {discountPercent > 0 && (
-                    <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm">
-                      -{discountPercent}%
-                    </span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => previewUrl && setShowPreviewModal(true)}
-                    disabled={!previewUrl}
-                    className={`w-full h-full flex items-center justify-center ${previewUrl ? 'cursor-pointer' : 'cursor-default'}`}
-                  >
-                    {images[activeImage] ? (
-                      <img
-                        src={imgUrl(images[activeImage])!}
-                        alt={product.name}
-                        className="w-full h-full object-contain drop-shadow-md"
-                      />
-                    ) : (
-                      <HiOutlineBookOpen className="w-28 h-28 text-gray-200" />
-                    )}
-                  </button>
-
-                  {/* Hover preview overlay */}
-                  {previewUrl && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-all duration-200 pointer-events-none rounded-2xl">
-                      <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-xl flex items-center gap-2">
-                        <HiOutlineEye className="w-5 h-5 text-emerald-600" />
-                        <span className="text-sm font-semibold text-gray-800">একটু পড়ুন</span>
-                      </div>
+        {/* ── Main 3-col card ── */}
+        <section style={{ maxWidth: 1280, margin: '8px auto 0', padding: '0 24px' }}>
+          <div className="pd-main-card">
+            {/* LEFT: Cover */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 22, alignItems: 'stretch' }}>
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '24px 8px 28px' }}>
+                <div style={{ position: 'relative', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.20))', maxWidth: 260 }}>
+                  {images[activeImage] ? (
+                    <img
+                      src={imgUrl(images[activeImage])!}
+                      alt={product.name}
+                      style={{ width: 250, height: 350, objectFit: 'cover', borderRadius: 8, display: 'block' }}
+                    />
+                  ) : (
+                    <div className={`cv ${cvClass(product._id)}`} style={{ width: 250, height: 350, borderRadius: 8 }}>
+                      <div className="a">{authorName || 'AUTHOR'}</div>
+                      <div className="t">{product.name}</div>
+                      <div className="frame" />
+                      <div className="num">S</div>
                     </div>
                   )}
-
-                  {/* Navigation arrows */}
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        onClick={prevImage}
-                        className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center hover:bg-white hover:shadow-lg transition-all"
-                      >
-                        <FaChevronLeft className="text-gray-600 text-xs" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center hover:bg-white hover:shadow-lg transition-all"
-                      >
-                        <FaChevronRight className="text-gray-600 text-xs" />
-                      </button>
-                    </>
+                  {discountPercent > 0 && (
+                    <div style={{
+                      position: 'absolute', top: 12, left: 12,
+                      background: '#dc2626', color: 'white', fontWeight: 800, fontSize: 12,
+                      padding: '4px 10px', borderRadius: 8
+                    }}>−{discountPercent}% ছাড়</div>
                   )}
                 </div>
+              </div>
 
-                {/* Preview pill button */}
-                {previewUrl && (
-                  <button
-                    onClick={() => setShowPreviewModal(true)}
-                    className="w-full mb-4 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-4 py-2.5 text-xs font-semibold hover:bg-emerald-100 hover:border-emerald-300 transition-all"
-                  >
-                    <HiOutlineEye className="w-4 h-4" />
-                    একটু পড়ে দেখুন
-                  </button>
-                )}
-
-                {/* Thumbnails */}
-                {images.length > 1 && (
-                  <div className="flex gap-2 justify-center mb-4">
-                    {images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveImage(idx)}
-                        className={`w-12 h-16 rounded-xl overflow-hidden border-2 transition-all ${
-                          idx === activeImage
-                            ? 'border-emerald-500 ring-2 ring-emerald-200 shadow-sm'
-                            : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={imgUrl(img)!} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Trust badges */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100">
-                  {[
-                    { icon: <FaUndo className="text-emerald-600 text-sm" />, label: 'ফ্রি রিটার্ন' },
-                    { icon: <FaShieldAlt className="text-emerald-600 text-sm" />, label: 'নিরাপদ পেমেন্ট' },
-                    { icon: <FaCheck className="text-emerald-600 text-sm" />, label: 'অরিজিনাল বই' },
-                  ].map(({ icon, label }) => (
-                    <div key={label} className="flex flex-col items-center gap-1.5 text-center">
-                      <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
-                        {icon}
-                      </div>
-                      <span className="text-[10px] text-gray-500 leading-tight font-medium">{label}</span>
-                    </div>
+              {images.length > 1 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  {images.slice(0, 4).map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImage(idx)}
+                      style={{
+                        aspectRatio: '2/3', borderRadius: 6, overflow: 'hidden', cursor: 'pointer',
+                        border: idx === activeImage ? `2px solid ${PRIMARY}` : '1px solid #e5e7eb',
+                        background: 'transparent', padding: 0
+                      }}
+                    >
+                      <img src={imgUrl(img)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </button>
                   ))}
                 </div>
+              )}
+
+              {previewUrl && (
+                <button
+                  onClick={() => setShowPreviewModal(true)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'center',
+                    color: PRIMARY, fontSize: 13, fontWeight: 600, background: 'transparent', border: 'none',
+                    textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: 'inherit'
+                  }}
+                >
+                  <IcEye /> একটু পড়ে দেখুন
+                </button>
+              )}
+
+              {/* Trust badges */}
+              <div style={{
+                background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12,
+                padding: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8
+              }}>
+                {[
+                  { Icon: IcRefresh, label: 'ফ্রি রিটার্ন' },
+                  { Icon: IcShield, label: 'নিরাপদ পেমেন্ট' },
+                  { Icon: IcBookCheck, label: 'অরিজিনাল বই' },
+                ].map(({ Icon, label }, i) => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+                    <Icon />
+                    <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, lineHeight: 1.3 }}>{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* ─────────────── CENTER: Product Info ─────────────── */}
-            <div className="md:col-span-1 lg:col-span-5">
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-7 space-y-5">
+            {/* CENTER: Product info */}
+            <div style={{ padding: '4px 4px' }}>
+              {/* Category pill */}
+              {categoryName && (
+                <Link href={`/products?category=${categorySlug}`} style={{ textDecoration: 'none' }}>
+                  <span style={{
+                    display: 'inline-block', background: '#dcfce7', color: PRIMARY,
+                    padding: '4px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600
+                  }}>{categoryName}</span>
+                </Link>
+              )}
 
-                {/* Category badge */}
-                {product.category?.[0] && (
-                  <Link
-                    href={`/products?category=${product.category[0].slug}`}
-                    className="inline-block bg-emerald-50 text-emerald-700 rounded-full px-3.5 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors border border-emerald-100"
-                  >
-                    {product.category[0].name}
-                  </Link>
-                )}
+              <h1 style={{
+                fontSize: 30, fontWeight: 800, color: '#0f172a', margin: '12px 0 12px',
+                lineHeight: 1.3, letterSpacing: '-0.005em'
+              }}>{product.name}</h1>
 
-                {/* Title */}
-                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug tracking-tight">
-                  {product.name}
-                </h1>
+              {rating > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <span style={{ color: '#f59e0b', fontSize: 16, letterSpacing: 1 }}>{starStr(rating)}</span>
+                  <strong style={{ fontSize: 14 }}>{rating.toFixed(1)}</strong>
+                  <span style={{ color: '#9ca3af', fontSize: 13.5 }}>({product.ratingCount || 0} টি রিভিউ)</span>
+                </div>
+              )}
 
-                {/* Author & Publisher */}
-                <div className="space-y-1.5">
-                  {authorName && (
-                    <p className="text-sm text-gray-500">
-                      লেখক:{' '}
-                      <Link
-                        href={`/products?author=${encodeURIComponent(authorName)}`}
-                        className="text-emerald-600 font-semibold hover:underline"
-                      >
+              {/* Meta grid */}
+              <div style={{ display: 'grid', rowGap: 8 }}>
+                {authorName && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
+                    <span style={tinyLabel}>লেখক</span>
+                    <span>
+                      <Link href={authorSlug ? `/products?author=${encodeURIComponent(authorName)}` : '#'} style={{ color: PRIMARY, textDecoration: 'underline', textUnderlineOffset: 2, fontWeight: 600, fontSize: 14 }}>
                         {authorName}
                       </Link>
-                    </p>
-                  )}
-                  {publisherName && (
-                    <p className="text-sm text-gray-500">
-                      প্রকাশনা: <span className="text-gray-800 font-semibold">{publisherName}</span>
-                    </p>
-                  )}
-                  {product.weight && (
-                    <p className="text-xs text-gray-400">ওজন: {product.weight}g</p>
-                  )}
-                </div>
-
-                {/* Rating row */}
-                {rating > 0 && (
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <FaStar key={s} className={`text-sm ${s <= Math.round(rating) ? 'text-amber-400' : 'text-gray-200'}`} />
-                      ))}
-                    </div>
-                    <span className="text-sm font-bold text-gray-800">{rating.toFixed(1)}</span>
-                    <span className="text-xs text-gray-400">({product.ratingCount || 0} রিভিউ)</span>
+                    </span>
                   </div>
                 )}
-
-                <div className="h-px bg-gray-100" />
-
-                {/* Price section */}
-                <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-4 border border-gray-100">
-                  <div className="flex items-baseline gap-3 flex-wrap mb-1.5">
-                    <span className="text-4xl font-extrabold text-gray-900 tracking-tight">৳{currentPrice}</span>
-                    {discountPercent > 0 && (
-                      <>
-                        <span className="text-xl text-gray-400 line-through font-medium">৳{originalPrice}</span>
-                        <span className="bg-red-100 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                          -{discountPercent}% ছাড়
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {savings > 0 && (
-                    <p className="text-emerald-600 text-sm font-semibold">
-                      আপনি বাঁচাচ্ছেন ৳{savings}
-                    </p>
-                  )}
-                </div>
-
-                {/* Stock badge */}
-                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 border rounded-full text-xs font-semibold ${
-                  inStock
-                    ? 'border-emerald-200 text-emerald-700 bg-emerald-50'
-                    : 'border-red-200 text-red-600 bg-red-50'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${inStock ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                  {inStock ? 'স্টকে আছে' : 'স্টক শেষ'}
-                </div>
-
-                {/* Short description */}
-                {product.shortDescription && (
-                  <div>
-                    <p className={`text-gray-600 text-sm leading-relaxed ${!showFullDescription ? 'line-clamp-4' : ''}`}>
-                      {product.shortDescription.replace(/<[^>]*>/g, '')}
-                    </p>
-                    {product.shortDescription?.length > 150 && (
-                      <button
-                        onClick={() => setShowFullDescription(!showFullDescription)}
-                        className="text-emerald-600 text-xs font-semibold mt-2 hover:underline flex items-center gap-1"
-                      >
-                        {showFullDescription
-                          ? <><FaChevronUp className="text-[10px]" /> কম দেখুন</>
-                          : <><FaChevronDown className="text-[10px]" /> আরও দেখুন</>
-                        }
-                      </button>
-                    )}
+                {publisherName && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
+                    <span style={tinyLabel}>প্রকাশনা</span>
+                    <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 500 }}>{publisherName}</span>
                   </div>
                 )}
-
-                <div className="h-px bg-gray-100" />
-
-                {/* Quantity selector */}
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600 font-semibold">পরিমাণ:</span>
-                  <div className="inline-flex items-center bg-gray-100 rounded-full h-11 overflow-hidden">
-                    <button
-                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      className="w-11 h-11 flex items-center justify-center hover:bg-gray-200 text-gray-700 transition-colors rounded-full"
-                    >
-                      <FaMinus className="text-xs" />
-                    </button>
-                    <span className="w-10 text-center font-extrabold text-gray-900 text-sm">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity(q => q + 1)}
-                      className="w-11 h-11 flex items-center justify-center hover:bg-gray-200 text-gray-700 transition-colors rounded-full"
-                    >
-                      <FaPlus className="text-xs" />
-                    </button>
+                {product.weight && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
+                    <span style={tinyLabel}>ওজন</span>
+                    <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 500 }}>{product.weight}g</span>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Add to cart button */}
-                <button
+              <hr style={dividerStyle} />
+
+              {/* Pricing */}
+              <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 14, rowGap: 6 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1, fontFamily: "'Inter', 'Hind Siliguri', sans-serif" }}>
+                  ৳{currentPrice}
+                </span>
+                {discountPercent > 0 && (
+                  <>
+                    <span style={{ fontSize: 18, color: '#9ca3af', textDecoration: 'line-through' }}>৳{originalPrice}</span>
+                    <span style={{
+                      background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
+                      borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 700
+                    }}>−{discountPercent}% ছাড়</span>
+                  </>
+                )}
+              </div>
+              {savings > 0 && (
+                <p style={{ margin: '8px 0 16px', color: PRIMARY, fontSize: 13, fontStyle: 'italic', fontWeight: 600 }}>
+                  আপনি বাঁচাচ্ছেন ৳{savings}
+                </p>
+              )}
+
+              {/* Stock */}
+              <div>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: inStock ? '#f0fdf4' : '#fef2f2',
+                  color: inStock ? PRIMARY : '#dc2626',
+                  border: `1px solid ${inStock ? '#86efac' : '#fecaca'}`,
+                  padding: '5px 14px', borderRadius: 999, fontSize: 13, fontWeight: 700
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 999, background: inStock ? PRIMARY : '#dc2626', display: 'inline-block' }}/>
+                  {inStock ? 'স্টক আছে' : 'স্টক শেষ'}
+                </span>
+              </div>
+
+              <hr style={dividerStyle} />
+
+              {/* Description */}
+              {(product.description || product.shortDescription) && (
+                <>
+                  <div style={{
+                    color: '#374151', lineHeight: 1.85, fontSize: 15,
+                    display: showFullDescription ? 'block' : '-webkit-box',
+                    WebkitLineClamp: showFullDescription ? 'none' : 4,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}
+                    dangerouslySetInnerHTML={{ __html: product.description || product.shortDescription || '' }}
+                  />
+                  <button onClick={() => setShowFullDescription(e => !e)} style={{
+                    background: 'transparent', border: 'none', color: PRIMARY, padding: '10px 0 0',
+                    fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14,
+                    display: 'inline-flex', alignItems: 'center', gap: 6
+                  }}>
+                    {showFullDescription ? 'কম দেখুন' : 'আরও দেখুন'} <IcChevDown />
+                  </button>
+                  <hr style={dividerStyle} />
+                </>
+              )}
+
+              {/* Quantity */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+                <span style={tinyLabel}>পরিমাণ</span>
+                <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    style={{ width: 40, height: 40, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <IcMinus />
+                  </button>
+                  <div style={{ width: 56, height: 40, borderRadius: 10, border: '1.5px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#0f172a', background: 'white' }}>
+                    {quantity}
+                  </div>
+                  <button
+                    onClick={() => setQuantity(q => q + 1)}
+                    style={{ width: 40, height: 40, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <IcPlus />
+                  </button>
+                </div>
+                {product.totalPages && (
+                  <span style={{ color: '#9ca3af', fontSize: 13 }}>{product.totalPages} পৃষ্ঠা{product.edition ? ` · ${product.edition}` : ''}</span>
+                )}
+              </div>
+
+              {/* CTA buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <CTAButton
                   onClick={handleAddToCart}
-                  disabled={!inStock}
-                  className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-base transition-all duration-200 ${
-                    inStock
-                      ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-sm hover:shadow-md active:scale-[0.98]'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', boxShadow: '0 4px 16px rgba(234,88,12,0.35)' }}
+                  hoverShadow="0 10px 24px rgba(234,88,12,0.45)"
                 >
-                  <FaShoppingCart className="text-lg" />
-                  কার্টে যোগ করুন
-                </button>
-
-                {/* Buy now button */}
-                <button
+                  <IcCart /><span>কার্টে যোগ করুন</span>
+                </CTAButton>
+                <CTAButton
                   onClick={handleBuyNow}
-                  disabled={!inStock}
-                  className={`w-full py-4 rounded-2xl font-extrabold text-lg text-white transition-all duration-200 ${
-                    inStock
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98]'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', color: 'white', boxShadow: '0 4px 16px rgba(21,128,61,0.30)' }}
+                  hoverShadow="0 10px 24px rgba(21,128,61,0.4)"
                 >
-                  এখনই অর্ডার করুন
-                </button>
-
-                {/* WhatsApp order button */}
+                  <IcBolt /><span>এখনই অর্ডার করুন</span>
+                </CTAButton>
                 <a
                   href={`https://wa.me/8801893058682?text=${encodeURIComponent(`আমি এই বইটি অর্ডার করতে চাই: ${product?.name}\nলিংক: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-base bg-[#25D366] hover:bg-[#1ebe5d] text-white transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98]"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    background: '#ffffff', color: '#128C7E', border: '2px solid #25D366',
+                    borderRadius: 14, height: 56, fontSize: 16, fontWeight: 700,
+                    textDecoration: 'none', fontFamily: 'inherit',
+                    transition: 'background .2s ease'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#ffffff')}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-lg w-5 h-5">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  WhatsApp-এ অর্ডার করুন
+                  <IcWhatsApp /><span>WhatsApp-এ অর্ডার করুন</span>
                 </a>
-
-                {/* YouTube embed */}
-                {youtubeId && (
-                  <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2.5 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <FaPlay className="text-[8px]" /> PLAY
-                      </span>
-                      <h3 className="font-bold text-sm text-gray-700">বুক রিভিউ</h3>
-                    </div>
-                    <div className="aspect-video bg-black">
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title="Book Review Video"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* ─────────────── RIGHT: Delivery + Related ─────────────── */}
-            <div className="lg:col-span-3 space-y-5">
-
+            {/* RIGHT: Delivery + Related */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* Delivery card */}
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-                <h3 className="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <FaTruck className="text-emerald-600 text-xs" />
-                  </div>
-                  ডেলিভারি তথ্য
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                    <span className="text-xs text-gray-600 font-medium">ঢাকার ভেতরে</span>
-                    <span className="text-xs font-extrabold text-emerald-700">৳{shippingCharge?.deliveryInDhaka || 60}</span>
-                  </div>
-                  <div className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-xs text-gray-600 font-medium">ঢাকার বাইরে</span>
-                    <span className="text-xs font-extrabold text-gray-700">৳{shippingCharge?.deliveryOutsideDhaka || 120}</span>
-                  </div>
-                  {shippingCharge?.deliveryOutsideBD ? (
-                    <div className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-gray-50 border border-gray-100">
-                      <span className="text-xs text-gray-600 font-medium">বাংলাদেশের বাইরে</span>
-                      <span className="text-xs font-extrabold text-gray-700">৳{shippingCharge.deliveryOutsideBD}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-gray-50 border border-gray-100 opacity-40">
-                      <span className="text-xs text-gray-500 font-medium">বাংলাদেশের বাইরে</span>
-                      <span className="text-xs font-bold text-gray-400">N/A</span>
-                    </div>
-                  )}
+              <div style={sideCardStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
+                  <IcTruck />
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>ডেলিভারির তথ্য</h3>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-3.5 text-center font-medium">১–৪ কার্যদিবসে ডেলিভারি</p>
+                {[
+                  { label: 'ঢাকার ভেতরে', value: `৳${shippingCharge?.deliveryInDhaka || 60}`, muted: false },
+                  { label: 'ঢাকার বাইরে', value: `৳${shippingCharge?.deliveryOutsideDhaka || 120}`, muted: false },
+                  { label: 'আন্তর্জাতিক', value: 'N/A', muted: true },
+                ].map(({ label, value, muted }) => (
+                  <div key={label} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '12px 0', borderBottom: '1px solid #f1f5f9', fontSize: 14
+                  }}>
+                    <span style={{ color: muted ? '#9ca3af' : '#374151' }}>{label}</span>
+                    <span style={{ color: muted ? '#9ca3af' : '#0f172a', fontWeight: 700 }}>{value}</span>
+                  </div>
+                ))}
+                <div style={{
+                  marginTop: 12, marginInline: -20, marginBottom: -20,
+                  background: '#f8fafc', padding: '10px 20px', borderRadius: '0 0 20px 20px',
+                  display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', fontSize: 12
+                }}>
+                  <IcClock /> ১–৪ কার্যদিবসে ডেলিভারি
+                </div>
               </div>
 
               {/* Related books */}
-              {relatedProducts.length > 0 && (
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="w-1 h-5 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full inline-block" />
-                    <h3 className="font-bold text-sm text-gray-900">সম্পর্কিত বই</h3>
-                  </div>
-                  <div className="space-y-3.5">
-                    {relatedProducts.slice(0, 6).map((p) => {
-                      const pPrice = getCurrentPrice(p);
-                      const pOriginalPrice = getOriginalPrice(p);
-                      const pDiscount = getDiscountPercent(p);
+              {sideRelated.length > 0 && (
+                <div style={sideCardStyle}>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>সম্পর্কিত বই</h3>
+                  <div>
+                    {sideRelated.map((b, i) => {
+                      const bPrice = getCurrentPrice(b);
                       return (
-                        <div key={p._id} className="flex gap-3 group">
-                          <Link href={`/products/${p.slug}`} className="flex-shrink-0">
-                            <div className="w-12 h-16 bg-gray-100 rounded-xl overflow-hidden relative shadow-sm group-hover:shadow-md transition-shadow">
-                              {p.images?.[0] && (
-                                <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />
-                              )}
-                              {pDiscount > 0 && (
-                                <span className="absolute top-0 right-0 bg-red-500 text-white text-[7px] font-bold px-1 py-0.5 rounded-bl-lg">
-                                  -{pDiscount}%
-                                </span>
-                              )}
-                            </div>
-                          </Link>
-                          <div className="flex-1 min-w-0 flex flex-col justify-between">
-                            <Link href={`/products/${p.slug}`}>
-                              <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors">
-                                {p.name}
-                              </p>
-                            </Link>
-                            <div className="flex items-center justify-between mt-1.5">
-                              <div>
-                                <p className="text-xs font-extrabold text-gray-900">৳{pPrice}</p>
-                                {pDiscount > 0 && (
-                                  <p className="text-[10px] text-gray-400 line-through">৳{pOriginalPrice}</p>
-                                )}
+                        <div key={b._id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '10px 0',
+                          borderBottom: i < sideRelated.length - 1 ? '1px solid #f1f5f9' : 'none'
+                        }}>
+                          <Link href={`/products/${b.slug}`} style={{ width: 52, height: 68, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', display: 'block' }}>
+                            {b.images?.[0] ? (
+                              <img src={imgUrl(b.images[0])!} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div className={`cv ${cvClass(b._id)}`} style={{ width: '100%', height: '100%' }}>
+                                <div className="t" style={{ fontSize: 9 }}>{b.name}</div>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  addItem(p, 1);
-                                  toast.success('কার্টে যোগ হয়েছে');
-                                }}
-                                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors shadow-sm"
-                              >
-                                + Add
-                              </button>
-                            </div>
+                            )}
+                          </Link>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Link href={`/products/${b.slug}`} style={{ textDecoration: 'none' }}>
+                              <div style={{
+                                fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35,
+                                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                              }}>{b.name}</div>
+                            </Link>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY, marginTop: 2 }}>৳{bPrice}</div>
                           </div>
+                          <button onClick={() => { addItem(b, 1); toast.success('কার্টে যোগ হয়েছে'); }} style={{
+                            background: ORANGE, color: 'white', border: 'none', borderRadius: 999,
+                            padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: 'inherit', letterSpacing: 0.4, flexShrink: 0
+                          }}>+ ADD</button>
                         </div>
                       );
                     })}
@@ -770,425 +822,431 @@ export default function ProductDetailClient({ params }: Props) {
               )}
             </div>
           </div>
+        </section>
 
-          {/* ─────────────── Bundle Section ─────────────── */}
-          {bundleProducts.length > 0 && (
-            <div className="mt-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-emerald-50 to-white border-b border-gray-100">
-                <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <HiOutlineBookOpen className="text-emerald-600 w-4 h-4" />
-                  </div>
-                  একসাথে কিনুন
-                </h2>
+        {/* ── Bundle section ── */}
+        {bundleProducts.length > 0 && (
+          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #fefce8, #fff7ed)',
+              border: '1.5px solid #fed7aa', borderRadius: 20, padding: 24,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>📚 একসাথে কিনুন</h3>
                 {bundleSavings > 0 && (
-                  <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-200">
+                  <span style={{ background: '#dcfce7', color: PRIMARY, padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800 }}>
                     ৳{bundleSavings.toFixed(0)} সাশ্রয়
                   </span>
                 )}
               </div>
 
-              <div className="p-6">
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                  {/* Main product */}
-                  <div className="text-center">
-                    <div className="w-20 h-28 bg-gray-100 rounded-2xl overflow-hidden mb-2 mx-auto ring-2 ring-emerald-400 ring-offset-2 shadow-md">
-                      {product?.images?.[0] && (
-                        <img src={imgUrl(product.images[0])!} alt="" className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <Link
-                      href={`/products/${product?.slug || product?._id}`}
-                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors"
-                    >
-                      {product?.name}
-                    </Link>
-                    <p className="text-xs font-extrabold text-gray-900 mt-1">৳{getCurrentPrice(product!)}</p>
+              <div className="pd-bundle-row">
+                {/* Current book */}
+                <div style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative' }}>
+                  <span style={{ position: 'absolute', top: 8, right: 8, background: PRIMARY, color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>✓</span>
+                  <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
+                    {product.images?.[0] ? (
+                      <img src={imgUrl(product.images[0])!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div className={`cv ${cvClass(product._id)}`} style={{ width: '100%', height: '100%' }}>
+                        <div className="t" style={{ fontSize: 10 }}>{product.name}</div>
+                      </div>
+                    )}
                   </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{authorName}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 6 }}>৳{currentPrice}</div>
+                  </div>
+                </div>
 
-                  {bundleProducts.map((item) => {
-                    const itemPrice = getCurrentPrice(item.product);
-                    const itemDiscount = getDiscountPercent(item.product);
-                    const isSelected = selectedBundle.includes(item.product._id);
-
-                    return (
-                      <div key={item.product._id} className="flex items-center gap-4">
-                        <span className="text-2xl text-gray-300 font-light select-none">+</span>
-                        <div className="text-center">
-                          {/* Image — click toggles selection */}
-                          <div
-                            className={`relative w-20 h-28 bg-gray-100 rounded-2xl overflow-hidden mb-2 cursor-pointer transition-all duration-200 mx-auto
-                              ${isSelected ? 'ring-2 ring-emerald-400 ring-offset-2 shadow-md' : 'opacity-55 hover:opacity-80 shadow-sm'}`}
-                            onClick={() => handleToggleBundle(item.product._id)}
-                          >
-                            {item.product.images?.[0] && (
-                              <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />
-                            )}
-                            {itemDiscount > 0 && (
-                              <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-                                -{itemDiscount}%
-                              </span>
-                            )}
-                            {isSelected ? (
-                              <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
-                                <FaCheck className="text-white text-[8px]" />
-                              </div>
-                            ) : (
-                              <div className="absolute inset-0 bg-black/25 flex items-center justify-center rounded-2xl">
-                                <FaPlus className="text-white text-sm" />
-                              </div>
-                            )}
-                          </div>
-                          {/* Title — always a link using slug or _id */}
-                          <Link
-                            href={`/products/${item.product.slug || item.product._id}`}
-                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline line-clamp-2 max-w-[80px] mx-auto block transition-colors"
-                          >
-                            {item.product.name}
-                          </Link>
-                          <p className="text-xs font-extrabold text-gray-900 mt-1">৳{itemPrice}</p>
+                {bundleProducts.map((item) => {
+                  const isSelected = selectedBundle.includes(item.product._id);
+                  const itemPrice = getCurrentPrice(item.product);
+                  const discountedItemPrice = Math.round(itemPrice * 0.9);
+                  const itemAuthorName = getAuthorName(item.product.author);
+                  return (
+                    <div key={item.product._id} style={{ display: 'contents' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#d97706', fontWeight: 900 }}>+</div>
+                      <div
+                        onClick={() => handleToggleBundle(item.product._id)}
+                        style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative', cursor: 'pointer', opacity: isSelected ? 1 : 0.55, transition: 'opacity .2s' }}
+                      >
+                        <span style={{ position: 'absolute', top: 8, right: 8, background: isSelected ? PRIMARY : '#e5e7eb', color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{isSelected ? '✓' : ''}</span>
+                        <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
+                          {item.product.images?.[0] ? (
+                            <img src={imgUrl(item.product.images[0])!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div className={`cv ${cvClass(item.product._id)}`} style={{ width: '100%', height: '100%' }}>
+                              <div className="t" style={{ fontSize: 10 }}>{item.product.name}</div>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.product.name}</div>
+                          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{itemAuthorName}</div>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 6 }}>৳{discountedItemPrice} <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through', fontWeight: 400 }}>৳{itemPrice}</span></div>
                         </div>
                       </div>
-                    );
-                  })}
-
-                  {/* Equals + Total */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl text-gray-300 font-light select-none">=</span>
-                    <div className="bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 rounded-2xl p-4 text-center min-w-[108px] shadow-sm">
-                      <p className="text-[10px] text-gray-500 font-medium mb-1">মোট মূল্য</p>
-                      <p className="text-2xl font-extrabold text-gray-900">৳{bundleTotal.toFixed(0)}</p>
-                      {bundleSavings > 0 && (
-                        <p className="text-[10px] text-emerald-600 font-bold mt-1">সাশ্রয় ৳{bundleSavings.toFixed(0)}</p>
-                      )}
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
 
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={handleAddBundleToCart}
-                    disabled={selectedBundle.length === 0}
-                    className="w-full max-w-sm bg-orange-500 hover:bg-orange-600 disabled:bg-gray-100 disabled:text-gray-400 text-white py-3.5 px-6 rounded-2xl font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2.5 active:scale-[0.98]"
-                  >
-                    <FaShoppingCart />
-                    সব একসাথে কার্টে যোগ করুন
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#d97706', fontWeight: 900 }}>=</div>
+                <div style={{ background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div style={{ ...tinyLabel, color: '#9ca3af' }}>মোট</div>
+                  <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706', lineHeight: 1.1, marginTop: 4 }}>৳{bundleTotal.toFixed(0)}</div>
+                  {bundleSavings > 0 && <div style={{ fontSize: 12.5, color: PRIMARY, marginTop: 4, fontWeight: 700 }}>সাশ্রয় ৳{bundleSavings.toFixed(0)}</div>}
+                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{selectedBundle.length + 1}টি বই</div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* ─────────────── Tabs ─────────────── */}
-          <div className="mt-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* Tab bar */}
-            <div className="flex border-b border-gray-100 bg-gray-50/70">
-              {['description', 'specifications', 'author', 'reviews'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-4 text-sm font-semibold transition-all whitespace-nowrap ${
-                    activeTab === tab
-                      ? 'text-emerald-700 border-b-2 border-emerald-600 bg-white -mb-px'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
-                  }`}
-                >
-                  {tab === 'description' ? 'বিবরণ' : tab === 'specifications' ? 'স্পেসিফিকেশন' : tab === 'author' ? 'লেখক' : 'রিভিউ'}
-                  {tab === 'reviews' && product.ratingCount ? (
-                    <span className="ml-1.5 text-[10px] bg-gray-200 text-gray-600 font-bold px-1.5 py-0.5 rounded-full">
-                      {product.ratingCount}
-                    </span>
-                  ) : null}
-                </button>
-              ))}
+              <button
+                onClick={handleAddBundleToCart}
+                disabled={selectedBundle.length === 0}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(234,88,12,0.45)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(234,88,12,0.35)'; }}
+                style={{
+                  width: '100%', marginTop: 20,
+                  background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white',
+                  border: 'none', borderRadius: 14, height: 52, fontSize: 16, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: '0 4px 16px rgba(234,88,12,0.35)',
+                  transition: 'transform .15s ease, box-shadow .2s ease',
+                  opacity: selectedBundle.length === 0 ? 0.6 : 1
+                }}
+              >
+                <IcCart /> সব একসাথে কার্টে যোগ করুন
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* ── Tabs ── */}
+        <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
+          <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', padding: '12px 12px 0', gap: 4, overflowX: 'auto' }}>
+              {[
+                { id: 'description', label: 'বিবরণ' },
+                { id: 'specifications', label: 'স্পেসিফিকেশন' },
+                { id: 'author', label: 'লেখক' },
+                { id: 'reviews', label: `রিভিউ${product.ratingCount ? ` (${product.ratingCount})` : ''}` },
+              ].map(t => {
+                const active = activeTab === t.id;
+                return (
+                  <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                    padding: '12px 18px', background: active ? '#f0fdf4' : 'transparent',
+                    border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
+                    fontSize: 15, whiteSpace: 'nowrap', color: active ? PRIMARY : '#9ca3af',
+                    borderRadius: '10px 10px 0 0',
+                    borderBottom: active ? `3px solid ${PRIMARY}` : '3px solid transparent',
+                    marginBottom: -1, transition: 'all .2s ease'
+                  }}>{t.label}</button>
+                );
+              })}
             </div>
 
-            {/* Tab content */}
-            <div className="p-6 md:p-8">
-              {activeTab === 'description' && product.description && (
-                <div
-                  className="prose prose-sm max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-900 prose-a:text-emerald-600"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
+            <div style={{ padding: 28 }}>
+              {activeTab === 'description' && (
+                product.description ? (
+                  <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9, maxWidth: 880 }} dangerouslySetInnerHTML={{ __html: product.description }} />
+                ) : product.shortDescription ? (
+                  <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9, maxWidth: 880 }}>
+                    <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
+                  </div>
+                ) : (
+                  <p style={{ color: '#9ca3af', fontFamily: 'var(--bn)' }}>বিবরণ পাওয়া যায়নি।</p>
+                )
               )}
 
               {activeTab === 'specifications' && (
-                <div className="overflow-hidden rounded-2xl border border-gray-100">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {product.name && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold w-1/3 bg-gray-50/60">শিরোনাম</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.name}</td>
-                        </tr>
-                      )}
-                      {authorName && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">লেখক</td>
-                          <td className="py-3.5 px-5 text-gray-800">{authorName}</td>
-                        </tr>
-                      )}
-                      {publisherName && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">প্রকাশনী</td>
-                          <td className="py-3.5 px-5 text-gray-800">{publisherName}</td>
-                        </tr>
-                      )}
-                      {product.edition && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">সংস্করণ</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.edition}</td>
-                        </tr>
-                      )}
-                      {product.totalPages && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">পৃষ্ঠা সংখ্যা</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.totalPages}</td>
-                        </tr>
-                      )}
-                      {product.country && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">দেশ</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.country}</td>
-                        </tr>
-                      )}
-                      {product.language && (
-                        <tr className="border-b border-gray-100">
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">ভাষা</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.language}</td>
-                        </tr>
-                      )}
-                      {product.weight && (
-                        <tr>
-                          <td className="py-3.5 px-5 text-gray-500 font-semibold bg-gray-50/60">ওজন</td>
-                          <td className="py-3.5 px-5 text-gray-800">{product.weight}g</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <table style={{ width: '100%', maxWidth: 720, borderCollapse: 'collapse', fontSize: 15 }}>
+                  <tbody>
+                    {[
+                      ['শিরোনাম', product.name],
+                      authorName ? ['লেখক', authorName] : null,
+                      publisherName ? ['প্রকাশনী', publisherName] : null,
+                      product.edition ? ['সংস্করণ', product.edition] : null,
+                      product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
+                      product.country ? ['দেশ', product.country] : null,
+                      product.language ? ['ভাষা', product.language] : null,
+                      product.weight ? ['ওজন', `${product.weight}g`] : null,
+                    ].filter(Boolean).map(([k, v], i) => (
+                      <tr key={k as string} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
+                        <td style={{ padding: '14px 18px', color: '#6b7280', width: 200, fontWeight: 600 }}>{k}</td>
+                        <td style={{ padding: '14px 18px', color: '#0f172a', fontWeight: 600 }}>{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
 
               {activeTab === 'author' && authorName && (
-                <div className="flex items-start gap-5">
-                  <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-emerald-700 font-extrabold text-xl">{authorName[0]}</span>
-                  </div>
+                <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start', maxWidth: 820 }}>
+                  <div style={{
+                    width: 96, height: 96, borderRadius: '50%', background: '#dcfce7', color: '#15803d',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 36, fontWeight: 800, flexShrink: 0
+                  }}>{authorName[0]}</div>
                   <div>
-                    <h3 className="font-extrabold text-xl text-gray-900 mb-1.5">{authorName}</h3>
-                    <p className="text-gray-500 text-sm">লেখকের অন্যান্য বই সমূহ দেখতে লেখকের নামে সার্চ করুন।</p>
-                    <Link
-                      href={`/products?author=${encodeURIComponent(authorName)}`}
-                      className="inline-block mt-3 text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline"
-                    >
-                      সকল বই দেখুন →
+                    <h4 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{authorName}</h4>
+                    <p style={{ margin: '0 0 16px', color: '#374151', fontSize: 15, lineHeight: 1.85 }}>
+                      লেখকের অন্যান্য বই সমূহ দেখতে নিচের লিঙ্কে যান।
+                    </p>
+                    <Link href={`/products?author=${encodeURIComponent(authorName)}`} style={{ color: PRIMARY, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
+                      লেখকের সব বই দেখুন →
                     </Link>
                   </div>
                 </div>
               )}
 
               {activeTab === 'reviews' && (
-                <div className="space-y-6">
-                  {/* Rating summary */}
-                  {product.ratingAvr ? (
-                    <div className="flex items-start gap-6 p-5 bg-gradient-to-r from-amber-50 to-white rounded-2xl border border-amber-100">
-                      <div className="text-center flex-shrink-0">
-                        <p className="text-5xl font-extrabold text-gray-900 leading-none mb-2">{product.ratingAvr.toFixed(1)}</p>
-                        <div className="flex gap-0.5 justify-center mb-2">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <FaStar key={s} className={`text-lg ${s <= Math.round(product.ratingAvr || 0) ? 'text-amber-400' : 'text-gray-200'}`} />
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-400 font-medium">{product.ratingCount || 0} রিভিউ</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 820 }}>
+                  {rating > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: 18, background: '#f9fafb', borderRadius: 14, flexWrap: 'wrap' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>{rating.toFixed(1)}</div>
+                        <div style={{ color: '#f59e0b', fontSize: 16, marginTop: 4 }}>{'★'.repeat(Math.round(rating))}</div>
+                        <div style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 4 }}>{product.ratingCount || 0} টি রিভিউ</div>
                       </div>
-                      <div className="flex-1 space-y-2">
-                        {[5, 4, 3, 2, 1].map((stars) => {
-                          const count = product.ratingDetails?.find(r => r.stars === stars)?.count || 0;
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
+                        {[5, 4, 3, 2, 1].map(s => {
+                          const count = product.ratingDetails?.find((r: any) => r.stars === s)?.count || 0;
                           const total = product.ratingCount || 1;
                           const percent = (count / total) * 100;
                           return (
-                            <div key={stars} className="flex items-center gap-2.5 text-xs">
-                              <span className="text-gray-500 w-10 text-right font-medium">{stars} ★</span>
-                              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-amber-400 rounded-full transition-all duration-500"
-                                  style={{ width: `${percent}%` }}
-                                />
+                            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                              <span style={{ width: 32, color: '#9ca3af' }}>{s}★</span>
+                              <div style={{ flex: 1, height: 8, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden' }}>
+                                <div style={{ width: `${percent}%`, height: '100%', background: PRIMARY }} />
                               </div>
-                              <span className="text-gray-400 w-6 font-medium">{count}</span>
+                              <span style={{ width: 36, color: '#9ca3af', textAlign: 'right' }}>{count}</span>
                             </div>
                           );
                         })}
                       </div>
                     </div>
-                  ) : null}
+                  )}
 
-                  {/* Write review */}
                   {isAuthenticated() ? (
-                    <div>
-                      {!showReviewForm ? (
-                        <button
-                          onClick={() => setShowReviewForm(true)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm hover:shadow-md"
-                        >
-                          রিভিউ লিখুন
-                        </button>
-                      ) : (
-                        <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-4">
-                          <h4 className="font-extrabold text-gray-900">আপনার রিভিউ লিখুন</h4>
-                          <div>
-                            <label className="block text-gray-600 text-sm mb-2 font-semibold">রেটিং</label>
-                            <div className="flex gap-2">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  onClick={() => setNewReview({ ...newReview, rating: star })}
-                                  className="text-2xl transition-transform hover:scale-110"
-                                >
-                                  <FaStar className={star <= newReview.rating ? 'text-amber-400' : 'text-gray-200'} />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-gray-600 text-sm mb-2 font-semibold">আপনার মন্তব্য</label>
-                            <textarea
-                              value={newReview.review}
-                              onChange={(e) => setNewReview({ ...newReview, review: e.target.value })}
-                              placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
-                              className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-sm bg-white transition-shadow"
-                              rows={4}
-                            />
-                          </div>
-                          <div className="flex gap-3">
-                            <button
-                              onClick={handleSubmitReview}
-                              disabled={submittingReview}
-                              className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-200 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
-                            >
-                              {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
-                            </button>
-                            <button
-                              onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }}
-                              className="bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors"
-                            >
-                              বাতিল
-                            </button>
+                    !showReviewForm ? (
+                      <button onClick={() => setShowReviewForm(true)} style={{
+                        alignSelf: 'flex-start', background: 'white', border: `1px solid ${PRIMARY}`,
+                        color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit'
+                      }}>রিভিউ লিখুন</button>
+                    ) : (
+                      <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        <h4 style={{ fontFamily: 'var(--bn)', fontWeight: 600, fontSize: 18, margin: 0 }}>আপনার রিভিউ লিখুন</h4>
+                        <div>
+                          <div style={{ ...tinyLabel, marginBottom: 8 }}>রেটিং</div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <button key={star} onClick={() => setNewReview({ ...newReview, rating: star })} style={{ background: 'none', border: 0, cursor: 'pointer', fontSize: 24 }}>
+                                <FaStar style={{ color: star <= newReview.rating ? '#f59e0b' : '#e5e7eb' }} />
+                              </button>
+                            ))}
                           </div>
                         </div>
-                      )}
-                    </div>
+                        <div>
+                          <div style={{ ...tinyLabel, marginBottom: 8 }}>মন্তব্য</div>
+                          <textarea
+                            value={newReview.review}
+                            onChange={e => setNewReview({ ...newReview, review: e.target.value })}
+                            placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
+                            rows={4}
+                            style={{ width: '100%', padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', color: '#0f172a', fontFamily: 'var(--bn)', fontSize: 15, lineHeight: 1.6, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button onClick={handleSubmitReview} disabled={submittingReview} style={{ background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
+                          </button>
+                          <button onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }} style={{ background: 'white', border: '1px solid #e5e7eb', color: '#374151', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            বাতিল
+                          </button>
+                        </div>
+                      </div>
+                    )
                   ) : (
-                    <div className="p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 text-center">
-                      <p className="text-gray-600 mb-4 text-sm font-medium">রিভিউ লিখতে লগইন করুন</p>
-                      <div className="flex items-center justify-center gap-3">
-                        <Link href="/login" className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm">
-                          লগইন
-                        </Link>
-                        <span className="text-gray-400 text-sm">বা</span>
-                        <Link href="/register" className="text-emerald-600 hover:underline font-semibold text-sm">
-                          নিবন্ধন করুন
-                        </Link>
+                    <div style={{ padding: 24, background: '#f9fafb', borderRadius: 16, textAlign: 'center' }}>
+                      <p style={{ color: '#374151', marginBottom: 16, fontFamily: 'var(--bn)' }}>রিভিউ লিখতে লগইন করুন</p>
+                      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
+                        <Link href="/login" style={{ background: PRIMARY, color: 'white', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>লগইন</Link>
+                        <Link href="/register" style={{ background: 'white', border: `1px solid ${PRIMARY}`, color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>নিবন্ধন</Link>
                       </div>
                     </div>
                   )}
 
-                  {/* Reviews list */}
                   {loadingReviews ? (
-                    <div className="space-y-3">
-                      {[0, 1, 2].map(i => (
-                        <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 animate-pulse">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-200 rounded-full" />
-                            <div className="h-3 w-32 bg-gray-200 rounded-full" />
-                          </div>
-                          <div className="h-3 bg-gray-200 rounded-full w-full" />
-                          <div className="h-3 bg-gray-200 rounded-full w-4/5" />
-                        </div>
-                      ))}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: '#f1f5f9', borderRadius: 12 }} />)}
                     </div>
                   ) : reviews.length > 0 ? (
-                    <div className="space-y-3">
-                      {reviews.map((review) => (
-                        <div key={review._id} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 transition-colors">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-emerald-700 font-extrabold text-sm">
-                                {review.user?.name?.[0]?.toUpperCase() || 'A'}
-                              </span>
+                    <div>
+                      {reviews.map((review, i) => (
+                        <div key={review._id} style={{ padding: '18px 0', borderBottom: i < reviews.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 999, background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                              {review.user?.name?.[0]?.toUpperCase() || 'A'}
                             </div>
-                            <div>
-                              <p className="font-bold text-gray-800 text-sm">{review.user?.name || 'Anonymous'}</p>
-                              <div className="flex gap-0.5 mt-0.5">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                  <FaStar key={s} className={`text-xs ${s <= review.rating ? 'text-amber-400' : 'text-gray-200'}`} />
-                                ))}
-                              </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{review.user?.name || 'Anonymous'}</div>
                             </div>
+                            <span style={{ color: '#f59e0b', fontSize: 14 }}>{'★'.repeat(review.rating)}</span>
                           </div>
-                          <p className="text-gray-600 text-sm leading-relaxed">{review.review}</p>
+                          <p style={{ margin: '0 0 0 48px', color: '#374151', fontSize: 14.5, lineHeight: 1.75 }}>{review.review}</p>
                           {review.reply && (
-                            <div className="mt-3 pl-4 border-l-2 border-emerald-300 bg-emerald-50/70 rounded-r-xl p-3">
-                              <p className="text-xs text-emerald-700 font-bold mb-1">বিক্রেতার উত্তর:</p>
-                              <p className="text-gray-600 text-sm">{review.reply}</p>
+                            <div style={{ marginTop: 10, marginLeft: 48, padding: '10px 14px', borderLeft: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: '0 8px 8px 0' }}>
+                              <h4 style={{ margin: '0 0 4px', fontSize: 13, color: '#15803d', fontWeight: 700 }}>বিক্রেতার উত্তর:</h4>
+                              <p style={{ margin: 0, color: '#374151', fontSize: 13.5 }}>{review.reply}</p>
                             </div>
                           )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-10">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <FaStar className="text-gray-300 text-2xl" />
-                      </div>
-                      <p className="text-gray-400 text-sm font-medium">এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!</p>
+                    <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontFamily: 'var(--bn)' }}>
+                      এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!
                     </div>
                   )}
                 </div>
               )}
             </div>
           </div>
+        </section>
 
-          {/* ─────────────── Best Sellers ─────────────── */}
-          {bestSellers.length > 0 && (
-            <div className="mt-6 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="w-1.5 h-7 bg-gradient-to-b from-orange-500 to-red-500 rounded-full" />
-                <h2 className="text-base font-extrabold text-gray-900">সর্বাধিক বিক্রিত বই</h2>
+        {/* ── Video section ── */}
+        {youtubeId && (
+          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
+            <div className="video-section">
+              <div className="video-player" onClick={() => setShowVideoModal(true)}>
+                <div className="video-thumb-meta">
+                  <span>বুক রিভিউ</span>
+                  <span className="live">▶ PLAY</span>
+                </div>
+                <button className="play-btn" type="button">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
+                <div className="video-thumb-bottom">
+                  <div className="vt">{product.name} — বুক রিভিউ</div>
+                  <div className="vd">YouTube · {authorName}</div>
+                </div>
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                {bestSellers.slice(0, 8).map((p) => (
-                  <div
-                    key={p._id}
-                    className="flex-shrink-0 w-28 group"
-                  >
-                    <Link href={`/products/${p.slug}`}>
-                      <div className="w-28 h-36 bg-gray-100 rounded-2xl mb-2.5 overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:-translate-y-0.5">
-                        {p.images?.[0] && (
-                          <img src={imgUrl(p.images[0])!} alt="" className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                      <p className="text-xs font-semibold text-gray-800 line-clamp-2 mb-1.5 group-hover:text-emerald-600 transition-colors leading-snug">
-                        {p.name}
-                      </p>
-                      <p className="text-xs font-extrabold text-gray-900 mb-2">৳{getCurrentPrice(p)}</p>
-                    </Link>
-                    <button
-                      onClick={() => { addItem(p, 1); toast.success('কার্টে যোগ হয়েছে'); }}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold py-2 rounded-xl transition-colors shadow-sm hover:shadow-md active:scale-95"
-                    >
-                      + কার্টে যোগ
-                    </button>
+              <div className="video-side">
+                <div>
+                  <div className="sub">BOOK REVIEW · ভিডিও রিভিউ</div>
+                  <h3><span className="bn">{product.name} নিয়ে আলোচনা</span></h3>
+                  <p>এই বইটির বিস্তারিত রিভিউ দেখুন।</p>
+                </div>
+                <div>
+                  <div className="video-reviewer">
+                    <div className="video-reviewer-av">{authorName?.[0] || 'A'}</div>
+                    <div>
+                      <div className="video-reviewer-name">বুক রিভিউ</div>
+                      <div className="video-reviewer-meta">Shobaz Editorial · বাংলাদেশ</div>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {youtubeId && (
+          <div className={`video-modal-bg${showVideoModal ? ' open' : ''}`} onClick={() => setShowVideoModal(false)}>
+            <div className="video-modal" onClick={e => e.stopPropagation()}>
+              <button className="video-modal-x" type="button" onClick={() => setShowVideoModal(false)}>×</button>
+              {showVideoModal && (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Book Review"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Bestsellers carousel ── */}
+        {bestSellers.length > 0 && (
+          <section style={{ maxWidth: 1280, margin: '40px auto 0', padding: '0 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <IcFlame /> সর্বাধিক বিক্রিত বই
+              </h2>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[IcChevL, IcChevR].map((Ic, dir) => (
+                  <button key={dir} onClick={() => bestsellerScrollRef.current?.scrollBy({ left: dir === 0 ? -320 : 320, behavior: 'smooth' })} style={{
+                    width: 40, height: 40, borderRadius: 999, background: 'white',
+                    border: '1.5px solid #e2e8f0', cursor: 'pointer', color: '#374151',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                  }}>
+                    <Ic />
+                  </button>
                 ))}
               </div>
             </div>
-          )}
-
-        </div>
+            <div ref={bestsellerScrollRef} style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory', scrollbarWidth: 'thin' }}>
+              {bestSellers.map(b => {
+                const bPrice = getCurrentPrice(b);
+                const bOriginal = getOriginalPrice(b);
+                const bDisc = getDiscountPercent(b);
+                const bAuthor = getAuthorName(b.author);
+                return (
+                  <div
+                    key={b._id}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 30px rgba(0,0,0,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.07)'; }}
+                    style={{ flex: '0 0 220px', scrollSnapAlign: 'start', background: 'white', borderRadius: 16, padding: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', transition: 'transform .2s ease, box-shadow .2s ease' }}
+                  >
+                    <Link href={`/products/${b.slug}`} style={{ display: 'block', position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#f8fafc', marginBottom: 12, textDecoration: 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0' }}>
+                        {b.images?.[0] ? (
+                          <img src={imgUrl(b.images[0])!} alt={b.name} style={{ width: 120, height: 170, objectFit: 'cover', borderRadius: 6, boxShadow: '0 12px 18px rgba(15,23,42,0.18)' }} />
+                        ) : (
+                          <div className={`cv ${cvClass(b._id)}`} style={{ width: 120, height: 170, borderRadius: 6 }}>
+                            <div className="a">{bAuthor?.split(' ')[0] || ''}</div>
+                            <div className="t">{b.name}</div>
+                            <div className="frame" />
+                          </div>
+                        )}
+                      </div>
+                      {bDisc > 0 && (
+                        <div style={{ position: 'absolute', top: 10, left: 10, background: '#dc2626', color: 'white', fontWeight: 800, fontSize: 11, padding: '3px 8px', borderRadius: 6 }}>−{bDisc}%</div>
+                      )}
+                    </Link>
+                    <Link href={`/products/${b.slug}`} style={{ textDecoration: 'none' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 38 }}>{b.name}</div>
+                    </Link>
+                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{bAuthor}</div>
+                    {b.ratingAvr && (
+                      <div style={{ marginTop: 4, color: '#f59e0b', fontSize: 11 }}>{'★'.repeat(Math.round(b.ratingAvr))} <span style={{ color: '#9ca3af' }}>({b.ratingCount || 0})</span></div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: PRIMARY }}> ৳{bPrice}</span>
+                      {bDisc > 0 && <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>৳{bOriginal}</span>}
+                    </div>
+                    <button
+                      onClick={() => { addItem(b, 1); toast.success('কার্টে যোগ হয়েছে'); }}
+                      style={{ marginTop: 12, width: '100%', height: 40, background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    >
+                      <IcCart size={16} /> কার্টে যোগ করুন
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </main>
 
-      {/* ─────────────── PDF Preview Modal ─────────────── */}
+      {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
         <div className="fixed inset-0 z-[100]">
           <button
