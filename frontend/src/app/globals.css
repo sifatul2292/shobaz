@@ -499,3 +499,13 @@ input[type="number"] {
   .pd-bundle-row > :nth-child(2),
   .pd-bundle-row > :nth-child(4) { display: none; }
 }
+
+.pd-video-tabs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 32px;
+  align-items: flex-start;
+}
+@media (max-width: 768px) {
+  .pd-video-tabs-grid { grid-template-columns: 1fr; }
+}

@@ -443,7 +443,7 @@ export default function ProductDetailClient({ params }: Props) {
     return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
   }, 0);
 
-  const sideRelated = relatedProducts.slice(0, 6);
+  const sideRelated = relatedProducts.slice(0, 5);
 
   return (
     <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
@@ -818,9 +818,9 @@ export default function ProductDetailClient({ params }: Props) {
                 )}
               </div>
 
-              <div className="pd-bundle-row">
+              <div style={{ display: 'flex', gap: 10, alignItems: 'stretch', overflowX: 'auto' }}>
                 {/* Current book */}
-                <div style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative' }}>
+                <div style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative' }}>
                   <span style={{ position: 'absolute', top: 8, right: 8, background: PRIMARY, color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>✓</span>
                   <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
                     {product.images?.[0] ? (
@@ -845,10 +845,10 @@ export default function ProductDetailClient({ params }: Props) {
                   const itemAuthorName = getAuthorName(item.product.author);
                   return (
                     <div key={item.product._id} style={{ display: 'contents' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#d97706', fontWeight: 900 }}>+</div>
+                      <div style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>+</div>
                       <div
                         onClick={() => handleToggleBundle(item.product._id)}
-                        style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative', cursor: 'pointer', opacity: isSelected ? 1 : 0.55, transition: 'opacity .2s' }}
+                        style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative', cursor: 'pointer', opacity: isSelected ? 1 : 0.55, transition: 'opacity .2s' }}
                       >
                         <span style={{ position: 'absolute', top: 8, right: 8, background: isSelected ? PRIMARY : '#e5e7eb', color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{isSelected ? '✓' : ''}</span>
                         <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
@@ -870,8 +870,8 @@ export default function ProductDetailClient({ params }: Props) {
                   );
                 })}
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#d97706', fontWeight: 900 }}>=</div>
-                <div style={{ background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>=</div>
+                <div style={{ flexShrink: 0, minWidth: 130, background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <div style={{ ...tinyLabel, color: '#9ca3af' }}>মোট</div>
                   <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706', lineHeight: 1.1, marginTop: 4 }}>৳{bundleTotal.toFixed(0)}</div>
                   {bundleSavings > 0 && <div style={{ fontSize: 12.5, color: PRIMARY, marginTop: 4, fontWeight: 700 }}>সাশ্রয় ৳{bundleSavings.toFixed(0)}</div>}
@@ -901,238 +901,233 @@ export default function ProductDetailClient({ params }: Props) {
           </section>
         )}
 
-        {/* ── Tabs ── */}
+        {/* ── Tabs + Video (side-by-side when video exists) ── */}
         <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
-          <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', padding: '12px 12px 0', gap: 4, overflowX: 'auto' }}>
-              {[
-                { id: 'description', label: 'বিবরণ' },
-                { id: 'specifications', label: 'স্পেসিফিকেশন' },
-                { id: 'author', label: 'লেখক' },
-                { id: 'reviews', label: `রিভিউ${product.ratingCount ? ` (${product.ratingCount})` : ''}` },
-              ].map(t => {
-                const active = activeTab === t.id;
-                return (
-                  <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-                    padding: '12px 18px', background: active ? '#f0fdf4' : 'transparent',
-                    border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                    fontSize: 15, whiteSpace: 'nowrap', color: active ? PRIMARY : '#9ca3af',
-                    borderRadius: '10px 10px 0 0',
-                    borderBottom: active ? `3px solid ${PRIMARY}` : '3px solid transparent',
-                    marginBottom: -1, transition: 'all .2s ease'
-                  }}>{t.label}</button>
-                );
-              })}
-            </div>
-
-            <div style={{ padding: 28 }}>
-              {activeTab === 'description' && (
-                product.description ? (
-                  <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9, maxWidth: 880 }} dangerouslySetInnerHTML={{ __html: product.description }} />
-                ) : product.shortDescription ? (
-                  <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9, maxWidth: 880 }}>
-                    <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
+          <div className={youtubeId ? 'pd-video-tabs-grid' : ''}>
+            {/* Video left (only when youtubeId exists) */}
+            {youtubeId && (
+              <div>
+                <div
+                  className="video-player"
+                  onClick={() => setShowVideoModal(true)}
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                >
+                  <img
+                    src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
+                    alt={`${product.name} বুক রিভিউ`}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 60%, transparent 100%)' }} />
+                  <div className="video-thumb-meta">
+                    <span>বুক রিভিউ</span>
+                    <span className="live">▶ PLAY</span>
                   </div>
-                ) : (
-                  <p style={{ color: '#9ca3af', fontFamily: 'var(--bn)' }}>বিবরণ পাওয়া যায়নি।</p>
-                )
-              )}
-
-              {activeTab === 'specifications' && (
-                <table style={{ width: '100%', maxWidth: 720, borderCollapse: 'collapse', fontSize: 15 }}>
-                  <tbody>
-                    {[
-                      ['শিরোনাম', product.name],
-                      authorName ? ['লেখক', authorName] : null,
-                      publisherName ? ['প্রকাশনী', publisherName] : null,
-                      product.edition ? ['সংস্করণ', product.edition] : null,
-                      product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
-                      product.country ? ['দেশ', product.country] : null,
-                      product.language ? ['ভাষা', product.language] : null,
-                      product.weight ? ['ওজন', `${product.weight}g`] : null,
-                    ].filter(Boolean).map(([k, v], i) => (
-                      <tr key={k as string} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
-                        <td style={{ padding: '14px 18px', color: '#6b7280', width: 200, fontWeight: 600 }}>{k}</td>
-                        <td style={{ padding: '14px 18px', color: '#0f172a', fontWeight: 600 }}>{v}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-
-              {activeTab === 'author' && authorName && (
-                <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start', maxWidth: 820 }}>
-                  <div style={{
-                    width: 96, height: 96, borderRadius: '50%', background: '#dcfce7', color: '#15803d',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 36, fontWeight: 800, flexShrink: 0
-                  }}>{authorName[0]}</div>
-                  <div>
-                    <h4 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{authorName}</h4>
-                    <p style={{ margin: '0 0 16px', color: '#374151', fontSize: 15, lineHeight: 1.85 }}>
-                      লেখকের অন্যান্য বই সমূহ দেখতে নিচের লিঙ্কে যান।
-                    </p>
-                    <Link href={`/products?author=${encodeURIComponent(authorName)}`} style={{ color: PRIMARY, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
-                      লেখকের সব বই দেখুন →
-                    </Link>
+                  <button className="play-btn" type="button">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </button>
+                  <div className="video-thumb-bottom">
+                    <div className="vt">{product.name} — বুক রিভিউ</div>
+                    <div className="vd">YouTube · {authorName}</div>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === 'reviews' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 820 }}>
-                  {rating > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: 18, background: '#f9fafb', borderRadius: 14, flexWrap: 'wrap' }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>{rating.toFixed(1)}</div>
-                        <div style={{ color: '#f59e0b', fontSize: 16, marginTop: 4 }}>{'★'.repeat(Math.round(rating))}</div>
-                        <div style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 4 }}>{product.ratingCount || 0} টি রিভিউ</div>
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
-                        {[5, 4, 3, 2, 1].map(s => {
-                          const count = product.ratingDetails?.find((r: any) => r.stars === s)?.count || 0;
-                          const total = product.ratingCount || 1;
-                          const percent = (count / total) * 100;
-                          return (
-                            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                              <span style={{ width: 32, color: '#9ca3af' }}>{s}★</span>
-                              <div style={{ flex: 1, height: 8, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden' }}>
-                                <div style={{ width: `${percent}%`, height: '100%', background: PRIMARY }} />
-                              </div>
-                              <span style={{ width: 36, color: '#9ca3af', textAlign: 'right' }}>{count}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+            {/* Tabs card right (or full-width when no video) */}
+            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', padding: '12px 12px 0', gap: 4, overflowX: 'auto' }}>
+                {[
+                  { id: 'description', label: 'বিবরণ' },
+                  { id: 'specifications', label: 'স্পেসিফিকেশন' },
+                  { id: 'author', label: 'লেখক' },
+                  { id: 'reviews', label: `রিভিউ${product.ratingCount ? ` (${product.ratingCount})` : ''}` },
+                ].map(t => {
+                  const active = activeTab === t.id;
+                  return (
+                    <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                      padding: '12px 18px', background: active ? '#f0fdf4' : 'transparent',
+                      border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
+                      fontSize: 15, whiteSpace: 'nowrap', color: active ? PRIMARY : '#9ca3af',
+                      borderRadius: '10px 10px 0 0',
+                      borderBottom: active ? `3px solid ${PRIMARY}` : '3px solid transparent',
+                      marginBottom: -1, transition: 'all .2s ease'
+                    }}>{t.label}</button>
+                  );
+                })}
+              </div>
+
+              <div style={{ padding: 28 }}>
+                {activeTab === 'description' && (
+                  product.description ? (
+                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: product.description }} />
+                  ) : product.shortDescription ? (
+                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }}>
+                      <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
                     </div>
-                  )}
-
-                  {isAuthenticated() ? (
-                    !showReviewForm ? (
-                      <button onClick={() => setShowReviewForm(true)} style={{
-                        alignSelf: 'flex-start', background: 'white', border: `1px solid ${PRIMARY}`,
-                        color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit'
-                      }}>রিভিউ লিখুন</button>
-                    ) : (
-                      <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <h4 style={{ fontFamily: 'var(--bn)', fontWeight: 600, fontSize: 18, margin: 0 }}>আপনার রিভিউ লিখুন</h4>
-                        <div>
-                          <div style={{ ...tinyLabel, marginBottom: 8 }}>রেটিং</div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <button key={star} onClick={() => setNewReview({ ...newReview, rating: star })} style={{ background: 'none', border: 0, cursor: 'pointer', fontSize: 24 }}>
-                                <FaStar style={{ color: star <= newReview.rating ? '#f59e0b' : '#e5e7eb' }} />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ ...tinyLabel, marginBottom: 8 }}>মন্তব্য</div>
-                          <textarea
-                            value={newReview.review}
-                            onChange={e => setNewReview({ ...newReview, review: e.target.value })}
-                            placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
-                            rows={4}
-                            style={{ width: '100%', padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', color: '#0f172a', fontFamily: 'var(--bn)', fontSize: 15, lineHeight: 1.6, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', gap: 10 }}>
-                          <button onClick={handleSubmitReview} disabled={submittingReview} style={{ background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                            {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
-                          </button>
-                          <button onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }} style={{ background: 'white', border: '1px solid #e5e7eb', color: '#374151', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                            বাতিল
-                          </button>
-                        </div>
-                      </div>
-                    )
                   ) : (
-                    <div style={{ padding: 24, background: '#f9fafb', borderRadius: 16, textAlign: 'center' }}>
-                      <p style={{ color: '#374151', marginBottom: 16, fontFamily: 'var(--bn)' }}>রিভিউ লিখতে লগইন করুন</p>
-                      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
-                        <Link href="/login" style={{ background: PRIMARY, color: 'white', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>লগইন</Link>
-                        <Link href="/register" style={{ background: 'white', border: `1px solid ${PRIMARY}`, color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>নিবন্ধন</Link>
-                      </div>
-                    </div>
-                  )}
+                    <p style={{ color: '#9ca3af', fontFamily: 'var(--bn)' }}>বিবরণ পাওয়া যায়নি।</p>
+                  )
+                )}
 
-                  {loadingReviews ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: '#f1f5f9', borderRadius: 12 }} />)}
-                    </div>
-                  ) : reviews.length > 0 ? (
-                    <div>
-                      {reviews.map((review, i) => (
-                        <div key={review._id} style={{ padding: '18px 0', borderBottom: i < reviews.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: 999, background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                              {review.user?.name?.[0]?.toUpperCase() || 'A'}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{review.user?.name || 'Anonymous'}</div>
-                            </div>
-                            <span style={{ color: '#f59e0b', fontSize: 14 }}>{'★'.repeat(review.rating)}</span>
-                          </div>
-                          <p style={{ margin: '0 0 0 48px', color: '#374151', fontSize: 14.5, lineHeight: 1.75 }}>{review.review}</p>
-                          {review.reply && (
-                            <div style={{ marginTop: 10, marginLeft: 48, padding: '10px 14px', borderLeft: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: '0 8px 8px 0' }}>
-                              <h4 style={{ margin: '0 0 4px', fontSize: 13, color: '#15803d', fontWeight: 700 }}>বিক্রেতার উত্তর:</h4>
-                              <p style={{ margin: 0, color: '#374151', fontSize: 13.5 }}>{review.reply}</p>
-                            </div>
-                          )}
-                        </div>
+                {activeTab === 'specifications' && (
+                  <table style={{ width: '100%', maxWidth: 720, borderCollapse: 'collapse', fontSize: 15 }}>
+                    <tbody>
+                      {[
+                        ['শিরোনাম', product.name],
+                        authorName ? ['লেখক', authorName] : null,
+                        publisherName ? ['প্রকাশনী', publisherName] : null,
+                        product.edition ? ['সংস্করণ', product.edition] : null,
+                        product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
+                        product.country ? ['দেশ', product.country] : null,
+                        product.language ? ['ভাষা', product.language] : null,
+                        product.weight ? ['ওজন', `${product.weight}g`] : null,
+                      ].filter(Boolean).map(([k, v], i) => (
+                        <tr key={k as string} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
+                          <td style={{ padding: '14px 18px', color: '#6b7280', width: 200, fontWeight: 600 }}>{k}</td>
+                          <td style={{ padding: '14px 18px', color: '#0f172a', fontWeight: 600 }}>{v}</td>
+                        </tr>
                       ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {activeTab === 'author' && authorName && (
+                  <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start' }}>
+                    <div style={{
+                      width: 96, height: 96, borderRadius: '50%', background: '#dcfce7', color: '#15803d',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 36, fontWeight: 800, flexShrink: 0
+                    }}>{authorName[0]}</div>
+                    <div>
+                      <h4 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{authorName}</h4>
+                      <p style={{ margin: '0 0 16px', color: '#374151', fontSize: 15, lineHeight: 1.85 }}>
+                        লেখকের অন্যান্য বই সমূহ দেখতে নিচের লিঙ্কে যান।
+                      </p>
+                      <Link href={`/products?author=${encodeURIComponent(authorName)}`} style={{ color: PRIMARY, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
+                        লেখকের সব বই দেখুন →
+                      </Link>
                     </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontFamily: 'var(--bn)' }}>
-                      এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!
-                    </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+
+                {activeTab === 'reviews' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    {rating > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: 18, background: '#f9fafb', borderRadius: 14, flexWrap: 'wrap' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>{rating.toFixed(1)}</div>
+                          <div style={{ color: '#f59e0b', fontSize: 16, marginTop: 4 }}>{'★'.repeat(Math.round(rating))}</div>
+                          <div style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 4 }}>{product.ratingCount || 0} টি রিভিউ</div>
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
+                          {[5, 4, 3, 2, 1].map(s => {
+                            const count = product.ratingDetails?.find((r: any) => r.stars === s)?.count || 0;
+                            const total = product.ratingCount || 1;
+                            const percent = (count / total) * 100;
+                            return (
+                              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                                <span style={{ width: 32, color: '#9ca3af' }}>{s}★</span>
+                                <div style={{ flex: 1, height: 8, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden' }}>
+                                  <div style={{ width: `${percent}%`, height: '100%', background: PRIMARY }} />
+                                </div>
+                                <span style={{ width: 36, color: '#9ca3af', textAlign: 'right' }}>{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {isAuthenticated() ? (
+                      !showReviewForm ? (
+                        <button onClick={() => setShowReviewForm(true)} style={{
+                          alignSelf: 'flex-start', background: 'white', border: `1px solid ${PRIMARY}`,
+                          color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700,
+                          cursor: 'pointer', fontFamily: 'inherit'
+                        }}>রিভিউ লিখুন</button>
+                      ) : (
+                        <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          <h4 style={{ fontFamily: 'var(--bn)', fontWeight: 600, fontSize: 18, margin: 0 }}>আপনার রিভিউ লিখুন</h4>
+                          <div>
+                            <div style={{ ...tinyLabel, marginBottom: 8 }}>রেটিং</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} onClick={() => setNewReview({ ...newReview, rating: star })} style={{ background: 'none', border: 0, cursor: 'pointer', fontSize: 24 }}>
+                                  <FaStar style={{ color: star <= newReview.rating ? '#f59e0b' : '#e5e7eb' }} />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ ...tinyLabel, marginBottom: 8 }}>মন্তব্য</div>
+                            <textarea
+                              value={newReview.review}
+                              onChange={e => setNewReview({ ...newReview, review: e.target.value })}
+                              placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
+                              rows={4}
+                              style={{ width: '100%', padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', color: '#0f172a', fontFamily: 'var(--bn)', fontSize: 15, lineHeight: 1.6, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            <button onClick={handleSubmitReview} disabled={submittingReview} style={{ background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
+                            </button>
+                            <button onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }} style={{ background: 'white', border: '1px solid #e5e7eb', color: '#374151', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              বাতিল
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <div style={{ padding: 24, background: '#f9fafb', borderRadius: 16, textAlign: 'center' }}>
+                        <p style={{ color: '#374151', marginBottom: 16, fontFamily: 'var(--bn)' }}>রিভিউ লিখতে লগইন করুন</p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
+                          <Link href="/login" style={{ background: PRIMARY, color: 'white', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>লগইন</Link>
+                          <Link href="/register" style={{ background: 'white', border: `1px solid ${PRIMARY}`, color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>নিবন্ধন</Link>
+                        </div>
+                      </div>
+                    )}
+
+                    {loadingReviews ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: '#f1f5f9', borderRadius: 12 }} />)}
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      <div>
+                        {reviews.map((review, i) => (
+                          <div key={review._id} style={{ padding: '18px 0', borderBottom: i < reviews.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 999, background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                                {review.user?.name?.[0]?.toUpperCase() || 'A'}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{review.user?.name || 'Anonymous'}</div>
+                              </div>
+                              <span style={{ color: '#f59e0b', fontSize: 14 }}>{'★'.repeat(review.rating)}</span>
+                            </div>
+                            <p style={{ margin: '0 0 0 48px', color: '#374151', fontSize: 14.5, lineHeight: 1.75 }}>{review.review}</p>
+                            {review.reply && (
+                              <div style={{ marginTop: 10, marginLeft: 48, padding: '10px 14px', borderLeft: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: '0 8px 8px 0' }}>
+                                <h4 style={{ margin: '0 0 4px', fontSize: 13, color: '#15803d', fontWeight: 700 }}>বিক্রেতার উত্তর:</h4>
+                                <p style={{ margin: 0, color: '#374151', fontSize: 13.5 }}>{review.reply}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontFamily: 'var(--bn)' }}>
+                        এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
-
-        {/* ── Video section ── */}
-        {youtubeId && (
-          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
-            <div className="video-section">
-              <div className="video-player" onClick={() => setShowVideoModal(true)}>
-                <div className="video-thumb-meta">
-                  <span>বুক রিভিউ</span>
-                  <span className="live">▶ PLAY</span>
-                </div>
-                <button className="play-btn" type="button">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-                <div className="video-thumb-bottom">
-                  <div className="vt">{product.name} — বুক রিভিউ</div>
-                  <div className="vd">YouTube · {authorName}</div>
-                </div>
-              </div>
-              <div className="video-side">
-                <div>
-                  <div className="sub">BOOK REVIEW · ভিডিও রিভিউ</div>
-                  <h3><span className="bn">{product.name} নিয়ে আলোচনা</span></h3>
-                  <p>এই বইটির বিস্তারিত রিভিউ দেখুন।</p>
-                </div>
-                <div>
-                  <div className="video-reviewer">
-                    <div className="video-reviewer-av">{authorName?.[0] || 'A'}</div>
-                    <div>
-                      <div className="video-reviewer-name">বুক রিভিউ</div>
-                      <div className="video-reviewer-meta">Shobaz Editorial · বাংলাদেশ</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
         {youtubeId && (
           <div className={`video-modal-bg${showVideoModal ? ' open' : ''}`} onClick={() => setShowVideoModal(false)}>
