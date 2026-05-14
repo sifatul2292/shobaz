@@ -7,7 +7,6 @@ import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
 import { capiViewContent, capiAddToCart } from '@/lib/capi';
-import posthog from 'posthog-js';
 import { Product, ShippingCharge, Review } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -215,12 +214,6 @@ export default function ProductDetailClient({ params }: Props) {
         document.title = `${productData.name} | Shobaz`;
         gtmViewItem(productData);
         capiViewContent(productData);
-        posthog.capture('product_viewed', {
-          product_id: productData._id,
-          product_name: productData.name,
-          price: productData.salePrice,
-          slug: productData.slug,
-        });
 
         if (relatedRes.data?.data) {
           let allProducts = relatedRes.data.data;
@@ -294,14 +287,6 @@ export default function ProductDetailClient({ params }: Props) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
       capiAddToCart(product, quantity);
-      const price = (product.salePrice || 0) - (product.discountAmount || 0);
-      posthog.capture('product_added_to_cart', {
-        product_id: product._id,
-        product_name: product.name,
-        price,
-        quantity,
-        source: 'product_detail',
-      });
       toast.success('কার্টে যোগ হয়েছে');
     }
   };
@@ -311,14 +296,6 @@ export default function ProductDetailClient({ params }: Props) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
       capiAddToCart(product, quantity);
-      const price = (product.salePrice || 0) - (product.discountAmount || 0);
-      posthog.capture('product_added_to_cart', {
-        product_id: product._id,
-        product_name: product.name,
-        price,
-        quantity,
-        source: 'buy_now',
-      });
       window.location.href = '/checkout';
     }
   };
