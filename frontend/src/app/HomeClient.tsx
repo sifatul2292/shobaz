@@ -39,7 +39,6 @@ const CAT_PALETTES = [
   { bg: '#f3e8ff', accent: '#6b21a8' },
 ];
 
-const CAT_ICONS = ['📖', '🌱', '📈', '🕌', '🏛️', '🧸', '🔬', '✒️'];
 
 const STATIC_REVIEWS = [
   {
@@ -139,7 +138,7 @@ function NewBookCard({ product, onAdd }: { product: Product; onAdd: (p: Product)
         </svg>
       </Link>
 
-      <Link href={`/${product.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
+      <Link href={`/products/${product.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
         <div style={{
           background: '#f8fafc', borderRadius: 10, padding: '20px 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
@@ -229,7 +228,7 @@ export default function HomePage() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [banners, setBanners] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -246,11 +245,10 @@ export default function HomePage() {
         const cachedAuthors = getCached<Author[]>('authors');
         const cachedPublishers = getCached<Publisher[]>('publishers');
 
-        const [productsRes, categoriesRes, tagsRes, bannersRes, authorsRes, publishersRes, blogsRes, sectionsRes] = await Promise.allSettled([
+        const [productsRes, categoriesRes, tagsRes, authorsRes, publishersRes, blogsRes, sectionsRes] = await Promise.allSettled([
           api.get('/product/get-all-data'),
           cachedCategories ? Promise.resolve({ data: { data: cachedCategories } }) : api.post('/category/get-all'),
           api.get('/tag/get-all-basic'),
-          api.get('/banner-carousel/get-all-basic'),
           cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
           cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
           api.get('/blog/get-all-basic'),
@@ -263,6 +261,7 @@ export default function HomePage() {
           if (Array.isArray(productsData)) {
             setFeaturedProducts(productsData.filter((p: Product) => (p.discountAmount || 0) > 0).slice(0, 10));
             setNewProducts(productsData.slice(0, 10));
+            setAllProducts(productsData);
           }
         }
         if (categoriesRes.status === 'fulfilled' && categoriesRes.value.data?.data) {
@@ -275,11 +274,6 @@ export default function HomePage() {
         }
         if (tagsRes.status === 'fulfilled' && tagsRes.value.data?.data) {
           setTags(tagsRes.value.data.data.slice(0, 20));
-        }
-        if (bannersRes.status === 'fulfilled' && bannersRes.value.data?.data) {
-          let bannerData = bannersRes.value.data.data;
-          if (bannersRes.value.data.data.items) bannerData = bannersRes.value.data.data.items;
-          setBanners(Array.isArray(bannerData) ? bannerData : []);
         }
         if (authorsRes.status === 'fulfilled' && authorsRes.value.data?.data) {
           const authorsData = authorsRes.value.data.data;
@@ -499,39 +493,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Banner carousel ── */}
-        {banners.length > 0 && (
-          <section className="page-section" style={{ paddingTop: 32, paddingBottom: 0 }}>
-            <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--line-soft)' }}>
-              <Swiper
-                modules={[Autoplay, Pagination]}
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                pagination={{ clickable: true, dynamicBullets: true }}
-                loop
-                speed={800}
-                style={{ maxHeight: 360 }}
-              >
-                {banners.map((banner) => (
-                  <SwiperSlide key={banner._id}>
-                    <Link href={banner.link || '/'} className="block w-full">
-                      {banner.image ? (
-                        <img
-                          src={imgUrl(banner.image)!}
-                          alt={banner.title || ''}
-                          className="w-full object-cover"
-                          style={{ maxHeight: 360 }}
-                        />
-                      ) : (
-                        <div style={{ height: 280, background: PRIMARY }} />
-                      )}
-                    </Link>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </section>
-        )}
-
         {/* ── Category Grid ── */}
         {categories.length > 0 && (
           <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 24px' }}>
@@ -583,12 +544,30 @@ export default function HomePage() {
                         {count}+ বই
                       </div>
                     )}
-                    <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 72 }}>
-                      {catImg
-                        ? <img src={catImg} alt={cat.name} style={{ height: 64, maxWidth: '100%', objectFit: 'contain', borderRadius: 6 }} />
-                        : <div style={{ fontSize: 44 }}>{CAT_ICONS[i % CAT_ICONS.length]}</div>
-                      }
-                    </div>
+                    {(() => {
+                      const catProducts = allProducts.filter(p => {
+                        const catId = typeof (p as any).category === 'object'
+                          ? (p as any).category?._id
+                          : (p as any).category;
+                        return catId === cat._id;
+                      }).slice(0, 4);
+                      if (catProducts.length === 0) return null;
+                      return (
+                        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                          {catProducts.map((cp, ci) => {
+                            const cpImg = imgUrl(cp.images?.[0]);
+                            return (
+                              <div key={ci} style={{ borderRadius: 6, overflow: 'hidden', aspectRatio: '3/4', boxShadow: '0 6px 10px rgba(15,23,42,0.18)' }}>
+                                {cpImg
+                                  ? <img src={cpImg} alt={cp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  : <div style={{ width: '100%', height: '100%', background: '#1e3a8a' }} />
+                                }
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     <div style={{
                       marginTop: 16, fontSize: 13, color: pal.accent, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
