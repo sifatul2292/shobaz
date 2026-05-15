@@ -8,8 +8,6 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
 import toast from 'react-hot-toast';
-import posthog from 'posthog-js';
-
 import { HiOutlineTruck, HiOutlineSparkles, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
 const CORE_ROUTES = ['products', 'authors', 'publishers', 'offers', 'blog', 'about', 'contact'];
@@ -109,10 +107,6 @@ export default function Header() {
       const results = res.data?.data || [];
       setSearchResults({ products: results });
       setOpen(true);
-      posthog.capture('product_searched', {
-        query: searchQuery,
-        result_count: results.length,
-      });
     } catch (err) { console.error(err); }
     finally { setIsSearching(false); }
   };

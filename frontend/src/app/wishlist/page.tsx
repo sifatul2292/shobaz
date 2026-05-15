@@ -33,6 +33,7 @@ export default function WishlistPage() {
   };
 
   const removeFromWishlist = async (productId: string) => {
+    const product = products.find(p => p._id === productId);
     try {
       await api.delete(`/user/wishlist/remove/${productId}`);
       setProducts(products.filter(p => p._id !== productId));
