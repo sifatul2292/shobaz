@@ -27,10 +27,9 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await api.post('/user/auth/login', formData);
-      if (res.data?.success && res.data?.data) {
-        const user = res.data.data.user;
-        setAuth(user, res.data.data.token);
+      const res = await api.post('/user/login', { username: formData.email, password: formData.password });
+      if (res.data?.success && res.data?.token) {
+        setAuth(res.data.data || {}, res.data.token);
         toast.success('সফলভাবে লগইন হয়েছে!');
         router.push('/');
       } else {

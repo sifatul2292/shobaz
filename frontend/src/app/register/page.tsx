@@ -25,7 +25,14 @@ export default function RegisterPage() {
     if (formData.password.length < 6) { toast.error('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'); return; }
     setLoading(true);
     try {
-      const res = await api.post('/user/auth/register', formData);
+      const res = await api.post('/user/signup', {
+        name: formData.name,
+        username: formData.email,
+        email: formData.email,
+        phoneNo: formData.phone,
+        password: formData.password,
+        registrationType: 'email',
+      });
       if (res.data?.success) {
         toast.success('রেজিস্ট্রেশন সফল! এখন লগইন করুন');
         router.push('/login');
