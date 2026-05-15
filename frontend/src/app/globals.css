@@ -504,7 +504,7 @@ input[type="number"] {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   gap: 32px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 @media (max-width: 768px) {
   .pd-video-tabs-grid { grid-template-columns: 1fr; }
