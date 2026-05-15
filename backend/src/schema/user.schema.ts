@@ -46,6 +46,7 @@ export const UserSchema = new mongoose.Schema(
     hasAccess: {
       type: Boolean,
       required: true,
+      default: true,
     },
     carts: [
       {
