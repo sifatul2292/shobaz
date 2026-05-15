@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -10,45 +10,302 @@ import api, { imgUrl } from '@/lib/api';
 import { gtmBeginCheckout } from '@/lib/gtm';
 import { capiInitiateCheckout } from '@/lib/capi';
 import toast from 'react-hot-toast';
-import { FaShoppingCart, FaTruck, FaCheckCircle, FaMapMarkerAlt, FaChevronLeft } from 'react-icons/fa';
 import Link from 'next/link';
 
-interface ShippingCharge {
-  deliveryInDhaka: number;
-  deliveryOutsideDhaka: number;
+// ── Design tokens ─────────────────────────────────────────────────────
+const PRIMARY = '#16a34a';
+const PARCHMENT = '#f5f0e8';
+
+// ── Types ─────────────────────────────────────────────────────────────
+interface ShippingCharge { deliveryInDhaka: number; deliveryOutsideDhaka: number; }
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const getAuthorName = (author: any): string => {
+  if (!author) return '';
+  if (Array.isArray(author)) return author[0]?.name || '';
+  if (typeof author === 'object') return author.name || '';
+  return author as string;
+};
+const getCurrentPrice = (product: any): number => {
+  const salePrice = product.salePrice || 0;
+  const discount = product.discountAmount || 0;
+  return discount > 0 ? salePrice - discount : salePrice;
+};
+
+// ── SVG Icons ─────────────────────────────────────────────────────────
+const IcCheck = ({ size = 16, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+const IcCircleCheck = ({ size = 22, color = PRIMARY, filled = false }: { size?: number; color?: string; filled?: boolean }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={filled ? 'white' : color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" fill={filled ? color : 'none'}/>
+    <polyline points="8 12 11 15 16 9" stroke={filled ? 'white' : color}/>
+  </svg>
+);
+const IcArrowR = ({ size = 18, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/>
+  </svg>
+);
+const IcArrowL = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/>
+  </svg>
+);
+const IcPin = ({ size = 22, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/>
+    <circle cx="12" cy="9" r="2.5"/>
+  </svg>
+);
+const IcWallet = ({ size = 22, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 8H6a2 2 0 0 1 0-4h12v4z"/>
+    <path d="M4 8v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8"/>
+    <circle cx="17" cy="14" r="1.4" fill={color}/>
+  </svg>
+);
+const IcTruck = ({ size = 24, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="6" width="14" height="11" rx="1.5"/>
+    <path d="M15 9h4l3 4v4h-7"/>
+    <circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>
+  </svg>
+);
+const IcCash = ({ size = 24, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/>
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M6 12h.01M18 12h.01"/>
+  </svg>
+);
+const IcShield = ({ size = 14, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5l-8-3z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </svg>
+);
+const IcLock = ({ size = 14, color = '#9ca3af' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+  </svg>
+);
+const IcCart = ({ size = 48, color = '#cbd5e1' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/>
+    <path d="M3 4h2l2.6 12.2a1.8 1.8 0 0 0 1.8 1.5h7.5a1.8 1.8 0 0 0 1.8-1.4L21 9H6"/>
+  </svg>
+);
+
+// ── Step Progress ─────────────────────────────────────────────────────
+function StepProgress({ step }: { step: number }) {
+  const STEPS = [{ n: 1, label: 'কার্ট' }, { n: 2, label: 'চেকআউট' }, { n: 3, label: 'সম্পন্ন' }];
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 24px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+        {STEPS.map((s, i) => {
+          const active = step === s.n;
+          const completed = s.n < step;
+          const fill = completed || active ? PRIMARY : '#e2e8f0';
+          return (
+            <Fragment key={s.n}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 999, background: fill,
+                  color: (completed || active) ? 'white' : '#9ca3af',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, fontSize: 14,
+                  boxShadow: active ? `0 0 0 4px ${PRIMARY}22` : 'none',
+                  transition: 'all .2s ease',
+                }}>
+                  {completed ? <IcCheck color="white" size={16}/> : s.n}
+                </div>
+                <span style={{ marginTop: 8, fontSize: 13, color: (completed || active) ? '#0f172a' : '#9ca3af', fontWeight: active ? 700 : 600 }}>
+                  {s.label}
+                </span>
+              </div>
+              {i < STEPS.length - 1 && (
+                <div style={{ flex: 1, height: 2, background: '#e2e8f0', margin: '0 -2px', position: 'relative', top: -14 }}>
+                  <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: PRIMARY, transition: 'width .4s ease' }}/>
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
+// ── Accent Card ───────────────────────────────────────────────────────
+function AccentCard({ icon, title, subtitle, children }: {
+  icon: React.ReactNode; title: string; subtitle?: string; children: React.ReactNode;
+}) {
+  return (
+    <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
+        <div style={{ width: 4, background: PRIMARY, flexShrink: 0 }}/>
+        <div style={{ flex: 1, padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {icon}
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{title}</h3>
+          </div>
+          {subtitle && <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>{subtitle}</div>}
+        </div>
+      </div>
+      <div style={{ padding: 24 }}>{children}</div>
+    </div>
+  );
+}
+
+// ── Form field ────────────────────────────────────────────────────────
+const inputBase: React.CSSProperties = {
+  width: '100%', height: 48, border: '1.5px solid #e2e8f0', borderRadius: 12,
+  padding: '0 16px', fontSize: 15, color: '#0f172a', background: '#fafafa',
+  fontFamily: 'inherit', outline: 'none', transition: 'border-color .15s, box-shadow .15s, background .15s',
+  boxSizing: 'border-box',
+};
+const inputError: React.CSSProperties = { ...inputBase, borderColor: '#ef4444', background: '#fef2f2' };
+function focusIn(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  e.target.style.borderColor = PRIMARY;
+  e.target.style.boxShadow = `0 0 0 3px ${PRIMARY}1f`;
+  e.target.style.background = 'white';
+}
+function focusOut(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  e.target.style.borderColor = e.target.value ? '#e2e8f0' : '#e2e8f0';
+  e.target.style.boxShadow = 'none';
+  e.target.style.background = '#fafafa';
+}
+
+function FormField({ label, required, hint, error, children }: {
+  label: string; required?: boolean; hint?: string; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+        {label}{required && <span style={{ color: '#ef4444', marginLeft: 4 }}>*</span>}
+      </label>
+      {children}
+      {hint && !error && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>{hint}</div>}
+      {error && <div style={{ fontSize: 12, color: '#ef4444', marginTop: 6 }}>{error}</div>}
+    </div>
+  );
+}
+
+// ── Delivery location selector ─────────────────────────────────────────
+function DeliveryLocSelector({ value, onChange, inside, outside }: {
+  value: 'inside' | 'outside'; onChange: (v: 'inside' | 'outside') => void; inside: number; outside: number;
+}) {
+  const opts = [
+    { id: 'inside' as const, title: 'ঢাকা সিটির ভিতরে', price: inside, icon: <IcPin size={24} color={PRIMARY}/> },
+    { id: 'outside' as const, title: 'ঢাকা সিটির বাইরে', price: outside, icon: <IcTruck size={24} color={PRIMARY}/> },
+  ];
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      {opts.map(o => {
+        const selected = value === o.id;
+        return (
+          <button
+            key={o.id} type="button" onClick={() => onChange(o.id)}
+            style={{
+              position: 'relative', cursor: 'pointer', fontFamily: 'inherit',
+              border: selected ? `2px solid ${PRIMARY}` : '1.5px solid #e2e8f0',
+              background: selected ? '#f0fdf4' : 'white',
+              borderRadius: 14, padding: '16px 14px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              transition: 'all .15s ease',
+            }}
+          >
+            {selected && (
+              <div style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 999, background: PRIMARY, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IcCheck color="white" size={14}/>
+              </div>
+            )}
+            {o.icon}
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', textAlign: 'center' }}>{o.title}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: selected ? PRIMARY : '#374151', fontFamily: "'Inter', sans-serif" }}>৳{o.price}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Payment COD ───────────────────────────────────────────────────────
+function PaymentCOD() {
+  return (
+    <>
+      <div style={{ border: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <IcCash size={24} color={PRIMARY}/>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>ক্যাশ অন ডেলিভারি</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>পণ্য হাতে পেয়ে টাকা দিন</div>
+        </div>
+        <IcCircleCheck filled color={PRIMARY} size={24}/>
+      </div>
+      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: PRIMARY, fontSize: 12, fontWeight: 600 }}>
+        <IcShield color={PRIMARY} size={14}/> আপনার অর্ডার সম্পূর্ণ নিরাপদ
+      </div>
+    </>
+  );
+}
+
+// ── Summary row ───────────────────────────────────────────────────────
+function SummaryRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ color: '#374151', fontSize: 14 }}>{label}</span>
+      <span style={{ color: valueColor || '#0f172a', fontWeight: 700, fontSize: 14 }}>{value}</span>
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────
+function EmptyCheckout() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT }}>
+      <Header />
+      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <IcCart size={56} color="#cbd5e1"/>
+          </div>
+          <h2 style={{ fontFamily: "'Hind Siliguri', sans-serif", fontSize: 24, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>আপনার কার্ট খালি</h2>
+          <p style={{ fontFamily: "'Hind Siliguri', sans-serif", color: '#9ca3af', marginBottom: 28, lineHeight: 1.6 }}>আপনি কোনো পণ্য যোগ করেননি</p>
+          <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: PRIMARY, color: 'white', borderRadius: 12, padding: '12px 24px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Hind Siliguri', sans-serif", fontSize: 15 }}>
+            বই কিনুন <IcArrowR size={16}/>
+          </Link>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: '',
-    address: '',
-  });
+  const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '' });
   const [errors, setErrors] = useState({ name: '', phone: '', address: '' });
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    // Fetch shipping charge
-    const fetchShippingCharge = async () => {
-      try {
-        const res = await api.get('/shipping-charge/get');
-        if (res.data?.data) {
-          setShippingCharge(res.data.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch shipping charge:', err);
-      }
-    };
-    fetchShippingCharge();
-  }, [isAuthenticated, router]);
+    api.get('/shipping-charge/get').then(res => {
+      if (res.data?.data) setShippingCharge(res.data.data);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
-    document.title = 'Checkout - Shobaz';
+    document.title = 'চেকআউট - Shobaz';
     if (items.length > 0) {
       const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
       const total = getTotalPrice();
@@ -57,117 +314,56 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaShoppingCart className="text-4xl text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">আপনার কার্ট খালি</h2>
-            <p className="text-gray-500 mb-4">আপনি কোনো পণ্য যোগ করেননি</p>
-            <a href="/products" className="inline-block bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium">বই কিনুন</a>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  if (items.length === 0) return <EmptyCheckout />;
+
+  const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
+  const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
+  const deliveryFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
+  const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
+  const subtotal = getTotalPrice();
+  const grandTotal = subtotal + deliveryFee;
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const validateForm = () => {
     const newErrors = { name: '', phone: '', address: '' };
-    let isValid = true;
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'নাম প্রয়োজন';
-      isValid = false;
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'ফোন নম্বর প্রয়োজন';
-      isValid = false;
-    } else if (!/^01\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'সঠিক বাংলাদেশি নম্বর দিন (০১XXXXXXXXX)';
-      isValid = false;
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = 'ঠিকানা প্রয়োজন';
-      isValid = false;
-    }
-
+    let valid = true;
+    if (!formData.name.trim()) { newErrors.name = 'নাম প্রয়োজন'; valid = false; }
+    if (!formData.phone.trim()) { newErrors.phone = 'ফোন নম্বর প্রয়োজন'; valid = false; }
+    else if (!/^01\d{9}$/.test(formData.phone)) { newErrors.phone = 'সঠিক বাংলাদেশি নম্বর দিন (01XXXXXXXXX)'; valid = false; }
+    if (!formData.address.trim()) { newErrors.address = 'ঠিকানা প্রয়োজন'; valid = false; }
     setErrors(newErrors);
-    return isValid;
+    return valid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!validateForm()) return;
-
     setLoading(true);
     try {
-      const subtotal = getTotalPrice();
-      const shipping = deliveryLocation === 'inside' 
-        ? (shippingCharge?.deliveryInDhaka || 60) 
-        : (shippingCharge?.deliveryOutsideDhaka || 120);
-      const grandTotal = subtotal + shipping;
-      
-      // Build orderedItems with full product data to bypass database fetch
+      const shipping = deliveryFee;
+      const total = subtotal + shipping;
       const orderedItems = items.map(item => {
         const salePrice = item.product.salePrice || item.product.price || 0;
         const discountAmt = item.product.discountAmount || 0;
         const afterDiscountPrice = discountAmt > 0 ? salePrice - discountAmt : salePrice;
-        const regularPrice = item.product.price || salePrice;
         return {
-          _id: item.product._id,
-          name: item.product.name,
-          nameEn: item.product.name,
-          slug: item.product.slug,
-          image: item.product.images?.[0] || null,
-          category: item.product.category,
-          author: item.product.author,
-          publisher: item.product.publisher,
-          subCategory: null,
-          brand: null,
-          discountType: item.product.discountType ?? 0,
-          discountAmount: discountAmt,
-          regularPrice: salePrice,
-          unitPrice: afterDiscountPrice,
-          salePrice: afterDiscountPrice,
-          quantity: item.quantity,
-          selectedQty: item.quantity,
-          orderType: 'regular',
+          _id: item.product._id, name: item.product.name, nameEn: item.product.name,
+          slug: item.product.slug, image: item.product.images?.[0] || null,
+          category: item.product.category, author: item.product.author,
+          publisher: item.product.publisher, subCategory: null, brand: null,
+          discountType: item.product.discountType ?? 0, discountAmount: discountAmt,
+          regularPrice: salePrice, unitPrice: afterDiscountPrice, salePrice: afterDiscountPrice,
+          quantity: item.quantity, selectedQty: item.quantity, orderType: 'regular',
         };
       });
-      
       const orderData = {
-        name: formData.name,
-        phoneNo: formData.phone,
-        shippingAddress: formData.address,
-        paymentType: 'cod',
-        deliveryLocation: deliveryLocation,
-        deliveryCharge: shipping,
-        subTotal: subtotal,
-        grandTotal: grandTotal,
-        orderedItems: orderedItems,
-        // Include cart data for fallback
+        name: formData.name, phoneNo: formData.phone, shippingAddress: formData.address,
+        paymentType: 'cod', deliveryLocation, deliveryCharge: shipping,
+        subTotal: subtotal, grandTotal: total, orderedItems,
         carts: items.map(item => item.product._id),
-        cartData: items.map(item => ({
-          product: item.product._id,
-          selectedQty: item.quantity,
-          quantity: item.quantity,
-          cartType: 0,
-        })),
+        cartData: items.map(item => ({ product: item.product._id, selectedQty: item.quantity, quantity: item.quantity, cartType: 0 })),
       };
-      
-      console.log('Submitting order:', JSON.stringify(orderData, null, 2));
-      
       const res = await api.post('/order/add-order-by-anonymous', orderData);
-      console.log('Order response:', res.data);
-      console.log('Order response status:', res.status);
-      
       if (res.data?.success || res.status === 200 || res.status === 201) {
         const newOrderId = res.data?.data?._id || res.data?._id || res.data?.order?._id;
         clearCart();
@@ -177,240 +373,165 @@ export default function CheckoutPage() {
         toast.error(res.data?.message || 'অর্ডার তৈরিতে সমস্যা হয়েছে');
       }
     } catch (err: any) {
-      console.error('Order error:', err);
-      console.error('Order error response:', err.response?.data);
       toast.error(err.response?.data?.message || err.response?.data?.error || 'অর্ডার তৈরিতে সমস্যা হয়েছে');
     }
     setLoading(false);
   };
 
-  const subtotal = getTotalPrice();
-  const shipping = deliveryLocation === 'inside' 
-    ? (shippingCharge?.deliveryInDhaka || 60) 
-    : (shippingCharge?.deliveryOutsideDhaka || 120);
-  const total = subtotal + shipping;
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
-    setFormData({ ...formData, phone: value });
-    if (errors.phone) setErrors({ ...errors, phone: '' });
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT, fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
       <Header />
-      <main className="flex-1 w-full">
-        {/* Progress Header */}
-        <div className="bg-white border-b py-4">
-          <div className="max-w-5xl mx-auto px-4 flex items-center justify-center gap-8">
-            <Link href="/cart" className="flex items-center gap-2 text-green-500 hover:text-green-600 transition-colors group">
-              <FaShoppingCart />
-              <span className="font-medium group-hover:underline">কার্ট</span>
-            </Link>
-            <div className="w-8 h-px bg-gray-300"></div>
-            <div className="flex items-center gap-2 text-green-500 font-medium">
-              <FaTruck />
-              <span>চেকআউট</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300"></div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <FaCheckCircle />
-              <span>সম্পন্ন</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form Section */}
-            <div className="lg:col-span-2">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Delivery Address Card */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                    <h2 className="text-xl font-bold text-white">ডেলিভারি ঠিকানা</h2>
-                    <p className="text-green-100 text-sm mt-1">আপনার অর্ডার কোথায় পাঠাতে হবে</p>
-                  </div>
-                  <div className="p-6 space-y-5">
-                    {/* Name */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">আপনার নাম *</label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => { setFormData({ ...formData, name: e.target.value }); if (errors.name) setErrors({ ...errors, name: '' }); }}
-                        placeholder="আপনার সম্পূর্ণ নাম"
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                      />
-                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                    </div>
+      <StepProgress step={2}/>
 
-                    {/* Phone */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">মোবাইল নম্বর *</label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handlePhoneChange}
-                        placeholder="০১XXXXXXXXX"
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                      />
-                      {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-                      <p className="text-gray-400 text-xs mt-1">১১ সংখ্যার বাংলাদেশি নম্বর (০১ দিয়ে শুরু)</p>
-                    </div>
+      <main style={{ flex: 1 }}>
+        <section style={{ maxWidth: 1280, margin: '0 auto', padding: '8px 24px 56px' }}>
+          <div className="checkout-layout">
 
-                    {/* Address */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">সম্পূর্ণ ঠিকানা *</label>
-                      <textarea
-                        value={formData.address}
-                        onChange={(e) => { setFormData({ ...formData, address: e.target.value }); if (errors.address) setErrors({ ...errors, address: '' }); }}
-                        placeholder="বাড়ি নং, রোড নং, এলাকার নাম, জেলা"
-                        rows={3}
-                        className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                      />
-                      {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-                    </div>
+            {/* ── LEFT — form ── */}
+            <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <AccentCard icon={<IcPin size={22} color={PRIMARY}/>} title="ডেলিভারি ঠিকানা" subtitle="আপনার অর্ডার কোথায় পাঠাতে হবে">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <FormField label="আপনার নাম" required error={errors.name}>
+                    <input
+                      value={formData.name}
+                      onChange={e => { setFormData(d => ({ ...d, name: e.target.value })); if (errors.name) setErrors(v => ({ ...v, name: '' })); }}
+                      onFocus={focusIn} onBlur={focusOut}
+                      placeholder="আপনার সম্পূর্ণ নাম"
+                      style={errors.name ? inputError : inputBase}
+                    />
+                  </FormField>
 
-                    {/* Delivery Location Selection */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">ডেলিভারি লোকেশন *</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryLocation('inside')}
-                          className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                            deliveryLocation === 'inside' 
-                              ? 'border-green-500 bg-green-50 shadow-md' 
-                              : 'border-gray-200 hover:border-green-300'
-                          }`}
-                        >
-                          <FaMapMarkerAlt className={`text-xl ${deliveryLocation === 'inside' ? 'text-green-500' : 'text-gray-400'}`} />
-                          <span className={`font-medium ${deliveryLocation === 'inside' ? 'text-green-600' : 'text-gray-600'}`}>
-                            ঢাকা সিটির ভিতরে
-                          </span>
-                          <span className={`text-sm font-bold ${deliveryLocation === 'inside' ? 'text-green-500' : 'text-gray-500'}`}>
-                            ৳{shippingCharge?.deliveryInDhaka || 60}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryLocation('outside')}
-                          className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                            deliveryLocation === 'outside' 
-                              ? 'border-green-500 bg-green-50 shadow-md' 
-                              : 'border-gray-200 hover:border-green-300'
-                          }`}
-                        >
-                          <FaTruck className={`text-xl ${deliveryLocation === 'outside' ? 'text-green-500' : 'text-gray-400'}`} />
-                          <span className={`font-medium ${deliveryLocation === 'outside' ? 'text-green-600' : 'text-gray-600'}`}>
-                            ঢাকা সিটির বাহিরে
-                          </span>
-                          <span className={`text-sm font-bold ${deliveryLocation === 'outside' ? 'text-green-500' : 'text-gray-500'}`}>
-                            ৳{shippingCharge?.deliveryOutsideDhaka || 120}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <FormField label="মোবাইল নম্বর" required hint="১১ সংখ্যার বাংলাদেশি নম্বর (01 দিয়ে শুরু)" error={errors.phone}>
+                    <input
+                      type="tel" inputMode="numeric"
+                      value={formData.phone}
+                      onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setFormData(d => ({ ...d, phone: v })); if (errors.phone) setErrors(vv => ({ ...vv, phone: '' })); }}
+                      onFocus={focusIn} onBlur={focusOut}
+                      placeholder="01XXXXXXXXX"
+                      style={errors.phone ? inputError : inputBase}
+                    />
+                  </FormField>
+
+                  <FormField label="সম্পূর্ণ ঠিকানা" required error={errors.address}>
+                    <textarea
+                      value={formData.address}
+                      onChange={e => { setFormData(d => ({ ...d, address: e.target.value })); if (errors.address) setErrors(v => ({ ...v, address: '' })); }}
+                      onFocus={focusIn as any} onBlur={focusOut as any}
+                      placeholder="বাড়ি নং, রোড নং, এলাকার নাম, জেলা"
+                      style={{ ...((errors.address ? inputError : inputBase) as object), height: 100, padding: '14px 16px', resize: 'none', lineHeight: 1.6 } as React.CSSProperties}
+                    />
+                  </FormField>
+
+                  <FormField label="ডেলিভারি লোকেশন" required>
+                    <DeliveryLocSelector
+                      value={deliveryLocation}
+                      onChange={setDeliveryLocation}
+                      inside={insideFee}
+                      outside={outsideFee}
+                    />
+                  </FormField>
+                </div>
+              </AccentCard>
+
+              <AccentCard icon={<IcWallet size={22} color={PRIMARY}/>} title="পেমেন্ট পদ্ধতি" subtitle="নিরাপদ পেমেন্ট">
+                <PaymentCOD/>
+              </AccentCard>
+            </form>
+
+            {/* ── RIGHT — order summary sticky ── */}
+            <div style={{ position: 'sticky', top: 16 }}>
+              <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
+                {/* gradient header */}
+                <div style={{ background: `linear-gradient(135deg, ${PRIMARY}, #14532d)`, padding: '20px 24px', color: 'white' }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>অর্ডার সারাংশ</h3>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', marginTop: 2 }}>{itemCount}টি পণ্য</div>
                 </div>
 
-                {/* Payment Method - Cash on Delivery */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4">
-                    <h2 className="text-xl font-bold text-white">পেমেন্ট পদ্ধতি</h2>
-                    <p className="text-orange-100 text-sm mt-1">নিরাপদ পেমেন্ট</p>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border-2 border-green-200">
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">💵</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-800">ক্যাশ অন ডেলিভারি</h3>
-                        <p className="text-gray-500 text-sm">পণ্য হাতে পেয়ে টাকা দিন</p>
-                      </div>
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <FaCheckCircle className="text-white text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-24">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-4">
-                  <h3 className="font-bold text-white">অর্ডার সারাংশ</h3>
-                  <p className="text-green-100 text-sm">{items.length}টি পণ্য</p>
-                </div>
-                
-                <div className="p-5">
-                  <div className="space-y-3 max-h-64 overflow-auto mb-4">
-                    {items.map(item => (
-                      <div key={item._id} className="flex gap-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-14 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          {item.product.images?.[0] && <img src={imgUrl(item.product.images[0])!} alt="" className="w-full h-full object-cover" />}
+                {/* item list */}
+                <div style={{ padding: '4px 24px 0' }}>
+                  {items.map((item, i) => {
+                    const price = getCurrentPrice(item.product);
+                    const img = item.product.images?.[0];
+                    return (
+                      <div key={item._id || item.product._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < items.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+                        <div style={{ width: 52, height: 68, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', background: '#f8fafc' }}>
+                          {img ? <img src={imgUrl(img)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/> : <div style={{ width: '100%', height: '100%' }}/>}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.product.name}</p>
-                          <p className="text-xs text-gray-500">পরিমাণ: {item.quantity}</p>
-                          <p className="text-sm font-bold text-green-500 mt-1">৳{(((item.product.discountAmount && item.product.discountAmount > 0 ? (item.product.salePrice || 0) - item.product.discountAmount : item.product.salePrice) || item.product.price || 0) * item.quantity).toFixed(0)}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {item.product.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>পরিমাণ: {item.quantity}</div>
                         </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY }}>৳{price * item.quantity}</div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
+                </div>
 
-                  <div className="space-y-2 text-sm border-t pt-4">
-                    <div className="flex justify-between text-gray-600">
-                      <span>উপ-মোট</span>
-                      <span>৳{subtotal.toFixed(0)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>ডেলিভারি চার্জ ({deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাহিরে'})</span>
-                      <span className="font-medium text-green-500">৳{shipping}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-xl pt-2 border-t">
-                      <span>মোট</span>
-                      <span className="text-green-500">৳{total.toFixed(0)}</span>
-                    </div>
-                  </div>
+                {/* price rows */}
+                <div style={{ padding: '16px 24px 0' }}>
+                  <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
+                  <SummaryRow label={`ডেলিভারি চার্জ (${deliveryLabel})`} value={`৳${deliveryFee}`} valueColor={PRIMARY}/>
+                </div>
 
-                  <Link
-                    href="/cart"
-                    className="flex items-center justify-center gap-2 w-full border-2 border-gray-200 hover:border-green-400 text-gray-600 hover:text-green-600 py-3 px-5 rounded-xl font-medium mt-5 transition-all"
-                  >
-                    <FaChevronLeft className="text-xs" />
-                    কার্ট সম্পাদনা করুন
+                {/* grand total */}
+                <div style={{ margin: '12px 24px 16px', borderTop: '2px solid #f1f5f9', paddingTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>মোট</span>
+                  <span style={{ fontSize: 26, fontWeight: 900, color: PRIMARY, fontFamily: "'Inter', sans-serif" }}>৳{grandTotal}</span>
+                </div>
+
+                {/* edit cart */}
+                <div style={{ padding: '0 24px 10px' }}>
+                  <Link href="/cart" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, border: '1.5px solid #e2e8f0', background: 'white', color: '#374151', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    <IcArrowL color="#374151" size={16}/> কার্ট সম্পাদনা করুন
                   </Link>
+                </div>
 
+                {/* CTA */}
+                <div style={{ padding: '6px 24px 16px' }}>
                   <button
-                    type="submit"
-                    onClick={handleSubmit}
+                    type="button"
+                    onClick={() => handleSubmit()}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 px-5 rounded-xl font-bold text-lg mt-3 transition-all hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      width: '100%', height: 56,
+                      background: loading ? '#86efac' : `linear-gradient(135deg, ${PRIMARY}, #14532d)`,
+                      color: 'white', borderRadius: 14, fontSize: 17, fontWeight: 700,
+                      border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 4px 16px rgba(21,128,61,0.30)',
+                      transition: 'transform .15s ease, box-shadow .2s ease',
+                    }}
+                    onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 10px 24px rgba(21,128,61,0.4)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(21,128,61,0.30)'; }}
                   >
                     {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      <>
+                        <svg style={{ animation: 'spin 1s linear infinite' }} width="20" height="20" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" fill="none" strokeOpacity="0.3"/>
+                          <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                        </svg>
                         প্রসেসিং...
-                      </span>
+                      </>
                     ) : (
-                      'অর্ডার নিশ্চিত করুন'
+                      <><IcCheck color="white" size={18}/> অর্ডার নিশ্চিত করুন</>
                     )}
                   </button>
+                </div>
 
-                  <p className="text-center text-gray-400 text-xs mt-3">
-                    🔒 নিরাপদ পেমেন্ট গ্যারান্টি
-                  </p>
+                {/* secure */}
+                <div style={{ padding: '0 24px 22px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#9ca3af', fontSize: 12 }}>
+                  <IcLock/> নিরাপদ পেমেন্ট গ্যারান্টি
                 </div>
               </div>
             </div>
+
           </div>
-        </div>
+        </section>
       </main>
+
       <Footer />
     </div>
   );
