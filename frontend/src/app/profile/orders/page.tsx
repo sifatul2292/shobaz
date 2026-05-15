@@ -12,18 +12,18 @@ import { FaShippingFast } from 'react-icons/fa';
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { token } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!token) {
       router.push('/login');
       return;
     }
     fetchOrders();
-  }, [isAuthenticated, router]);
+  }, [token, router]);
 
   const fetchOrders = async () => {
     try {
@@ -55,7 +55,7 @@ export default function OrdersPage() {
     return order.shippingAddress?.phone || order.shippingAddress?.address || '';
   };
 
-  if (!isAuthenticated) return null;
+  if (!token) return null;
 
   return (
     <div className="min-h-screen flex flex-col">
