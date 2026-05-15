@@ -111,7 +111,7 @@ function ProfileContent() {
       api.get('/user/logged-in-user-data'),
       api.post('/user/order/get-all', {}),
       api.get('/user/get-user-address'),
-      api.post('/user/wishlist/get-all', {}),
+      api.get('/wishList/get-wish-lists-by-user'),
     ]);
     if (pRes.status === 'fulfilled') {
       const p = pRes.value.data?.data;
@@ -168,7 +168,10 @@ function ProfileContent() {
     try {
       const verifyRes = await api.post('/otp/validate-otp-with-email', { email: profile?.username, code: pwOtpCode });
       if (!verifyRes.data?.success) { toast.error(verifyRes.data?.message || 'OTP সঠিক নয়'); setChangingPw(false); return; }
-      const res = await api.put('/user/change-logged-in-user-password', pwForm);
+      const res = await api.put('/user/change-logged-in-user-password', {
+        oldPassword: pwForm.password,
+        password: pwForm.newPassword,
+      });
       if (res.data?.success) {
         toast.success('পাসওয়ার্ড পরিবর্তন হয়েছে');
         setPwForm({ password: '', newPassword: '' });
@@ -210,7 +213,7 @@ function ProfileContent() {
 
   const removeWishlist = async (id: string) => {
     try {
-      await api.delete(`/user/wishlist/remove/${id}`);
+      await api.delete(`/wishList/delete/${id}`);
       setWishlist(w => w.filter(x => x._id !== id));
       toast.success('সরানো হয়েছে');
     } catch { toast.error('সরাতে ব্যর্থ'); }

@@ -31,7 +31,7 @@ export default function LoginPage() {
       if (res.data?.success && res.data?.token) {
         setAuth(res.data.data || {}, res.data.token);
         toast.success('সফলভাবে লগইন হয়েছে!');
-        router.push('/');
+        router.push('/profile');
       } else {
         toast.error(res.data?.message || 'লগইন ব্যর্থ');
       }

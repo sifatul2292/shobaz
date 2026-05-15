@@ -87,6 +87,19 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+async function addToWishlist(productId: string) {
+  try {
+    const res = await api.post('/wishList/add-to-wish-list', { product: productId, selectedQty: 1 });
+    if (res.data?.success) {
+      toast.success('ইচ্ছা তালিকায় যোগ হয়েছে');
+    } else {
+      toast.error(res.data?.message || 'লগইন করুন');
+    }
+  } catch {
+    toast.error('লগইন করুন');
+  }
+}
+
 function NewBookCard({ product, onAdd }: { product: Product; onAdd: (p: Product) => void }) {
   const authorName = Array.isArray(product.author)
     ? (product.author[0] as any)?.name
@@ -132,16 +145,19 @@ function NewBookCard({ product, onAdd }: { product: Product; onAdd: (p: Product)
         </div>
       )}
 
-      <Link href="/wishlist" style={{
-        position: 'absolute', top: 14, right: 14, width: 36, height: 36,
-        borderRadius: '50%', background: 'white', border: '1px solid #f1f5f9',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
-        textDecoration: 'none',
-      }}>
+      <button
+        onClick={e => { e.preventDefault(); e.stopPropagation(); addToWishlist(product._id); }}
+        style={{
+          position: 'absolute', top: 14, right: 14, width: 36, height: 36,
+          borderRadius: '50%', background: 'white', border: '1px solid #f1f5f9',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+          cursor: 'pointer', padding: 0,
+        }}
+      >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
-      </Link>
+      </button>
 
       <Link href={`/products/${product.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
         <div style={{
