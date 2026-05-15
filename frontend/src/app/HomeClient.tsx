@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -193,6 +193,7 @@ function NewBookCard({ product, onAdd }: { product: Product; onAdd: (p: Product)
 
       <button
         onClick={() => onAdd(product)}
+        className="nh-add-btn"
         style={{
           background: PRIMARY, color: 'white', border: 'none', borderRadius: 10,
           padding: '11px 16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--bn)',
@@ -237,6 +238,7 @@ export default function HomePage() {
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
+  const tagScrollRef = useRef<HTMLDivElement>(null);
 
   const handleAddToCart = useCallback((product: Product) => {
     addItem(product, 1);
@@ -381,14 +383,14 @@ export default function HomePage() {
                   fontFamily: 'var(--bn)', textDecoration: 'none', display: 'inline-block',
                 }}>অফার দেখুন</Link>
               </div>
-              <div style={{ display: 'flex', gap: 32, marginTop: 40, flexWrap: 'wrap' }}>
+              <div className="nh-hero-stats" style={{ display: 'flex', gap: 32, marginTop: 40, flexWrap: 'wrap' }}>
                 {[
                   { n: '৫০,০০০+', l: 'বই' },
                   { n: '১০,০০০+', l: 'সন্তুষ্ট পাঠক' },
                   { n: '৬৪ জেলায়', l: 'ডেলিভারি' },
                 ].map(s => (
                   <div key={s.l}>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--bn)' }}>{s.n}</div>
+                    <div className="nh-stat-num" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--bn)' }}>{s.n}</div>
                     <div style={{ fontSize: 13, color: '#64748b', fontFamily: 'var(--sans)' }}>{s.l}</div>
                   </div>
                 ))}
@@ -834,12 +836,31 @@ export default function HomePage() {
         {/* ── Tags ── */}
         {tags.length > 0 && (
           <section className="page-section">
-            <div className="sec-head">
+            <div className="sec-head" style={{ alignItems: 'center' }}>
               <h2>জনপ্রিয় ট্যাগ</h2>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['l', 'r'] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    onClick={() => tagScrollRef.current?.scrollBy({ left: dir === 'l' ? -200 : 200, behavior: 'smooth' })}
+                    style={{
+                      width: 32, height: 32, borderRadius: '50%', background: 'white',
+                      border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', color: '#374151', flexShrink: 0,
+                    }}
+                    aria-label={dir === 'l' ? 'Previous' : 'Next'}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      {dir === 'l' ? <path d="m15 18-6-6 6-6"/> : <path d="m9 18 6-6-6-6"/>}
+                    </svg>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="cat-pills">
+            <div ref={tagScrollRef} className="cat-pills" style={{ flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
               {tags.map((tag) => (
-                <Link key={tag._id} href={`/products?tag=${tag.slug}`} className="cat-pill">
+                <Link key={tag._id} href={`/products?tag=${tag.slug}`} className="cat-pill" style={{ flexShrink: 0 }}>
                   {tag.name}
                 </Link>
               ))}
