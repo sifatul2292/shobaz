@@ -29,7 +29,7 @@ const NAV_LINKS = [
 ];
 
 const ANNOUNCEMENTS = [
-  { icon: HiOutlineTruck, text: 'TK.500+ অর্ডারে বিনামূল্যে ডেলিভারি' },
+  { icon: HiOutlineTruck, text: '৯৫০ টাকার উপরে অর্ডার করলে একটি নোটবুক ফ্রি' },
   { icon: HiOutlineBookOpen, text: 'নির্বাচিত বইয়ে ৩০% পর্যন্ত ছাড়' },
   { icon: HiOutlineSparkles, text: 'ঢাকায় মাত্র ৬০ টাকায় ডেলিভারি' },
   { icon: HiOutlineShieldCheck, text: 'প্রতিটি অর্ডারে বিশেষ উপহার' },
