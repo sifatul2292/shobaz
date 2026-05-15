@@ -48,6 +48,7 @@ interface Order {
 
 interface WishProduct {
   _id: string;
+  wishlistId: string;
   name: string;
   slug?: string;
   images?: string[];
@@ -120,7 +121,10 @@ function ProfileContent() {
     }
     if (oRes.status === 'fulfilled') setOrders(oRes.value.data?.data || []);
     if (aRes.status === 'fulfilled') setAddresses(aRes.value.data?.data || []);
-    if (wRes.status === 'fulfilled') setWishlist(wRes.value.data?.data || []);
+    if (wRes.status === 'fulfilled') {
+      const raw = wRes.value.data?.data || [];
+      setWishlist(raw.map((item: any) => ({ ...item.product, wishlistId: item._id })));
+    }
     setLoading(false);
   };
 
@@ -211,10 +215,10 @@ function ProfileContent() {
     } catch { toast.error('মুছতে ব্যর্থ'); }
   };
 
-  const removeWishlist = async (id: string) => {
+  const removeWishlist = async (wishlistId: string, productId: string) => {
     try {
-      await api.delete(`/wishList/delete/${id}`);
-      setWishlist(w => w.filter(x => x._id !== id));
+      await api.delete(`/wishList/delete/${wishlistId}`);
+      setWishlist(w => w.filter(x => x._id !== productId));
       toast.success('সরানো হয়েছে');
     } catch { toast.error('সরাতে ব্যর্থ'); }
   };
@@ -504,7 +508,7 @@ function ProfileContent() {
                             <p style={{ margin: '0 0 10px', fontWeight: 700, color: PRIMARY, fontSize: 14 }}>৳{price || p.salePrice}</p>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <Link href={`/products/${p.slug}`} style={{ flex: 1, background: PRIMARY, color: 'white', textAlign: 'center', padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>বিস্তারিত</Link>
-                              <button onClick={() => removeWishlist(p._id)} style={{ padding: '6px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>✕</button>
+                              <button onClick={() => removeWishlist(p.wishlistId, p._id)} style={{ padding: '6px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>✕</button>
                             </div>
                           </div>
                         </div>

@@ -100,17 +100,11 @@ export default function Header() {
     router.push('/');
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    try {
-      const res = await api.get(`/product/search?q=${encodeURIComponent(searchQuery)}&limit=20`);
-      const results = res.data?.data || [];
-      setSearchResults({ products: results });
-      setOpen(true);
-    } catch (err) { console.error(err); }
-    finally { setIsSearching(false); }
+    setOpen(false);
+    router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
   const handleInputChange = async (value: string) => {
@@ -245,7 +239,6 @@ export default function Header() {
           <div className="flex items-center gap-1 shrink-0">
             {[
               { href: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'যোগাযোগ' },
-              { href: '/wishlist', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', label: 'ইচ্ছা তালিকা' },
             ].map(({ href, icon, label }) => (
               <Link key={href} href={href} className="flex flex-col items-center gap-0.5 px-3 py-1.5" style={{ borderRadius: 'var(--radius)' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-2)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--ink-2)' }}>
