@@ -52,8 +52,10 @@ export default function Header() {
   const { items, addItem } = useCartStore();
   const { user, token, logout } = useAuthStore();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [authMounted, setAuthMounted] = useState(false);
 
   useEffect(() => {
+    setAuthMounted(true);
     const fetchShopInfo = async () => {
       try {
         const res = await api.get('/shop-information/get');
@@ -253,7 +255,7 @@ export default function Header() {
               </Link>
             ))}
             {/* Account — auth-aware */}
-            {token ? (
+            {authMounted && token ? (
               <div ref={accountRef} style={{ position: 'relative' }}>
                 <button
                   onClick={() => setAccountOpen(v => !v)}
@@ -441,7 +443,7 @@ export default function Header() {
 
           {/* Drawer footer — auth-aware */}
           <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--line-soft)' }}>
-            {token ? (
+            {authMounted && token ? (
               <>
                 <div className="px-5 py-3" style={{ fontFamily: 'var(--bn)' }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{user?.name || 'ব্যবহারকারী'}</div>
