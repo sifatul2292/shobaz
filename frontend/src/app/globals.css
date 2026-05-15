@@ -611,6 +611,12 @@ input[type="number"] {
 @media (max-width: 640px) {
   .cart-layout section { padding: 8px 16px 40px; }
 }
+/* Step progress pulse ring animation */
+@keyframes stepPulse {
+  0%, 100% { transform: scale(1); opacity: 0.45; }
+  50% { transform: scale(1.18); opacity: 0.15; }
+}
+
 /* Checkout page 2-col layout */
 .checkout-layout {
   display: grid;

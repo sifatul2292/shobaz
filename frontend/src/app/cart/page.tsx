@@ -94,37 +94,51 @@ function StepProgress() {
   const STEPS = [{ n: 1, label: 'কার্ট' }, { n: 2, label: 'চেকআউট' }, { n: 3, label: 'সম্পন্ন' }];
   const step = 1;
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 24px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-        {STEPS.map((s, i) => {
-          const active = step === s.n;
-          const completed = s.n < step;
-          const fill = completed || active ? PRIMARY : '#e2e8f0';
-          return (
-            <Fragment key={s.n}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 999, background: fill,
-                  color: (completed || active) ? 'white' : '#9ca3af',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: 14,
-                  boxShadow: active ? `0 0 0 4px ${PRIMARY}22` : 'none',
-                  transition: 'all .2s ease',
-                }}>
-                  {completed ? <IcCheck color="white" size={16}/> : s.n}
+    <div style={{ background: 'white', borderBottom: '1px solid #f1f5f9', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '20px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {STEPS.map((s, i) => {
+            const active = step === s.n;
+            const completed = s.n < step;
+            return (
+              <Fragment key={s.n}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{ position: 'relative' }}>
+                    {active && (
+                      <div style={{
+                        position: 'absolute', inset: -7, borderRadius: 999,
+                        border: `2px solid ${PRIMARY}`,
+                        animation: 'stepPulse 2s ease-in-out infinite',
+                      }}/>
+                    )}
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 999,
+                      background: (completed || active) ? PRIMARY : 'white',
+                      border: (completed || active) ? 'none' : '2px solid #e2e8f0',
+                      color: (completed || active) ? 'white' : '#9ca3af',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: 17,
+                      boxShadow: (completed || active)
+                        ? `0 4px 14px ${PRIMARY}44, 0 1px 4px rgba(0,0,0,0.1)`
+                        : '0 2px 8px rgba(0,0,0,0.06)',
+                      transition: 'all .3s ease',
+                    }}>
+                      {completed ? <IcCheck color="white" size={20}/> : s.n}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: (completed || active) ? '#0f172a' : '#9ca3af', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
+                    {s.label}
+                  </span>
                 </div>
-                <span style={{ marginTop: 8, fontSize: 13, color: (completed || active) ? '#0f172a' : '#9ca3af', fontWeight: active ? 700 : 600 }}>
-                  {s.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div style={{ flex: 1, height: 2, background: '#e2e8f0', margin: '0 -2px', position: 'relative', top: -14 }}>
-                  <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: PRIMARY, transition: 'width .4s ease' }}/>
-                </div>
-              )}
-            </Fragment>
-          );
-        })}
+                {i < STEPS.length - 1 && (
+                  <div style={{ flex: 1, height: 3, background: '#f1f5f9', margin: '0 16px', marginBottom: 26, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: `linear-gradient(90deg, ${PRIMARY}, #22c55e)`, transition: 'width .5s ease', borderRadius: 999 }}/>
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -284,8 +298,10 @@ interface ShippingCharge {
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     document.title = 'কার্ট - Shobaz';
     if (items.length > 0) {
       gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
@@ -295,6 +311,7 @@ export default function CartPage() {
     }).catch(() => {});
   }, []);
 
+  if (!mounted) return <div style={{ minHeight: '100vh', background: PARCHMENT }}/>;
   if (items.length === 0) return <EmptyCart />;
 
   const subtotal = getTotalPrice();
@@ -377,14 +394,14 @@ export default function CartPage() {
 
                 {/* CTA */}
                 <div style={{ padding: '16px 24px' }}>
-                  <Link
+                  <a
                     href="/checkout"
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', height: 56, background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', borderRadius: 14, fontSize: 17, fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 16px rgba(234,88,12,0.35)', transition: 'transform .15s ease, box-shadow .2s ease' }}
                     onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(234,88,12,0.45)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(234,88,12,0.35)'; }}
                   >
                     <IcArrowR size={18}/> চেকআউটে যান
-                  </Link>
+                  </a>
                 </div>
 
                 {/* trust badges */}

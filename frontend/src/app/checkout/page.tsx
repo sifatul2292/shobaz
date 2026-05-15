@@ -103,37 +103,51 @@ const IcCart = ({ size = 48, color = '#cbd5e1' }: { size?: number; color?: strin
 function StepProgress({ step }: { step: number }) {
   const STEPS = [{ n: 1, label: 'কার্ট' }, { n: 2, label: 'চেকআউট' }, { n: 3, label: 'সম্পন্ন' }];
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 24px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-        {STEPS.map((s, i) => {
-          const active = step === s.n;
-          const completed = s.n < step;
-          const fill = completed || active ? PRIMARY : '#e2e8f0';
-          return (
-            <Fragment key={s.n}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 999, background: fill,
-                  color: (completed || active) ? 'white' : '#9ca3af',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: 14,
-                  boxShadow: active ? `0 0 0 4px ${PRIMARY}22` : 'none',
-                  transition: 'all .2s ease',
-                }}>
-                  {completed ? <IcCheck color="white" size={16}/> : s.n}
+    <div style={{ background: 'white', borderBottom: '1px solid #f1f5f9', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '20px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {STEPS.map((s, i) => {
+            const active = step === s.n;
+            const completed = s.n < step;
+            return (
+              <Fragment key={s.n}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{ position: 'relative' }}>
+                    {active && (
+                      <div style={{
+                        position: 'absolute', inset: -7, borderRadius: 999,
+                        border: `2px solid ${PRIMARY}`,
+                        animation: 'stepPulse 2s ease-in-out infinite',
+                      }}/>
+                    )}
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 999,
+                      background: (completed || active) ? PRIMARY : 'white',
+                      border: (completed || active) ? 'none' : '2px solid #e2e8f0',
+                      color: (completed || active) ? 'white' : '#9ca3af',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: 17,
+                      boxShadow: (completed || active)
+                        ? `0 4px 14px ${PRIMARY}44, 0 1px 4px rgba(0,0,0,0.1)`
+                        : '0 2px 8px rgba(0,0,0,0.06)',
+                      transition: 'all .3s ease',
+                    }}>
+                      {completed ? <IcCheck color="white" size={20}/> : s.n}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: (completed || active) ? '#0f172a' : '#9ca3af', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
+                    {s.label}
+                  </span>
                 </div>
-                <span style={{ marginTop: 8, fontSize: 13, color: (completed || active) ? '#0f172a' : '#9ca3af', fontWeight: active ? 700 : 600 }}>
-                  {s.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div style={{ flex: 1, height: 2, background: '#e2e8f0', margin: '0 -2px', position: 'relative', top: -14 }}>
-                  <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: PRIMARY, transition: 'width .4s ease' }}/>
-                </div>
-              )}
-            </Fragment>
-          );
-        })}
+                {i < STEPS.length - 1 && (
+                  <div style={{ flex: 1, height: 3, background: '#f1f5f9', margin: '0 16px', marginBottom: 26, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: `linear-gradient(90deg, ${PRIMARY}, #22c55e)`, transition: 'width .5s ease', borderRadius: 999 }}/>
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -291,6 +305,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
@@ -299,6 +314,7 @@ export default function CheckoutPage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     api.get('/shipping-charge/get').then(res => {
       if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
@@ -314,6 +330,7 @@ export default function CheckoutPage() {
     }
   }, []);
 
+  if (!mounted) return <div style={{ minHeight: '100vh', background: PARCHMENT }}/>;
   if (items.length === 0) return <EmptyCheckout />;
 
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
@@ -484,9 +501,9 @@ export default function CheckoutPage() {
 
                 {/* edit cart */}
                 <div style={{ padding: '0 24px 10px' }}>
-                  <Link href="/cart" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, border: '1.5px solid #e2e8f0', background: 'white', color: '#374151', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                  <a href="/cart" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, border: '1.5px solid #e2e8f0', background: 'white', color: '#374151', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                     <IcArrowL color="#374151" size={16}/> কার্ট সম্পাদনা করুন
-                  </Link>
+                  </a>
                 </div>
 
                 {/* CTA */}
