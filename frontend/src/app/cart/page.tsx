@@ -1,39 +1,292 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewCart } from '@/lib/gtm';
-import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaArrowRight, FaBookmark, FaHeart } from 'react-icons/fa';
-import { HiOutlineTruck, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 
-interface ShippingCharge {
-  deliveryInDhaka: number;
-  deliveryOutsideDhaka: number;
-}
+// ── Design tokens ─────────────────────────────────────────────────────
+const PRIMARY = '#16a34a';
+const PARCHMENT = '#f5f0e8';
 
-const getAuthorName = (author: any) => {
+// ── Helpers ───────────────────────────────────────────────────────────
+const getAuthorName = (author: any): string => {
   if (!author) return '';
   if (Array.isArray(author)) return author[0]?.name || '';
   if (typeof author === 'object') return author.name || '';
   return author as string;
 };
 
-const getCurrentPrice = (product: any) => {
+const getCurrentPrice = (product: any): number => {
   const salePrice = product.salePrice || 0;
   const discount = product.discountAmount || 0;
   return discount > 0 ? salePrice - discount : salePrice;
 };
 
+// ── SVG Icons ─────────────────────────────────────────────────────────
+const IcCart = ({ size = 20, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/>
+    <path d="M3 4h2l2.6 12.2a1.8 1.8 0 0 0 1.8 1.5h7.5a1.8 1.8 0 0 0 1.8-1.4L21 9H6"/>
+  </svg>
+);
+const IcTrash = ({ size = 18, color = '#9ca3af' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+  </svg>
+);
+const IcHeart = ({ size = 16, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.66l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.22l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+const IcPlus = ({ size = 16, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+const IcMinus = ({ size = 16, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+const IcArrowR = ({ size = 18, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/>
+  </svg>
+);
+const IcArrowL = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/>
+  </svg>
+);
+const IcTruck = ({ size = 20, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="6" width="14" height="11" rx="1.5"/>
+    <path d="M15 9h4l3 4v4h-7"/>
+    <circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>
+  </svg>
+);
+const IcShield = ({ size = 18, color = PRIMARY }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5l-8-3z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </svg>
+);
+const IcCheck = ({ size = 16, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+const IcLock = ({ size = 14, color = '#9ca3af' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+  </svg>
+);
+
+// ── Step Progress ─────────────────────────────────────────────────────
+function StepProgress() {
+  const STEPS = [{ n: 1, label: 'কার্ট' }, { n: 2, label: 'চেকআউট' }, { n: 3, label: 'সম্পন্ন' }];
+  const step = 1;
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 24px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+        {STEPS.map((s, i) => {
+          const active = step === s.n;
+          const completed = s.n < step;
+          const fill = completed || active ? PRIMARY : '#e2e8f0';
+          return (
+            <Fragment key={s.n}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 999, background: fill,
+                  color: (completed || active) ? 'white' : '#9ca3af',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, fontSize: 14,
+                  boxShadow: active ? `0 0 0 4px ${PRIMARY}22` : 'none',
+                  transition: 'all .2s ease',
+                }}>
+                  {completed ? <IcCheck color="white" size={16}/> : s.n}
+                </div>
+                <span style={{ marginTop: 8, fontSize: 13, color: (completed || active) ? '#0f172a' : '#9ca3af', fontWeight: active ? 700 : 600 }}>
+                  {s.label}
+                </span>
+              </div>
+              {i < STEPS.length - 1 && (
+                <div style={{ flex: 1, height: 2, background: '#e2e8f0', margin: '0 -2px', position: 'relative', top: -14 }}>
+                  <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: PRIMARY, transition: 'width .4s ease' }}/>
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Qty stepper styles ────────────────────────────────────────────────
+const qtyEdge: React.CSSProperties = {
+  width: 40, height: 40, borderRadius: 10, background: '#f1f5f9',
+  border: 'none', cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+};
+const qtyCenter: React.CSSProperties = {
+  width: 48, height: 40, borderRadius: 10, border: '1.5px solid #e2e8f0',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 16, fontWeight: 700, color: '#0f172a', background: 'white',
+};
+
+// ── Cart Row ──────────────────────────────────────────────────────────
+function CartRow({ item, onQty, onRemove, last }: {
+  item: any; onQty: (q: number) => void; onRemove: () => void; last: boolean;
+}) {
+  const [hov, setHov] = useState(false);
+  const product = item.product;
+  const price = getCurrentPrice(product);
+  const original = product.salePrice || 0;
+  const discount = product.discountAmount || 0;
+  const authorName = getAuthorName(product.author);
+  const name = product.name || 'Untitled';
+  const img = product.images?.[0];
+  const sub = price * item.quantity;
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 18,
+        padding: '20px 24px', alignItems: 'flex-start',
+        borderBottom: last ? 'none' : '1px solid #f5f5f5',
+        background: hov ? '#fafafa' : 'white',
+        transition: 'background .15s ease',
+      }}
+    >
+      {/* Thumb */}
+      <Link href={`/products/${product.slug}`} style={{
+        width: 80, height: 104, borderRadius: 8, overflow: 'hidden', display: 'block',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.12)', textDecoration: 'none', flexShrink: 0, background: '#f8fafc',
+      }}>
+        {img ? (
+          <img src={imgUrl(img)!} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IcCart size={28} color="#cbd5e1"/>
+          </div>
+        )}
+      </Link>
+
+      {/* Info */}
+      <div style={{ minWidth: 0 }}>
+        <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{name}</div>
+        </Link>
+        {authorName && <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>• {authorName}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: PRIMARY, fontFamily: "'Inter', sans-serif" }}>৳{price}</span>
+          {discount > 0 && (
+            <>
+              <span style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'line-through' }}>৳{original}</span>
+              <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
+                ৳{discount * item.quantity} সাশ্রয়
+              </span>
+            </>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 20, marginTop: 12, flexWrap: 'wrap' }}>
+          <Link href="/wishlist" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: PRIMARY, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+            <IcHeart size={15} color={PRIMARY}/> পছন্দ তালিকায় রাখুন
+          </Link>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 14, minWidth: 152 }}>
+        <button
+          onClick={onRemove}
+          title="মুছুন"
+          className="cart-trash-btn"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
+        >
+          <IcTrash size={18} color="#9ca3af"/>
+        </button>
+        <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={() => onQty(item.quantity - 1)} disabled={item.quantity <= 1}
+            style={{ ...qtyEdge, opacity: item.quantity <= 1 ? 0.4 : 1, cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer' }}>
+            <IcMinus color={PRIMARY}/>
+          </button>
+          <div style={qtyCenter}>{item.quantity}</div>
+          <button onClick={() => onQty(item.quantity + 1)} style={qtyEdge}>
+            <IcPlus color={PRIMARY}/>
+          </button>
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>= ৳{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Summary Row ───────────────────────────────────────────────────────
+function SummaryRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ color: '#374151', fontSize: 14 }}>{label}</span>
+      <span style={{ color: valueColor || '#0f172a', fontWeight: 700, fontSize: 14 }}>{value}</span>
+    </div>
+  );
+}
+
+// ── Trust Mini ────────────────────────────────────────────────────────
+function TrustMini({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div style={{ flex: 1, background: '#f8fafc', borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+      {icon}
+      <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{label}</span>
+    </div>
+  );
+}
+
+// ── Empty State ───────────────────────────────────────────────────────
+function EmptyCart() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT }}>
+      <Header />
+      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <IcCart size={56} color="#cbd5e1"/>
+          </div>
+          <h2 style={{ fontFamily: "'Hind Siliguri', sans-serif", fontSize: 24, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>আপনার কার্ট খালি</h2>
+          <p style={{ fontFamily: "'Hind Siliguri', sans-serif", color: '#9ca3af', marginBottom: 28, lineHeight: 1.6 }}>পছন্দের বই কার্টে যোগ করুন</p>
+          <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: PRIMARY, color: 'white', borderRadius: 12, padding: '12px 24px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Hind Siliguri', sans-serif", fontSize: 15 }}>
+            কেনাকাটা শুরু করুন <IcArrowR size={16}/>
+          </Link>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// ── Shipping charge interface ──────────────────────────────────────────
+interface ShippingCharge {
+  deliveryInDhaka: number;
+  deliveryOutsideDhaka: number;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
 
   useEffect(() => {
-    document.title = 'Cart - Shobaz';
+    document.title = 'কার্ট - Shobaz';
     if (items.length > 0) {
       gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
     }
@@ -42,219 +295,120 @@ export default function CartPage() {
     }).catch(() => {});
   }, []);
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-4">
-            <div className="relative mb-8">
-              <div className="w-40 h-40 mx-auto bg-gradient-to-br from-green-100 to-cyan-100 rounded-full flex items-center justify-center">
-                <FaShoppingCart className="text-6xl text-green-300" />
-              </div>
-              <div className="absolute -top-2 -right-8 w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center animate-bounce">
-                <span className="text-2xl">😢</span>
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">আপনার কার্ট খালি</h2>
-            <p className="text-gray-500 mb-8">মনে করিয়া দেখুন আপনার পছন্দের বইগুলো কোথায় রাখা হয়েছে</p>
-            <Link href="/products" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-cyan-500 text-white rounded-xl font-bold hover:from-green-500 hover:to-cyan-600 transition-all hover:scale-105 shadow-lg">
-              <FaBookmark />
-              বই কিনুন
-              <FaArrowRight />
-            </Link>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  if (items.length === 0) return <EmptyCart />;
 
   const subtotal = getTotalPrice();
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT, fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
       <Header />
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">আমার কার্ট</h1>
-          <p className="text-gray-500">{items.length}টি পণ্য আপনার কার্টে আছে</p>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Cart Items */}
-          <div className="lg:col-span-3 space-y-4">
-            {items.map((item) => {
-              const product = item.product;
-              const price = getCurrentPrice(product);
-              const authorName = getAuthorName(product.author);
-              const img = product.images?.[0];
-              const name = product.name || 'Untitled';
-              const totalItemPrice = price * item.quantity;
-              
-              return (
-                <div key={item._id} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300">
-                  <div className="flex p-4 gap-4">
-                    {/* Product Image */}
-                    <Link href={`/products/${product.slug}`} className="shrink-0">
-                      <div className="w-28 h-36 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl flex items-center justify-center overflow-hidden relative">
-                        {img ? (
-                          <img src={imgUrl(img)!} alt={name} className="w-full h-full object-cover" />
-                        ) : (
-                          <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-                      </div>
-                    </Link>
-                    
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between gap-4">
-                        <div className="min-w-0">
-                          <Link href={`/products/${product.slug}`} className="font-bold text-lg text-gray-800 hover:text-green-500 line-clamp-2 transition-colors">
-                            {name}
-                          </Link>
-                          {authorName && (
-                            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                              <span className="w-1 h-1 bg-green-500 rounded-full"></span>
-                              {authorName}
-                            </p>
-                          )}
-                        </div>
-                        <button 
-                          onClick={() => removeItem(product._id)} 
-                          className="shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="সরান"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                      
-                      {/* Price */}
-                      <div className="mt-3 flex items-center gap-3">
-                        <span className="text-2xl font-bold text-green-500">৳{price}</span>
-                        {product.discountAmount > 0 && (
-                          <>
-                            <span className="text-sm text-gray-400 line-through">৳{product.salePrice}</span>
-                            <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                              -৳{product.discountAmount}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      
-                      {/* Quantity Controls */}
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
-                          <button 
-                            onClick={() => updateQuantity(product._id, Math.max(1, item.quantity - 1))} 
-                            className="px-4 py-2 hover:bg-slate-50 font-bold text-gray-600 transition-colors disabled:opacity-50"
-                            disabled={item.quantity <= 1}
-                          >
-                            <FaMinus className="text-xs" />
-                          </button>
-                          <span className="px-5 py-2 font-bold text-gray-800 min-w-[60px] text-center">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(product._id, item.quantity + 1)} 
-                            className="px-4 py-2 hover:bg-slate-50 font-bold text-gray-600 transition-colors"
-                          >
-                            <FaPlus className="text-xs" />
-                          </button>
-                        </div>
-                        <span className="text-lg font-bold text-gray-800">
-                          = ৳{totalItemPrice}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="px-4 py-3 bg-slate-50 flex items-center justify-between">
-                    <button className="text-sm text-green-500 hover:text-green-600 flex items-center gap-2 transition-colors">
-                      <FaHeart className="text-xs" />
-                      পছন্দ তালিকায় রাখুন
-                    </button>
-                    <Link href="/products" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                      + আরও যোগ করুন
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-            
-            {/* Clear Cart */}
-            <button 
-              onClick={clearCart}
-              className="text-red-500 text-sm hover:underline"
-            >
-              সমস্ত কার্ট মুছে ফেলুন
-            </button>
-          </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden sticky top-24">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-green-500 to-cyan-500 px-6 py-4">
-                <h3 className="font-bold text-white text-lg">অর্ডার সারাংশ</h3>
-                <p className="text-green-100 text-sm">{items.length}টি পণ্য</p>
-              </div>
-              
-              <div className="p-6">
-                {/* Price Details */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-gray-600">
-                    <span>উপ-মোট</span>
-                    <span>৳{subtotal}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>ঢাকার ভেতরে</span>
-                    <span className="font-medium">৳{shippingCharge?.deliveryInDhaka ?? '—'}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>ঢাকার বাইরে</span>
-                    <span className="font-medium">৳{shippingCharge?.deliveryOutsideDhaka ?? '—'}</span>
-                  </div>
-                  <p className="text-xs text-gray-400">* চেকআউটে সঠিক চার্জ নির্বাচন করুন</p>
-                  <div className="h-px bg-slate-100"></div>
-                  <div className="flex justify-between text-xl font-bold">
-                    <span>সাব-টোটাল</span>
-                    <span className="text-green-500">৳{subtotal}</span>
-                  </div>
+      <StepProgress />
+
+      <main style={{ flex: 1 }}>
+        <section style={{ maxWidth: 1280, margin: '0 auto', padding: '8px 24px 56px' }}>
+          <div className="cart-layout">
+
+            {/* ── LEFT — cart items ── */}
+            <div style={{ background: 'white', borderRadius: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
+              {/* header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <IcCart color={PRIMARY} size={22}/>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>আপনার কার্ট</h2>
                 </div>
-                
-                {/* Checkout Button */}
-                <Link href="/checkout" className="block w-full bg-gradient-to-r from-green-500 to-cyan-500 text-white text-center py-4 rounded-xl font-bold hover:from-green-500 hover:to-cyan-600 transition-all hover:scale-[1.02] shadow-lg hover:shadow-xl">
-                  চেকআউটে যান
-                  <FaArrowRight className="inline-block ml-2" />
+                <span style={{ background: '#f1f5f9', color: '#374151', borderRadius: 999, padding: '4px 14px', fontSize: 13, fontWeight: 600 }}>
+                  {itemCount}টি পণ্য
+                </span>
+              </div>
+
+              {/* rows */}
+              {items.map((item, i) => (
+                <CartRow
+                  key={item._id || item.product._id}
+                  item={item}
+                  last={i === items.length - 1}
+                  onQty={(q) => updateQuantity(item.product._id, Math.max(1, q))}
+                  onRemove={() => { removeItem(item.product._id); toast.success('পণ্য সরানো হয়েছে'); }}
+                />
+              ))}
+
+              {/* footer */}
+              <div style={{ background: '#fafafa', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <button
+                  onClick={() => { if (confirm('সব পণ্য মুছে ফেলবেন?')) clearCart(); }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', transition: 'color .15s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; }}
+                >
+                  <IcTrash color="#9ca3af" size={16}/> সমস্ত কার্ট মুছে ফেলুন
+                </button>
+                <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: PRIMARY, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <IcArrowL size={14} color={PRIMARY}/> কেনাকাটা চালিয়ে যান
                 </Link>
-                
-                {/* Trust Badges */}
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <HiOutlineTruck className="text-green-600 text-xs" />
-                    </div>
-                    <span>দ্রুত ডেলিভারি</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <HiOutlineShieldCheck className="text-blue-600 text-xs" />
-                    </div>
-                    <span>১০০% নিরাপদ পেমেন্ট</span>
-                  </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT — summary ── */}
+            <div style={{ position: 'sticky', top: 16 }}>
+              <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
+                {/* gradient header */}
+                <div style={{ background: `linear-gradient(135deg, ${PRIMARY}, #14532d)`, padding: '20px 24px', color: 'white' }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>অর্ডার সারাংশ</h3>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', marginTop: 2 }}>{itemCount}টি পণ্য</div>
+                </div>
+
+                {/* price rows */}
+                <div style={{ padding: '8px 24px 0' }}>
+                  <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
+                  <SummaryRow label="ঢাকার ভেতরে" value={shippingCharge ? `৳${shippingCharge.deliveryInDhaka}` : '৳৬০'}/>
+                  <SummaryRow label="ঢাকার বাইরে" value={shippingCharge ? `৳${shippingCharge.deliveryOutsideDhaka}` : '৳৮০'}/>
+                  <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9ca3af', fontStyle: 'italic' }}>
+                    * চেকআউটে সঠিক চার্জ নির্বাচন করুন
+                  </p>
+                </div>
+
+                {/* subtotal banner */}
+                <div style={{ background: '#f8fafc', padding: '16px 24px', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>সাব-টোটাল</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: PRIMARY, fontFamily: "'Inter', sans-serif" }}>৳{subtotal}</span>
+                </div>
+
+                {/* CTA */}
+                <div style={{ padding: '16px 24px' }}>
+                  <Link
+                    href="/checkout"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', height: 56, background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', borderRadius: 14, fontSize: 17, fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 16px rgba(234,88,12,0.35)', transition: 'transform .15s ease, box-shadow .2s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(234,88,12,0.45)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(234,88,12,0.35)'; }}
+                  >
+                    <IcArrowR size={18}/> চেকআউটে যান
+                  </Link>
+                </div>
+
+                {/* trust badges */}
+                <div style={{ padding: '0 24px 20px', display: 'flex', gap: 12 }}>
+                  <TrustMini icon={<IcTruck color={PRIMARY} size={18}/>} label="দ্রুত ডেলিভারি"/>
+                  <TrustMini icon={<IcShield color={PRIMARY} size={18}/>} label="১০০% নিরাপদ পেমেন্ট"/>
+                </div>
+
+                {/* add more */}
+                <Link href="/products" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px', color: PRIMARY, fontSize: 14, fontWeight: 600, textDecoration: 'none', borderTop: '1px solid #f1f5f9' }}>
+                  <IcPlus color={PRIMARY} size={16}/> আরও বই যোগ করুন
+                </Link>
+
+                {/* secure badge */}
+                <div style={{ padding: '0 24px 20px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#9ca3af', fontSize: 12 }}>
+                  <IcLock/> নিরাপদ পেমেন্ট গ্যারান্টি
                 </div>
               </div>
             </div>
-            
-            {/* Continue Shopping */}
-            <Link href="/products" className="block mt-4 text-center text-green-500 hover:text-green-600 font-medium transition-colors">
-              + আরও বই যোগ করুন
-            </Link>
+
           </div>
-        </div>
+        </section>
       </main>
+
       <Footer />
     </div>
   );

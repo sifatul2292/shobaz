@@ -591,3 +591,23 @@ input[type="number"] {
 
 /* Tags horizontal scroll — hide scrollbar */
 .cat-pills::-webkit-scrollbar { display: none; }
+
+/* Cart page 2-col layout */
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: flex-start;
+}
+@media (max-width: 900px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .cart-layout > div:last-child { position: static !important; }
+}
+
+/* Cart trash btn hover — red stroke via CSS */
+.cart-trash-btn:hover svg { stroke: #ef4444; }
+
+/* Cart row mobile compact */
+@media (max-width: 640px) {
+  .cart-layout section { padding: 8px 16px 40px; }
+}
