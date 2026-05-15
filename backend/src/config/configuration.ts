@@ -22,6 +22,7 @@ export default () => ({
       : 'http://localhost:4000',
 
   gmail: process.env.GMAIL || 'your-email@gmail.com',
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD || '',
   googleClientId1: process.env.GOOGLE_CLIENT_ID_1 || 'your_client_id',
   googleClientSecret1: process.env.GOOGLE_CLIENT_SECRET_1 || 'your_client_secret',
   googleClientRedirectUrl: 'https://developers.google.com/oauthplayground',
