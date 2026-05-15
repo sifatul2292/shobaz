@@ -275,7 +275,11 @@ export default function Header() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{user?.name || 'ব্যবহারকারী'}</div>
                       <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{user?.email || ''}</div>
                     </div>
-                    <Link href="/profile/orders" onClick={() => setAccountOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 8, fontSize: 13, color: '#374151', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    <Link href="/profile" onClick={() => setAccountOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 8, fontSize: 13, color: '#374151', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      ড্যাশবোর্ড
+                    </Link>
+                    <Link href="/profile?tab=orders" onClick={() => setAccountOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 8, fontSize: 13, color: '#374151', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
                       আমার অর্ডার
                     </Link>
@@ -449,7 +453,7 @@ export default function Header() {
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{user?.name || 'ব্যবহারকারী'}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user?.email || ''}</div>
                 </div>
-                <Link href="/profile/orders" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-5 py-3.5 text-base" style={{ fontFamily: 'var(--bn)', color: 'var(--ink-2)' }}>
+                <Link href="/profile?tab=orders" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-5 py-3.5 text-base" style={{ fontFamily: 'var(--bn)', color: 'var(--ink-2)' }}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--muted)' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                   </svg>
