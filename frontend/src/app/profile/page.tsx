@@ -90,6 +90,9 @@ function ProfileContent() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwForm, setPwForm] = useState({ password: '', newPassword: '' });
+  const [pwOtpStep, setPwOtpStep] = useState<'form' | 'otp'>('form');
+  const [pwOtpCode, setPwOtpCode] = useState('');
+  const [pwOtpCooldown, setPwOtpCooldown] = useState(0);
 
   const [showAddrForm, setShowAddrForm] = useState(false);
   const [addrForm, setAddrForm] = useState({ phoneNo: '', address: '', city: '', addressType: 'home' });
@@ -136,15 +139,41 @@ function ProfileContent() {
     setSavingProfile(false);
   };
 
-  const changePassword = async (e: React.FormEvent) => {
+  const sendPwOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!pwForm.password) { toast.error('বর্তমান পাসওয়ার্ড দিন'); return; }
     if (pwForm.newPassword.length < 5) { toast.error('নতুন পাসওয়ার্ড কমপক্ষে ৫ অক্ষর'); return; }
+    if (!profile?.username) { toast.error('প্রোফাইল লোড হয়নি'); return; }
     setChangingPw(true);
     try {
+      const res = await api.post('/otp/generate-otp-with-email', { email: profile.username });
+      if (res.data?.success) {
+        toast.success('OTP পাঠানো হয়েছে! ইমেইল চেক করুন');
+        setPwOtpStep('otp');
+        setPwOtpCooldown(60);
+        const t = setInterval(() => {
+          setPwOtpCooldown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; });
+        }, 1000);
+      } else {
+        toast.error(res.data?.message || 'OTP পাঠাতে ব্যর্থ');
+      }
+    } catch { toast.error('OTP পাঠাতে ব্যর্থ হয়েছে'); }
+    setChangingPw(false);
+  };
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwOtpCode.length !== 6) { toast.error('৬ সংখ্যার OTP দিন'); return; }
+    setChangingPw(true);
+    try {
+      const verifyRes = await api.post('/otp/validate-otp-with-email', { email: profile?.username, code: pwOtpCode });
+      if (!verifyRes.data?.success) { toast.error(verifyRes.data?.message || 'OTP সঠিক নয়'); setChangingPw(false); return; }
       const res = await api.put('/user/change-logged-in-user-password', pwForm);
       if (res.data?.success) {
         toast.success('পাসওয়ার্ড পরিবর্তন হয়েছে');
         setPwForm({ password: '', newPassword: '' });
+        setPwOtpCode('');
+        setPwOtpStep('form');
       } else {
         toast.error(res.data?.message || 'পাসওয়ার্ড পরিবর্তন ব্যর্থ');
       }
@@ -516,22 +545,62 @@ function ProfileContent() {
 
               {/* Password */}
               <div style={{ background: 'white', borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 28 }}>
-                <h3 style={{ margin: '0 0 20px', fontSize: 17, fontWeight: 700 }}>পাসওয়ার্ড পরিবর্তন</h3>
-                <form onSubmit={changePassword}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 400, marginBottom: 20 }}>
-                    <div>
-                      <label style={labelStyle}>বর্তমান পাসওয়ার্ড</label>
-                      <input type="password" value={pwForm.password} onChange={e => setPwForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••" style={fieldStyle} />
+                <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>পাসওয়ার্ড পরিবর্তন</h3>
+                <p style={{ margin: '0 0 20px', fontSize: 12, color: '#94a3b8' }}>ইমেইল OTP দিয়ে যাচাই করতে হবে</p>
+
+                {pwOtpStep === 'form' && (
+                  <form onSubmit={sendPwOtp}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 400, marginBottom: 20 }}>
+                      <div>
+                        <label style={labelStyle}>বর্তমান পাসওয়ার্ড</label>
+                        <input type="password" value={pwForm.password} onChange={e => setPwForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••" style={fieldStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>নতুন পাসওয়ার্ড</label>
+                        <input type="password" value={pwForm.newPassword} onChange={e => setPwForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="কমপক্ষে ৫ অক্ষর" style={fieldStyle} />
+                      </div>
                     </div>
-                    <div>
-                      <label style={labelStyle}>নতুন পাসওয়ার্ড</label>
-                      <input type="password" value={pwForm.newPassword} onChange={e => setPwForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="কমপক্ষে ৫ অক্ষর" style={fieldStyle} />
+                    <button type="submit" disabled={changingPw} style={{ padding: '11px 28px', background: changingPw ? '#86efac' : PRIMARY, color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14 }}>
+                      {changingPw ? 'পাঠানো হচ্ছে...' : 'ইমেইলে OTP পাঠান →'}
+                    </button>
+                  </form>
+                )}
+
+                {pwOtpStep === 'otp' && (
+                  <form onSubmit={changePassword}>
+                    <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>
+                      <strong>{profile?.username}</strong>-এ OTP পাঠানো হয়েছে
+                    </p>
+                    <div style={{ maxWidth: 280, marginBottom: 20 }}>
+                      <label style={labelStyle}>OTP কোড</label>
+                      <input
+                        type="text"
+                        value={pwOtpCode}
+                        onChange={e => setPwOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="123456"
+                        inputMode="numeric"
+                        maxLength={6}
+                        style={{ ...fieldStyle, fontSize: 22, letterSpacing: 6, textAlign: 'center', fontWeight: 700 }}
+                        autoFocus
+                      />
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94a3b8' }}>কোডের মেয়াদ ৫ মিনিট</p>
                     </div>
-                  </div>
-                  <button type="submit" disabled={changingPw} style={{ padding: '11px 28px', background: changingPw ? '#86efac' : PRIMARY, color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14 }}>
-                    {changingPw ? 'পরিবর্তন হচ্ছে...' : 'পাসওয়ার্ড পরিবর্তন করুন'}
-                  </button>
-                </form>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <button type="submit" disabled={changingPw || pwOtpCode.length !== 6} style={{ padding: '11px 28px', background: (changingPw || pwOtpCode.length !== 6) ? '#86efac' : PRIMARY, color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14 }}>
+                        {changingPw ? 'যাচাই হচ্ছে...' : 'যাচাই করুন ও পরিবর্তন করুন'}
+                      </button>
+                      <button type="button" onClick={() => { setPwOtpStep('form'); setPwOtpCode(''); }} style={{ padding: '11px 20px', background: '#f1f5f9', border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14 }}>
+                        ← ফিরে যান
+                      </button>
+                      {pwOtpCooldown === 0 && (
+                        <button type="button" onClick={e => sendPwOtp(e as any)} style={{ background: 'none', border: 'none', color: PRIMARY, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          পুনরায় পাঠান
+                        </button>
+                      )}
+                      {pwOtpCooldown > 0 && <span style={{ fontSize: 12, color: '#94a3b8' }}>পুনরায় পাঠান ({pwOtpCooldown}s)</span>}
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           )}
