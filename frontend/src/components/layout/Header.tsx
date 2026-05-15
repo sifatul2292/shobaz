@@ -235,7 +235,7 @@ export default function Header() {
       <div className="hidden lg:block max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center gap-5">
           <Link href="/" className="shrink-0"><Logo /></Link>
-          <SearchBox className="flex-1 max-w-2xl" />
+          {SearchBox({ className: 'flex-1 max-w-2xl' })}
           <div className="flex items-center gap-1 shrink-0">
             {[
               { href: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'যোগাযোগ' },
@@ -383,7 +383,7 @@ export default function Header() {
         {/* Collapsible search panel */}
         <div className={`overflow-hidden transition-all duration-200 ${searchOpen ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-4 pb-3 pt-1">
-            <SearchBox className="w-full" />
+            {SearchBox({ className: 'w-full' })}
           </div>
         </div>
       </div>
