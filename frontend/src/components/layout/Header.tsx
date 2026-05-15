@@ -81,7 +81,8 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+      const target = e.target as Element;
+      if (!target.closest?.('[data-search-wrap]')) {
         setOpen(false);
       }
       if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
@@ -139,7 +140,7 @@ export default function Header() {
   );
 
   const SearchBox = ({ className = '' }: { className?: string }) => (
-    <div ref={wrapRef} className={`relative ${className}`}>
+    <div ref={wrapRef} data-search-wrap className={`relative ${className}`}>
       <form onSubmit={handleSearch}>
         <div
           className="flex items-center transition-all duration-200"
