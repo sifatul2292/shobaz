@@ -273,7 +273,9 @@ function ProductsContent() {
               Books
             </p>
             <h1 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--ink)', margin: '0 0 6px' }}>
-              {filters.category ? decodeURIComponent(filters.category) : 'All Books'}
+              {filters.category
+                ? (categories.find(c => c.slug === filters.category)?.name || decodeURIComponent(filters.category))
+                : 'All Books'}
             </h1>
             <p style={{ fontFamily: 'var(--sans)', fontSize: 13, color: 'var(--muted)' }}>
               {filteredProducts.length} books found
@@ -343,7 +345,7 @@ function ProductsContent() {
                     key={value}
                     onClick={() => updateURL('sort', value)}
                     className={`chip${filters.sortBy === value ? ' solid' : ''}`}
-                    style={{ cursor: 'pointer', background: 'none', border: undefined }}
+                    style={{ cursor: 'pointer' }}
                   >
                     {label}
                   </button>
