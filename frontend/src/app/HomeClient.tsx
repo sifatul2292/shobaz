@@ -325,6 +325,25 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    const sections = Array.from(document.querySelectorAll('main > section')).slice(1);
+    sections.forEach(s => s.classList.add('reveal-s'));
+    const io = new IntersectionObserver(
+      entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-visible');
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.06 }
+    );
+    sections.forEach(s => io.observe(s));
+    return () => io.disconnect();
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#ffffff' }}>
@@ -387,8 +406,8 @@ export default function HomePage() {
                 বাংলাদেশের বিশ্বস্ত অনলাইন বইয়ের দোকান — হাজার হাজার বইয়ের কালেকশন থেকে সারাদেশে দ্রুত ডেলিভারি।
               </p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Link href="/products" style={{
-                  background: PRIMARY, color: 'white', borderRadius: 10,
+                <Link href="/products" className="nh-cta-shine" style={{
+                  color: 'white', borderRadius: 10,
                   padding: '14px 28px', fontSize: 15, fontWeight: 700,
                   fontFamily: 'var(--bn)', boxShadow: '0 6px 20px -8px rgba(22,163,74,0.6)',
                   textDecoration: 'none', display: 'inline-block',
@@ -469,7 +488,7 @@ export default function HomePage() {
               }
 
               {hasDiscount && (
-                <div style={{
+                <div className="nh-disc-badge" style={{
                   position: 'absolute', top: '4%', right: '2%', background: AMBER, color: 'white',
                   borderRadius: 999, padding: '10px 14px', fontWeight: 800, fontSize: 12,
                   boxShadow: '0 8px 20px -8px rgba(245,158,11,0.6)', transform: 'rotate(6deg)',

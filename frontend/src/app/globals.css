@@ -629,3 +629,43 @@ input[type="number"] {
   .checkout-layout > div:last-child { position: static !important; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Homepage scroll-reveal ── */
+.reveal-s {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+}
+.reveal-s.is-visible { opacity: 1; transform: none; }
+
+/* CTA shimmer effect */
+@keyframes shimmer-btn {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.nh-cta-shine {
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 40%, #16a34a 100%) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer-btn 2.8s linear infinite;
+}
+
+/* Promo pulse glow */
+@keyframes promo-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.35); }
+  55%       { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
+}
+.nh-promo { animation: promo-glow 3s ease-in-out infinite; }
+
+/* Discount badge bounce */
+@keyframes badge-bounce {
+  0%, 100% { transform: scale(1); }
+  40%       { transform: scale(1.12); }
+  70%       { transform: scale(0.96); }
+}
+.nh-disc-badge { animation: badge-bounce 2.2s ease-in-out infinite; }
+
+/* Book card lift on hover (stronger) */
+.nh-book-card:hover {
+  transform: translateY(-5px);
+  transition: transform .22s ease, box-shadow .22s ease;
+}

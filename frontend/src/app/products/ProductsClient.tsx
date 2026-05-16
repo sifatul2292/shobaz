@@ -32,12 +32,12 @@ function ProductsContent() {
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
 
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
     author: searchParams.get('author') || '',
     publisher: searchParams.get('publisher') || '',
     q: searchParams.get('q') || '',
-    sortBy: searchParams.get('sort') || 'newest',
     priceMin: '',
     priceMax: '',
   });
@@ -48,7 +48,6 @@ function ProductsContent() {
       author: searchParams.get('author') || '',
       publisher: searchParams.get('publisher') || '',
       q: searchParams.get('q') || '',
-      sortBy: searchParams.get('sort') || 'newest',
       priceMin: '',
       priceMax: '',
     });
@@ -113,6 +112,7 @@ function ProductsContent() {
     let filtered = [...allProducts];
 
     if (filters.category) {
+
       filtered = filtered.filter((p: Product) => {
         const cat = p.category as any;
         if (Array.isArray(cat)) {
@@ -165,7 +165,7 @@ function ProductsContent() {
       });
     }
 
-    switch (filters.sortBy) {
+    switch (sortBy) {
       case 'price-asc':
         filtered.sort((a, b) => getCurrentPrice(a) - getCurrentPrice(b));
         break;
@@ -183,7 +183,7 @@ function ProductsContent() {
     }
 
     return filtered;
-  }, [allProducts, filters]);
+  }, [allProducts, filters, sortBy]);
 
   useEffect(() => {
     if (filters.q && filteredProducts.length >= 0 && !loading) {
@@ -335,16 +335,16 @@ function ProductsContent() {
               {/* Sort bar */}
               <div className="flex items-center gap-3 mb-6 flex-wrap">
                 <span style={{ fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Sort by</span>
-                {[
+                {([
                   { value: 'newest', label: 'Newest' },
                   { value: 'price-asc', label: 'Price ↑' },
                   { value: 'price-desc', label: 'Price ↓' },
                   { value: 'discount', label: 'Discount' },
-                ].map(({ value, label }) => (
+                ] as { value: SortOption; label: string }[]).map(({ value, label }) => (
                   <button
                     key={value}
-                    onClick={() => updateURL('sort', value)}
-                    className={`chip${filters.sortBy === value ? ' solid' : ''}`}
+                    onClick={() => { setSortBy(value); setPage(1); }}
+                    className={`chip${sortBy === value ? ' solid' : ''}`}
                     style={{ cursor: 'pointer' }}
                   >
                     {label}
