@@ -12,9 +12,9 @@
   --muted: #6b665a;
   --line: #1a1a18;
   --line-soft: rgba(15,15,14,.12);
-  --accent: oklch(0.58 0.15 35);
+  --accent: #16a34a;
   --accent-ink: #fff;
-  --ok: oklch(0.55 0.13 145);
+  --ok: #16a34a;
   --card: #fbf7ee;
   --shadow-sm: 0 1px 0 rgba(15,15,14,.06);
   --shadow-md: 0 8px 24px -12px rgba(15,15,14,.18);
@@ -164,7 +164,7 @@ input[type="number"] {
   font-family: var(--sans); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
   background: var(--bg); color: var(--ink); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--line);
 }
-.cover .label-tag.sale { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.cover .label-tag.sale { background: #dc2626; color: #fff; border-color: #dc2626 }
 .cover .label-tag.new { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 .cover .quick {
   position: absolute; left: 10px; right: 10px; bottom: 10px;

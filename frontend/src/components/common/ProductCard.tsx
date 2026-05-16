@@ -4,7 +4,7 @@ import { memo } from 'react';
 import Link from 'next/link';
 import LazyImage from '@/components/ui/LazyImage';
 import { Product } from '@/types';
-import api, { imgUrl } from '@/lib/api';
+import { imgUrl } from '@/lib/api';
 
 function cvIndex(id: string): number {
   let h = 0;
@@ -44,9 +44,6 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
   const slug = product.slug || product._id;
   const authorName = getAuthorName(product.author);
   const cv = cvIndex(product._id);
-  const isNew = !product.discountAmount && product.createdAt
-    ? Date.now() - new Date(product.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
-    : false;
 
   return (
     <div className="book">
@@ -69,31 +66,16 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
           {discountPercent > 0 && (
             <span className="label-tag sale">-{discountPercent}%</span>
           )}
-          {isNew && discountPercent === 0 && (
-            <span className="label-tag new">নতুন</span>
-          )}
-          {onAddToCart && (
-            <div className="quick">
-              <button
-                className="btn btn-accent btn-sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onAddToCart(product);
-                }}
-              >
-                + কার্ট
-              </button>
-            </div>
-          )}
         </div>
       </Link>
+
       <div className="meta">
         <Link href={`/products/${slug}`}>
           <h3 className="title">{product.name}</h3>
         </Link>
         {authorName && <p className="author">{authorName}</p>}
         <div className="price-row">
-          <span style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 15 }}>
+          <span style={{ fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 15, color: 'var(--accent)' }}>
             ৳{currentPrice}
           </span>
           {(product.discountAmount || 0) > 0 && (
@@ -101,6 +83,19 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
           )}
         </div>
       </div>
+
+      {onAddToCart && (
+        <button
+          className="btn btn-accent btn-sm"
+          style={{ borderRadius: 8, width: '100%', justifyContent: 'center', marginTop: 2, fontSize: 12 }}
+          onClick={(e) => {
+            e.preventDefault();
+            onAddToCart(product);
+          }}
+        >
+          + Add to Cart
+        </button>
+      )}
     </div>
   );
 });

@@ -5,12 +5,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import api, { imgUrl } from '@/lib/api';
+import api from '@/lib/api';
 import { getCached, setCached } from '@/lib/cache';
-import LazyImage from '@/components/ui/LazyImage';
 import { gtmSearch } from '@/lib/gtm';
 import { Product, Category, Author, Publisher } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
+import ProductCard from '@/components/common/ProductCard';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -228,7 +228,7 @@ function ProductsContent() {
 
   const handleAddToCart = (product: any) => {
     addItem(product, 1);
-    toast.success('🛒 কার্টে যোগ হয়েছে');
+    toast.success('🛒 Added to cart');
   };
 
   const activeFiltersCount = [
@@ -239,281 +239,145 @@ function ProductsContent() {
     filters.priceMin || filters.priceMax,
   ].filter(Boolean).length;
 
+  const selectStyle: React.CSSProperties = {
+    padding: '8px 12px',
+    border: '1px solid var(--line-soft)',
+    borderRadius: 'var(--radius)',
+    background: 'var(--card)',
+    color: 'var(--ink)',
+    fontFamily: 'var(--bn)',
+    fontSize: 13,
+    outline: 'none',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid var(--line-soft)',
+    borderRadius: 'var(--radius)',
+    background: 'var(--card)',
+    color: 'var(--ink)',
+    fontFamily: 'var(--bn)',
+    fontSize: 13,
+    outline: 'none',
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       <Header />
       <main className="flex-1">
-        <div className="bg-gradient-to-r from-green-500 to-green-700 py-8">
-          <div className="max-w-7xl mx-auto px-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
-              <HiOutlineBookOpen className="w-7 h-7" />
-              {filters.category ? `${decodeURIComponent(filters.category)}` : 'সকল বই'}
+        {/* Page header */}
+        <div style={{ borderBottom: '1px solid var(--line-soft)', padding: '32px 0', background: 'var(--card)' }}>
+          <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto', padding: '0 24px' }}>
+            <p style={{ fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
+              Books
+            </p>
+            <h1 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--ink)', margin: '0 0 6px' }}>
+              {filters.category ? decodeURIComponent(filters.category) : 'All Books'}
             </h1>
-            <p className="text-green-100">{filteredProducts.length} টি বই পাওয়া গেছে</p>
+            <p style={{ fontFamily: 'var(--sans)', fontSize: 13, color: 'var(--muted)' }}>
+              {filteredProducts.length} books found
+            </p>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row gap-6">
-            <aside className="lg:w-64 flex-shrink-0">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-gray-800">ফিল্টার</h2>
+        <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto', padding: '32px 24px' }}>
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar */}
+            <aside className="lg:w-56 flex-shrink-0">
+              <div style={{ border: '1px solid var(--line-soft)', borderRadius: 'var(--radius-lg)', padding: 20, background: 'var(--card)' }}>
+                <div className="flex items-center justify-between mb-5">
+                  <h2 style={{ fontFamily: 'var(--sans)', fontWeight: 600, fontSize: 13, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink)', margin: 0 }}>Filters</h2>
                   {activeFiltersCount > 0 && (
-                    <button onClick={clearFilters} className="text-sm text-red-500 hover:underline">
-                      সব মুছুন ({activeFiltersCount})
+                    <button onClick={clearFilters} style={{ fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--muted)', textDecoration: 'underline', background: 'none', border: 0, cursor: 'pointer' }}>
+                      Clear ({activeFiltersCount})
                     </button>
                   )}
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ক্যাটাগরি</label>
-                    <select 
-                      value={filters.category}
-                      onChange={(e) => updateURL('category', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="">সব ক্যাটাগরি</option>
-                      {categories.map((cat) => (
-                        <option key={cat._id} value={cat.slug}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {[
+                    { label: 'Category', key: 'category', items: categories.slice(0, 30), labelField: 'name', valueField: 'slug', defaultLabel: 'All Categories' },
+                    { label: 'Author', key: 'author', items: authors.slice(0, 20), labelField: 'name', valueField: 'slug', defaultLabel: 'All Authors' },
+                    { label: 'Publisher', key: 'publisher', items: publishers.slice(0, 20), labelField: 'name', valueField: 'slug', defaultLabel: 'All Publishers' },
+                  ].map(({ label, key, items, labelField, valueField, defaultLabel }) => (
+                    <div key={key}>
+                      <label style={{ display: 'block', fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>{label}</label>
+                      <select
+                        value={(filters as any)[key]}
+                        onChange={(e) => updateURL(key, e.target.value)}
+                        style={selectStyle}
+                        className="w-full"
+                      >
+                        <option value="">{defaultLabel}</option>
+                        {items.map((item: any) => (
+                          <option key={item._id} value={item[valueField]}>{item[labelField]}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">লেখক</label>
-                    <select 
-                      value={filters.author}
-                      onChange={(e) => updateURL('author', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="">সব লেখক</option>
-                      {authors.slice(0, 20).map((auth) => (
-                        <option key={auth._id} value={auth.slug}>{auth.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">প্রকাশনা</label>
-                    <select 
-                      value={filters.publisher}
-                      onChange={(e) => updateURL('publisher', e.target.value)}
-                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="">সব প্রকাশনা</option>
-                      {publishers.slice(0, 20).map((pub) => (
-                        <option key={pub._id} value={pub.slug}>{pub.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">মূল্য পরিসর</label>
+                    <label style={{ display: 'block', fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Price</label>
                     <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="কম"
-                        value={filters.priceMin}
-                        onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                      <input
-                        type="number"
-                        placeholder="বেশি"
-                        value={filters.priceMax}
-                        onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
+                      <input type="number" placeholder="Min" value={filters.priceMin} onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })} style={inputStyle} />
+                      <input type="number" placeholder="Max" value={filters.priceMax} onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })} style={inputStyle} />
                     </div>
                   </div>
-
-                  {filters.category && (
-                    <Link href="/products" className="block text-center py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm text-gray-700 transition">
-                      সব ক্যাটাগরি দেখুন
-                    </Link>
-                  )}
                 </div>
               </div>
             </aside>
 
+            {/* Main content */}
             <div className="flex-1">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <select 
-                      value={filters.sortBy}
-                      onChange={(e) => updateURL('sort', e.target.value)}
-                      className="p-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="newest">নতুন আগমন</option>
-                      <option value="price-asc">দাম: কম থেকে বেশি</option>
-                      <option value="price-desc">দাম: বেশি থেকে কম</option>
-                      <option value="name-asc">নাম: A-Z</option>
-                      <option value="discount">অফার</option>
-                    </select>
-
-                    <div className="hidden md:flex border border-gray-200 rounded-xl overflow-hidden">
-                      <button 
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2.5 ${viewMode === 'grid' ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                      </button>
-                      <button 
-                        onClick={() => setViewMode('list')}
-                        className={`p-2.5 ${viewMode === 'list' ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {/* Sort bar */}
+              <div className="flex items-center gap-3 mb-6 flex-wrap">
+                <span style={{ fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Sort by</span>
+                {[
+                  { value: 'newest', label: 'Newest' },
+                  { value: 'price-asc', label: 'Price ↑' },
+                  { value: 'price-desc', label: 'Price ↓' },
+                  { value: 'discount', label: 'Discount' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => updateURL('sort', value)}
+                    className={`chip${filters.sortBy === value ? ' solid' : ''}`}
+                    style={{ cursor: 'pointer', background: 'none', border: undefined }}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
 
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                  <div className="animate-spin rounded-full h-10 w-10" style={{ borderBottom: '2px solid var(--accent)' }} />
                 </div>
               ) : paginatedProducts.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                  <HiOutlineBookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">কোনো বই পাওয়া যায়নি</h3>
-                  <p className="text-gray-500 mb-4">আপনার ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন</p>
-                  <button onClick={clearFilters} className="px-6 py-2.5 bg-green-500 text-white rounded-xl font-medium hover:bg-green-500 transition">
-                    ফিল্টার মুছুন
-                  </button>
-                </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {paginatedProducts.map((product) => {
-                    const salePrice = product.salePrice || 0;
-                    const discount = product.discountAmount || 0;
-                    const currentPrice = getCurrentPrice(product);
-                    const discountPercent = getDiscountPercent(product);
-                    const img = product.images?.[0];
-                    const productName = product.name || 'Untitled';
-                    const productSlug = product.slug || product._id;
-                    const authorData = product.author;
-                    let authorName = '';
-                    if (Array.isArray(authorData)) {
-                      authorName = authorData[0]?.name || '';
-                    } else if (typeof authorData === 'object' && authorData) {
-                      authorName = (authorData as any)?.name || '';
-                    }
-                    
-                    return (
-                      <Link key={product._id} href={`/products/${productSlug}`} className="group">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                          <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center">
-                            {img ? (
-                              <LazyImage src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                            ) : (
-                              <div className="flex items-center justify-center w-full h-full">
-                                <HiOutlineBookOpen className="w-20 h-20 text-gray-300" />
-                              </div>
-                            )}
-                            {discountPercent > 0 && (
-                              <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-                                {discountPercent}% OFF
-                              </span>
-                            )}
-                          </div>
-                          <div className="p-4 pb-4 group-hover:pb-16 transition-all duration-300">
-                            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1 leading-tight">{productName}</h3>
-                            {authorName && <p className="text-xs text-gray-500 mb-2 truncate">{authorName}</p>}
-                            {salePrice > 0 && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold text-green-500">৳{currentPrice}</span>
-                                {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
-                              </div>
-                            )}
-                            {salePrice === 0 && <p className="text-sm font-bold text-green-500">Free</p>}
-                            <button 
-                              onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
-                              className="absolute bottom-3 left-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-full font-semibold text-sm transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg"
-                            >
-                              কার্টে যোগ করুন
-                            </button>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                <div style={{ border: '1px solid var(--line-soft)', borderRadius: 'var(--radius-lg)', padding: '64px 24px', textAlign: 'center', background: 'var(--card)' }}>
+                  <HiOutlineBookOpen style={{ width: 48, height: 48, color: 'var(--muted)', margin: '0 auto 16px' }} />
+                  <h3 style={{ fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>No books found</h3>
+                  <p style={{ fontFamily: 'var(--sans)', color: 'var(--muted)', marginBottom: 20 }}>Try changing your filters</p>
+                  <button onClick={clearFilters} className="btn btn-accent btn-sm">Clear filters</button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {paginatedProducts.map((product) => {
-                    const salePrice = product.salePrice || 0;
-                    const discount = product.discountAmount || 0;
-                    const currentPrice = getCurrentPrice(product);
-                    const discountPercent = getDiscountPercent(product);
-                    const img = product.images?.[0];
-                    const productName = product.name || 'Untitled';
-                    const productSlug = product.slug || product._id;
-                    const authorData = product.author;
-                    let authorName = '';
-                    if (Array.isArray(authorData)) {
-                      authorName = authorData[0]?.name || '';
-                    } else if (typeof authorData === 'object' && authorData) {
-                      authorName = (authorData as any)?.name || '';
-                    }
-                    
-                    return (
-                      <Link key={product._id} href={`/products/${productSlug}`} className="group">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-2xl transition-all duration-300 flex gap-4">
-                          <div className="w-24 h-32 md:w-32 md:h-44 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
-                            {img ? (
-                              <LazyImage src={imgUrl(img)!} alt={productName} className="w-full h-full object-cover" />
-                            ) : (
-                              <HiOutlineBookOpen className="w-10 h-10 text-gray-300" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div className="min-w-0">
-                                <h3 className="text-lg font-semibold text-gray-800 line-clamp-2 mb-1">{productName}</h3>
-                                {authorName && <p className="text-sm text-gray-500 mb-2">লেখক: {authorName}</p>}
-                              </div>
-                              {discountPercent > 0 && (
-                                <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                                  {discountPercent}% OFF
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xl font-bold text-green-500">৳{currentPrice}</span>
-                              {discount > 0 && <span className="text-sm text-gray-400 line-through">৳{salePrice}</span>}
-                            </div>
-                            <button 
-                              onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
-                              className="mt-3 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold text-sm transition"
-                            >
-                              কার্টে যোগ করুন
-                            </button>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                <div className="book-grid">
+                  {paginatedProducts.map((product) => (
+                    <ProductCard key={product._id} product={product} onAddToCart={handleAddToCart} />
+                  ))}
                 </div>
               )}
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
+                <div className="flex items-center justify-center gap-2 mt-10">
                   <button
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn btn-ghost btn-sm"
+                    style={{ opacity: page === 1 ? .4 : 1 }}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                    ←
                   </button>
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum = i + 1;
@@ -525,9 +389,8 @@ function ProductsContent() {
                       <button
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
-                        className={`w-10 h-10 rounded-xl font-medium transition ${
-                          page === pageNum ? 'bg-green-500 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
-                        }`}
+                        className={`chip${page === pageNum ? ' solid' : ''}`}
+                        style={{ cursor: 'pointer', width: 36, textAlign: 'center' }}
                       >
                         {pageNum}
                       </button>
@@ -536,11 +399,10 @@ function ProductsContent() {
                   <button
                     onClick={() => setPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
-                    className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn btn-ghost btn-sm"
+                    style={{ opacity: page === totalPages ? .4 : 1 }}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    →
                   </button>
                 </div>
               )}
@@ -555,7 +417,11 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="animate-spin rounded-full h-10 w-10" style={{ borderBottom: '2px solid var(--accent)' }} />
+      </div>
+    }>
       <ProductsContent />
     </Suspense>
   );
