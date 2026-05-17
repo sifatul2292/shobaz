@@ -421,7 +421,7 @@ export default function FinanceBundleClient() {
                     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                       <div>
                         <h3 style={{ fontFamily: 'var(--sans)', fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</h3>
-                        <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', fontWeight: 600 }}>{book.tagline}</p>
+                        <p style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', fontWeight: 600 }}>{bySlug[book.slug]?.taglineEn ?? book.tagline}</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <p style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', margin: 0 }}>{book.author}</p>
                           <span style={{ fontFamily: 'var(--sans)', fontSize: 11, color: '#cbd5e1', fontWeight: 500 }}>·</span>
@@ -515,7 +515,7 @@ export default function FinanceBundleClient() {
                       {/* Info */}
                       <div style={{ padding: '10px 10px 12px' }}>
                         <p style={{ fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</p>
-                        <p style={{ fontFamily: 'var(--bn)', fontSize: 9, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', lineHeight: 1.3 }}>{book.tagline}</p>
+                        <p style={{ fontFamily: 'var(--sans)', fontSize: 9, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', lineHeight: 1.3 }}>{bySlug[book.slug]?.taglineEn ?? book.tagline}</p>
                         <p style={{ fontFamily: 'var(--sans)', fontSize: 9, color: '#9ca3af', margin: '0 0 4px' }}>{book.author} · {book.pages}p</p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 900, color: isSelected ? '#16a34a' : '#6b7280' }}>৳{price}</span>
