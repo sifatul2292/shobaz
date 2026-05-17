@@ -121,6 +121,16 @@ const IcPlus = ({ color = PRIMARY }: { color?: string }) => (
   </svg>
 );
 
+function decodeHTML(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
 const dividerStyle: React.CSSProperties = { border: 0, borderTop: '1px solid #f1f5f9', margin: '20px 0' };
 const tinyLabel: React.CSSProperties = { fontSize: 12, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' };
 const sideCardStyle: React.CSSProperties = {
@@ -664,7 +674,7 @@ export default function ProductDetailClient({ params }: Props) {
                     maxHeight: showFullDescription ? undefined : '8.5em',
                     overflow: 'hidden',
                   }}
-                    dangerouslySetInnerHTML={{ __html: product.description || product.shortDescription || '' }}
+                    dangerouslySetInnerHTML={{ __html: decodeHTML(product.description || product.shortDescription || '') }}
                   />
                   <button onClick={() => setShowFullDescription(e => !e)} style={{
                     background: 'transparent', border: 'none', color: PRIMARY, padding: '10px 0 0',
@@ -975,7 +985,7 @@ export default function ProductDetailClient({ params }: Props) {
               <div style={{ padding: 28 }}>
                 {activeTab === 'description' && (
                   product.description ? (
-                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: product.description }} />
+                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: decodeHTML(product.description) }} />
                   ) : product.shortDescription ? (
                     <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }}>
                       <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
