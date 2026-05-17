@@ -21,7 +21,9 @@ const BOOKS = [
   {
     slug: 'i-will-teach-you-to-be-rich',
     title: 'I Will Teach You to Be Rich',
+    tagline: 'আর্থিক স্বাধীনতার ৬-সপ্তাহের রোডম্যাপ',
     author: 'Ramit Sethi',
+    pages: 352,
     salePrice: 681,
     discountAmount: 282,
     discountPct: 41,
@@ -32,7 +34,9 @@ const BOOKS = [
   {
     slug: 'the-intelligent-investor',
     title: 'The Intelligent Investor',
+    tagline: 'বিনিয়োগের কালজয়ী বাইবেল',
     author: 'Benjamin Graham',
+    pages: 640,
     salePrice: 924,
     discountAmount: 402,
     discountPct: 44,
@@ -43,7 +47,9 @@ const BOOKS = [
   {
     slug: 'rich-dad-poor-dad',
     title: 'Rich Dad Poor Dad',
+    tagline: 'আর্থিক শিক্ষার সবচেয়ে জনপ্রিয় বই',
     author: 'Robert T. Kiyosaki',
+    pages: 336,
     salePrice: 423,
     discountAmount: 154,
     discountPct: 36,
@@ -54,7 +60,9 @@ const BOOKS = [
   {
     slug: 'the-psychology-of-money',
     title: 'The Psychology of Money',
+    tagline: 'টাকার মনোবিজ্ঞানের ১৯টি অমূল্য পাঠ',
     author: 'Morgan Housel',
+    pages: 256,
     salePrice: 402,
     discountAmount: 143,
     discountPct: 36,
@@ -65,7 +73,9 @@ const BOOKS = [
   {
     slug: 'think-and-grow-rich',
     title: 'Think and Grow Rich',
+    tagline: 'সম্পদ তৈরির মানসিক রহস্য',
     author: 'Napoleon Hill',
+    pages: 320,
     salePrice: 555,
     discountAmount: 218,
     discountPct: 39,
@@ -84,9 +94,9 @@ const FAQS = [
 ];
 
 const REVIEWS = [
-  { name: 'রাহিম মিয়া', location: 'ঢাকা', text: 'Psychology of Money পড়ে টাকার প্রতি দৃষ্টিভঙ্গি পুরোপুরি বদলে গেছে। অসাধারণ বই!' },
-  { name: 'সুমাইয়া আক্তার', location: 'চট্টগ্রাম', text: 'Rich Dad Poor Dad আমার জীবনের সেরা বিনিয়োগ। এই বই না পড়লে বুঝতামই না asset কী জিনিস।' },
-  { name: 'করিম সাহেব', location: 'সিলেট', text: '৫টি বই একসাথে কিনেছি। দাম অনেক কম, বই অরিজিনাল। Shobaz-এর সার্ভিস অসাধারণ!' },
+  { name: 'Md Jubaer Arefin', location: 'ঢাকা', text: 'Psychology of Money পড়ে টাকার প্রতি দৃষ্টিভঙ্গি পুরোপুরি বদলে গেছে। অসাধারণ বই!' },
+  { name: 'Mushfiqur Rahman', location: 'চট্টগ্রাম', text: 'Rich Dad Poor Dad আমার জীবনের সেরা বিনিয়োগ। এই বই না পড়লে বুঝতামই না asset কী জিনিস।' },
+  { name: 'Taslim', location: 'সিলেট', text: '৫টি বই একসাথে কিনেছি। দাম অনেক কম, বই অরিজিনাল। Shobaz-এর সার্ভিস অসাধারণ!' },
 ];
 
 function Stars({ size = 16 }: { size?: number }) {
@@ -410,8 +420,13 @@ export default function FinanceBundleClient() {
                     {/* Content */}
                     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                       <div>
-                        <h3 style={{ fontFamily: 'var(--sans)', fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 4px', lineHeight: 1.3 }}>{book.title}</h3>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 13, color: '#9ca3af', margin: 0 }}>{book.author}</p>
+                        <h3 style={{ fontFamily: 'var(--sans)', fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</h3>
+                        <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', fontWeight: 600 }}>{book.tagline}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <p style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', margin: 0 }}>{book.author}</p>
+                          <span style={{ fontFamily: 'var(--sans)', fontSize: 11, color: '#cbd5e1', fontWeight: 500 }}>·</span>
+                          <p style={{ fontFamily: 'var(--sans)', fontSize: 11, color: '#9ca3af', margin: 0 }}>{book.pages} পেজ</p>
+                        </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Stars size={14} />
@@ -500,7 +515,8 @@ export default function FinanceBundleClient() {
                       {/* Info */}
                       <div style={{ padding: '10px 10px 12px' }}>
                         <p style={{ fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</p>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 10, color: '#9ca3af', margin: '0 0 6px' }}>{book.author}</p>
+                        <p style={{ fontFamily: 'var(--bn)', fontSize: 9, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', lineHeight: 1.3 }}>{book.tagline}</p>
+                        <p style={{ fontFamily: 'var(--sans)', fontSize: 9, color: '#9ca3af', margin: '0 0 4px' }}>{book.author} · {book.pages}p</p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 900, color: isSelected ? '#16a34a' : '#6b7280' }}>৳{price}</span>
                           <span style={{ fontFamily: 'var(--sans)', fontSize: 10, color: '#9ca3af', textDecoration: 'line-through' }}>৳{book.salePrice}</span>
@@ -556,6 +572,62 @@ export default function FinanceBundleClient() {
               </button>
               <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#9ca3af', textAlign: 'center', margin: '10px 0 0' }}>
                 ক্লিক করলে বইগুলো কার্টে যোগ হবে এবং সরাসরি চেকআউটে যাবেন
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Book Quality ────────────────────────────────────────────────────── */}
+        <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: isMobile ? '52px 20px' : '72px 80px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 999, padding: '6px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'var(--bn)', border: '1px solid rgba(251,191,36,0.3)' }}>প্রিমিয়াম মান</span>
+              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: 'white', margin: '12px 0 8px' }}>দেশের সেরা কোয়ালিটি</h2>
+              <p style={{ fontFamily: 'var(--bn)', fontSize: 15, color: 'rgba(255,255,255,0.6)', margin: 0 }}>প্রতিটি বই হাতে নিলেই পার্থক্য বুঝবেন</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 20 }}>
+              {[
+                {
+                  icon: '📄',
+                  title: '70 GSM Offset Paper',
+                  body: 'চোখের জন্য আরামদায়ক উজ্জ্বল সাদা পেপার — দীর্ঘ সময় পড়লেও চোখ ক্লান্ত হয় না।',
+                  color: '#3b82f6',
+                },
+                {
+                  icon: '📚',
+                  title: 'Good Binding',
+                  body: 'শক্তিশালী perfect binding — বারবার পড়লেও পেজ খুলে পড়বে না, বছরের পর বছর টেকে।',
+                  color: '#16a34a',
+                },
+                {
+                  icon: '🎨',
+                  title: '300 GSM Artcut Cover',
+                  body: 'মোটা আর্টকাট কভার — চকচকে lamination-এ দেখতে যেমন সুন্দর, টেকসইও তেমনই।',
+                  color: '#ea580c',
+                },
+                {
+                  icon: '🏆',
+                  title: 'দেশের সেরা কোয়ালিটি',
+                  body: 'বাংলাদেশের সেরা মুদ্রণ প্রযুক্তি ব্যবহার করে তৈরি — international standard-এ নির্মিত।',
+                  color: '#fbbf24',
+                },
+              ].map((q, i) => (
+                <div key={i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '28px 22px', border: `1px solid rgba(255,255,255,0.08)`, display: 'flex', flexDirection: 'column', gap: 14, transition: 'all .2s ease', borderTop: `3px solid ${q.color}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'none'; }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `${q.color}20`, border: `1px solid ${q.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>{q.icon}</div>
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 800, color: 'white', margin: '0 0 8px', lineHeight: 1.3 }}>{q.title}</h3>
+                    <p style={{ fontFamily: 'var(--bn)', fontSize: 13, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.75 }}>{q.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Quality guarantee bar */}
+            <div style={{ marginTop: 32, background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.3)', borderRadius: 16, padding: isMobile ? '16px 20px' : '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 22 }}>✅</span>
+              <p style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 14 : 16, fontWeight: 800, color: '#4ade80', margin: 0, textAlign: 'center' }}>
+                প্রতিটি বই হাতে পেয়ে সন্তুষ্ট না হলে আমরা বদলে দেব — এটাই আমাদের প্রতিশ্রুতি
               </p>
             </div>
           </div>
@@ -658,10 +730,10 @@ export default function FinanceBundleClient() {
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, background: 'white', borderTop: '1px solid #e5e7eb', padding: '12px 16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'var(--bn)', fontSize: 11, color: '#9ca3af' }}>৫টি বই একসাথে</div>
+              <div style={{ fontFamily: 'var(--bn)', fontSize: 11, color: '#9ca3af' }}>{selected.size}টি বই নির্বাচিত</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 900, color: '#16a34a' }}>৳1,786</span>
-                <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>৳2,985</span>
+                <span style={{ fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 900, color: '#16a34a' }}>৳{selectedTotal}</span>
+                <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>৳{selectedOriginal}</span>
               </div>
             </div>
             <button onClick={handleBundleCheckout} style={{ background: '#16a34a', color: 'white', border: 'none', borderRadius: 12, padding: '13px 20px', fontFamily: 'var(--bn)', fontSize: 14, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
