@@ -900,6 +900,15 @@ export default function FinanceBundleClient() {
                   const src = p ? imgUrl(p.images?.[0]) : null;
                   const { price, original, discountPct: bookDiscPct } = getBookPricing(book);
                   const tagline = p?.taglineEn ?? book.tagline;
+                  const pages = p?.totalPages ?? book.pages;
+                  const authorName = p?.author
+                    ? (Array.isArray(p.author) ? (p.author[0] as any)?.name : (p.author as any)?.name ?? p.author)
+                    : book.author;
+                  const publisherName = p?.publisher
+                    ? (typeof p.publisher === 'object' ? (p.publisher as any)?.name : p.publisher)
+                    : null;
+                  const ratingCount = p?.ratingCount ?? 0;
+                  const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
                   return (
                     <div key={book.slug} className="fb-bcard">
                       <div className="fb-thumb" style={{ background: book.dark ? '#EEE7DA' : 'linear-gradient(160deg, #FBF8F2, #EEE7DA)' }}>
@@ -917,8 +926,9 @@ export default function FinanceBundleClient() {
                       </div>
                       <div className="fb-body">
                         <h4>{book.title}<span className="en">{tagline}</span></h4>
-                        <div className="fb-aline">{book.author} · {book.pages} পেজ</div>
-                        <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">4.9</span></div>
+                        <div className="fb-aline">{authorName} · {pages} পেজ</div>
+                        {publisherName && <div style={{ fontSize: '0.72rem', color: '#8a7a6a', marginTop: 2 }}>{publisherName}</div>}
+                        <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#8a7a6a', marginLeft: 4 }}>({ratingCount})</span>}</div>
                         <div className="fb-pline">
                           <span className="fb-pnow fb-num">৳{price}</span>
                           <span className="fb-pwas fb-num">৳{original}</span>
