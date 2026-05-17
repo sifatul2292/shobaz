@@ -510,6 +510,15 @@ export default function ProductDetailClient({ params }: Props) {
                       padding: '4px 10px', borderRadius: 8
                     }}>−{discountPercent}% ছাড়</div>
                   )}
+                  {product.taglineEn && (
+                    <div style={{
+                      position: 'absolute', top: 12, right: 12,
+                      background: 'white', color: '#e85d2f', fontWeight: 700, fontSize: 11,
+                      padding: '5px 10px', borderRadius: 999,
+                      border: '2px solid #e85d2f', textAlign: 'center', lineHeight: 1.3,
+                      maxWidth: 80, boxShadow: '0 2px 8px rgba(232,93,47,0.15)'
+                    }}>{product.taglineEn}</div>
+                  )}
                 </div>
               </div>
 
