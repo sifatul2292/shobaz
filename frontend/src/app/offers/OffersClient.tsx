@@ -217,6 +217,20 @@ const CATEGORIES = [
   },
 ];
 
+// ── Allowed category slugs for flash deals / hero ─────────────────────────
+const ALLOWED_SLUGS = new Set([
+  'marketing-leadership', 'philosophy-wisdom', 'business-entrepreneurship',
+  'mindset-psychology', 'people-skills-communication', 'finance-wealth', 'productivity-habits',
+]);
+
+// ── Self-help adjacent slugs for Bundle 1 ─────────────────────────────────
+const SELF_HELP_SLUGS = new Set(['self-help', 'mindset-psychology', 'productivity-habits']);
+
+function productCatSlugs(p: Product): string[] {
+  const cats = Array.isArray((p as any).category) ? (p as any).category : [(p as any).category];
+  return cats.map((c: any) => c?.slug || '').filter(Boolean);
+}
+
 // ── Urgency stock (seeded by index so it's stable across renders) ──────────
 const STOCK = [4, 7, 3, 9, 5, 6, 3, 8];
 
@@ -270,10 +284,28 @@ export default function OffersClient() {
     return () => clearInterval(id);
   }, []);
 
-  // Sort products by discount % desc
-  const sorted = [...products].sort((a, b) => getDiscountPercent(b) - getDiscountPercent(a));
+  // Filter to allowed categories, then sort by discount % desc
+  const allowed = products.filter((p) => productCatSlugs(p).some((s) => ALLOWED_SLUGS.has(s)));
+  const sorted = [...allowed].sort((a, b) => getDiscountPercent(b) - getDiscountPercent(a));
   const flashDeals = sorted.slice(0, 8);
   const heroBooks = sorted.slice(0, 5);
+
+  // Bundle 1: top 3 discounted books from self-help adjacent categories
+  const selfHelpBooks = products
+    .filter((p) => productCatSlugs(p).some((s) => SELF_HELP_SLUGS.has(s)))
+    .sort((a, b) => getDiscountPercent(b) - getDiscountPercent(a))
+    .slice(0, 3);
+  const bundle1Dynamic = selfHelpBooks.length === 3
+    ? {
+        ...BUNDLES[0],
+        books: selfHelpBooks.map((p) => (p as any).nameEn || p.name),
+        slugs: selfHelpBooks.map((p) => p.slug || ''),
+        individualTotal: selfHelpBooks.reduce((s, p) => s + getCurrentPrice(p), 0),
+        bundlePrice: Math.round(selfHelpBooks.reduce((s, p) => s + getCurrentPrice(p), 0) * 0.88),
+        save: Math.round(selfHelpBooks.reduce((s, p) => s + getCurrentPrice(p), 0) * 0.12),
+      }
+    : BUNDLES[0];
+  const allBundles = [bundle1Dynamic, BUNDLES[1], BUNDLES[2]];
 
   // Build slug→product map for bundle covers
   const bySlug: Record<string, Product> = {};
@@ -711,7 +743,7 @@ export default function OffersClient() {
 
             {/* Bundle cards */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24 }}>
-              {BUNDLES.map((bundle, bi) => {
+              {allBundles.map((bundle, bi) => {
                 const covers = bundle.slugs.map((slug) => bySlug[slug]);
                 return (
                   <div
@@ -778,12 +810,20 @@ export default function OffersClient() {
 
                     {/* Book titles */}
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {bundle.books.map((title, ti) => (
-                        <li key={ti} style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                          {title}
-                        </li>
-                      ))}
+                      {bundle.books.map((title, ti) => {
+                        const slug = bundle.slugs[ti];
+                        return (
+                          <li key={ti} style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
+                            {slug ? (
+                              <Link href={`/${slug}`} style={{ color: '#1d4ed8', textDecoration: 'none', fontWeight: 500 }}
+                                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                              >{title}</Link>
+                            ) : title}
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     {/* Pricing */}
