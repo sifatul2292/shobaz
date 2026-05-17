@@ -22,104 +22,79 @@ const BOOKS = [
   {
     slug: 'i-will-teach-you-to-be-rich',
     title: 'I Will Teach You to Be Rich',
+    titleShort: 'I Will Teach You to Be Rich',
     tagline: 'আর্থিক স্বাধীনতার ৬-সপ্তাহের রোডম্যাপ',
-    author: 'Ramit Sethi',
-    pages: 352,
-    salePrice: 681,
-    discountAmount: 282,
-    discountPct: 41,
-    badge: 'NYT Bestseller',
-    description: 'মাত্র ৬ সপ্তাহে আর্থিক জীবন গুছিয়ে নেওয়ার সবচেয়ে practical গাইড — সঞ্চয়, বিনিয়োগ, automatic money system।',
-    fallbackColor: '#0369a1',
-    stock: 11,
-    popular: false,
+    author: 'Ramit Sethi', authorShort: 'R. Sethi',
+    pages: 352, salePrice: 681, discountAmount: 282, discountPct: 41,
+    badge: 'Bestseller', top: 'NYT Bestseller',
+    color: '#C5352C', dark: false, stock: 11, popular: false,
   },
   {
     slug: 'the-intelligent-investor',
     title: 'The Intelligent Investor',
+    titleShort: 'The Intelligent Investor',
     tagline: 'বিনিয়োগের কালজয়ী বাইবেল',
-    author: 'Benjamin Graham',
-    pages: 640,
-    salePrice: 924,
-    discountAmount: 402,
-    discountPct: 44,
-    badge: 'Warren Buffett পছন্দের',
-    description: 'শেয়ার বাজারে বুদ্ধিমানের মতো বিনিয়োগের কালজয়ী নীতি — ঝুঁকি কমিয়ে সম্পদ বাড়ানোর রোডম্যাপ।',
-    fallbackColor: '#14532d',
-    stock: 8,
-    popular: false,
+    author: 'Benjamin Graham', authorShort: 'B. Graham',
+    pages: 640, salePrice: 924, discountAmount: 402, discountPct: 44,
+    badge: 'Classic', top: 'Classic',
+    color: '#6B0F0A', dark: false, stock: 8, popular: false,
   },
   {
     slug: 'rich-dad-poor-dad',
     title: 'Rich Dad Poor Dad',
+    titleShort: 'Rich Dad Poor Dad',
     tagline: 'আর্থিক শিক্ষার সবচেয়ে জনপ্রিয় বই',
-    author: 'Robert T. Kiyosaki',
-    pages: 336,
-    salePrice: 423,
-    discountAmount: 154,
-    discountPct: 36,
-    badge: '৩.২ কোটি কপি বিক্রি',
-    description: 'ধনী ও গরিব মানুষের চিন্তার পার্থক্য — Asset vs Liability বুঝলেই আর্থিক জীবন বদলায়।',
-    fallbackColor: '#92400e',
-    stock: 9,
-    popular: true,
+    author: 'Robert T. Kiyosaki', authorShort: 'R. Kiyosaki',
+    pages: 336, salePrice: 423, discountAmount: 154, discountPct: 36,
+    badge: '#1 NYT', top: '#1 NYT',
+    color: '#E89B2D', dark: true, stock: 9, popular: true,
   },
   {
     slug: 'the-psychology-of-money',
     title: 'The Psychology of Money',
+    titleShort: 'The Psychology of Money',
     tagline: 'টাকার মনোবিজ্ঞানের ১৯টি অমূল্য পাঠ',
-    author: 'Morgan Housel',
-    pages: 256,
-    salePrice: 402,
-    discountAmount: 143,
-    discountPct: 36,
-    badge: 'Goodreads Choice',
-    description: 'টাকার সাথে আবেগের সম্পর্ক — কেন আমরা ভুল সিদ্ধান্ত নিই এবং কীভাবে সেটা বদলাবো।',
-    fallbackColor: '#4c1d95',
-    stock: 14,
-    popular: false,
+    author: 'Morgan Housel', authorShort: 'M. Housel',
+    pages: 256, salePrice: 402, discountAmount: 143, discountPct: 36,
+    badge: 'Best of 2020s', top: 'Best of 2020s',
+    color: '#E6DEC7', dark: true, stock: 14, popular: false,
   },
   {
     slug: 'think-and-grow-rich',
     title: 'Think and Grow Rich',
+    titleShort: 'Think and Grow Rich',
     tagline: 'সম্পদ তৈরির মানসিক রহস্য',
-    author: 'Napoleon Hill',
-    pages: 320,
-    salePrice: 555,
-    discountAmount: 218,
-    discountPct: 39,
-    badge: '১০ কোটি+ কপি বিক্রি',
-    description: 'বিশ্বের ৫০০+ কোটিপতির সাফল্যের রহস্য — চিন্তাশক্তিই সবচেয়ে বড় সম্পদ।',
-    fallbackColor: '#7f1d1d',
-    stock: 13,
-    popular: false,
+    author: 'Napoleon Hill', authorShort: 'N. Hill',
+    pages: 320, salePrice: 555, discountAmount: 218, discountPct: 39,
+    badge: 'Timeless', top: 'Timeless',
+    color: '#F2EDDF', dark: true, stock: 13, popular: false,
   },
 ];
 
 const FAQS = [
-  { q: 'ডেলিভারি কতদিনে পাবো?', a: 'ঢাকার ভেতরে ১-২ দিন, ঢাকার বাইরে ৩-৫ কার্যদিবস।' },
-  { q: 'বইগুলো কি ইংরেজিতে?', a: 'হ্যাঁ, সহজ ইংরেজিতে লেখা — যেকেউ পড়তে পারবেন।' },
-  { q: 'বই কি অরিজিনাল?', a: 'হ্যাঁ, Shobaz শুধুমাত্র ১০০% অরিজিনাল বই বিক্রি করে।' },
-  { q: 'কীভাবে অর্ডার করবো?', a: 'কার্টে যোগ করুন → Checkout → পেমেন্ট। মাত্র ৩ ধাপে অর্ডার সম্পন্ন।' },
-  { q: 'রিটার্ন পলিসি কী?', a: 'বই ক্ষতিগ্রস্ত অবস্থায় পেলে বদলে দেওয়া হবে।' },
+  { q: 'ডেলিভারি কতদিনে পাবো?', a: 'অর্ডার কনফার্ম হবার পর ঢাকায় ২-৩ কর্মদিবস, ঢাকার বাইরে ৩-৫ কর্মদিবসের মধ্যে পেয়ে যাবেন। সারা দেশে ক্যাশ অন ডেলিভারি সুবিধা রয়েছে।' },
+  { q: 'বইগুলো কি ইংরেজিতে?', a: 'হ্যাঁ, সহজ ইংরেজিতে লেখা — যেকেউ পড়তে পারবেন। আমাদের বাংলা অনুবাদও পাওয়া যায়।' },
+  { q: 'বই কি অরিজিনাল?', a: '১০০% অরিজিনাল প্রকাশকের বই। কোনো পাইরেটেড বা নকল বই আমরা বিক্রি করি না।' },
+  { q: 'রিটার্নের সুযোগ আছে?', a: 'ডেলিভারির সময় বই অক্ষত অবস্থায় না পেলে সাথে সাথে রিটার্ন করতে পারবেন। প্রিন্টে সমস্যা থাকলে ১০০% টাকা ফেরত।' },
+  { q: 'পেমেন্ট অপশন কী কী?', a: 'ক্যাশ অন ডেলিভারি, bKash, Nagad, Rocket — সব পেমেন্ট মেথড supported।' },
 ];
 
 const REVIEWS = [
-  { name: 'Md Jubaer Arefin', location: 'ঢাকা', text: 'Psychology of Money পড়ে টাকার প্রতি দৃষ্টিভঙ্গি পুরোপুরি বদলে গেছে। অসাধারণ বই!' },
-  { name: 'Mushfiqur Rahman', location: 'চট্টগ্রাম', text: 'Rich Dad Poor Dad আমার জীবনের সেরা বিনিয়োগ। এই বই না পড়লে বুঝতামই না asset কী জিনিস।' },
-  { name: 'Taslim', location: 'সিলেট', text: '৫টি বই একসাথে কিনেছি। দাম অনেক কম, বই অরিজিনাল। Shobaz-এর সার্ভিস অসাধারণ!' },
+  { name: 'Md Jubaer Arefin', location: 'ঢাকা', init: 'M', color: '#1E3A2A', text: 'The Psychology of Money পড়ে আমার চিন্তাভাবনা সম্পূর্ণ পাল্টে গেছে। প্রতি বাঙালির এটা পড়া উচিত।' },
+  { name: 'Mushfiqur Rahman', location: 'সিলেট', init: 'M', color: '#D2532A', text: 'Rich Dad Poor Dad বইয়ের কপি অসাধারণ — asset আর liability-র পার্থক্য এত পরিষ্কার করে কেউ বুঝায় নি।' },
+  { name: 'Taslim', location: 'চট্টগ্রাম', init: 'T', color: '#B8893A', text: '৫টি বই একসাথে এত কম দামে — Shobaz-কে ধন্যবাদ। বাঁধাই আর প্রিন্ট দুর্দান্ত।' },
 ];
 
 const WA_LINK = 'https://wa.me/8801XXXXXXXXX';
 
-function Stars({ size = 16 }: { size?: number }) {
-  return <span style={{ color: '#f59e0b', fontSize: size, letterSpacing: 1 }}>★★★★★</span>;
+function Stars({ n = 5, size = 14 }: { n?: number; size?: number }) {
+  return <span style={{ color: '#B8893A', fontSize: size, letterSpacing: 1 }}>{'★'.repeat(n)}</span>;
 }
 
-function IcWhatsApp({ size = 24 }: { size?: number }) {
+function WaIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="white">
+      <path d="M20.5 3.5A11 11 0 0 0 3.5 17l-1.5 5 5.2-1.4A11 11 0 1 0 20.5 3.5zm-8.5 17a8.7 8.7 0 0 1-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3a8.7 8.7 0 1 1 7.2 3.9zM16.7 14c-.3-.1-1.6-.8-1.9-.9s-.4-.1-.6.1-.6.8-.8 1-.3.1-.5 0a7 7 0 0 1-3.5-3c-.3-.5.3-.4.7-1.3.1-.2 0-.3 0-.5l-.9-2c-.2-.5-.4-.5-.6-.5h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-1 2.2c0 1.3.9 2.5 1 2.7s1.9 3 4.7 4.2c.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.6-.7 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.2-.2-.4-.3z" />
     </svg>
   );
 }
@@ -129,7 +104,7 @@ function useBreakpoint() {
   useEffect(() => {
     const fn = () => {
       const w = window.innerWidth;
-      setBp(w < 768 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop');
+      setBp(w < 640 ? 'mobile' : w < 900 ? 'tablet' : 'desktop');
     };
     fn();
     window.addEventListener('resize', fn);
@@ -145,28 +120,33 @@ function useFadeRef() {
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; obs.disconnect(); }
-    }, { threshold: 0.07 });
+    }, { threshold: 0.05 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
   return ref;
 }
 
-const fadeBase: React.CSSProperties = { opacity: 0, transform: 'translateY(32px)', transition: 'opacity 0.6s ease, transform 0.6s ease' };
+const fadeStyle: React.CSSProperties = { opacity: 0, transform: 'translateY(28px)', transition: 'opacity 0.55s ease, transform 0.55s ease' };
 
 export default function FinanceBundleClient() {
   const router = useRouter();
   const [bySlug, setBySlug] = useState<Record<string, Product>>({});
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set(BOOKS.map((b) => b.slug)));
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
-  const [visitorCount, setVisitorCount] = useState(147);
+  const [visitorCount, setVisitorCount] = useState(142);
   const [visitorFade, setVisitorFade] = useState(true);
   const [atBundle, setAtBundle] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const isTablet = bp === 'tablet';
+
+  const [r1, r2, r3, r4, r5, r6, r7, r8] = [
+    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
+    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
+  ];
 
   useEffect(() => {
     api.get('/product/get-all-data').then((res) => {
@@ -181,15 +161,12 @@ export default function FinanceBundleClient() {
     }
   }, []);
 
-  // 72-hour countdown persisted in localStorage
+  // 72h localStorage countdown
   useEffect(() => {
     const getOrCreateEnd = () => {
       try {
         const stored = localStorage.getItem(TIMER_KEY);
-        if (stored) {
-          const end = parseInt(stored, 10);
-          if (end > Date.now()) return end;
-        }
+        if (stored) { const end = parseInt(stored, 10); if (end > Date.now()) return end; }
       } catch {}
       const newEnd = Date.now() + 72 * 3600 * 1000;
       try { localStorage.setItem(TIMER_KEY, String(newEnd)); } catch {}
@@ -199,28 +176,21 @@ export default function FinanceBundleClient() {
     const tick = () => {
       const d = Math.max(0, end - Date.now());
       setTimeLeft({ h: Math.floor(d / 3600000), m: Math.floor((d % 3600000) / 60000), s: Math.floor((d % 60000) / 1000) });
-      if (d === 0) {
-        const newEnd = Date.now() + 72 * 3600 * 1000;
-        try { localStorage.setItem(TIMER_KEY, String(newEnd)); } catch {}
-        end = newEnd;
-      }
+      if (d === 0) { const ne = Date.now() + 72 * 3600 * 1000; try { localStorage.setItem(TIMER_KEY, String(ne)); } catch {} end = ne; }
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Dynamic visitor count every 8-12 seconds
+  // Dynamic visitor count
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
     const schedule = () => {
       t = setTimeout(() => {
         setVisitorFade(false);
         setTimeout(() => {
-          setVisitorCount((prev) => {
-            const delta = Math.floor(Math.random() * 11) - 5;
-            return Math.min(180, Math.max(120, prev + delta));
-          });
+          setVisitorCount((prev) => Math.min(180, Math.max(120, prev + Math.floor(Math.random() * 11) - 5)));
           setVisitorFade(true);
           schedule();
         }, 300);
@@ -230,9 +200,9 @@ export default function FinanceBundleClient() {
     return () => clearTimeout(t);
   }, []);
 
-  // Bundle section visibility for mobile sticky
+  // Bundle section visibility
   useEffect(() => {
-    const el = document.getElementById('bundle');
+    const el = document.getElementById('builder');
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => setAtBundle(e.isIntersecting), { threshold: 0.1 });
     obs.observe(el);
@@ -241,11 +211,11 @@ export default function FinanceBundleClient() {
 
   const pad = (n: number) => String(n).padStart(2, '0');
   const finalPrice = (book: typeof BOOKS[0]) => book.salePrice - book.discountAmount;
-
   const selectedBooks = BOOKS.filter((b) => selected.has(b.slug));
   const selectedTotal = selectedBooks.reduce((s, b) => s + finalPrice(b), 0);
   const selectedOriginal = selectedBooks.reduce((s, b) => s + b.salePrice, 0);
   const savedAmount = selectedOriginal - selectedTotal;
+  const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
   const toggleBook = (slug: string) => {
     setSelected((prev) => {
@@ -268,10 +238,7 @@ export default function FinanceBundleClient() {
 
   const handleBundleCheckout = () => {
     let added = 0;
-    selectedBooks.forEach((book) => {
-      const p = bySlug[book.slug];
-      if (p) { addItem(p); added++; }
-    });
+    selectedBooks.forEach((book) => { const p = bySlug[book.slug]; if (p) { addItem(p); added++; } });
     if (added === 0) { toast.error('পণ্য লোড হচ্ছে, একটু অপেক্ষা করুন'); return; }
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'AddToCart', { content_name: 'Finance Bundle', content_ids: selectedBooks.map((b) => b.slug), value: selectedTotal, currency: 'BDT' });
@@ -279,540 +246,875 @@ export default function FinanceBundleClient() {
     router.push('/checkout');
   };
 
-  const [r1, r2, r3, r4, r5, r6, r7, r8, r9] = [
-    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
-    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
-  ];
-
-  const bookGridCols = isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)';
+  const bookGridCols = isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)';
+  const pickGridCols = isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+    <>
       <style>{`
-        @keyframes fbPulse {
-          0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
-          70% { box-shadow: 0 0 0 14px rgba(22,163,74,0); }
-          100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700&display=swap');
+
+        .fb-serif { font-family: "Fraunces", Georgia, serif; }
+        .fb-ui { font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif; }
+        .fb-num { font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif; font-feature-settings: "tnum" 1; }
+
+        /* Strip */
+        .fb-strip {
+          background: #161510;
+          color: #F2EDDF;
+          font-size: 13px;
+          letter-spacing: 0.01em;
+          font-family: "Inter", sans-serif;
         }
-        @keyframes fbBounce {
-          0%,20%,53%,80%,100% { transform: translateY(0); }
-          40%,43% { transform: translateY(-14px); }
-          70% { transform: translateY(-7px); }
-          90% { transform: translateY(-3px); }
+        .fb-strip-row {
+          max-width: 1180px; margin: 0 auto; padding: 0 22px;
+          display: flex; align-items: center; justify-content: space-between;
+          height: 38px; gap: 16px;
         }
-        @keyframes fbWaBounce {
-          0%,100% { transform: scale(1); }
-          50% { transform: scale(1.08); }
+        .fb-strip-left { display:flex; align-items:center; gap:10px; }
+        .fb-pulse {
+          width:8px; height:8px; border-radius:50%;
+          background: #D2532A;
+          animation: fbPulse2 1.6s infinite;
+          flex-shrink:0;
+        }
+        @keyframes fbPulse2 {
+          0% { box-shadow:0 0 0 0 rgba(210,83,42,0.6); }
+          70% { box-shadow:0 0 0 8px rgba(210,83,42,0); }
+          100% { box-shadow:0 0 0 0 rgba(210,83,42,0); }
+        }
+        .fb-cd { display:flex; align-items:center; gap:6px; }
+        .fb-cd b {
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 4px;
+          padding: 2px 7px;
+          min-width: 28px;
+          text-align: center;
+          font-family: "Inter", sans-serif;
+          font-weight: 600;
+          font-feature-settings: "tnum" 1;
+        }
+
+        /* Value strip */
+        .fb-value-strip {
+          background: #161510;
+          color: #E9E2D2;
+          padding: 15px 0;
+          border-top: 1px solid #2a261d;
+          border-bottom: 1px solid #2a261d;
+        }
+        .fb-value-row {
+          max-width: 1180px; margin: 0 auto; padding: 0 22px;
+          display:flex; align-items:center; gap: 40px; justify-content: center;
+          font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.02em;
+          flex-wrap: wrap;
+        }
+        .fb-value-row > div { display:flex; align-items:center; gap: 10px; opacity: 0.95; }
+
+        /* Eyebrow */
+        .fb-eyebrow {
+          display:inline-flex; align-items:center; gap:10px;
+          font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+          color: #2A5340; font-family: "Inter", sans-serif; font-weight: 600;
+          padding: 6px 12px;
+          background: #DCE7DC;
+          border-radius: 999px;
+          margin-bottom: 18px;
+        }
+        .fb-eyebrow .dot { width:6px; height:6px; border-radius:50%; background: #2A5340; }
+        .fb-section-eyebrow {
+          display: inline-block;
+          font-family: "Inter", sans-serif; font-size: 12px; font-weight: 600;
+          letter-spacing: 0.18em; text-transform: uppercase;
+          color: #6E685D; margin-bottom: 14px;
+        }
+        .fb-section-eyebrow::before { content:"— "; }
+
+        /* Section head */
+        .fb-section-head { text-align:center; max-width: 720px; margin: 0 auto 52px; }
+        .fb-section-title {
+          font-family: "Hind Siliguri", sans-serif;
+          font-weight: 600;
+          font-size: clamp(26px, 3.6vw, 40px);
+          line-height: 1.18;
+          letter-spacing: -0.01em;
+          color: #161510;
+          margin: 0 0 12px;
+        }
+        .fb-section-sub { color: #3F3B33; font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+        /* Hero */
+        .fb-hero { padding: 72px 0 84px; background: #F4EFE6; position: relative; overflow: hidden; }
+        .fb-hero-art { position: absolute; right: -6%; top: -10%; width: 60%; height: 120%; pointer-events: none; z-index: 0; }
+        .fb-container { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+        .fb-hero-grid {
+          display: grid;
+          grid-template-columns: 1.05fr 0.95fr;
+          gap: 56px;
+          align-items: center;
+          position: relative; z-index: 1;
+        }
+        .fb-lede-bn {
+          font-family: "Hind Siliguri", sans-serif;
+          font-weight: 700;
+          font-size: clamp(30px, 4.6vw, 52px);
+          line-height: 1.16;
+          letter-spacing: -0.005em;
+          margin: 20px 0 16px;
+          color: #161510;
+        }
+        .fb-lede-bn span { color: #1E3A2A; }
+        .fb-sub { color: #3F3B33; font-size: 17px; max-width: 480px; margin-bottom: 26px; line-height: 1.65; }
+        .fb-sub b { color: #161510; font-weight: 600; }
+        .fb-price-row { display:flex; align-items: baseline; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+        .fb-price-now { font-family: "Fraunces", serif; font-size: 42px; font-weight: 600; letter-spacing: -0.02em; color: #161510; }
+        .fb-price-was { color: #6E685D; text-decoration: line-through; font-size: 18px; font-family: "Inter", sans-serif; }
+        .fb-save-pill {
+          background: #D2532A; color: #fff;
+          font-family: "Inter", sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.04em;
+          padding: 5px 10px; border-radius: 4px;
+        }
+        .fb-cta-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .fb-btn {
+          display:inline-flex; align-items:center; justify-content:center; gap:10px;
+          padding: 15px 24px; border-radius: 12px; font-weight: 600; font-size: 15px;
+          border: 1px solid transparent; cursor: pointer;
+          transition: transform .12s ease, background .15s ease;
+          font-family: "Hind Siliguri", sans-serif; text-decoration: none;
+        }
+        .fb-btn:hover { transform: translateY(-1px); }
+        .fb-btn-primary { background: #1E3A2A; color: #F8F4EB; box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 10px 22px -10px rgba(30,58,42,0.55); }
+        .fb-btn-primary:hover { background: #2A5340; }
+        .fb-btn-ghost { background: transparent; color: #161510; border-color: #C9BFA8; }
+        .fb-btn-ghost:hover { background: #FBF8F2; }
+        .fb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #6E685D; font-size: 13px; flex-wrap: wrap; }
+        .fb-trust-mini b { color: #3F3B33; font-weight: 600; }
+
+        /* Book stack */
+        .fb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
+        .fb-stack { position: relative; width: 420px; height: 420px; }
+        .fb-book {
+          position: absolute; width: 150px; height: 220px;
+          border-radius: 3px 6px 6px 3px;
+          box-shadow: 0 24px 36px -18px rgba(22,21,16,0.45), 0 6px 14px -6px rgba(22,21,16,0.30);
+          overflow: hidden;
+          transition: transform .35s cubic-bezier(.2,.7,.2,1);
+        }
+        .fb-book::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: linear-gradient(90deg, rgba(0,0,0,0.25), rgba(0,0,0,0)); z-index:1; }
+        .fb-book::after { content:""; position:absolute; inset:0; background: linear-gradient(115deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 38%); pointer-events:none; z-index:2; }
+        .fb-book .fb-cover { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:14px 12px; z-index:3; }
+        .fb-book .fb-btop { font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.7; }
+        .fb-book .fb-bttl { font-family: "Fraunces", serif; font-weight: 700; font-size: 18px; line-height: 1.05; letter-spacing: -0.01em; }
+        .fb-book .fb-bauth { font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+        .fb-book .fb-ptag {
+          position:absolute; top:8px; right:-8px; z-index:4;
+          background: #D2532A; color:#fff;
+          font-family: "Inter", sans-serif; font-weight:700; font-size:11px;
+          padding: 4px 8px; border-radius: 3px;
+          box-shadow: 0 4px 10px -4px rgba(210,83,42,.6);
+        }
+        .fb-stack:hover .fb-b1 { transform: rotate(-13deg) translate(-8px, -6px); }
+        .fb-stack:hover .fb-b2 { transform: rotate(-6deg) translate(-4px, -4px); }
+        .fb-stack:hover .fb-b3 { transform: rotate(0deg) translate(0, -10px); }
+        .fb-stack:hover .fb-b4 { transform: rotate(6deg) translate(4px, -4px); }
+        .fb-stack:hover .fb-b5 { transform: rotate(13deg) translate(8px, -6px); }
+        .fb-stack-floor {
+          position: absolute; left: 10%; right: 10%; bottom: 0;
+          height: 24px;
+          background: radial-gradient(50% 50% at 50% 50%, rgba(22,21,16,0.18), rgba(0,0,0,0));
+          filter: blur(6px);
+        }
+
+        /* Problems */
+        .fb-problems { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .fb-problem {
+          background: #FBF8F2; border: 1px solid #E0D8C7; border-radius: 18px;
+          padding: 26px; display:flex; flex-direction: column; gap: 12px;
+          position: relative;
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .fb-problem:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(22,21,16,0.04), 0 12px 32px -16px rgba(22,21,16,0.16); }
+        .fb-problem .fb-ico { width:44px;height:44px;border-radius:12px; background:#F2D6C7;color:#D2532A; display:grid;place-items:center; font-size:20px; }
+        .fb-problem h3 { font-size: 17px; font-weight: 600; margin: 4px 0 2px; color: #161510; }
+        .fb-problem p { color: #3F3B33; font-size: 14px; margin: 0; line-height: 1.65; }
+        .fb-problem .fb-num-mark { position:absolute;top:22px;right:24px; font-family:"Fraunces",serif; font-style:italic; font-weight:500; color:#C9BFA8; font-size:26px; }
+        .fb-problem-cta {
+          margin-top: 26px; background:#DCE7DC; border:1px dashed #2A5340; border-radius:14px;
+          padding:18px 22px; display:flex; align-items:center; gap:14px; color:#1E3A2A; font-weight:500;
+        }
+        .fb-problem-cta .fb-check { width:28px;height:28px;border-radius:50%;background:#1E3A2A;color:#fff;display:grid;place-items:center;flex-shrink:0; }
+
+        /* Benefits */
+        .fb-benefits-band { background: #1E3A2A; color: #EBE4D1; padding: 96px 0; }
+        .fb-benefits-band .fb-section-eyebrow { color: rgba(235,228,209,0.7); }
+        .fb-benefits-band .fb-section-title { color: #F8F4EB; }
+        .fb-benefits-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 920px; margin: 0 auto; }
+        .fb-benefit {
+          background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+          padding: 18px 20px; display:flex; align-items:flex-start; gap:14px;
+          transition: background .2s ease;
+        }
+        .fb-benefit:hover { background: rgba(255,255,255,0.07); }
+        .fb-b-ico { width:36px;height:36px;border-radius:10px; background:rgba(184,137,58,0.18); color:#E8C075; display:grid;place-items:center;flex-shrink:0; }
+        .fb-benefit p { margin:0;font-size:15px;color:#E8E1CE;line-height:1.55; }
+
+        /* Book cards */
+        .fb-books-section { background: #EEE7DA; padding: 96px 0; }
+        .fb-bcard {
+          background: #FBF8F2; border-radius: 16px; overflow: hidden;
+          border: 1px solid #E0D8C7; display:flex; flex-direction:column;
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .fb-bcard:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgba(22,21,16,0.04), 0 12px 32px -16px rgba(22,21,16,0.16); }
+        .fb-bcard .fb-thumb { aspect-ratio: 3/4; position:relative; display:grid;place-items:center; overflow:hidden; }
+        .fb-mini-book {
+          width: 62%; aspect-ratio: 2/3; border-radius: 2px 4px 4px 2px;
+          box-shadow: 0 16px 24px -12px rgba(0,0,0,0.4), 0 4px 8px -4px rgba(0,0,0,0.25);
+          padding: 12px 10px; display:flex; flex-direction:column; justify-content:space-between;
+          position: relative;
+        }
+        .fb-mini-book::before { content:""; position:absolute; left:0;top:0;bottom:0;width:3px; background:linear-gradient(90deg,rgba(0,0,0,0.3),rgba(0,0,0,0)); }
+        .fb-mini-book::after { content:""; position:absolute;inset:0; background:linear-gradient(115deg,rgba(255,255,255,0.18),rgba(255,255,255,0) 40%); pointer-events:none; }
+        .fb-mb-top { font-family:"Inter",sans-serif; font-size:8px; letter-spacing:0.16em; text-transform:uppercase; opacity:0.7; }
+        .fb-mb-ttl { font-family:"Fraunces",serif; font-weight:700; font-size:14px; line-height:1.05; }
+        .fb-mb-auth { font-family:"Inter",sans-serif; font-size:8px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
+        .fb-bcard .fb-bdg {
+          position:absolute; top:10px; left:10px;
+          background: #D2532A; color:#fff;
+          font-family:"Inter",sans-serif; font-weight:700; font-size:10px;
+          padding:4px 8px; border-radius:4px;
+        }
+        .fb-bcard .fb-popular-badge {
+          position:absolute; top:10px; right:10px;
+          background: linear-gradient(135deg,#D2532A,#B8893A); color:#fff;
+          font-family:"Inter",sans-serif; font-weight:700; font-size:9px;
+          padding:3px 8px; border-radius:4px; letter-spacing:0.04em;
+        }
+        .fb-bcard .fb-body { padding: 14px 16px 16px; display:flex;flex-direction:column;gap:6px;flex:1; }
+        .fb-bcard h4 { font-family:"Hind Siliguri",sans-serif; font-size:15px; font-weight:600; margin:0; line-height:1.25; color:#161510; }
+        .fb-bcard h4 .en { display:block; font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:12px; color:#6E685D; margin-top:2px; }
+        .fb-bcard .fb-aline { font-size:12px; color:#6E685D; }
+        .fb-bcard .fb-stars-row { display:flex;gap:6px;align-items:center;font-size:11px;color:#6E685D; }
+        .fb-bcard .fb-pline { margin-top:auto; display:flex; align-items:baseline; gap:7px; padding-top:8px; }
+        .fb-bcard .fb-pnow { font-family:"Inter",sans-serif; font-weight:700; font-size:17px; color:#161510; }
+        .fb-bcard .fb-pwas { font-family:"Inter",sans-serif; text-decoration:line-through; color:#6E685D; font-size:12px; }
+        .fb-bcard .fb-scarcity { font-size:11px; color:#D2532A; font-weight:600; }
+        .fb-bcard .fb-actions { display:flex; gap:6px; margin-top:8px; }
+        .fb-btn-mini-ghost { border:1px solid #C9BFA8; background:transparent; color:#161510; padding:9px 10px; font-size:12px; border-radius:9px; }
+        .fb-btn-mini-ghost:hover { background:#F4EFE6; }
+        .fb-btn-mini-primary { background:#1E3A2A; color:#fff; padding:9px 10px; font-size:12px; border-radius:9px; }
+        .fb-btn-mini-primary:hover { background:#2A5340; }
+
+        /* Builder */
+        .fb-builder-wrap { background: #F4EFE6; padding: 96px 0; }
+        .fb-builder {
+          background: linear-gradient(180deg, #1E3A2A 0%, #2A5340 100%);
+          color: #F8F4EB; border-radius: 28px; padding: 38px;
+          box-shadow: 0 30px 60px -30px rgba(30,58,42,0.5);
+        }
+        .fb-builder-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:26px; }
+        .fb-builder-head .fb-section-eyebrow { color:#E8C075; }
+        .fb-builder-head h3 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:27px; line-height:1.2; margin:0 0 6px; }
+        .fb-builder-head p { margin:0; color:rgba(248,244,235,0.7); font-size:14px; max-width:460px; }
+        .fb-builder-price {
+          background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+          border-radius:14px; padding:14px 18px; text-align:right; min-width:200px;
+        }
+        .fb-builder-price .lbl { font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(248,244,235,0.6);font-family:"Inter",sans-serif; }
+        .fb-builder-price .val { font-family:"Fraunces",serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; line-height:1.1; }
+        .fb-builder-price .save { font-family:"Inter",sans-serif; font-size:12px; color:#E8C075; font-weight:600; }
+        .fb-pick {
+          background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.12); border-radius:14px;
+          padding:14px; cursor:pointer; position:relative; transition:all .18s ease; text-align:left;
+        }
+        .fb-pick:hover { background:rgba(255,255,255,0.07); }
+        .fb-pick.on { background:rgba(184,137,58,0.18); border-color:#E8C075; }
+        .fb-pick .fb-pick-check {
+          position:absolute; top:10px; right:10px;
+          width:22px; height:22px; border-radius:50%;
+          border:1.5px solid rgba(255,255,255,0.3); background:transparent;
+          display:grid; place-items:center; transition:all .18s ease;
+        }
+        .fb-pick.on .fb-pick-check { background:#E8C075; border-color:#E8C075; }
+        .fb-pmini {
+          width:100%; aspect-ratio:2/3; border-radius:2px 4px 4px 2px;
+          margin-bottom:10px; padding:8px 6px;
+          display:flex; flex-direction:column; justify-content:space-between;
+          position:relative; box-shadow:0 8px 14px -6px rgba(0,0,0,0.4);
+        }
+        .fb-pmini::before { content:""; position:absolute; left:0;top:0;bottom:0;width:2px; background:rgba(0,0,0,0.2); }
+        .fb-pmini .pt { font-family:"Fraunces",serif; font-weight:700; font-size:11px; line-height:1.05; }
+        .fb-pmini .pa { font-family:"Inter",sans-serif; font-size:7px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
+        .fb-pick .fb-ptitle { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:12px; line-height:1.25; margin-bottom:2px; color:#F8F4EB; }
+        .fb-pick .fb-pprice { font-family:"Inter",sans-serif; font-weight:600; font-size:13px; opacity:0.85; color:#F8F4EB; }
+        .fb-builder-totals {
+          margin-top:24px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;
+          padding-top:20px; border-top:1px solid rgba(255,255,255,0.12);
+        }
+        .fb-totals-left { display:flex; gap:24px; flex-wrap:wrap; }
+        .fb-totals-left > div { display:flex; flex-direction:column; gap:2px; }
+        .fb-totals-left .l { font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(248,244,235,0.55);font-family:"Inter",sans-serif; }
+        .fb-totals-left .v { font-family:"Inter",sans-serif; font-size:17px; font-weight:600; }
+        .fb-totals-left .v.strike { text-decoration:line-through;color:rgba(248,244,235,0.5);font-weight:500; }
+        .fb-totals-left .v.gold { color:#E8C075; }
+        .fb-builder-cta {
+          width:100%; margin-top:20px;
+          background:#E8C075; color:#1E3A2A;
+          padding:18px 26px; border-radius:14px;
+          font-weight:700; font-size:16px;
+          display:inline-flex;align-items:center;justify-content:center;gap:10px;
+          transition:transform .12s ease, background .15s ease; cursor:pointer; border:none;
+          font-family:"Hind Siliguri",sans-serif;
+        }
+        .fb-builder-cta:hover { background:#F0CF8C; transform:translateY(-1px); }
+        .fb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(248,244,235,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
+
+        /* Quality */
+        .fb-quality-section { background: #F4EFE6; padding: 96px 0; }
+        .fb-qcard { background:#FBF8F2; border:1px solid #E0D8C7; border-radius:16px; padding:24px; position:relative; }
+        .fb-qcard .qno { font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:14px; color:#6E685D; margin-bottom:14px; }
+        .fb-qcard .qico { width:44px;height:44px;border-radius:12px; background:#DCE7DC;color:#1E3A2A; display:grid;place-items:center; margin-bottom:16px; }
+        .fb-qcard h4 { font-family:"Inter",sans-serif; font-weight:600; font-size:14px; letter-spacing:0.02em; margin:0 0 8px; color:#161510; }
+        .fb-qcard p { font-size:13.5px; color:#3F3B33; margin:0; line-height:1.5; }
+        .fb-promise {
+          margin-top:26px; background:#FBF8F2; border:1px solid #2A5340;
+          border-left:4px solid #1E3A2A; border-radius:14px; padding:20px 24px;
+          display:flex; align-items:center; gap:16px;
+        }
+        .fb-promise p { margin:0; color:#161510; font-size:15px; }
+        .fb-promise b { color:#1E3A2A; }
+
+        /* Reviews */
+        .fb-reviews-section { background: #FBF8F2; padding: 96px 0; }
+        .fb-review {
+          background: #F4EFE6; border:1px solid #E0D8C7; border-radius:18px;
+          padding:26px; display:flex; flex-direction:column; gap:14px;
+        }
+        .fb-review .fb-quote { font-family:"Fraunces",serif; font-style:italic; font-size:52px; line-height:1; color:#1E3A2A; margin:-8px 0 -18px; }
+        .fb-review p { margin:0; color:#161510; font-size:15px; line-height:1.55; }
+        .fb-review .fb-who { display:flex;align-items:center;gap:12px;margin-top:4px; }
+        .fb-review .fb-av { width:38px;height:38px;border-radius:50%; display:grid;place-items:center; font-family:"Fraunces",serif; font-weight:600; font-size:16px; color:#F8F4EB; }
+        .fb-review .fb-who-l { display:flex;flex-direction:column;gap:0; }
+        .fb-review .fb-who-l b { font-size:14px;font-weight:600;color:#161510; }
+        .fb-review .fb-who-l span { font-size:12px;color:#6E685D; }
+
+        /* FAQ */
+        .fb-faq-section { background: #F4EFE6; padding: 96px 0; }
+        .fb-faq-list { max-width:760px; margin:0 auto; display:flex;flex-direction:column;gap:8px; }
+        .fb-faq-item { background:#FBF8F2; border:1px solid #E0D8C7; border-radius:14px; overflow:hidden; }
+        .fb-faq-item.on { border-color:#2A5340; }
+        .fb-faq-q { width:100%;text-align:left;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px; font-weight:600;font-size:15px;color:#161510; font-family:"Hind Siliguri",sans-serif; cursor:pointer; background:none; border:none; }
+        .fb-pm { width:26px;height:26px;border-radius:50%; border:1px solid #C9BFA8; display:grid;place-items:center; transition:transform .2s ease,background .15s ease; flex-shrink:0; }
+        .fb-faq-item.on .fb-pm { background:#1E3A2A; border-color:#1E3A2A; transform:rotate(45deg); }
+        .fb-faq-a { max-height:0; overflow:hidden; transition:max-height .25s ease; border-left:4px solid transparent; }
+        .fb-faq-item.on .fb-faq-a { max-height:300px; border-left-color:#1E3A2A; }
+        .fb-faq-a-inner { padding:0 24px 20px; color:#3F3B33; font-size:15px; line-height:1.7; }
+        .fb-faq-help { margin-top:22px;text-align:center; }
+        .fb-faq-help a { display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border:1px solid #C9BFA8;border-radius:999px;background:#FBF8F2;font-size:14px;color:#3F3B33;text-decoration:none; }
+        .fb-faq-help a:hover { color:#161510; }
+        .fb-wa-dot { width:18px;height:18px;border-radius:50%;background:#25D366;display:grid;place-items:center; }
+
+        /* Final CTA */
+        .fb-final-cta {
+          background: #161510; color: #F2EDDF;
+          text-align:center; padding: 100px 0; position:relative; overflow:hidden;
+        }
+        .fb-final-cta::before {
+          content:""; position:absolute; top:0; left:50%; width:90%; max-width:800px;
+          height:1px; background:linear-gradient(90deg,transparent,#B8893A,transparent);
+          transform:translateX(-50%);
+        }
+        .fb-final-cta .fb-section-eyebrow { color:rgba(232,192,117,0.8); }
+        .fb-final-cta h2 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F8F4EB; line-height:1.18; }
+        .fb-final-cta p { color:rgba(242,237,223,0.7); max-width:540px; margin:0 auto 26px; }
+        .fb-final-cd { display:flex;gap:16px;justify-content:center;margin-bottom:30px; flex-wrap:wrap; }
+        .fb-cd-box { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 22px;min-width:80px;text-align:center; }
+        .fb-cd-box .n { font-family:"Fraunces",serif;font-weight:600;font-size:34px;line-height:1;color:#F8F4EB; }
+        .fb-cd-box .l { font-family:"Inter",sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(232,192,117,0.75);margin-top:6px; }
+        .fb-final-cta .fb-btn-ghost { color:#F2EDDF;border-color:rgba(255,255,255,0.2); }
+        .fb-final-cta .fb-btn-ghost:hover { background:rgba(255,255,255,0.05); }
+        .fb-final-cta .fb-btn-primary { background:#E8C075;color:#1E3A2A; }
+        .fb-final-cta .fb-btn-primary:hover { background:#F0CF8C; }
+
+        /* Mobile sticky bar */
+        .fb-mobile-bar {
+          display:none; position:fixed;bottom:0;left:0;right:0;z-index:50;
+          padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));
+          background:rgba(244,239,230,0.97); backdrop-filter:blur(10px);
+          border-top:1px solid #E0D8C7;
+          align-items:center;justify-content:space-between;gap:10px;
+        }
+        .fb-mobile-bar .mb-price { display:flex;flex-direction:column; }
+        .fb-mobile-bar .mb-price .now { font-family:"Fraunces",serif;font-weight:600;font-size:21px;line-height:1;color:#161510; }
+        .fb-mobile-bar .mb-price .was { font-family:"Inter",sans-serif;text-decoration:line-through;color:#6E685D;font-size:12px; }
+
+        /* WhatsApp */
+        .fb-whatsapp {
+          position:fixed;right:18px;bottom:18px;z-index:49;
+          background:#25D366;color:#fff;
+          padding:12px 18px;border-radius:999px;
+          font-family:"Hind Siliguri",sans-serif;font-weight:600;font-size:14px;
+          display:flex;align-items:center;gap:8px;text-decoration:none;
+          box-shadow:0 10px 22px -10px rgba(37,211,102,0.7);
+          transition:transform .15s ease;
+        }
+        .fb-whatsapp:hover { transform:translateY(-2px); }
+
+        @media (max-width:900px) {
+          .fb-hero { padding:40px 0 32px; }
+          .fb-hero-grid { grid-template-columns:1fr; gap:28px; }
+          .fb-stack-wrap { height:340px; order:-1; }
+          .fb-stack { transform:scale(0.82); transform-origin: center center; }
+          .fb-lede-bn { font-size:32px; }
+          .fb-price-now { font-size:36px; }
+          .fb-problems { grid-template-columns:1fr; }
+          .fb-benefits-grid { grid-template-columns:1fr; }
+          .fb-builder-head { flex-direction:column; }
+          .fb-builder-price { width:100%; text-align:left; min-width:0; }
+          .fb-builder { padding:24px; border-radius:20px; }
+          .fb-benefits-band { padding:64px 0; }
+          section.fb-books-section, .fb-builder-wrap, .fb-quality-section, .fb-reviews-section, .fb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
+        }
+        @media (max-width:640px) {
+          .fb-strip-row .fb-strip-right-num { display:none; }
+          .fb-mobile-bar { display:flex; }
+          body { padding-bottom: 76px; }
+          .fb-whatsapp { bottom:84px; right:14px; padding:10px 14px; font-size:13px; }
+          .fb-stack-wrap { height:280px; }
+          .fb-stack { transform:scale(0.68); }
+          .fb-lede-bn { font-size:27px; }
+          .fb-sub { font-size:15px; }
+          .fb-cta-row .fb-btn { flex:1 1 100%; }
+          .fb-final-cta { padding:64px 0; }
+          .fb-value-row > div:nth-child(n+3) { display:none; }
+        }
+        @media (max-width:1100px) {
+          .fb-book-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+          *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
         }
       `}</style>
 
-      <Header />
-
-      {/* ── Urgency bar ─────────────────────────────────────────────────────── */}
-      <div style={{ background: '#dc2626', padding: '10px 20px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 8 : 20, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: 'white', fontWeight: 700 }}>
-          ⚡ অফার শেষ হচ্ছে:
-        </span>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          {[pad(timeLeft.h), pad(timeLeft.m), pad(timeLeft.s)].map((v, i) => (
-            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ background: 'rgba(0,0,0,0.3)', color: 'white', borderRadius: 6, padding: '2px 8px', fontFamily: 'var(--sans)', fontWeight: 900, fontSize: 15, minWidth: 30, textAlign: 'center' }}>{v}</span>
-              {i < 2 && <span style={{ color: 'white', fontWeight: 900 }}>:</span>}
-            </span>
-          ))}
+      {/* ── Announcement strip ─────────────────────────────────────── */}
+      <div className="fb-strip">
+        <div className="fb-strip-row">
+          <div className="fb-strip-left">
+            <span className="fb-pulse" />
+            <span>সীমিত অফার শেষ হচ্ছে — <b className="fb-num">৪৪% ছাড়</b></span>
+          </div>
+          <div className="fb-cd">
+            <span style={{ color: 'rgba(242,237,223,0.6)', marginRight: 4, fontFamily: '"Inter",sans-serif', fontSize: 12 }}>অফার শেষ হবে</span>
+            <b className="fb-num">{pad(timeLeft.h)}</b>
+            <span>:</span>
+            <b className="fb-num">{pad(timeLeft.m)}</b>
+            <span>:</span>
+            <b className="fb-num">{pad(timeLeft.s)}</b>
+          </div>
+          <div className="fb-strip-right-num fb-strip-left" style={{ opacity: visitorFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+            <span>৪.৯ ★ <b>{visitorCount} রিভিউ</b></span>
+          </div>
         </div>
-        <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#fef9c3', fontWeight: 600, opacity: visitorFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-          🔥 {visitorCount} জন এখন এই পেজ দেখছেন
-        </span>
       </div>
 
-      <main style={{ flex: 1 }}>
+      <Header />
 
-        {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-        <section id="top" style={{ background: 'linear-gradient(150deg, #0f4c24 0%, #16a34a 40%, #065f46 100%)', padding: isMobile ? '52px 20px 80px' : '72px 80px 100px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -80, right: -80, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -60, left: -60, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+      <main style={{ background: '#F4EFE6' }}>
 
-          <div ref={r1} style={{ ...fadeBase, maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '55% 45%', gap: 48, alignItems: 'center' }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 999, padding: '8px 20px', marginBottom: 24 }}>
-                <span style={{ fontSize: 16 }}>🏆</span>
-                <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: 'white', fontWeight: 700 }}>বিশ্বের সেরা ৫টি ফিন্যান্স বই — একসাথে</span>
+        {/* ── Hero ────────────────────────────────────────────────────── */}
+        <section className="fb-hero">
+          <div className="fb-hero-art" aria-hidden="true">
+            <svg viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice">
+              <circle cx="500" cy="280" r="260" fill="none" stroke="#C9BFA8" strokeWidth="1" strokeDasharray="2 6" opacity="0.6"/>
+              <circle cx="500" cy="280" r="190" fill="none" stroke="#C9BFA8" strokeWidth="1" opacity="0.4"/>
+              <circle cx="500" cy="280" r="120" fill="#E0D8C7" opacity="0.35"/>
+            </svg>
+          </div>
+          <div className="fb-container">
+            <div ref={r1} style={{ ...fadeStyle }}>
+              <div className="fb-hero-grid">
+                <div>
+                  <span className="fb-eyebrow"><span className="dot" />৫টি বইয়ের একচেটিয়া বান্ডেল</span>
+                  <h1 className="fb-lede-bn">
+                    অর্থনৈতিক স্বাধীনতার পথে<br />
+                    <span>আপনার ৫ জন সঙ্গী।</span>
+                  </h1>
+                  <p className="fb-sub">
+                    দুনিয়ার সবচেয়ে প্রভাবশালী ফিন্যান্স ক্লাসিকগুলো — এক প্যাকে, <b>৪৪% ছাড়ে</b>। যারা টাকার সাথে নিজের সম্পর্ক বদলাতে চান, তাদের জন্য।
+                  </p>
+                  <div className="fb-price-row">
+                    <span className="fb-price-now fb-num">৳1,786</span>
+                    <span className="fb-price-was fb-num">৳3,213</span>
+                    <span className="fb-save-pill">SAVE ৳1,427</span>
+                  </div>
+                  <div className="fb-cta-row">
+                    <a href="#builder" className="fb-btn fb-btn-primary">
+                      এখনই অর্ডার করুন
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    <a href="#books" className="fb-btn fb-btn-ghost">সব বই দেখুন</a>
+                  </div>
+                  <div className="fb-trust-mini">
+                    <div><Stars size={14} /> <b className="fb-num">4.9</b> <span style={{ color: '#6E685D' }}>(১৪২)</span></div>
+                    <div>·</div>
+                    <div><b>৩০০+</b> পাঠক কিনেছেন</div>
+                  </div>
+                </div>
+
+                {/* Book stack */}
+                <div className="fb-stack-wrap" aria-hidden="true">
+                  <div className="fb-stack">
+                    {BOOKS.map((book, i) => {
+                      const p = bySlug[book.slug];
+                      const src = p ? imgUrl(p.images?.[0]) : null;
+                      const poses = [
+                        { cls: 'fb-b1', left: 0, top: 40, rot: '-9deg' },
+                        { cls: 'fb-b2', left: 75, top: 70, rot: '-4deg' },
+                        { cls: 'fb-b3', left: 140, top: 90, rot: '0deg' },
+                        { cls: 'fb-b4', left: 205, top: 70, rot: '4deg' },
+                        { cls: 'fb-b5', left: 270, top: 40, rot: '9deg' },
+                      ][i];
+                      return (
+                        <div key={book.slug}
+                          className={`fb-book ${poses.cls}`}
+                          style={{ left: poses.left, top: poses.top, transform: `rotate(${poses.rot})`, background: book.color, color: book.dark ? '#1a1a1a' : '#fff', border: book.dark ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
+                          {src ? (
+                            <img src={src} alt={book.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : null}
+                          {!src && (
+                            <div className="fb-cover" style={{ color: book.dark ? '#1a1a1a' : '#fff' }}>
+                              <div className="fb-btop">{book.top}</div>
+                              <div className="fb-bttl" style={{ fontSize: i === 2 ? 22 : 18 }}>{book.titleShort}</div>
+                              <div className="fb-bauth">{book.authorShort}</div>
+                            </div>
+                          )}
+                          {(i === 0 || i === 2) && <span className="fb-ptag">{book.discountPct}%</span>}
+                        </div>
+                      );
+                    })}
+                    <div className="fb-stack-floor" />
+                  </div>
+                </div>
               </div>
-              <h1 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 30 : 46, fontWeight: 900, color: 'white', lineHeight: 1.2, margin: '0 0 16px' }}>
-                অর্থনৈতিক স্বাধীনতার পথে আপনার ৫টি সেরা সঙ্গী
-              </h1>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 16 : 19, color: 'rgba(255,255,255,0.85)', margin: '0 0 28px', lineHeight: 1.65 }}>
-                দুনিয়ার সফল মানুষদের পড়া বই — এখন <strong style={{ color: '#fef08a' }}>সর্বোচ্চ ৪৪% ছাড়ে</strong>
-              </p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Value strip ─────────────────────────────────────────────── */}
+        <div className="fb-value-strip">
+          <div className="fb-value-row">
+            {[
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: 'সারা দেশে ক্যাশ অন ডেলিভারি' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, label: '৪.৯ ★ — ১৪২ রিভিউ' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M4 7h16v12H4zM4 7l8 6 8-6"/></svg>, label: '১০০% অরিজিনাল প্রিন্ট' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'যত্ন নিয়ে প্যাকেজিং' },
+            ].map((v, i) => (
+              <div key={i}>{v.icon}<span>{v.label}</span></div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Problems ────────────────────────────────────────────────── */}
+        <section style={{ background: '#F4EFE6', padding: '96px 0' }}>
+          <div className="fb-container">
+            <div ref={r2} style={fadeStyle}>
+              <div className="fb-section-head">
+                <div className="fb-section-eyebrow">আপনার পরিচিত সমস্যা</div>
+                <h2 className="fb-section-title">আপনি কি এই সমস্যাগুলোর কোনোটায় আছেন?</h2>
+                <p className="fb-section-sub">প্রায় প্রত্যেক বাঙালি মধ্যবিত্ত এই তিনটির একটা বা একাধিক সমস্যা প্রতিদিন ভোগেন। আপনি একা নন।</p>
+              </div>
+              <div className="fb-problems">
                 {[
-                  { icon: '📚', val: '৫০০+', label: 'পাঠক এই মাসে' },
-                  { icon: '⭐', val: '৪.৯', label: 'গড় রেটিং' },
-                  { icon: '🚚', val: 'ফ্রি', label: 'ডেলিভারি ৯৫০ টাকায়' },
-                ].map((s, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 18 }}>{s.icon}</span>
-                    <div>
-                      <div style={{ fontFamily: 'var(--sans)', fontWeight: 900, fontSize: 16, color: 'white' }}>{s.val}</div>
-                      <div style={{ fontFamily: 'var(--bn)', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{s.label}</div>
-                    </div>
+                  { num: '01', ico: '৳', title: 'টাকা কোথায় যায় বুঝতে পারেন না', body: 'মাস শেষে মনে হয় হাত খালি, কিন্তু কোথায় খরচ হলো হিসাব মেলে না। বাজেট, সেভিং, ইনভেস্ট — সবই অস্পষ্ট।' },
+                  { num: '02', ico: '↗', title: 'সঞ্চয় শুরু হয় না', body: '"পরের মাস থেকে শুরু করব" — এই অপেক্ষায় বছর কেটে যায়। কোথা থেকে শুরু করবেন সেটাই বুঝে উঠতে পারেন না।' },
+                  { num: '03', ico: '⊘', title: 'বিনিয়োগে ভয় লাগে', body: 'স্টক, রিয়েল এস্টেট, ব্যবসা — সবকিছুই ঝুঁকি মনে হয়। ভুল সিদ্ধান্তের ভয়ে কিছুই করা হয় না।' },
+                ].map((c, i) => (
+                  <div key={i} className="fb-problem">
+                    <div className="fb-num-mark">{c.num}</div>
+                    <div className="fb-ico" style={{ fontSize: 20 }}>{c.ico}</div>
+                    <h3>{c.title}</h3>
+                    <p>{c.body}</p>
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <a href="#books" style={{ display: 'inline-block', background: 'white', color: '#14532d', fontWeight: 800, fontFamily: 'var(--bn)', borderRadius: 14, padding: '16px 36px', fontSize: 16, textDecoration: 'none', boxShadow: '0 8px 28px rgba(0,0,0,0.25)', transition: 'all .15s ease' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.25)'; }}>
-                  সব বই দেখুন ↓
-                </a>
-                <a href="#bundle" style={{ display: 'inline-block', background: 'transparent', color: 'white', fontWeight: 700, fontFamily: 'var(--bn)', borderRadius: 14, padding: '16px 28px', fontSize: 15, textDecoration: 'none', border: '2px solid rgba(255,255,255,0.4)', transition: 'all .15s ease' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-                  বান্ডেল অফার দেখুন
-                </a>
+              <div className="fb-problem-cta">
+                <div className="fb-check">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M5 12l5 5L20 7"/></svg>
+                </div>
+                <div>এই ৫টি বই-ই আপনার সব প্রশ্নের উত্তর দেবে — <b>প্রমাণিত।</b></div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Book stack — larger covers */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', gap: isMobile ? 8 : 14, justifyContent: 'center', flexWrap: isMobile ? 'nowrap' : 'wrap', alignItems: 'flex-end' }}>
-                {BOOKS.map((book, i) => {
-                  const p = bySlug[book.slug];
-                  const src = p ? imgUrl(p.images?.[0]) : null;
-                  const rots = [-5, -2, 1, 4, -3];
-                  const w = isMobile ? 64 : 110;
-                  const h = isMobile ? 96 : 165;
-                  return (
-                    <div key={book.slug}
-                      style={{ transform: `rotate(${rots[i]}deg)`, transition: 'transform .25s ease', flexShrink: 0 }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'rotate(0deg) scale(1.1) translateY(-10px)'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = `rotate(${rots[i]}deg)`; }}>
-                      {src ? (
-                        <img src={src} alt={book.title} loading="lazy" style={{ width: w, height: h, objectFit: 'contain', borderRadius: 6, boxShadow: '0 20px 44px rgba(0,0,0,0.55)', border: '2px solid rgba(255,255,255,0.2)' }} />
-                      ) : (
-                        <div style={{ width: w, height: h, borderRadius: 6, background: book.fallbackColor, boxShadow: '0 20px 44px rgba(0,0,0,0.55)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6 }}>
-                          <span style={{ fontFamily: 'var(--sans)', fontSize: 8, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 1.3 }}>{book.title}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+        {/* ── Benefits ────────────────────────────────────────────────── */}
+        <section className="fb-benefits-band">
+          <div className="fb-container">
+            <div ref={r3} style={fadeStyle}>
+              <div className="fb-section-head">
+                <div className="fb-section-eyebrow">আপনি যা শিখবেন</div>
+                <h2 className="fb-section-title">এই বইগুলো পড়ে আপনার জীবন বদলাবে</h2>
               </div>
-              {!isMobile && (
-                <div style={{ textAlign: 'center', marginTop: 8 }}>
-                  <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 20px', display: 'inline-block' }}>
-                    <span style={{ fontFamily: 'var(--sans)', fontSize: 22, fontWeight: 900, color: '#fef08a' }}>৳1,786</span>
-                    <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: 'rgba(255,255,255,0.75)', marginLeft: 8 }}>৫টির মোট দাম</span>
+              <div className="fb-benefits-grid">
+                {[
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.7.8 1 1.8 1 2.8v.5h6V17.5c0-1 .3-2 1-2.8A7 7 0 0 0 12 2z"/></svg>, text: 'টাকার সাথে নিজের সম্পর্ক নতুনভাবে বুঝতে শিখবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M3 21V7l9-4 9 4v14M9 21V12h6v9"/></svg>, text: 'লোন আর জাল থেকে বাঁচার বাস্তব রাস্তা পাবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'সঠিক financial structures ও decisions নিতে পারবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>, text: 'সঠিক বিনিয়োগের কৌশল রপ্ত করতে পারবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M13 2L4 14h7l-2 8 11-12h-7z"/></svg>, text: 'সহজ habits তৈরি করে দীর্ঘমেয়াদে ধনী হবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM3 15h6M15 15h6"/></svg>, text: 'একটি smart money management system গড়ে তুলবেন' },
+                ].map((b, i) => (
+                  <div key={i} className="fb-benefit">
+                    <div className="fb-b-ico">{b.icon}</div>
+                    <p>{b.text}</p>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Pain Points ──────────────────────────────────────────────────────── */}
-        <section style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '48px 20px' : '64px 48px' }}>
-          <div ref={r2} style={fadeBase}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <span style={{ background: '#fef2f2', color: '#dc2626', borderRadius: 999, padding: '6px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'var(--bn)' }}>আপনার সমস্যা চিনি আমরা</span>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: '#0f172a', margin: '12px 0 0' }}>আপনি কি এই সমস্যায় আছেন?</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20, marginBottom: 36 }}>
-              {[
-                { emoji: '💸', title: 'টাকা কোথায় যায় বোঝা যায় না', body: 'মাস শেষে ব্যাংক ব্যালেন্স দেখে অবাক হন — কিন্তু কোথায় গেল?' },
-                { emoji: '📉', title: 'সঞ্চয় হয় না', body: 'ভালো আয় করেও মাস শেষে হাতে কিছু থাকে না — সঞ্চয়ের কোনো system নেই।' },
-                { emoji: '😰', title: 'বিনিয়োগ করতে ভয় লাগে', body: 'বিনিয়োগ করতে চান, কিন্তু কোথা থেকে শুরু করবেন বুঝতে পারছেন না।' },
-              ].map((c, i) => (
-                <div key={i}
-                  style={{ background: '#faf7f2', borderRadius: 24, padding: '28px 24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e8e0d0', borderTop: '4px solid #dc2626', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .25s ease, box-shadow .25s ease' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.13)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; }}>
-                  <span style={{ fontSize: 40 }}>{c.emoji}</span>
-                  <h3 style={{ fontFamily: 'var(--bn)', fontSize: 17, fontWeight: 800, color: '#0f172a', margin: 0 }}>{c.title}</h3>
-                  <p style={{ fontFamily: 'var(--bn)', fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.7 }}>{c.body}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '2px solid #86efac', borderRadius: 18, padding: isMobile ? '18px 20px' : '20px 36px', textAlign: 'center', borderLeft: '6px solid #16a34a' }}>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 16 : 20, fontWeight: 900, color: '#14532d', margin: 0 }}>
-                ✅ এই ৫টি বই আপনার সব প্রশ্নের উত্তর দেবে — গ্যারান্টি
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Benefits ────────────────────────────────────────────────────────── */}
-        <section style={{ background: '#0f172a', padding: isMobile ? '52px 20px' : '72px 80px' }}>
-          <div ref={r3} style={{ ...fadeBase, maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <span style={{ background: 'rgba(22,163,74,0.2)', color: '#4ade80', borderRadius: 999, padding: '6px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'var(--bn)' }}>আপনি যা শিখবেন</span>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: 'white', margin: '12px 0 0' }}>এই বইগুলো পড়ে আপনার জীবন বদলাবে</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>
-              {[
-                { icon: '💡', text: 'কীভাবে চিন্তা করলে টাকা আসে' },
-                { icon: '🔍', text: 'কেন ভালো আয় করেও টাকা ধরে রাখা যায় না' },
-                { icon: '🧠', text: 'কীভাবে emotions ভুল financial decision তৈরি করে' },
-                { icon: '📈', text: 'কীভাবে বিনিয়োগ করলে সম্পদ বাড়ে' },
-                { icon: '⚡', text: 'কীভাবে simple habits আর্থিক জীবন বদলায়' },
-                { icon: '🏦', text: 'কীভাবে smart money management system তৈরি করতে হয়' },
-              ].map((p, i) => (
-                <div key={i}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, background: i % 2 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.04)', borderRadius: 14, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.07)', borderLeft: '3px solid #16a34a', transition: 'background .2s ease, border .2s ease' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(22,163,74,0.12)'; e.currentTarget.style.border = '1px solid rgba(22,163,74,0.3)'; e.currentTarget.style.borderLeft = '3px solid #4ade80'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = i % 2 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.04)'; e.currentTarget.style.border = '1px solid rgba(255,255,255,0.07)'; e.currentTarget.style.borderLeft = '3px solid #16a34a'; }}>
-                  <span style={{ fontSize: 24, flexShrink: 0 }}>{p.icon}</span>
-                  <span style={{ fontFamily: 'var(--bn)', fontSize: 15, color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>{p.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Book Cards ──────────────────────────────────────────────────────── */}
-        <section id="books" style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '52px 20px' : '72px 40px' }}>
-          <div ref={r4} style={fadeBase}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <span style={{ background: '#fef9c3', color: '#92400e', borderRadius: 999, padding: '6px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'var(--bn)' }}>সীমিত সময়ের অফার</span>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: '#0f172a', margin: '12px 0 6px' }}>৫টি সেরা ফিন্যান্স বই</h2>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 15, color: '#6b7280', margin: 0 }}>প্রতিটি বই আপনার আর্থিক চিন্তাভাবনা সম্পূর্ণ বদলে দেবে</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: bookGridCols, gap: 20, alignItems: 'stretch' }}>
-              {BOOKS.map((book, idx) => {
-                const p = bySlug[book.slug];
-                const src = p ? imgUrl(p.images?.[0]) : null;
-                const price = finalPrice(book);
-                const isLastTablet = isTablet && idx === 4;
-                return (
-                  <div
-                    key={book.slug}
-                    style={{ background: 'white', borderRadius: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'transform .25s ease, box-shadow .25s ease', position: 'relative', gridColumn: isLastTablet ? '1 / -1' : undefined, maxWidth: isLastTablet ? 400 : undefined, margin: isLastTablet ? '0 auto' : undefined, width: isLastTablet ? '100%' : undefined }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(0,0,0,0.14)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.07)'; }}
-                  >
-                    {/* Popular badge */}
-                    {book.popular && (
-                      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', borderRadius: 999, padding: '4px 12px', fontSize: 11, fontFamily: 'var(--bn)', fontWeight: 800, boxShadow: '0 4px 12px rgba(234,88,12,0.5)' }}>
-                        সবচেয়ে জনপ্রিয়
-                      </div>
-                    )}
-
-                    {/* Cover */}
-                    <div style={{ position: 'relative', height: 240, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {src ? (
-                        <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform .3s ease' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', background: book.fallbackColor, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                          <span style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.4, fontWeight: 700 }}>{book.title}</span>
-                        </div>
-                      )}
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)' }} />
-                      <div style={{ position: 'absolute', top: 12, left: 12, background: '#dc2626', color: 'white', borderRadius: '50%', width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', fontWeight: 900, fontSize: 14, fontFamily: 'var(--sans)', lineHeight: 1, boxShadow: '0 4px 12px rgba(220,38,38,0.5)' }}>
-                        <span>{book.discountPct}%</span>
-                        <span style={{ fontSize: 9, fontFamily: 'var(--bn)' }}>ছাড়</span>
-                      </div>
-                      <div style={{ position: 'absolute', bottom: 10, left: 12, right: book.popular ? 60 : 12 }}>
-                        <span style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(4px)', color: 'white', borderRadius: 8, padding: '3px 10px', fontSize: 11, fontFamily: 'var(--sans)', fontWeight: 700 }}>{book.badge}</span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                      <div>
-                        <h3 style={{ fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</h3>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', fontWeight: 600 }}>{bySlug[book.slug]?.taglineEn ?? book.tagline}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <p style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', margin: 0 }}>{book.author}</p>
-                          <span style={{ color: '#cbd5e1', fontSize: 10 }}>·</span>
-                          <p style={{ fontFamily: 'var(--sans)', fontSize: 11, color: '#9ca3af', margin: 0 }}>{book.pages} পেজ</p>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Stars size={13} />
-                        <span style={{ fontFamily: 'var(--sans)', fontSize: 11, color: '#6b7280' }}>(৪.৯) • ১০০+ রিভিউ</span>
-                      </div>
-                      <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#374151', lineHeight: 1.7, margin: 0, flex: 1 }}>{book.description}</p>
-
-                      {/* Price */}
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9' }}>
-                        <span style={{ fontFamily: 'var(--sans)', fontSize: 22, fontWeight: 900, color: '#16a34a' }}>৳{price}</span>
-                        <span style={{ fontFamily: 'var(--sans)', fontSize: 13, color: '#9ca3af', textDecoration: 'line-through' }}>৳{book.salePrice}</span>
-                        <span style={{ fontFamily: 'var(--bn)', fontSize: 11, color: '#dc2626', fontWeight: 700, marginLeft: 'auto' }}>৳{book.discountAmount} সাশ্রয়</span>
-                      </div>
-
-                      {/* Scarcity */}
-                      <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#e65c00', fontWeight: 700 }}>
-                        ⚡ মাত্র {book.stock} টি বাকি আছে
-                      </div>
-
-                      {/* Buttons */}
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <Link href={`/${book.slug}`} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #e5e7eb', color: '#374151', background: 'transparent', borderRadius: 12, padding: '10px 8px', fontFamily: 'var(--bn)', fontSize: 12, fontWeight: 700, textDecoration: 'none', transition: 'all .15s ease' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.color = '#16a34a'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}>
-                          বিস্তারিত
-                        </Link>
-                        <button onClick={() => handleAddToCart(book.slug, book.title)} style={{ flex: 2, background: '#16a34a', color: 'white', border: 'none', borderRadius: 12, padding: '10px 8px', fontFamily: 'var(--bn)', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'background .15s ease, transform .15s ease' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#15803d'; e.currentTarget.style.transform = 'scale(1.02)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#16a34a'; e.currentTarget.style.transform = 'none'; }}>
-                          কার্টে যোগ করুন
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Bundle Selector ──────────────────────────────────────────────────── */}
-        <section id="bundle" style={{ padding: isMobile ? '0 20px 56px' : '0 48px 72px', maxWidth: 1200, margin: '0 auto' }}>
-          <div ref={r5} style={{ ...fadeBase, background: 'white', borderRadius: 28, boxShadow: '0 8px 48px rgba(0,0,0,0.10)', overflow: 'hidden', border: '2px solid #bbf7d0' }}>
-            <div style={{ background: 'linear-gradient(135deg, #14532d, #16a34a)', padding: isMobile ? '24px 20px' : '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 999, padding: '4px 14px', marginBottom: 8 }}>
-                  <span style={{ fontFamily: 'var(--bn)', fontSize: 12, color: 'white', fontWeight: 700 }}>🎉 সবচেয়ে বেশি সাশ্রয়</span>
-                </div>
-                <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 20 : 26, fontWeight: 900, color: 'white', margin: 0 }}>
-                  বই বেছে নিন — তারপর সরাসরি অর্ডার করুন
-                </h2>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: '12px 20px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 2 }}>নির্বাচিত বইয়ের দাম</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontFamily: 'var(--sans)', fontSize: 28, fontWeight: 900, color: '#fef08a' }}>৳{selectedTotal}</span>
-                  <span style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'line-through' }}>৳{selectedOriginal}</span>
-                </div>
-                <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#86efac', fontWeight: 700 }}>৳{savedAmount} সাশ্রয়</div>
+                ))}
               </div>
             </div>
+          </div>
+        </section>
 
-            <div style={{ padding: isMobile ? '20px 16px' : '28px 40px' }}>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 14, color: '#6b7280', margin: '0 0 20px', textAlign: 'center' }}>
-                যে বইগুলো চান সেগুলো টিক দিন → তারপর নিচের বোতাম চাপুন
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? 12 : 16, marginBottom: 28 }}>
+        {/* ── Book Cards ──────────────────────────────────────────────── */}
+        <section id="books" className="fb-books-section">
+          <div className="fb-container">
+            <div ref={r4} style={fadeStyle}>
+              <div className="fb-section-head">
+                <div className="fb-section-eyebrow">যা যা আছে বান্ডেলে</div>
+                <h2 className="fb-section-title">৫টি সেরা ফিন্যান্স বই</h2>
+                <p className="fb-section-sub">প্রতিটি বই আন্তর্জাতিক বেস্টসেলার ও সময়ের পরীক্ষায় উত্তীর্ণ।</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: bookGridCols, gap: 16 }}>
                 {BOOKS.map((book) => {
                   const p = bySlug[book.slug];
                   const src = p ? imgUrl(p.images?.[0]) : null;
                   const price = finalPrice(book);
-                  const isSelected = selected.has(book.slug);
+                  const tagline = p?.taglineEn ?? book.tagline;
                   return (
-                    <div
-                      key={book.slug}
-                      onClick={() => toggleBook(book.slug)}
-                      style={{ position: 'relative', cursor: 'pointer', borderRadius: 16, border: `2.5px solid ${isSelected ? '#16a34a' : '#e5e7eb'}`, background: isSelected ? '#f0fdf4' : '#fafafa', transition: 'all .2s ease', overflow: 'hidden', boxShadow: isSelected ? '0 4px 16px rgba(22,163,74,0.2)' : '0 2px 8px rgba(0,0,0,0.04)' }}
-                    >
-                      <div style={{ height: isMobile ? 110 : 140, background: '#f8fafc', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div key={book.slug} className="fb-bcard">
+                      <div className="fb-thumb" style={{ background: book.dark ? '#EEE7DA' : 'linear-gradient(160deg, #FBF8F2, #EEE7DA)' }}>
+                        <span className="fb-bdg">{book.discountPct}% OFF</span>
+                        {book.popular && <span className="fb-popular-badge">MOST POPULAR</span>}
                         {src ? (
-                          <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: isSelected ? 'none' : 'grayscale(20%)' }} />
+                          <img src={src} alt={book.title} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
                         ) : (
-                          <div style={{ width: '100%', height: '100%', background: book.fallbackColor, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
-                            <span style={{ fontFamily: 'var(--sans)', fontSize: 9, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.4 }}>{book.title}</span>
+                          <div className="fb-mini-book" style={{ background: book.color, color: book.dark ? '#1a1a1a' : '#fff' }}>
+                            <div className="fb-mb-top">{book.top}</div>
+                            <div className="fb-mb-ttl">{book.titleShort}</div>
+                            <div className="fb-mb-auth">{book.authorShort}</div>
                           </div>
                         )}
                       </div>
-                      <div style={{ padding: '10px 10px 12px' }}>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', lineHeight: 1.3 }}>{book.title}</p>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 9, color: '#16a34a', margin: '0 0 2px', fontStyle: 'italic', lineHeight: 1.3 }}>{bySlug[book.slug]?.taglineEn ?? book.tagline}</p>
-                        <p style={{ fontFamily: 'var(--sans)', fontSize: 9, color: '#9ca3af', margin: '0 0 4px' }}>{book.author} · {book.pages}p</p>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 900, color: isSelected ? '#16a34a' : '#6b7280' }}>৳{price}</span>
-                          <span style={{ fontFamily: 'var(--sans)', fontSize: 10, color: '#9ca3af', textDecoration: 'line-through' }}>৳{book.salePrice}</span>
+                      <div className="fb-body">
+                        <h4>{book.title}<span className="en">{tagline}</span></h4>
+                        <div className="fb-aline">{book.author} · {book.pages} পেজ</div>
+                        <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">4.9</span></div>
+                        <div className="fb-pline">
+                          <span className="fb-pnow fb-num">৳{price}</span>
+                          <span className="fb-pwas fb-num">৳{book.salePrice}</span>
                         </div>
-                      </div>
-                      <div style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: isSelected ? '#16a34a' : 'rgba(255,255,255,0.9)', border: `2px solid ${isSelected ? '#16a34a' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-                        {isSelected && <span style={{ color: 'white', fontSize: 13, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                        <div className="fb-scarcity">⚡ মাত্র {book.stock} টি বাকি</div>
+                        <div className="fb-actions">
+                          <Link href={`/${book.slug}`} className="fb-btn fb-btn-mini-ghost">বিস্তারিত</Link>
+                          <button className="fb-btn fb-btn-mini-primary" onClick={() => handleAddToCart(book.slug, book.title)}>কার্টে যোগ</button>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div style={{ background: '#f8fafc', borderRadius: 16, padding: isMobile ? '16px' : '20px 28px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                <div style={{ display: 'flex', gap: isMobile ? 12 : 24, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* ── Bundle Builder ───────────────────────────────────────────── */}
+        <section id="builder" className="fb-builder-wrap">
+          <div className="fb-container">
+            <div ref={r5} style={fadeStyle}>
+              <div className="fb-builder">
+                <div className="fb-builder-head">
                   <div>
-                    <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#9ca3af' }}>নির্বাচিত বই</div>
-                    <div style={{ fontFamily: 'var(--sans)', fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{selected.size}টি</div>
+                    <div className="fb-section-eyebrow" style={{ color: '#E8C075' }}>বান্ডেল বানান</div>
+                    <h3>বই বেছে নিন — সরাসরি অর্ডার করুন</h3>
+                    <p>সব বই একসাথে নিলে সর্বোচ্চ ছাড়। পছন্দ করে কিছু বই নিন — যত বেশি, তত বেশি সাশ্রয়।</p>
                   </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#9ca3af' }}>আলাদা দাম</div>
-                    <div style={{ fontFamily: 'var(--sans)', fontSize: 16, fontWeight: 700, color: '#9ca3af', textDecoration: 'line-through' }}>৳{selectedOriginal}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#16a34a', fontWeight: 700 }}>আপনার দাম</div>
-                    <div style={{ fontFamily: 'var(--sans)', fontSize: 24, fontWeight: 900, color: '#16a34a' }}>৳{selectedTotal}</div>
-                  </div>
-                  <div style={{ background: '#fef2f2', borderRadius: 10, padding: '6px 14px' }}>
-                    <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#dc2626', fontWeight: 800 }}>সাশ্রয় হচ্ছে</div>
-                    <div style={{ fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 900, color: '#dc2626' }}>৳{savedAmount}</div>
+                  <div className="fb-builder-price">
+                    <div className="lbl">আপনার মোট</div>
+                    <div className="val fb-num">৳{selectedTotal}</div>
+                    <div className="save">{savedAmount.toLocaleString()} টাকা সাশ্রয় · {discountPct}% ছাড়</div>
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-                {['✅ সারা বাংলাদেশে ডেলিভারি', '✅ ১০০% অরিজিনাল', '✅ দ্রুত ডেলিভারি', '✅ নিরাপদ পেমেন্ট'].map((t, i) => (
-                  <span key={i} style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#374151', fontWeight: 600 }}>{t}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: pickGridCols, gap: 12 }}>
+                  {BOOKS.map((book) => {
+                    const p = bySlug[book.slug];
+                    const src = p ? imgUrl(p.images?.[0]) : null;
+                    const isOn = selected.has(book.slug);
+                    const price = finalPrice(book);
+                    return (
+                      <button key={book.slug} className={`fb-pick${isOn ? ' on' : ''}`} onClick={() => toggleBook(book.slug)}>
+                        <div className="fb-pick-check">
+                          {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1E3A2A" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
+                        </div>
+                        {src ? (
+                          <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
+                        ) : (
+                          <div className="fb-pmini" style={{ background: book.color, color: book.dark ? '#1a1a1a' : '#fff' }}>
+                            <div className="pa">{book.top}</div>
+                            <div className="pt">{book.titleShort}</div>
+                            <div className="pa">{book.authorShort}</div>
+                          </div>
+                        )}
+                        <div className="fb-ptitle">{book.title}</div>
+                        <div className="fb-pprice fb-num">৳{price}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="fb-builder-totals">
+                  <div className="fb-totals-left">
+                    <div><span className="l">বই</span><span className="v fb-num">{selected.size} টি</span></div>
+                    <div><span className="l">আসল দাম</span><span className="v strike fb-num">৳{selectedOriginal}</span></div>
+                    <div><span className="l">ছাড়</span><span className="v gold fb-num">{discountPct}%</span></div>
+                    <div><span className="l">আপনি দেন</span><span className="v fb-num">৳{selectedTotal}</span></div>
+                  </div>
+                </div>
+
+                <button className="fb-builder-cta" onClick={handleBundleCheckout}>
+                  নির্বাচিত {selected.size}টি বই অর্ডার করুন
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+                <div className="fb-builder-fineprint">
+                  <span>✓ ক্যাশ অন ডেলিভারি</span>
+                  <span>✓ ৩-৫ দিনে ডেলিভারি</span>
+                  <span>✓ পছন্দ না হলে রিটার্ন</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Quality ─────────────────────────────────────────────────── */}
+        <section className="fb-quality-section">
+          <div className="fb-container">
+            <div ref={r6} style={fadeStyle}>
+              <div className="fb-section-head">
+                <div className="fb-section-eyebrow">মুদ্রণের মান</div>
+                <h2 className="fb-section-title">দেশের সেরা কোয়ালিটি</h2>
+                <p className="fb-section-sub">প্রতিটি বই হাতে নিলেই বুঝবেন পার্থক্য।</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
+                {[
+                  { n: 'i.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1E3A2A" strokeWidth="1.5"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/><path d="M8 12h8M8 16h6"/></svg>, title: '৭০ GSM Offset Paper', body: 'ভারী, ম্যাট ফিনিশের কাগজ — চোখে আরাম, দীর্ঘস্থায়ী।' },
+                  { n: 'ii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1E3A2A" strokeWidth="1.5"><path d="M4 4v16h16"/><path d="M4 4h4v16M16 4h4v16"/></svg>, title: 'Perfect Binding', body: 'মজবুত perfect binding — বহু বছর পরও পাতা খুলে যাবে না।' },
+                  { n: 'iii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1E3A2A" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18M8 3v18"/></svg>, title: '৩০০ GSM Art Cover', body: 'প্রিমিয়াম matte-laminated কভার — দেখতে সুন্দর, টেকসই।' },
+                  { n: 'iv.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1E3A2A" strokeWidth="1.5"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, title: 'দেশের সেরা কোয়ালিটি', body: 'বাংলাদেশের সেরা মুদ্রণ প্রযুক্তি — international standard।' },
+                ].map((q, i) => (
+                  <div key={i} className="fb-qcard">
+                    <div className="qno">{q.n}</div>
+                    <div className="qico">{q.icon}</div>
+                    <h4>{q.title}</h4>
+                    <p>{q.body}</p>
+                  </div>
                 ))}
               </div>
-
-              {/* Pulse CTA button */}
-              <button
-                onClick={handleBundleCheckout}
-                style={{ width: '100%', background: 'linear-gradient(135deg, #16a34a, #15803d)', color: 'white', border: 'none', borderRadius: 16, padding: '20px 40px', fontFamily: 'var(--bn)', fontSize: isMobile ? 16 : 19, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 28px rgba(22,163,74,0.4)', transition: 'all .15s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, animation: 'fbPulse 2s infinite' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 14px 40px rgba(22,163,74,0.5)'; e.currentTarget.style.animation = 'none'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(22,163,74,0.4)'; e.currentTarget.style.animation = 'fbPulse 2s infinite'; }}
-              >
-                <span>🛒</span>
-                <span>নির্বাচিত {selected.size}টি বই কার্টে যোগ করুন → চেকআউট</span>
-              </button>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#9ca3af', textAlign: 'center', margin: '10px 0 0' }}>
-                ক্লিক করলে সরাসরি চেকআউটে যাবেন
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Book Quality ────────────────────────────────────────────────────── */}
-        <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: isMobile ? '52px 20px' : '72px 80px' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 999, padding: '6px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'var(--bn)', border: '1px solid rgba(251,191,36,0.3)' }}>প্রিমিয়াম মান</span>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: 'white', margin: '12px 0 8px' }}>দেশের সেরা কোয়ালিটি</h2>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 15, color: 'rgba(255,255,255,0.6)', margin: 0 }}>প্রতিটি বই হাতে নিলেই পার্থক্য বুঝবেন</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 20 }}>
-              {[
-                { icon: '📄', title: '70 GSM Offset Paper', body: 'চোখের জন্য আরামদায়ক উজ্জ্বল সাদা পেপার — দীর্ঘ সময় পড়লেও চোখ ক্লান্ত হয় না।', color: '#3b82f6' },
-                { icon: '📚', title: 'Good Binding', body: 'শক্তিশালী perfect binding — বারবার পড়লেও পেজ খুলে পড়বে না, বছরের পর বছর টেকে।', color: '#16a34a' },
-                { icon: '🎨', title: '300 GSM Artcut Cover', body: 'মোটা আর্টকাট কভার — চকচকে lamination-এ দেখতে যেমন সুন্দর, টেকসইও তেমনই।', color: '#ea580c' },
-                { icon: '🏆', title: 'দেশের সেরা কোয়ালিটি', body: 'বাংলাদেশের সেরা মুদ্রণ প্রযুক্তি ব্যবহার করে তৈরি — international standard-এ নির্মিত।', color: '#fbbf24' },
-              ].map((q, i) => (
-                <div key={i}
-                  style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '28px 22px', border: `1px solid rgba(255,255,255,0.08)`, display: 'flex', flexDirection: 'column', gap: 14, transition: 'all .2s ease', borderTop: `3px solid ${q.color}` }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'none'; }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `${q.color}20`, border: `1px solid ${q.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>{q.icon}</div>
-                  <div>
-                    <h3 style={{ fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 800, color: 'white', margin: '0 0 8px', lineHeight: 1.3 }}>{q.title}</h3>
-                    <p style={{ fontFamily: 'var(--bn)', fontSize: 13, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.75 }}>{q.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 32, background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.3)', borderRadius: 16, padding: isMobile ? '16px 20px' : '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 22 }}>✅</span>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 14 : 16, fontWeight: 800, color: '#4ade80', margin: 0, textAlign: 'center' }}>
-                প্রতিটি বই হাতে পেয়ে সন্তুষ্ট না হলে আমরা বদলে দেব — এটাই আমাদের প্রতিশ্রুতি
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Reviews ─────────────────────────────────────────────────────────── */}
-        <section style={{ background: '#f8fafc', padding: isMobile ? '52px 20px' : '72px 80px' }}>
-          <div ref={r6} style={{ ...fadeBase, maxWidth: 1200, margin: '0 auto' }}>
-            {/* Summary bar */}
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'white', borderRadius: 999, padding: '10px 28px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: 20, border: '1px solid #e5e7eb' }}>
-                <Stars size={22} />
-                <span style={{ fontFamily: 'var(--bn)', fontSize: 15, fontWeight: 800, color: '#0f172a' }}>গড় রেটিং: ৪.৯/৫</span>
-                <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#9ca3af' }}>—</span>
-                <span style={{ fontFamily: 'var(--bn)', fontSize: 13, color: '#6b7280' }}>৫০০+ পাঠক</span>
+              <div className="fb-promise">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1E3A2A" strokeWidth="1.5" style={{ flexShrink: 0 }}><path d="M12 2l9 4v6c0 5-3.8 9-9 10-5.2-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                <p><b>আমাদের প্রতিশ্রুতি:</b> বই পেয়ে যদি প্রিন্টে এতটুকু সমস্যা পান, পুরো টাকা ফেরত — কোনো প্রশ্ন নয়।</p>
               </div>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 32, fontWeight: 900, color: '#0f172a', margin: '0 0 8px' }}>পাঠকরা কী বলছেন</h2>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 14, color: '#6b7280', margin: 0 }}>৫০০+ সন্তুষ্ট পাঠকের মধ্যে থেকে কিছু মতামত</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24 }}>
-              {REVIEWS.map((r, i) => (
-                <div key={i} style={{ background: 'white', borderRadius: 20, padding: 28, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', overflow: 'hidden' }}>
-                  {/* Decorative quote */}
-                  <div style={{ position: 'absolute', top: 12, right: 20, fontSize: 72, color: '#c9a84c', opacity: 0.18, fontWeight: 900, fontFamily: 'serif', lineHeight: 1 }}>&ldquo;</div>
-                  <Stars size={16} />
-                  <p style={{ fontFamily: 'var(--bn)', fontSize: 15, color: '#374151', lineHeight: 1.8, margin: 0, position: 'relative', zIndex: 1 }}>&ldquo;{r.text}&rdquo;</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #16a34a, #14532d)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}>
-                      <span style={{ color: 'white', fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 800 }}>{r.name[0]}</span>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'var(--bn)', fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{r.name}</div>
-                      <div style={{ fontFamily: 'var(--bn)', fontSize: 12, color: '#16a34a', fontWeight: 700 }}>✅ যাচাইকৃত ক্রেতা · {r.location}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>
 
-        {/* ── FAQ ─────────────────────────────────────────────────────────────── */}
-        <section style={{ maxWidth: 780, margin: '0 auto', padding: isMobile ? '52px 20px' : '72px 48px' }}>
-          <div ref={r7} style={fadeBase}>
-            <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 24 : 30, fontWeight: 900, color: '#0f172a', margin: '0 0 8px' }}>সচরাচর জিজ্ঞাসা</h2>
-              <p style={{ fontFamily: 'var(--bn)', fontSize: 14, color: '#9ca3af', margin: 0 }}>যেকোনো প্রশ্ন থাকলে আমাদের সাথে যোগাযোগ করুন</p>
-            </div>
-            <div style={{ background: 'white', borderRadius: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-              {FAQS.map((faq, i) => (
-                <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? '1px solid #f1f5f9' : 'none', transition: 'background .2s ease' }}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 12 }}>
-                    <span style={{ fontFamily: 'var(--bn)', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{faq.q}</span>
-                    <span style={{ color: '#16a34a', fontSize: 18, fontWeight: 900, flexShrink: 0, transition: 'transform .25s ease', transform: openFaq === i ? 'rotate(180deg)' : 'none', display: 'inline-block' }}>▼</span>
-                  </button>
-                  <div style={{ maxHeight: openFaq === i ? '200px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease', borderLeft: openFaq === i ? '4px solid #16a34a' : '4px solid transparent' }}>
-                    <div style={{ padding: '0 24px 20px', fontFamily: 'var(--bn)', fontSize: 14, color: '#374151', lineHeight: 1.8 }}>{faq.a}</div>
-                  </div>
+        {/* ── Reviews ─────────────────────────────────────────────────── */}
+        <section className="fb-reviews-section">
+          <div className="fb-container">
+            <div ref={r7} style={fadeStyle}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 46 }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {REVIEWS.map((r, i) => (
+                    <div key={i} style={{ width: 36, height: 36, borderRadius: '50%', background: r.color, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: '"Fraunces",serif', fontWeight: 600, fontSize: 14, marginLeft: i === 0 ? 0 : -10, border: '2px solid #FBF8F2' }}>{r.init}</div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            {/* WhatsApp CTA below FAQ */}
-            <div style={{ marginTop: 24, textAlign: 'center' }}>
-              <a href={WA_LINK} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: 14, padding: '14px 28px', textDecoration: 'none', transition: 'all .2s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#dcfce7'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#f0fdf4'; }}>
-                <span style={{ color: '#25D366' }}><IcWhatsApp size={20} /></span>
-                <span style={{ fontFamily: 'var(--bn)', fontSize: 14, color: '#14532d', fontWeight: 700 }}>আরও প্রশ্ন আছে? WhatsApp-এ জিজ্ঞেস করুন →</span>
-              </a>
+                <div><Stars size={18} /> <span style={{ fontFamily: '"Inter",sans-serif', fontWeight: 600, color: '#3F3B33', fontSize: 14 }}><b className="fb-num">4.9</b>/৫ · ১৪২ পাঠক</span></div>
+              </div>
+              <div className="fb-section-head" style={{ marginBottom: 36 }}>
+                <h2 className="fb-section-title">পাঠকরা কী বলছেন</h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 18 }}>
+                {REVIEWS.map((r, i) => (
+                  <div key={i} className="fb-review">
+                    <Stars size={14} />
+                    <div className="fb-quote">&ldquo;</div>
+                    <p>{r.text}</p>
+                    <div className="fb-who">
+                      <div className="fb-av" style={{ background: r.color }}>{r.init}</div>
+                      <div className="fb-who-l">
+                        <b>{r.name}</b>
+                        <span>ভেরিফাইড ক্রেতা · {r.location}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ── Final CTA ───────────────────────────────────────────────────────── */}
-        <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #14532d 100%)', padding: isMobile ? '60px 20px' : '80px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, borderRadius: '50%', background: 'rgba(22,163,74,0.08)', pointerEvents: 'none' }} />
-          <div ref={r8} style={{ ...fadeBase, position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: 'var(--bn)', fontSize: 40, marginBottom: 12 }}>📚</div>
-            <h2 style={{ fontFamily: 'var(--bn)', fontSize: isMobile ? 26 : 40, fontWeight: 900, color: 'white', margin: '0 0 14px', lineHeight: 1.2 }}>
-              আজকেই শুরু হোক আপনার আর্থিক যাত্রা
-            </h2>
-            <p style={{ fontFamily: 'var(--bn)', fontSize: 16, color: 'rgba(255,255,255,0.65)', margin: '0 0 12px' }}>
-              সীমিত স্টক — অফার যেকোনো সময় শেষ হতে পারে
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 36 }}>
-              {[pad(timeLeft.h), pad(timeLeft.m), pad(timeLeft.s)].map((v, i) => (
-                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: 8, padding: '4px 12px', fontFamily: 'var(--sans)', fontWeight: 900, fontSize: 18 }}>{v}</span>
-                  {i < 2 && <span style={{ color: '#fef08a', fontWeight: 900, fontSize: 20 }}>:</span>}
-                </span>
+        {/* ── FAQ ─────────────────────────────────────────────────────── */}
+        <section className="fb-faq-section">
+          <div className="fb-container">
+            <div ref={r8} style={fadeStyle}>
+              <div className="fb-section-head">
+                <div className="fb-section-eyebrow">প্রশ্ন ও উত্তর</div>
+                <h2 className="fb-section-title">সচরাচর জিজ্ঞাসা</h2>
+              </div>
+              <div className="fb-faq-list">
+                {FAQS.map((faq, i) => (
+                  <div key={i} className={`fb-faq-item${openFaq === i ? ' on' : ''}`}>
+                    <button className="fb-faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                      {faq.q}
+                      <span className="fb-pm">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={openFaq === i ? 'white' : '#161510'} strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+                      </span>
+                    </button>
+                    <div className="fb-faq-a">
+                      <div className="fb-faq-a-inner">{faq.a}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="fb-faq-help">
+                <a href={WA_LINK} target="_blank" rel="noopener noreferrer">
+                  <span className="fb-wa-dot"><WaIcon size={11} /></span>
+                  আরও প্রশ্ন আছে? WhatsApp-এ মেসেজ করুন
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Final CTA ────────────────────────────────────────────────── */}
+        <section className="fb-final-cta">
+          <div className="fb-container">
+            <div className="fb-section-eyebrow">আজই শুরু করুন</div>
+            <h2>আজকেই শুরু হোক<br />আপনার আর্থিক যাত্রা</h2>
+            <p>৫টি বই, ৪৪% ছাড় — অফার শেষ হবে কাউন্টডাউনে।</p>
+            <div className="fb-final-cd">
+              {[{ v: pad(timeLeft.h), l: 'ঘণ্টা' }, { v: pad(timeLeft.m), l: 'মিনিট' }, { v: pad(timeLeft.s), l: 'সেকেন্ড' }].map((c, i) => (
+                <div key={i} className="fb-cd-box">
+                  <div className="n fb-num">{c.v}</div>
+                  <div className="l">{c.l}</div>
+                </div>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="#bundle" style={{ display: 'inline-block', background: '#16a34a', color: 'white', fontWeight: 800, fontFamily: 'var(--bn)', borderRadius: 16, padding: '18px 48px', fontSize: 17, textDecoration: 'none', boxShadow: '0 8px 28px rgba(22,163,74,0.45)', transition: 'all .15s ease', animation: 'fbPulse 2s infinite' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#15803d'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.animation = 'none'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#16a34a'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.animation = 'fbPulse 2s infinite'; }}>
-                এখনই অর্ডার করুন →
+            <div className="fb-cta-row" style={{ justifyContent: 'center' }}>
+              <a href="#builder" className="fb-btn fb-btn-primary">
+                এখনই অর্ডার করুন
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
-              <a href="#books" style={{ display: 'inline-block', background: 'transparent', color: 'white', fontWeight: 700, fontFamily: 'var(--bn)', borderRadius: 16, padding: '18px 32px', fontSize: 16, textDecoration: 'none', border: '2px solid rgba(255,255,255,0.3)', transition: 'all .15s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-                বইগুলো দেখুন
-              </a>
+              <a href="#books" className="fb-btn fb-btn-ghost">বইগুলো আবার দেখুন</a>
             </div>
           </div>
         </section>
@@ -821,38 +1123,24 @@ export default function FinanceBundleClient() {
 
       <Footer />
 
-      {/* ── Mobile sticky CTA ────────────────────────────────────────────────── */}
-      {isMobile && !atBundle && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 998, background: 'white', borderTop: '1px solid #e5e7eb', padding: '12px 16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'var(--bn)', fontSize: 11, color: '#9ca3af' }}>{selected.size}টি বই নির্বাচিত</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontFamily: 'var(--sans)', fontSize: 18, fontWeight: 900, color: '#16a34a' }}>৳{selectedTotal}</span>
-                <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>৳{selectedOriginal}</span>
-              </div>
-            </div>
-            <a href="#bundle" style={{ background: '#16a34a', color: 'white', border: 'none', borderRadius: 12, padding: '13px 20px', fontFamily: 'var(--bn)', fontSize: 14, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block' }}>
-              বই বেছে নিন →
-            </a>
+      {/* ── Mobile sticky bar ─────────────────────────────────────────── */}
+      {!atBundle && (
+        <div className="fb-mobile-bar">
+          <div className="mb-price">
+            <span className="now fb-num">৳{selectedTotal}</span>
+            <span className="was fb-num">৳{selectedOriginal}</span>
           </div>
+          <a href="#builder" className="fb-btn fb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
+            এখনই অর্ডার করুন
+          </a>
         </div>
       )}
 
-      {/* ── Floating WhatsApp button ─────────────────────────────────────────── */}
-      <a
-        href={WA_LINK}
-        target="_blank"
-        rel="noopener noreferrer"
-        title="WhatsApp-এ অর্ডার করুন"
-        style={{ position: 'fixed', bottom: isMobile ? 80 : 28, right: 24, zIndex: 9999, background: '#25D366', color: 'white', borderRadius: isMobile ? 999 : 999, padding: isMobile ? '14px 18px' : '14px 20px', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', boxShadow: '0 6px 24px rgba(37,211,102,0.45)', animation: 'fbWaBounce 2.5s ease-in-out infinite', transition: 'all .2s ease' }}
-        onMouseEnter={(e) => { e.currentTarget.style.animation = 'none'; e.currentTarget.style.transform = 'scale(1.06)'; e.currentTarget.style.boxShadow = '0 10px 32px rgba(37,211,102,0.6)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.animation = 'fbWaBounce 2.5s ease-in-out infinite'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(37,211,102,0.45)'; }}
-      >
-        <IcWhatsApp size={22} />
-        {(!isMobile) && <span style={{ fontFamily: 'var(--bn)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>অর্ডার করুন WhatsApp-এ</span>}
-        {isMobile && <span style={{ fontFamily: 'var(--bn)', fontSize: 12, fontWeight: 700 }}>WhatsApp</span>}
+      {/* ── WhatsApp float ────────────────────────────────────────────── */}
+      <a className="fb-whatsapp" href={WA_LINK} target="_blank" rel="noopener noreferrer">
+        <WaIcon size={18} />
+        সাহায্য
       </a>
-    </div>
+    </>
   );
 }
