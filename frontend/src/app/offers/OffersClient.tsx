@@ -204,7 +204,7 @@ export default function OffersClient() {
   // Fetch products
   useEffect(() => {
     api
-      .post('/product/get-all', { page: 1, limit: 30, type: 'featured' })
+      .get('/product/get-all-data')
       .then((res) => {
         if (res.data?.data) setProducts(res.data.data);
       })
