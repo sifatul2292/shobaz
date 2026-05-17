@@ -386,9 +386,9 @@ export default function FinanceBundleClient() {
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.07)'; }}
                   >
                     {/* Cover */}
-                    <div style={{ position: 'relative', height: 260, overflow: 'hidden', background: book.fallbackColor }}>
+                    <div style={{ position: 'relative', height: 260, overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {src ? (
-                        <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .3s ease' }} />
+                        <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform .3s ease' }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                           <span style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.4, fontWeight: 700 }}>{book.title}</span>
@@ -488,9 +488,9 @@ export default function FinanceBundleClient() {
                       style={{ position: 'relative', cursor: 'pointer', borderRadius: 16, border: `2.5px solid ${isSelected ? '#16a34a' : '#e5e7eb'}`, background: isSelected ? '#f0fdf4' : '#fafafa', transition: 'all .2s ease', overflow: 'hidden', boxShadow: isSelected ? '0 4px 16px rgba(22,163,74,0.2)' : '0 2px 8px rgba(0,0,0,0.04)' }}
                     >
                       {/* Cover */}
-                      <div style={{ height: isMobile ? 110 : 140, background: book.fallbackColor, overflow: 'hidden' }}>
+                      <div style={{ height: isMobile ? 110 : 140, background: '#f8fafc', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {src ? (
-                          <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: isSelected ? 'none' : 'grayscale(20%)' }} />
+                          <img src={src} alt={book.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: isSelected ? 'none' : 'grayscale(20%)' }} />
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
                             <span style={{ fontFamily: 'var(--sans)', fontSize: 9, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.4 }}>{book.title}</span>
