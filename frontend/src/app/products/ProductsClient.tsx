@@ -37,6 +37,7 @@ function ProductsContent() {
     category: searchParams.get('category') || '',
     author: searchParams.get('author') || '',
     publisher: searchParams.get('publisher') || '',
+    tag: searchParams.get('tag') || '',
     q: searchParams.get('q') || '',
     priceMin: '',
     priceMax: '',
@@ -47,6 +48,7 @@ function ProductsContent() {
       category: searchParams.get('category') || '',
       author: searchParams.get('author') || '',
       publisher: searchParams.get('publisher') || '',
+      tag: searchParams.get('tag') || '',
       q: searchParams.get('q') || '',
       priceMin: '',
       priceMax: '',
@@ -119,6 +121,15 @@ function ProductsContent() {
           return cat.some((c: any) => c.slug === filters.category);
         } else if (cat?.slug) {
           return cat.slug === filters.category;
+        }
+        return false;
+      });
+    }
+    if (filters.tag) {
+      filtered = filtered.filter((p: Product) => {
+        const tags = (p as any).tags;
+        if (Array.isArray(tags)) {
+          return tags.some((t: any) => t.slug === filters.tag);
         }
         return false;
       });
