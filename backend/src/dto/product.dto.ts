@@ -141,6 +141,7 @@ export class UpdateProductDto {
   @IsOptional() variationsOptions: any[];
   @IsOptional() hasVariations: boolean;
   @IsOptional() @IsArray() @IsString({ each: true }) @ArrayMaxSize(3) boughtTogetherIds: string[];
+  @IsOptional() boughtTogetherTitle: string;
   @IsOptional() @IsArray() @IsString({ each: true }) @ArrayMinSize(1) @ArrayMaxSize(50) ids: string[];
 }
 

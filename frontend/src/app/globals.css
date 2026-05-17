@@ -630,6 +630,12 @@ input[type="number"] {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Buy Now button glow pulse */
+@keyframes buy-now-glow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(21,128,61,0.30); }
+  50%       { box-shadow: 0 4px 28px rgba(21,128,61,0.65), 0 0 0 5px rgba(21,128,61,0.14); }
+}
+
 /* ── Homepage scroll-reveal ── */
 .reveal-s {
   opacity: 0;

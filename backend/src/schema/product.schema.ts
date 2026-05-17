@@ -499,6 +499,10 @@ export const ProductSchema = new mongoose.Schema(
       required: false,
       default: [],
     },
+    boughtTogetherTitle: {
+      type: String,
+      required: false,
+    },
   },
   {
     versionKey: false,

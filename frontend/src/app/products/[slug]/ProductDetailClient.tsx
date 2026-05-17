@@ -565,9 +565,18 @@ export default function ProductDetailClient({ params }: Props) {
               )}
 
               <h1 style={{
-                fontSize: 30, fontWeight: 800, color: '#0f172a', margin: '12px 0 12px',
-                lineHeight: 1.3, letterSpacing: '-0.005em'
+                fontSize: 30, fontWeight: 800, color: '#0f172a', margin: '12px 0 6px',
+                lineHeight: 1.3, letterSpacing: '-0.01em', fontFamily: 'var(--serif)'
               }}>{product.name}</h1>
+
+              {(product.taglineEn || product.tagline) && (
+                <p style={{
+                  fontStyle: 'italic', color: '#64748b', fontSize: 15, margin: '0 0 12px',
+                  lineHeight: 1.55, fontFamily: 'var(--serif)',
+                }}>
+                  {product.taglineEn || product.tagline}
+                </p>
+              )}
 
               {rating > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -621,8 +630,13 @@ export default function ProductDetailClient({ params }: Props) {
                 )}
               </div>
               {savings > 0 && (
-                <p style={{ margin: '8px 0 16px', color: PRIMARY, fontSize: 13, fontStyle: 'italic', fontWeight: 600 }}>
-                  আপনি বাঁচাচ্ছেন ৳{savings}
+                <p style={{ margin: '8px 0 4px', color: PRIMARY, fontSize: 13, fontStyle: 'italic', fontWeight: 600 }}>
+                  ✓ আপনি বাঁচাচ্ছেন ৳{savings}
+                </p>
+              )}
+              {product.dollarPrice && product.dollarPrice > 0 && (
+                <p style={{ margin: '4px 0 16px', fontSize: 13, color: '#64748b', fontFamily: 'var(--sans)' }}>
+                  আন্তর্জাতিক মূল্য ${product.dollarPrice} (~৳{Math.round(product.dollarPrice * 110).toLocaleString('bn-BD')}) — আজই পাচ্ছেন মাত্র ৳{currentPrice}!
                 </p>
               )}
 
@@ -646,11 +660,9 @@ export default function ProductDetailClient({ params }: Props) {
               {(product.description || product.shortDescription) && (
                 <>
                   <div style={{
-                    color: '#374151', lineHeight: 1.85, fontSize: 15,
-                    display: showFullDescription ? 'block' : '-webkit-box',
-                    WebkitLineClamp: showFullDescription ? 'none' : 4,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
+                    color: '#374151', lineHeight: 1.85, fontSize: 15, fontFamily: 'var(--sans)',
+                    maxHeight: showFullDescription ? undefined : '8.5em',
+                    overflow: 'hidden',
                   }}
                     dangerouslySetInnerHTML={{ __html: product.description || product.shortDescription || '' }}
                   />
@@ -692,20 +704,22 @@ export default function ProductDetailClient({ params }: Props) {
 
               {/* CTA buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <CTAButton
-                  onClick={handleAddToCart}
-                  style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', boxShadow: '0 4px 16px rgba(234,88,12,0.35)' }}
-                  hoverShadow="0 10px 24px rgba(234,88,12,0.45)"
-                >
-                  <IcCart /><span>কার্টে যোগ করুন</span>
-                </CTAButton>
-                <CTAButton
-                  onClick={handleBuyNow}
-                  style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', color: 'white', boxShadow: '0 4px 16px rgba(21,128,61,0.30)' }}
-                  hoverShadow="0 10px 24px rgba(21,128,61,0.4)"
-                >
-                  <IcBolt /><span>এখনই অর্ডার করুন</span>
-                </CTAButton>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <CTAButton
+                    onClick={handleAddToCart}
+                    style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', boxShadow: '0 4px 16px rgba(234,88,12,0.35)', fontSize: 14 }}
+                    hoverShadow="0 10px 24px rgba(234,88,12,0.45)"
+                  >
+                    <IcCart size={17} /><span>কার্টে যোগ করুন</span>
+                  </CTAButton>
+                  <CTAButton
+                    onClick={handleBuyNow}
+                    style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', color: 'white', boxShadow: '0 4px 16px rgba(21,128,61,0.30)', fontSize: 14, animation: 'buy-now-glow 2.2s ease-in-out infinite' }}
+                    hoverShadow="0 10px 24px rgba(21,128,61,0.4)"
+                  >
+                    <IcBolt /><span>এখনই অর্ডার করুন</span>
+                  </CTAButton>
+                </div>
                 <a
                   href={`https://wa.me/8801893058682?text=${encodeURIComponent(`আমি এই বইটি অর্ডার করতে চাই: ${product?.name}\nলিংক: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                   target="_blank"
@@ -713,7 +727,7 @@ export default function ProductDetailClient({ params }: Props) {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     background: '#ffffff', color: '#128C7E', border: '2px solid #25D366',
-                    borderRadius: 14, height: 56, fontSize: 16, fontWeight: 700,
+                    borderRadius: 14, height: 52, fontSize: 15, fontWeight: 700,
                     textDecoration: 'none', fontFamily: 'inherit',
                     transition: 'background .2s ease'
                   }}
@@ -810,7 +824,7 @@ export default function ProductDetailClient({ params }: Props) {
               boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>একসাথে কিনুন</h3>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--bn)' }}>{product.boughtTogetherTitle || 'একসাথে কিনুন'}</h3>
                 {bundleSavings > 0 && (
                   <span style={{ background: '#dcfce7', color: PRIMARY, padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800 }}>
                     ৳{bundleSavings.toFixed(0)} সাশ্রয়

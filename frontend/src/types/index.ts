@@ -34,7 +34,11 @@ export interface Product {
   reviews?: Review[];
   boughtTogether?: Product[];
   boughtTogetherProducts?: Product[];
+  boughtTogetherTitle?: string;
   bundleDiscount?: number;
+  tagline?: string;
+  taglineEn?: string;
+  dollarPrice?: number;
 }
 
 export interface Review {
