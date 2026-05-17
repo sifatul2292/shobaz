@@ -80,6 +80,7 @@ export class UpdateProductDto {
   @IsOptional() shortDescription: string;
   @IsOptional() tagline: string;
   @IsOptional() taglineEn: string;
+  @IsOptional() badge: string;
   @IsOptional() featureTitle: string;
   @IsOptional() costPrice: number;
   @IsOptional() salePrice: number;

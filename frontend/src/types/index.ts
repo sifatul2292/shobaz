@@ -38,6 +38,7 @@ export interface Product {
   bundleDiscount?: number;
   tagline?: string;
   taglineEn?: string;
+  badge?: string;
   dollarPrice?: number;
 }
 

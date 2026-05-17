@@ -42,6 +42,10 @@ export const ProductSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    badge: {
+      type: String,
+      required: false,
+    },
     featureTitle: {
       type: String,
       required: false,
