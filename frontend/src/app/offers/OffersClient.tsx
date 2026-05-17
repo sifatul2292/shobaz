@@ -109,14 +109,34 @@ const IcCompass = () => (
     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
   </svg>
 );
+const IcBriefcase = () => (
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2"/>
+    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+    <line x1="12" y1="12" x2="12" y2="12.01"/>
+    <path d="M2 12h20"/>
+  </svg>
+);
+const IcMessageCircle = () => (
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
+const IcCoin = () => (
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 6v2m0 8v2m-4-6h8"/>
+    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2.5-5 2.5-5 5a2.5 2.5 0 0 0 5 0"/>
+  </svg>
+);
 
 // ── Bundle data ──────────────────────────────────────────────────────────────
 const BUNDLES = [
   {
     label: 'কম্বো ১',
     name: 'সেলফ-হেল্প ট্রিও',
-    books: ['Atomic Habits', 'The Subtle Art', 'Psychology of Selling'],
-    slugs: ['atomic-habits', 'the-subtle-art-of-not-giving-a-fck', 'psychology-of-selling'],
+    books: ['Atomic Habits', 'The Subtle Art of Not Giving a F*ck', 'Deep Focus'],
+    slugs: ['atomic-habits', 'the-subtle-art-of-not-giving-a-fck', 'deep-focus'],
     individualTotal: 744,
     bundlePrice: 649,
     save: 95,
@@ -147,20 +167,6 @@ const BUNDLES = [
 // ── Category data ──────────────────────────────────────────────────────────
 const CATEGORIES = [
   {
-    name: 'মাইন্ডসেট ও সাইকোলজি',
-    discount: '৪০% পর্যন্ত',
-    slug: 'mindset-psychology',
-    gradient: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-    icon: <IcBrain />,
-  },
-  {
-    name: 'প্রোডাক্টিভিটি ও হ্যাবিট',
-    discount: '৫২% পর্যন্ত',
-    slug: 'productivity-habits',
-    gradient: 'linear-gradient(135deg, #ea580c, #f97316)',
-    icon: <IcZap />,
-  },
-  {
     name: 'মার্কেটিং ও লিডারশিপ',
     discount: '৩৫% পর্যন্ত',
     slug: 'marketing-leadership',
@@ -173,6 +179,41 @@ const CATEGORIES = [
     slug: 'philosophy-wisdom',
     gradient: 'linear-gradient(135deg, #15803d, #16a34a)',
     icon: <IcCompass />,
+  },
+  {
+    name: 'বিজনেস ও উদ্যোক্তা',
+    discount: '৩৮% পর্যন্ত',
+    slug: 'business-entrepreneurship',
+    gradient: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+    icon: <IcBriefcase />,
+  },
+  {
+    name: 'মাইন্ডসেট ও সাইকোলজি',
+    discount: '৪০% পর্যন্ত',
+    slug: 'mindset-psychology',
+    gradient: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+    icon: <IcBrain />,
+  },
+  {
+    name: 'পিপল স্কিলস ও কমিউনিকেশন',
+    discount: '৪৫% পর্যন্ত',
+    slug: 'people-skills-communication',
+    gradient: 'linear-gradient(135deg, #9333ea, #c084fc)',
+    icon: <IcMessageCircle />,
+  },
+  {
+    name: 'ফিন্যান্স ও ওয়েলথ',
+    discount: '৪২% পর্যন্ত',
+    slug: 'finance-wealth',
+    gradient: 'linear-gradient(135deg, #b45309, #f59e0b)',
+    icon: <IcCoin />,
+  },
+  {
+    name: 'প্রোডাক্টিভিটি ও হ্যাবিট',
+    discount: '৫২% পর্যন্ত',
+    slug: 'productivity-habits',
+    gradient: 'linear-gradient(135deg, #ea580c, #f97316)',
+    icon: <IcZap />,
   },
 ];
 
@@ -239,11 +280,16 @@ export default function OffersClient() {
   products.forEach((p) => { if (p.slug) bySlug[p.slug] = p; });
 
   // Build category→products map for category thumbnails
+  // API returns category as array of objects [{slug, name, ...}]
   const byCat: Record<string, Product[]> = {};
   products.forEach((p) => {
-    const cat = (p as any).category?.slug || (p as any).category || '';
-    if (!byCat[cat]) byCat[cat] = [];
-    if (byCat[cat].length < 3) byCat[cat].push(p);
+    const cats = Array.isArray((p as any).category) ? (p as any).category : [(p as any).category];
+    cats.forEach((c: any) => {
+      const slug = c?.slug || '';
+      if (!slug) return;
+      if (!byCat[slug]) byCat[slug] = [];
+      if (byCat[slug].length < 3) byCat[slug].push(p);
+    });
   });
 
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -795,6 +841,7 @@ export default function OffersClient() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
             {CATEGORIES.map((cat, ci) => {
               const catBooks = byCat[cat.slug] || [];
+              const isLastOdd = ci === CATEGORIES.length - 1 && CATEGORIES.length % 2 !== 0;
               return (
                 <Link
                   key={ci}
@@ -808,6 +855,7 @@ export default function OffersClient() {
                     textDecoration: 'none',
                     boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
                     transition: 'transform .2s ease, box-shadow .2s ease',
+                    gridColumn: isLastOdd ? 'span 2' : undefined,
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.14)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.08)'; }}
