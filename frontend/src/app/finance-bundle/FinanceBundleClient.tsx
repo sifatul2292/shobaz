@@ -210,10 +210,20 @@ export default function FinanceBundleClient() {
   }, []);
 
   const pad = (n: number) => String(n).padStart(2, '0');
-  const finalPrice = (book: typeof BOOKS[0]) => book.salePrice - book.discountAmount;
+  const getBookPricing = (book: typeof BOOKS[0]) => {
+    const p = bySlug[book.slug];
+    if (p?.salePrice) {
+      const original = p.salePrice;
+      const discount = p.discountAmount || 0;
+      const price = original - discount;
+      const pct = original > 0 ? Math.round((discount / original) * 100) : 0;
+      return { price, original, discountPct: pct };
+    }
+    return { price: book.salePrice - book.discountAmount, original: book.salePrice, discountPct: book.discountPct };
+  };
   const selectedBooks = BOOKS.filter((b) => selected.has(b.slug));
-  const selectedTotal = selectedBooks.reduce((s, b) => s + finalPrice(b), 0);
-  const selectedOriginal = selectedBooks.reduce((s, b) => s + b.salePrice, 0);
+  const selectedTotal = selectedBooks.reduce((s, b) => s + getBookPricing(b).price, 0);
+  const selectedOriginal = selectedBooks.reduce((s, b) => s + getBookPricing(b).original, 0);
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
@@ -789,7 +799,7 @@ export default function FinanceBundleClient() {
                               <div className="fb-bauth">{book.authorShort}</div>
                             </div>
                           )}
-                          {(i === 0 || i === 2) && <span className="fb-ptag">{book.discountPct}%</span>}
+                          {(i === 0 || i === 2) && <span className="fb-ptag">{getBookPricing(book).discountPct}%</span>}
                         </div>
                       );
                     })}
@@ -888,12 +898,12 @@ export default function FinanceBundleClient() {
                 {BOOKS.map((book) => {
                   const p = bySlug[book.slug];
                   const src = p ? imgUrl(p.images?.[0]) : null;
-                  const price = finalPrice(book);
+                  const { price, original, discountPct: bookDiscPct } = getBookPricing(book);
                   const tagline = p?.taglineEn ?? book.tagline;
                   return (
                     <div key={book.slug} className="fb-bcard">
                       <div className="fb-thumb" style={{ background: book.dark ? '#EEE7DA' : 'linear-gradient(160deg, #FBF8F2, #EEE7DA)' }}>
-                        <span className="fb-bdg">{book.discountPct}% OFF</span>
+                        <span className="fb-bdg">{bookDiscPct}% OFF</span>
                         {book.popular && <span className="fb-popular-badge">MOST POPULAR</span>}
                         {src ? (
                           <img src={src} alt={book.title} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
@@ -911,7 +921,7 @@ export default function FinanceBundleClient() {
                         <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">4.9</span></div>
                         <div className="fb-pline">
                           <span className="fb-pnow fb-num">৳{price}</span>
-                          <span className="fb-pwas fb-num">৳{book.salePrice}</span>
+                          <span className="fb-pwas fb-num">৳{original}</span>
                         </div>
                         <div className="fb-scarcity">⚡ মাত্র {book.stock} টি বাকি</div>
                         <div className="fb-actions">
@@ -950,7 +960,7 @@ export default function FinanceBundleClient() {
                     const p = bySlug[book.slug];
                     const src = p ? imgUrl(p.images?.[0]) : null;
                     const isOn = selected.has(book.slug);
-                    const price = finalPrice(book);
+                    const { price } = getBookPricing(book);
                     return (
                       <button key={book.slug} className={`fb-pick${isOn ? ' on' : ''}`} onClick={() => toggleBook(book.slug)}>
                         <div className="fb-pick-check">
