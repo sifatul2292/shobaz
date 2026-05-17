@@ -15,6 +15,7 @@
   var isAddPage = false;
   var selectedProducts = [];     // [{_id, name, images, salePrice}]
   var pendingNewProductId = null;// set when add-product API responds
+  var boughtTogetherTitle = '';
   var searchTimeout = null;
   var mountTimer = null;
   var PANEL_ID = 'bt-inline-panel';
@@ -61,7 +62,9 @@
           var newId = json && json.data && json.data._id;
           if (newId) {
             var ids = selectedProducts.map(function (p) { return p._id; });
-            apiPut('/api/product/update/' + newId, { boughtTogetherIds: ids })
+            var titleEl = document.getElementById('bt-title-input');
+            var titleVal = titleEl ? titleEl.value.trim() : '';
+            apiPut('/api/product/update/' + newId, { boughtTogetherIds: ids, boughtTogetherTitle: titleVal })
               .then(function () { showStatus('✅ Bought Together saved!'); })
               .catch(function (e) { console.error('[BT] post-save update failed', e); });
           }
@@ -173,11 +176,12 @@
     return j.data || [];
   }
 
-  async function saveToProduct(productId, ids) {
+  async function saveToProduct(productId, ids, title) {
+    var body = { boughtTogetherIds: ids, boughtTogetherTitle: title !== undefined ? title : '' };
     var res = await _origFetch(API + '/api/product/update/' + productId, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify({ boughtTogetherIds: ids }),
+      body: JSON.stringify(body),
     });
     return res.ok;
   }
@@ -198,6 +202,7 @@
         if (product && product.boughtTogetherIds && product.boughtTogetherIds.length) {
           selectedProducts = (await fetchProductsByIds(product.boughtTogetherIds)).slice(0, 3);
         }
+        boughtTogetherTitle = (product && product.boughtTogetherTitle) || '';
       } catch (e) {
         console.warn('[BT Widget] load error:', e);
       }
@@ -299,6 +304,10 @@
       '  </div>',
       '  <p class="bt-sub">Select up to 3 products to show in "Bought Together" on the product page.',
       '  If none selected, the global default applies.</p>',
+      '  <div class="bt-title-wrap">',
+      '    <div class="bt-section-lbl">Section Title</div>',
+      '    <input id="bt-title-input" class="bt-search-input" type="text" placeholder="e.g. একসাথে কিনুন (leave blank for default)" value="' + esc(boughtTogetherTitle) + '" />',
+      '  </div>',
       '  <div class="bt-selected-wrap">',
       '    <div class="bt-section-lbl">Selected Products</div>',
       '    <div id="bt-selected-list"></div>',
@@ -451,7 +460,9 @@
           sav.textContent = 'Saving…';
           try {
             var ids = selectedProducts.map(function (p) { return p._id; });
-            var ok = await saveToProduct(currentProductId, ids);
+            var titleEl = document.getElementById('bt-title-input');
+            var title = titleEl ? titleEl.value.trim() : '';
+            var ok = await saveToProduct(currentProductId, ids, title);
             showStatus(ok ? '✅ Saved successfully!' : 'Save failed.', !ok);
           } catch (e) {
             console.error('[BT Widget] save error:', e);
@@ -555,6 +566,9 @@
       '  white-space:nowrap;flex-shrink:0;transition:background .15s',
       '}',
       '#bt-inline-panel .bt-chip-remove:hover{background:#ffebee}',
+
+      /* Title input */
+      '#bt-inline-panel .bt-title-wrap{margin-bottom:16px}',
 
       /* Search */
       '#bt-inline-panel .bt-search-wrap{margin-bottom:16px}',
