@@ -351,6 +351,16 @@ export default function CheckoutPage() {
   const matchedRule = weightRules.find(r => totalKg >= r.fromGram && totalKg <= r.toGram);
   const baseFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
   const deliveryFee = matchedRule ? matchedRule.cost : baseFee;
+
+  // DEBUG — open browser console to see weight diagnostic
+  console.log('[Shipping Debug]', {
+    items: items.map(i => ({ name: i.product.name, weight: i.product.weight, qty: i.quantity })),
+    totalGrams,
+    totalKg,
+    weightRules,
+    matchedRule,
+    deliveryFee,
+  });
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
