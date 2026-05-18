@@ -312,6 +312,7 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '' });
   const [errors, setErrors] = useState({ name: '', phone: '', address: '' });
   const formRef = useRef<HTMLFormElement>(null);
+  const incompleteOrderSaved = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -350,6 +351,26 @@ export default function CheckoutPage() {
     if (!formData.address.trim()) { newErrors.address = 'ঠিকানা প্রয়োজন'; valid = false; }
     setErrors(newErrors);
     return valid;
+  };
+
+  const handleAddressBlur = () => {
+    if (incompleteOrderSaved.current) return;
+    const { name, phone, address } = formData;
+    if (!name.trim() || !/^01\d{9}$/.test(phone) || !address.trim()) return;
+    incompleteOrderSaved.current = true;
+    const shipping = deliveryLocation === 'inside' ? (shippingCharge?.deliveryInDhaka ?? 60) : (shippingCharge?.deliveryOutsideDhaka ?? 80);
+    const total = getTotalPrice() + shipping;
+    const orderedItems = items.map(item => {
+      const salePrice = item.product.salePrice || item.product.price || 0;
+      const discountAmt = item.product.discountAmount || 0;
+      const afterDiscountPrice = discountAmt > 0 ? salePrice - discountAmt : salePrice;
+      return { _id: item.product._id, name: item.product.name, unitPrice: afterDiscountPrice, quantity: item.quantity };
+    });
+    api.post('/order/add-incomplete-order', {
+      name: name.trim(), phoneNo: phone, shippingAddress: address.trim(),
+      paymentType: 'cod', deliveryCharge: shipping,
+      subTotal: getTotalPrice(), grandTotal: total, orderedItems,
+    }).catch(() => {});
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -434,7 +455,7 @@ export default function CheckoutPage() {
                     <textarea
                       value={formData.address}
                       onChange={e => { setFormData(d => ({ ...d, address: e.target.value })); if (errors.address) setErrors(v => ({ ...v, address: '' })); }}
-                      onFocus={focusIn as any} onBlur={focusOut as any}
+                      onFocus={focusIn as any} onBlur={e => { (focusOut as any)(e); handleAddressBlur(); }}
                       placeholder="বাড়ি নং, রোড নং, এলাকার নাম, জেলা"
                       style={{ ...((errors.address ? inputError : inputBase) as object), height: 100, padding: '14px 16px', resize: 'none', lineHeight: 1.6 } as React.CSSProperties}
                     />

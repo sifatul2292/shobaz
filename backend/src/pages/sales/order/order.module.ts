@@ -13,11 +13,13 @@ import { SpecialPackageSchema } from '../../../schema/special-package.schema';
 import { ShopInformationSchema } from '../../../schema/shop-information.schema';
 import { SettingSchema } from '../../customization/setting/schema/setting.schema';
 import { AdminSchema } from '../../../schema/admin.schema';
+import { IncompleteOrderSchema } from '../../../schema/incomplete-order.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'Order', schema: OrderSchema },
+      { name: 'IncompleteOrder', schema: IncompleteOrderSchema },
       { name: 'Product', schema: ProductSchema },
       { name: 'UniqueId', schema: UniqueIdSchema },
       { name: 'Cart', schema: CartSchema },

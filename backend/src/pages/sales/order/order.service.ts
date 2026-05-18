@@ -49,6 +49,7 @@ export class OrderService {
   constructor(
     @InjectModel('Admin') private readonly adminModel: Model<Admin>,
     @InjectModel('Order') private readonly orderModel: Model<Order>,
+    @InjectModel('IncompleteOrder') private readonly incompleteOrderModel: Model<any>,
     @InjectModel('Product') private readonly productModel: Model<Product>,
     @InjectModel('SpecialPackage')
     private readonly specialPackageModel: Model<SpecialPackage>,
@@ -392,11 +393,160 @@ export class OrderService {
   async addOrderByAnonymous(
     addOrderDto: AddOrderDto,
   ): Promise<ResponsePayload> {
-    // Add user ID on order dto
-    // if (user) {
-    //   addOrderDto.user = user._id;
-    // }
-    return this.addOrder(addOrderDto);
+    const result = await this.addOrder(addOrderDto);
+    if (result.success && addOrderDto.phoneNo) {
+      this.incompleteOrderModel
+        .deleteMany({ phoneNo: addOrderDto.phoneNo })
+        .exec()
+        .catch(() => {});
+    }
+    return result;
+  }
+
+  async addIncompleteOrder(dto: any): Promise<ResponsePayload> {
+    try {
+      await this.incompleteOrderModel.findOneAndUpdate(
+        { phoneNo: dto.phoneNo },
+        {
+          $set: {
+            name: dto.name,
+            phoneNo: dto.phoneNo,
+            shippingAddress: dto.shippingAddress,
+            paymentType: dto.paymentType || 'cod',
+            deliveryCharge: dto.deliveryCharge || 0,
+            subTotal: dto.subTotal || 0,
+            grandTotal: dto.grandTotal || 0,
+            orderedItems: dto.orderedItems || [],
+            checkoutDate: new Date(),
+          },
+        },
+        { upsert: true, new: true },
+      );
+      return { success: true, message: 'Incomplete order saved' };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  }
+
+  async getAllIncompleteOrders(
+    filterOrderDto: FilterAndPaginationOrderDto,
+    searchQuery?: string,
+  ): Promise<ResponsePayload> {
+    const { filter } = filterOrderDto;
+    const { pagination } = filterOrderDto;
+    const { sort } = filterOrderDto;
+    const { select } = filterOrderDto;
+
+    const aggregateStages = [];
+    let mFilter: any = {};
+    let mSort: any = {};
+    let mSelect: any = {};
+    let mPagination: any = {};
+
+    if (filter) {
+      mFilter = { ...mFilter, ...filter };
+    }
+
+    if (searchQuery) {
+      mFilter = {
+        $and: [
+          mFilter,
+          {
+            $or: [
+              { phoneNo: { $regex: searchQuery, $options: 'i' } },
+              { name: { $regex: searchQuery, $options: 'i' } },
+            ],
+          },
+        ],
+      };
+    }
+
+    if (sort) {
+      mSort = sort;
+    } else {
+      mSort = { createdAt: -1 };
+    }
+
+    if (select) {
+      mSelect = { ...select };
+    } else {
+      mSelect = { name: 1 };
+    }
+
+    if (Object.keys(mFilter).length) {
+      aggregateStages.push({ $match: mFilter });
+    }
+
+    if (Object.keys(mSort).length) {
+      aggregateStages.push({ $sort: mSort });
+    }
+
+    if (!pagination) {
+      aggregateStages.push({ $project: mSelect });
+    }
+
+    if (pagination) {
+      mPagination = {
+        $facet: {
+          metadata: [{ $count: 'total' }],
+          data: [
+            { $skip: Math.max(0, pagination.pageSize * pagination.currentPage) },
+            { $limit: pagination.pageSize },
+            { $project: mSelect },
+          ],
+        },
+      };
+      aggregateStages.push(mPagination);
+      aggregateStages.push({
+        $project: {
+          data: 1,
+          count: { $arrayElemAt: ['$metadata.total', 0] },
+        },
+      });
+    }
+
+    try {
+      const dataAggregates =
+        await this.incompleteOrderModel.aggregate(aggregateStages);
+      if (pagination) {
+        return {
+          success: true,
+          message: 'Success',
+          data: dataAggregates[0]?.data || [],
+          count: dataAggregates[0]?.count || 0,
+        } as ResponsePayload;
+      } else {
+        return {
+          success: true,
+          message: 'Success',
+          data: dataAggregates,
+          count: dataAggregates.length,
+        } as ResponsePayload;
+      }
+    } catch (err) {
+      return { success: false, message: err.message } as ResponsePayload;
+    }
+  }
+
+  async getIncompleteOrderById(id: string): Promise<ResponsePayload> {
+    try {
+      const data = await this.incompleteOrderModel.findById(id);
+      return { success: true, message: 'Success', data } as ResponsePayload;
+    } catch (err) {
+      return { success: false, message: err.message } as ResponsePayload;
+    }
+  }
+
+  async updateIncompleteOrderById(
+    id: string,
+    dto: any,
+  ): Promise<ResponsePayload> {
+    try {
+      await this.incompleteOrderModel.findByIdAndUpdate(id, { $set: dto });
+      return { success: true, message: 'Updated' } as ResponsePayload;
+    } catch (err) {
+      return { success: false, message: err.message } as ResponsePayload;
+    }
   }
 
   async updateDate(): Promise<ResponsePayload> {

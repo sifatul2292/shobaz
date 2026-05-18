@@ -151,6 +151,37 @@ export class OrderController {
     return this.orderService.generateInvoicesByIds(dto.ids);
   }
 
+  @Post('/add-incomplete-order')
+  async addIncompleteOrder(@Body() dto: any): Promise<ResponsePayload> {
+    return this.orderService.addIncompleteOrder(dto);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Post('/get-all-incomplete-orders')
+  async getAllIncompleteOrders(
+    @Body() filterOrderDto: FilterAndPaginationOrderDto,
+    @Query('q') searchString: string,
+  ): Promise<ResponsePayload> {
+    return this.orderService.getAllIncompleteOrders(filterOrderDto, searchString);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Get('/incomplete/:id')
+  async getIncompleteOrderById(
+    @Param('id', MongoIdValidationPipe) id: string,
+  ): Promise<ResponsePayload> {
+    return this.orderService.getIncompleteOrderById(id);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Put('/update-incomplete-order-by-id/:id')
+  async updateIncompleteOrderById(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @Body() dto: any,
+  ): Promise<ResponsePayload> {
+    return this.orderService.updateIncompleteOrderById(id, dto);
+  }
+
   /**
    * getAllOrders
    * getOrderById
