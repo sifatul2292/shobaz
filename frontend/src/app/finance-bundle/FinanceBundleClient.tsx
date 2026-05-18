@@ -355,7 +355,7 @@ export default function FinanceBundleClient() {
         .fb-section-sub { color: #3F3B33; font-size: 16px; max-width: 560px; margin: 0 auto; }
 
         /* Hero */
-        .fb-hero { padding: 72px 0 84px; background: #F4EFE6; position: relative; overflow: hidden; }
+        .fb-hero { padding: 72px 0 84px; background: #F4EFE6; position: relative; overflow: hidden; max-width: 100vw; }
         .fb-hero-art { position: absolute; right: -6%; top: -10%; width: 60%; height: 120%; pointer-events: none; z-index: 0; }
         .fb-container { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
         .fb-hero-grid {
@@ -674,8 +674,9 @@ export default function FinanceBundleClient() {
         @media (max-width:900px) {
           .fb-hero { padding:40px 0 32px; }
           .fb-hero-grid { grid-template-columns:1fr; gap:28px; }
-          .fb-stack-wrap { height:340px; order:-1; }
-          .fb-stack { transform:scale(0.82); transform-origin: center center; }
+          .fb-stack-wrap { height:340px; order:-1; width:100%; overflow:hidden; }
+          .fb-stack { transform:scale(0.82); transform-origin: center top; }
+          .fb-sub { max-width:100%; }
           .fb-lede-bn { font-size:32px; }
           .fb-price-now { font-size:36px; }
           .fb-problems { grid-template-columns:1fr; }
@@ -691,10 +692,12 @@ export default function FinanceBundleClient() {
           .fb-mobile-bar { display:flex; }
           body { padding-bottom: 76px; }
           .fb-whatsapp { bottom:84px; right:14px; padding:10px 14px; font-size:13px; }
-          .fb-stack-wrap { height:280px; }
-          .fb-stack { transform:scale(0.68); }
+          .fb-stack-wrap { height:260px; width:100%; overflow:hidden; }
+          .fb-stack { transform:scale(0.62); transform-origin: center top; }
           .fb-lede-bn { font-size:27px; }
-          .fb-sub { font-size:15px; }
+          .fb-sub { font-size:15px; max-width:100%; }
+          .fb-price-row { gap:10px; }
+          .fb-save-pill { font-size:11px; }
           .fb-cta-row .fb-btn { flex:1 1 100%; }
           .fb-final-cta { padding:64px 0; }
           .fb-value-row > div:nth-child(n+3) { display:none; }
@@ -754,9 +757,9 @@ export default function FinanceBundleClient() {
                     দুনিয়ার সবচেয়ে প্রভাবশালী ফিন্যান্স ক্লাসিকগুলো — এক প্যাকে, <b>৪৪% ছাড়ে</b>। যারা টাকার সাথে নিজের সম্পর্ক বদলাতে চান, তাদের জন্য।
                   </p>
                   <div className="fb-price-row">
-                    <span className="fb-price-now fb-num">৳1,786</span>
-                    <span className="fb-price-was fb-num">৳3,213</span>
-                    <span className="fb-save-pill">SAVE ৳1,427</span>
+                    <span className="fb-price-now fb-num">৳{selectedTotal.toLocaleString('en-IN')}</span>
+                    <span className="fb-price-was fb-num">৳{selectedOriginal.toLocaleString('en-IN')}</span>
+                    <span className="fb-save-pill">SAVE ৳{savedAmount.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="fb-cta-row">
                     <a href="#builder" className="fb-btn fb-btn-primary">
