@@ -738,11 +738,14 @@ export default function FinanceBundleClient() {
                 <div>
                   <span className="fb-eyebrow"><span className="dot" />৫টি বইয়ের একচেটিয়া বান্ডেল</span>
                   <h1 className="fb-lede-bn">
-                    অর্থনৈতিক স্বাধীনতার পথে<br />
-                    <span>আপনার ৫ জন সঙ্গী।</span>
+                    <span>কেন বেশিরভাগ মানুষ সারাজীবন আয় করেও Wealth তৈরি করতে পারে না?</span>
                   </h1>
                   <p className="fb-sub">
-                    দুনিয়ার সবচেয়ে প্রভাবশালী ফিন্যান্স ক্লাসিকগুলো — এক প্যাকে, <b>৪৪% ছাড়ে</b>। যারা টাকার সাথে নিজের সম্পর্ক বদলাতে চান, তাদের জন্য।
+                    পরিবার, স্কুল-কলেজ—সব জায়গায় অনেক কিছু শেখানো হয়।
+                    কিন্তু money management, saving, investing আর wealth building-এর মতো জরুরি বিষয়গুলো বাংলাদেশে এখনো সবচেয়ে বেশি উপেক্ষিত।
+                  </p>
+                  <p className="fb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
+                    এই ৫টি বিশ্ববিখ্যাত Finance বই আপনাকে শেখাবে টাকা চিনতে, ধরে রাখতে এবং grow করতে।
                   </p>
                   <div className="fb-price-row">
                     <span className="fb-price-now fb-num">৳{selectedTotal.toLocaleString('en-IN')}</span>
@@ -751,7 +754,7 @@ export default function FinanceBundleClient() {
                   </div>
                   <div className="fb-cta-row">
                     <a href="#builder" className="fb-btn fb-btn-primary">
-                      এখনই অর্ডার করুন
+                      ৪৪% ছাড়ে এখনই অর্ডার করুন
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
                     <a href="#books" className="fb-btn fb-btn-ghost">সব বই দেখুন</a>
@@ -822,14 +825,13 @@ export default function FinanceBundleClient() {
             <div ref={r2} style={fadeStyle}>
               <div className="fb-section-head">
                 <div className="fb-section-eyebrow">আপনার পরিচিত সমস্যা</div>
-                <h2 className="fb-section-title">আপনি কি এই সমস্যাগুলোর কোনোটায় আছেন?</h2>
-                <p className="fb-section-sub">প্রায় প্রত্যেক বাঙালি মধ্যবিত্ত এই তিনটির একটা বা একাধিক সমস্যা প্রতিদিন ভোগেন। আপনি একা নন।</p>
+                <h2 className="fb-section-title">সমস্যা আয় কম হওয়া নয়, সমস্যা financial literacy-র অভাব</h2>
               </div>
               <div className="fb-problems">
                 {[
-                  { num: '01', ico: '৳', title: 'টাকা কোথায় যায় বুঝতে পারেন না', body: 'মাস শেষে মনে হয় হাত খালি, কিন্তু কোথায় খরচ হলো হিসাব মেলে না। বাজেট, সেভিং, ইনভেস্ট — সবই অস্পষ্ট।' },
-                  { num: '02', ico: '↗', title: 'সঞ্চয় শুরু হয় না', body: '"পরের মাস থেকে শুরু করব" — এই অপেক্ষায় বছর কেটে যায়। কোথা থেকে শুরু করবেন সেটাই বুঝে উঠতে পারেন না।' },
-                  { num: '03', ico: '⊘', title: 'বিনিয়োগে ভয় লাগে', body: 'স্টক, রিয়েল এস্টেট, ব্যবসা — সবকিছুই ঝুঁকি মনে হয়। ভুল সিদ্ধান্তের ভয়ে কিছুই করা হয় না।' },
+                  { num: '01', ico: '৳', title: 'মাস শেষে টাকা থাকে না', body: 'অনেকেই ভালো আয় করেন, কিন্তু মাস শেষে টাকা থাকে না।' },
+                  { num: '02', ico: '↗', title: 'সঞ্চয় শুরু করতে পারেন না', body: 'অনেকে সঞ্চয় করতে চান, কিন্তু শুরু করতে পারেন না।' },
+                  { num: '03', ico: '⊘', title: 'বিনিয়োগে ভয় পিছিয়ে রাখে', body: 'অনেকে ইনভেস্ট করতে চান, কিন্তু ভয় আর ভুল ধারণার কারণে পিছিয়ে যান।' },
                 ].map((c, i) => (
                   <div key={i} className="fb-problem">
                     <div className="fb-num-mark">{c.num}</div>
@@ -843,7 +845,7 @@ export default function FinanceBundleClient() {
                 <div className="fb-check">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M5 12l5 5L20 7"/></svg>
                 </div>
-                <div>এই ৫টি বই-ই আপনার সব প্রশ্নের উত্তর দেবে — <b>প্রমাণিত।</b></div>
+                <div>কারণ ধনী হতে হলে শুধু আয় করলেই হয় না — জানতে হয় কীভাবে চিন্তা করতে হয়, টাকাকে কাজে লাগাতে হয়, আর ধরে রাখতে হয়।</div>
               </div>
             </div>
           </div>
@@ -855,16 +857,16 @@ export default function FinanceBundleClient() {
             <div ref={r3} style={fadeStyle}>
               <div className="fb-section-head">
                 <div className="fb-section-eyebrow">আপনি যা শিখবেন</div>
-                <h2 className="fb-section-title">এই বইগুলো পড়ে আপনার জীবন বদলাবে</h2>
+                <h2 className="fb-section-title">এই ৫টি বই আপনাকে শেখাবে—</h2>
               </div>
               <div className="fb-benefits-grid">
                 {[
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.7.8 1 1.8 1 2.8v.5h6V17.5c0-1 .3-2 1-2.8A7 7 0 0 0 12 2z"/></svg>, text: 'টাকার সাথে নিজের সম্পর্ক নতুনভাবে বুঝতে শিখবেন' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M3 21V7l9-4 9 4v14M9 21V12h6v9"/></svg>, text: 'লোন আর জাল থেকে বাঁচার বাস্তব রাস্তা পাবেন' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'সঠিক financial structures ও decisions নিতে পারবেন' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>, text: 'সঠিক বিনিয়োগের কৌশল রপ্ত করতে পারবেন' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M13 2L4 14h7l-2 8 11-12h-7z"/></svg>, text: 'সহজ habits তৈরি করে দীর্ঘমেয়াদে ধনী হবেন' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM3 15h6M15 15h6"/></svg>, text: 'একটি smart money management system গড়ে তুলবেন' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.7.8 1 1.8 1 2.8v.5h6V17.5c0-1 .3-2 1-2.8A7 7 0 0 0 12 2z"/></svg>, text: 'টাকার psychology ও behavior' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M3 21V7l9-4 9 4v14M9 21V12h6v9"/></svg>, text: 'Asset ও liability-র পার্থক্য' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'Smart investing-এর মূলনীতি' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>, text: 'Wealth mindset ও long-term thinking' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M13 2L4 14h7l-2 8 11-12h-7z"/></svg>, text: 'Practical money management system' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM3 15h6M15 15h6"/></svg>, text: 'Simple habit দিয়ে financial future গড়ার উপায়' },
                 ].map((b, i) => (
                   <div key={i} className="fb-benefit">
                     <div className="fb-b-ico">{b.icon}</div>
@@ -882,7 +884,7 @@ export default function FinanceBundleClient() {
             <div ref={r4} style={fadeStyle}>
               <div className="fb-section-head">
                 <div className="fb-section-eyebrow">যা যা আছে বান্ডেলে</div>
-                <h2 className="fb-section-title">৫টি সেরা ফিন্যান্স বই</h2>
+                <h2 className="fb-section-title">দুনিয়ার সবচেয়ে সফল মানুষদের পড়া ৫টি must-read Finance বই এখন এক বান্ডেলে</h2>
                 <p className="fb-section-sub">প্রতিটি বই আন্তর্জাতিক বেস্টসেলার ও সময়ের পরীক্ষায় উত্তীর্ণ।</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: bookGridCols, gap: 16 }}>
@@ -1011,9 +1013,9 @@ export default function FinanceBundleClient() {
           <div className="fb-container">
             <div ref={r6} style={fadeStyle}>
               <div className="fb-section-head">
-                <div className="fb-section-eyebrow">মুদ্রণের মান</div>
-                <h2 className="fb-section-title">দেশের সেরা কোয়ালিটি</h2>
-                <p className="fb-section-sub">প্রতিটি বই হাতে নিলেই বুঝবেন পার্থক্য।</p>
+                <div className="fb-section-eyebrow">অফার</div>
+                <h2 className="fb-section-title">৫টি বই একসাথে পাচ্ছেন ৪৪% ছাড়ে</h2>
+                <p className="fb-section-sub">প্রিমিয়াম প্রিন্ট, clear text এবং মজবুত binding সহ। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
                 {[
@@ -1110,8 +1112,8 @@ export default function FinanceBundleClient() {
         <section className="fb-final-cta">
           <div className="fb-container">
             <div className="fb-section-eyebrow">আজই শুরু করুন</div>
-            <h2>আজকেই শুরু হোক<br />আপনার আর্থিক যাত্রা</h2>
-            <p>৫টি বই, ৪৪% ছাড় — অফার শেষ হবে কাউন্টডাউনে।</p>
+            <h2>আজই অর্ডার কনফার্ম করুন</h2>
+            <p>shobaz.com অথবা WhatsApp-এর মাধ্যমে।</p>
             <div className="fb-final-cd">
               {[{ v: pad(timeLeft.h), l: 'ঘণ্টা' }, { v: pad(timeLeft.m), l: 'মিনিট' }, { v: pad(timeLeft.s), l: 'সেকেন্ড' }].map((c, i) => (
                 <div key={i} className="fb-cd-box">
