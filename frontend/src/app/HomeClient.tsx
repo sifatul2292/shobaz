@@ -254,6 +254,7 @@ export default function HomePage() {
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [bundleTimeLeft, setBundleTimeLeft] = useState({ h: 0, m: 0, s: 0 });
   const tagScrollRef = useRef<HTMLDivElement>(null);
 
   const handleAddToCart = useCallback((product: Product) => {
@@ -343,6 +344,18 @@ export default function HomePage() {
     sections.forEach(s => io.observe(s));
     return () => io.disconnect();
   }, [loading]);
+
+  useEffect(() => {
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 0);
+    const tick = () => {
+      const d = Math.max(0, endOfDay.getTime() - Date.now());
+      setBundleTimeLeft({ h: Math.floor(d / 3600000), m: Math.floor((d % 3600000) / 60000), s: Math.floor((d % 60000) / 1000) });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   if (loading) {
     return (
@@ -632,6 +645,110 @@ export default function HomePage() {
             </Swiper>
           </section>
         )}
+
+        {/* ── Bundle Cards ── */}
+        {(() => {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const bySlug = Object.fromEntries(allProducts.map(p => [p.slug, p]));
+          const FINANCE_SLUGS = ['i-will-teach-you-to-be-rich', 'the-intelligent-investor', 'rich-dad-poor-dad', 'the-psychology-of-money', 'think-and-grow-rich'];
+          const COMM_SLUGS = ['influence-the-psychology-of-persuasion', 'the-48-laws-of-power', 'how-to-win-friends-influence-people', 'never-split-the-difference', 'crucial-conversations'];
+          const BUNDLES = [
+            { name: 'Finance Bundle', label: 'অর্থনৈতিক স্বাধীনতার পথে ৫টি সেরা বই', href: '/finance-bundle', slugs: FINANCE_SLUGS, total: 1786, original: 2985, pct: 40, accent: '#1E3A2A', light: '#DCE7DC' },
+            { name: 'Communication Bundle', label: 'মানুষের মন জয় করার ৫টি সেরা বই', href: '/communication-bundle', slugs: COMM_SLUGS, total: 1682, original: 2769, pct: 39, accent: '#1B3D6B', light: '#DCEAF5' },
+          ];
+          return (
+            <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 8px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                  <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>Exclusive Bundles</h2>
+                  <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>সর্বোচ্চ ছাড়ে ৫টি বই একসাথে — সীমিত সময়ের অফার</p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                {BUNDLES.map((bundle) => (
+                  <Link key={bundle.href} href={bundle.href} style={{ textDecoration: 'none' }}>
+                    <div style={{
+                      background: '#fff', borderRadius: 20, overflow: 'hidden',
+                      border: '1px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                      transition: 'transform .2s ease, box-shadow .2s ease', cursor: 'pointer',
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 40px rgba(0,0,0,0.12)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.06)'; }}
+                    >
+                      {/* Header band */}
+                      <div style={{ background: bundle.accent, padding: '18px 22px 14px', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: -30, right: -20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                        <div style={{ position: 'absolute', bottom: -40, left: '30%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px', marginBottom: 8 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E8C075', display: 'inline-block' }} />
+                            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#E8C075', fontFamily: 'var(--sans)' }}>৫টি বইয়ের বান্ডেল</span>
+                          </div>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', fontFamily: 'var(--bn)', lineHeight: 1.2 }}>{bundle.name}</div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontFamily: 'var(--bn)' }}>{bundle.label}</div>
+                        </div>
+                      </div>
+
+                      {/* Book covers row */}
+                      <div style={{ padding: '16px 22px 8px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+                          {bundle.slugs.map((slug, i) => {
+                            const p = bySlug[slug];
+                            const src = p ? imgUrl(p.images?.[0]) : null;
+                            const colors = ['#1B3D6B', '#8B0000', '#F5F0E8', '#F5C518', '#C41E3A'];
+                            return (
+                              <div key={slug} style={{
+                                width: 44, height: 64, borderRadius: '2px 4px 4px 2px', flexShrink: 0,
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.18)',
+                                transform: `rotate(${[-3,-1,0,1,3][i]}deg) translateY(${[4,2,0,2,4][i]}px)`,
+                                overflow: 'hidden', background: colors[i % colors.length],
+                                border: '1px solid rgba(0,0,0,0.08)',
+                              }}>
+                                {src ? <img src={src} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Price + timer + CTA */}
+                      <div style={{ padding: '16px 22px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                              <span style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--sans)' }}>৳{bundle.total.toLocaleString('en-IN')}</span>
+                              <span style={{ fontSize: 14, color: '#94a3b8', textDecoration: 'line-through', fontFamily: 'var(--sans)' }}>৳{bundle.original.toLocaleString('en-IN')}</span>
+                              <span style={{ background: '#fee2e2', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4, fontFamily: 'var(--sans)' }}>{bundle.pct}% OFF</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'var(--bn)' }}>৫টি বই একসাথে · ৳{(bundle.original - bundle.total).toLocaleString('en-IN')} সাশ্রয়</div>
+                          </div>
+                        </div>
+                        {/* Countdown */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, marginBottom: 14 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e97316" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                          <span style={{ fontSize: 12, color: '#e97316', fontWeight: 600, fontFamily: 'var(--sans)' }}>অফার শেষ হবে:</span>
+                          {[pad(bundleTimeLeft.h), pad(bundleTimeLeft.m), pad(bundleTimeLeft.s)].map((v, i) => (
+                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                              <span style={{ background: '#0f172a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12, fontWeight: 700, fontFamily: 'var(--sans)' }}>{v}</span>
+                              {i < 2 && <span style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>:</span>}
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{
+                          background: bundle.accent, color: '#fff', borderRadius: 10,
+                          padding: '11px 18px', fontSize: 14, fontWeight: 700,
+                          textAlign: 'center', fontFamily: 'var(--bn)',
+                        }}>
+                          বান্ডেল দেখুন →
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ── Book Sections ── */}
         {activeSections.length > 0 ? (

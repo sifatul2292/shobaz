@@ -21,14 +21,15 @@ function getDynamicHref(slug: string) {
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'All Books', href: '/products' },
-  { label: 'Bestselling', href: '/products?tag=bestselling' },
-  { label: 'Business', href: '/products?tag=business-entrepreneurship' },
-  { label: 'Marketing', href: '/products?tag=marketing-leadership' },
-  { label: 'Finance', href: '/products?tag=finance-wealth' },
-  { label: 'Mindset', href: '/products?tag=mindset-psychology' },
-  { label: 'Productivity', href: '/products?tag=productivity-habits' },
-  { label: 'Communication', href: '/products?tag=people-skills-communication' },
+  { label: 'Bestselling', href: '/products?tag=our-bestselling-books' },
+  { label: 'Business', href: '/products?tag=business-and-entrepreneurship' },
+  { label: 'Marketing', href: '/products?tag=marketing-and-leadership' },
+  { label: 'Finance', href: '/products?tag=finance-and-wealth' },
+  { label: 'Mindset', href: '/products?tag=mindset-and-psychology' },
+  { label: 'Productivity', href: '/products?tag=productivity-and-habits' },
+  { label: 'Communication', href: '/products?tag=people-skill-and-communication' },
   { label: 'Finance Bundle', href: '/finance-bundle' },
+  { label: 'Communication Bundle', href: '/communication-bundle' },
 ];
 
 const ANNOUNCEMENTS = [
