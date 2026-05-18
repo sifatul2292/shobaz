@@ -2385,14 +2385,13 @@ async updateOrderById(
 
     if (!rules || rules.length === 0) return fallbackCharge;
 
-    // product.weight is stored in grams; rule fromGram/toGram store kg values
+    // product.weight is stored in grams; rules fromGram/toGram are also grams
     const totalGrams = cartItems.reduce((sum, item) => {
       return sum + (item.product?.weight || 0) * (item.selectedQty || 1);
     }, 0);
-    const totalKg = totalGrams / 1000;
 
     const matchedRule = rules.find(
-      (r) => totalKg >= r.fromGram && totalKg <= r.toGram,
+      (r) => totalGrams >= r.fromGram && totalGrams <= r.toGram,
     );
 
     return matchedRule ? matchedRule.cost : fallbackCharge;

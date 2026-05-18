@@ -314,6 +314,7 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
+  const [productWeightMap, setProductWeightMap] = useState<Record<string, number>>({});
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
   const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '' });
   const [errors, setErrors] = useState({ name: '', phone: '', address: '' });
@@ -325,6 +326,18 @@ export default function CheckoutPage() {
       if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items.map(i => i.product._id).filter(Boolean);
+    api.post('/product/get-products-by-ids', { ids }).then(res => {
+      if (res.data?.data) {
+        const map: Record<string, number> = {};
+        res.data.data.forEach((p: any) => { map[p._id] = Number(p.weight) || 0; });
+        setProductWeightMap(map);
+      }
+    }).catch(() => {});
+  }, [items.length]);
 
   useEffect(() => {
     document.title = 'চেকআউট - Shobaz';
@@ -343,24 +356,18 @@ export default function CheckoutPage() {
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
 
   // Weight-based delivery charge lookup
-  const totalGrams = items.reduce((sum, i) => sum + Number(i.product.weight || 0) * i.quantity, 0);
-  const totalKg = totalGrams / 1000;
+  // Use fresh weights from DB (productWeightMap) — cart may have stale/missing weight
+  // Rules store grams (fromGram/toGram are gram values despite the kg labels in admin UI)
+  const totalGrams = items.reduce((sum, i) => {
+    const weight = productWeightMap[i.product._id] ?? Number(i.product.weight || 0);
+    return sum + weight * i.quantity;
+  }, 0);
   const weightRules = deliveryLocation === 'inside'
     ? (shippingCharge?.insideDhakaRules ?? [])
     : (shippingCharge?.outsideDhakaRules ?? []);
-  const matchedRule = weightRules.find(r => totalKg >= r.fromGram && totalKg <= r.toGram);
+  const matchedRule = weightRules.find(r => totalGrams >= r.fromGram && totalGrams <= r.toGram);
   const baseFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
   const deliveryFee = matchedRule ? matchedRule.cost : baseFee;
-
-  // DEBUG — open browser console to see weight diagnostic
-  console.log('[Shipping Debug]', {
-    items: items.map(i => ({ name: i.product.name, weight: i.product.weight, qty: i.quantity })),
-    totalGrams,
-    totalKg,
-    weightRules,
-    matchedRule,
-    deliveryFee,
-  });
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
