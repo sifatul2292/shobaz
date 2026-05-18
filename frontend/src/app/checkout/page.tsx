@@ -335,10 +335,12 @@ export default function CheckoutPage() {
     api.post('/product/get-products-by-ids', { ids }, { params: { select: 'weight' } })
       .then(res => {
         const products: any[] = res.data?.data || [];
+        console.log('[WEIGHT] raw products from API:', products.map((p: any) => ({ id: p._id, weight: p.weight })));
         const map: Record<string, number> = {};
         products.forEach((p: any) => { map[p._id] = Number(p.weight) || 0; });
+        console.log('[WEIGHT] freshWeights map:', map);
         setFreshWeights(map);
-      }).catch(() => {});
+      }).catch((err) => { console.error('[WEIGHT] fetch failed:', err); });
   }, []);
 
   useEffect(() => {
@@ -370,6 +372,7 @@ export default function CheckoutPage() {
   const deliveryFee = deliveryLocation === 'inside'
     ? calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)
     : calcWeightFee(shippingCharge?.outsideDhakaRules, outsideFee);
+  console.log('[WEIGHT] totalWeightGrams:', totalWeightGrams, '| deliveryFee:', deliveryFee, '| location:', deliveryLocation);
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
