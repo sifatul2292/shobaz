@@ -663,7 +663,7 @@ export default function FinanceBundleClient() {
         @media (max-width:900px) {
           .fb-hero { padding:40px 0 32px; }
           .fb-hero-grid { grid-template-columns:1fr; gap:16px; }
-          .fb-stack-wrap { height:300px; order:-1; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
+          .fb-stack-wrap { height:300px; order:-1; width:100%; overflow:visible; align-items:flex-start; justify-content:center; }
           .fb-stack { transform:scale(0.78); transform-origin: top center; }
           .fb-sub { max-width:100%; }
           .fb-lede-bn { font-size:32px; }
@@ -680,7 +680,7 @@ export default function FinanceBundleClient() {
           .fb-strip-row .fb-strip-right-num { display:none; }
           .fb-mobile-bar { display:flex; }
           body { padding-bottom: 76px; }
-          .fb-stack-wrap { height:270px; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
+          .fb-stack-wrap { height:270px; width:100%; overflow:visible; align-items:flex-start; justify-content:center; }
           .fb-stack { transform:scale(0.68); transform-origin: top center; }
           .fb-lede-bn { font-size:27px; }
           .fb-sub { font-size:15px; max-width:100%; }
