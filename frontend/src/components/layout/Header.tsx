@@ -22,12 +22,12 @@ const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'All Books', href: '/products' },
   { label: 'Bestselling', href: '/products?tag=bestselling' },
-  { label: 'Business', href: '/products?category=business' },
-  { label: 'Marketing', href: '/products?category=marketing-leadership' },
-  { label: 'Finance', href: '/products?category=finance' },
-  { label: 'Mindset', href: '/products?category=mindset-psychology' },
-  { label: 'Productivity', href: '/products?category=productivity-habits' },
-  { label: 'Communication', href: '/products?category=communication' },
+  { label: 'Business', href: '/products?tag=business-entrepreneurship' },
+  { label: 'Marketing', href: '/products?tag=marketing-leadership' },
+  { label: 'Finance', href: '/products?tag=finance-wealth' },
+  { label: 'Mindset', href: '/products?tag=mindset-psychology' },
+  { label: 'Productivity', href: '/products?tag=productivity-habits' },
+  { label: 'Communication', href: '/products?tag=people-skills-communication' },
   { label: 'Finance Bundle', href: '/finance-bundle' },
 ];
 
