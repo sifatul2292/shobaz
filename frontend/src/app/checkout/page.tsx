@@ -337,10 +337,17 @@ export default function CheckoutPage() {
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
   const totalWeightGrams = items.reduce((sum, item) => sum + (Number(item.product.weight) || 0) * item.quantity, 0);
-  const weightExtraCharge = deliveryLocation === 'outside' && totalWeightGrams > 2000
-    ? Math.ceil((totalWeightGrams - 2000) / 1000) * 15
-    : 0;
-  const deliveryFee = deliveryLocation === 'inside' ? insideFee : outsideFee + weightExtraCharge;
+  const totalWeightKg = totalWeightGrams / 1000;
+  const calcWeightFee = (rules: { fromGram: number; toGram: number; cost: number }[] | undefined, fallback: number): number => {
+    if (!rules || rules.length === 0) return fallback;
+    const match = rules.find(r => totalWeightKg >= r.fromGram && totalWeightKg <= r.toGram);
+    if (match) return match.cost;
+    // weight exceeds all rules — use last rule's cost
+    return rules[rules.length - 1].cost;
+  };
+  const deliveryFee = deliveryLocation === 'inside'
+    ? calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)
+    : calcWeightFee(shippingCharge?.outsideDhakaRules, outsideFee);
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
