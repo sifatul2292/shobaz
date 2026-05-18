@@ -19,17 +19,19 @@ function getDynamicHref(slug: string) {
 }
 
 const NAV_LINKS = [
-  { label: 'মূলপাতা', href: '/' },
-  { label: 'সকল বই', href: '/products' },
-  { label: 'লেখক', href: '/authors' },
-  { label: 'প্রকাশনা', href: '/publishers' },
-  { label: 'অফার', href: '/offers' },
-  { label: 'ব্লগ', href: '/blog' },
-  { label: 'আমাদের বিশেষিত', href: '/about' },
+  { label: 'Home', href: '/' },
+  { label: 'All Books', href: '/products' },
+  { label: 'Bestselling', href: '/products?tag=bestselling' },
+  { label: 'Business', href: '/products?category=business' },
+  { label: 'Marketing', href: '/products?category=marketing-leadership' },
+  { label: 'Finance', href: '/products?category=finance' },
+  { label: 'Mindset', href: '/products?category=mindset-psychology' },
+  { label: 'Productivity', href: '/products?category=productivity-habits' },
+  { label: 'Communication', href: '/products?category=communication' },
+  { label: 'Finance Bundle', href: '/finance-bundle' },
 ];
 
 const ANNOUNCEMENTS = [
-  { icon: HiOutlineTruck, text: '৯৫০ টাকার উপরে অর্ডার করলে একটি নোটবুক ফ্রি' },
   { icon: HiOutlineBookOpen, text: 'নির্বাচিত বইয়ে ৩০% পর্যন্ত ছাড়' },
   { icon: HiOutlineSparkles, text: 'ঢাকায় মাত্র ৬০ টাকায় ডেলিভারি' },
   { icon: HiOutlineShieldCheck, text: 'প্রতিটি অর্ডারে বিশেষ উপহার' },

@@ -396,14 +396,14 @@ export default function HomePage() {
                 margin: '0 0 18px', color: '#0f172a', letterSpacing: '-0.01em',
                 fontFamily: 'var(--bn)',
               }}>
-                আপনার পছন্দের বই,<br />
-                <span style={{ color: PRIMARY }}>এখন ঘরে বসেই</span>
+                Self-help, business, finance, productivity থেকে fiction—<br />
+                <span style={{ color: PRIMARY }}>বাছাইকৃত সব বই</span>
               </h1>
               <p style={{
                 fontSize: 17, color: '#475569', lineHeight: 1.6,
                 margin: '0 0 32px', maxWidth: 520, fontFamily: 'var(--bn)',
               }}>
-                বাংলাদেশের বিশ্বস্ত অনলাইন বইয়ের দোকান — হাজার হাজার বইয়ের কালেকশন থেকে সারাদেশে দ্রুত ডেলিভারি।
+                Shobaz এর বই মানেই প্রিমিয়াম প্রিন্ট, পরিষ্কার লেখা আর মজবুত binding
               </p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link href="/products" className="nh-cta-shine" style={{
@@ -524,7 +524,6 @@ export default function HomePage() {
             {[
               { icon: <IcDelivery />, label: 'সারাদেশে ডেলিভারি' },
               { icon: <IcPayment />, label: 'bKash / Nagad / কার্ড' },
-              { icon: <IcReturn />, label: 'সহজ রিটার্ন' },
               { icon: <IcReaders />, label: '১০,০০০+ সন্তুষ্ট পাঠক' },
             ].map((it, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
@@ -541,7 +540,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
               <div>
                 <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>
-                  বিভাগসমূহ
+                  Categories
                 </h2>
                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>
                   যে কোনো বিভাগে ক্লিক করে বইয়ের পুরো কালেকশন দেখুন
