@@ -13,6 +13,7 @@ import { SpecialPackageSchema } from '../../../schema/special-package.schema';
 import { ShopInformationSchema } from '../../../schema/shop-information.schema';
 import { SettingSchema } from '../../customization/setting/schema/setting.schema';
 import { AdminSchema } from '../../../schema/admin.schema';
+import { ShippingChargeSchema } from '../../../schema/shipping-charge.schema';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AdminSchema } from '../../../schema/admin.schema';
       { name: 'ShopInformation', schema: ShopInformationSchema },
       { name: 'Setting', schema: SettingSchema },
       { name: 'Admin', schema: AdminSchema },
+      { name: 'ShippingCharge', schema: ShippingChargeSchema },
     ]),
   ],
   controllers: [OrderController],

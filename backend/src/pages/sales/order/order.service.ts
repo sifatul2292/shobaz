@@ -32,6 +32,7 @@ import { DiscountTypeEnum } from '../../../enum/product.enum';
 import { OrderOffer } from '../../../interfaces/common/order-offer.interface';
 import { SpecialPackage } from '../../../interfaces/common/special-package.interface';
 import { ShopInformation } from '../../../interfaces/common/shop-information.interface';
+import { ShippingCharge } from '../../../interfaces/common/shipping-charge.interface';
 import { Setting } from '../../customization/setting/interface/setting.interface';
 import {
   CourierApiConfig,
@@ -60,6 +61,8 @@ export class OrderService {
     private readonly courierService: CourierService,
     @InjectModel('ShopInformation')
     private readonly shopInformationModel: Model<ShopInformation>,
+    @InjectModel('ShippingCharge')
+    private readonly shippingChargeModel: Model<ShippingCharge>,
     @InjectModel('OrderOffer')
     private readonly orderOfferModel: Model<OrderOffer>,
     private configService: ConfigService,
@@ -2079,21 +2082,18 @@ async updateOrderById(
           )
         : 0;
 
-    // Calculate Weight-Based Delivery Charge (for record-keeping only)
-    // Note: Frontend already includes weight charge in deliveryCharge, so we don't add it again to grandTotal
-    const weightBasedDeliveryCharge = this.calculateWeightBasedDeliveryCharge(
+    // Calculate delivery charge from weight rules in DB
+    const fallbackCharge = orderData?.deliveryCharge || 0;
+    const deliveryCharge = await this.calculateWeightBasedDeliveryCharge(
       finalData,
-      orderData?.division?.name,
-      orderData?.area?.name,
-      orderData?.zone?.name,
+      orderData?.deliveryLocation,
+      fallbackCharge,
     );
 
     // Grand Total
-    // Note: orderData?.deliveryCharge already includes weight-based charge from frontend
-    // So we don't add weightBasedDeliveryCharge again to avoid double counting
     const grandTotal =
       cartSubTotal +
-      orderData?.deliveryCharge -
+      deliveryCharge -
       couponDiscount -
       cartDiscountAmount -
       orderDiscount;
@@ -2115,8 +2115,8 @@ async updateOrderById(
       orderStatus: OrderStatus.PENDING,
       orderedItems: products,
       subTotal: cartSubTotal,
-      deliveryCharge: orderData?.deliveryCharge || 0,
-      weightBasedDeliveryCharge: weightBasedDeliveryCharge,
+      deliveryCharge: deliveryCharge,
+      weightBasedDeliveryCharge: deliveryCharge,
       discount: cartDiscountAmount.toFixed(2),
       totalSave: cartDiscountAmount,
       grandTotal,
@@ -2338,58 +2338,33 @@ async updateOrderById(
     }
   }
 
-  // Calculate Weight-Based Delivery Charge
-  private calculateWeightBasedDeliveryCharge(
+  // Calculate Weight-Based Delivery Charge using DB rules
+  private async calculateWeightBasedDeliveryCharge(
     cartItems: any[],
-    division?: string,
-    area?: string,
-    zone?: string,
-  ): number {
-    // List of Dhaka areas that should NOT have weight charges (use outsideDhaka charge but no weight charge)
-    const dhakaOutsideAreas = [
-      'Savar >> সাভার',
-      'Dohar — দোহার',
-      'Nawabganj — নবাবগঞ্জ',
-      'Keraniganj — কেরানীগঞ্জ',
-      'Dhamrai — ধামরাই',
-    ];
+    deliveryLocation: string,
+    fallbackCharge: number,
+  ): Promise<number> {
+    const shippingDoc = await this.shippingChargeModel.findOne({});
+    if (!shippingDoc) return fallbackCharge;
 
-    // Check if division is Dhaka (with different possible formats)
-    const isDhakaDivision =
-      division === 'Dhaka > ঢাকা' ||
-      division === 'Dhaka >> ঢাকা' ||
-      division === 'Dhaka >ঢাকা';
+    const isInside = deliveryLocation === 'inside';
+    const rules = isInside
+      ? shippingDoc.insideDhakaRules
+      : shippingDoc.outsideDhakaRules;
 
-    // Skip weight charge for:
-    // 1. Dhaka division (all areas in Dhaka except specific outside areas)
-    // 2. Specific areas in Dhaka that use outsideDhaka charge (Savar, Dohar, etc.)
-    if (isDhakaDivision) {
-      // If it's one of the specific outside areas, still skip weight charge
-      // (they use outsideDhaka base charge but no weight-based charge)
-      if (area && dhakaOutsideAreas.includes(area)) {
-        return 0;
-      }
-      // For all other Dhaka areas, skip weight charge
-      return 0;
-    }
+    if (!rules || rules.length === 0) return fallbackCharge;
 
-    // Calculate total weight of all items in the cart
-    const totalWeight = cartItems.reduce((totalWeight, item) => {
-      const itemWeight = item.product?.weight || 0; // Get weight from product, default to 0
-      const quantity = item.selectedQty || 1;
-      return totalWeight + itemWeight * quantity;
+    // product.weight is stored in grams; rule fromGram/toGram store kg values
+    const totalGrams = cartItems.reduce((sum, item) => {
+      return sum + (item.product?.weight || 0) * (item.selectedQty || 1);
     }, 0);
+    const totalKg = totalGrams / 1000;
 
-    // If total weight is above 2000 grams (2 kg), calculate additional delivery charge
-    // This only applies to areas outside Dhaka
-    if (totalWeight > 2000) {
-      const excessWeight = totalWeight - 2000; // Weight above 2000 grams
-      const additionalKg = Math.ceil(excessWeight / 1000); // Convert to kg and round up
-      const additionalCharge = additionalKg * 15; // 15 taka per kg
-      return additionalCharge;
-    }
+    const matchedRule = rules.find(
+      (r) => totalKg >= r.fromGram && totalKg <= r.toGram,
+    );
 
-    return 0; // No additional charge if weight is 2000 grams or less
+    return matchedRule ? matchedRule.cost : fallbackCharge;
   }
 
   // Job Scheduler For Courier Status
