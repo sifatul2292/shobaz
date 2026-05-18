@@ -1922,16 +1922,47 @@ async updateOrderById(
         (acc: number, item: any) => acc + (item.regularPrice || 0) * (item.quantity || 1),
         0
       );
-      
+
       const cartDiscountAmount = orderData.orderedItems.reduce(
         (acc: number, item: any) => acc + ((item.regularPrice || 0) - (item.salePrice || 0)) * (item.quantity || 1),
         0
       );
 
+      // Fetch product weights from DB — orderedItems don't carry weight field
+      const productIds = orderData.orderedItems
+        .map((item: any) => item._id)
+        .filter(Boolean)
+        .map((id: string) => new ObjectId(id));
+      const dbProducts = await this.productModel
+        .find({ _id: { $in: productIds } }, { weight: 1 })
+        .lean();
+      const weightMap = new Map(
+        dbProducts.map((p: any) => [p._id.toString(), p.weight || 0]),
+      );
+
+      const cartItemsForWeight = orderData.orderedItems.map((item: any) => ({
+        product: { weight: weightMap.get(item._id?.toString()) || 0 },
+        selectedQty: item.selectedQty || item.quantity || 1,
+      }));
+
+      const fallbackCharge = orderData.deliveryCharge || 0;
+      const deliveryCharge = await this.calculateWeightBasedDeliveryCharge(
+        cartItemsForWeight,
+        orderData.deliveryLocation,
+        fallbackCharge,
+      );
+
+      // subTotal from frontend is after-discount; grandTotal = subTotal + deliveryCharge
+      const subTotal = orderData.subTotal ?? cartSubTotal - cartDiscountAmount;
+      const grandTotal = subTotal + deliveryCharge;
+
       return {
         products: orderData.orderedItems,
         cartSubTotal,
         cartDiscountAmount,
+        deliveryCharge,
+        weightBasedDeliveryCharge: deliveryCharge,
+        grandTotal,
       };
     }
     
