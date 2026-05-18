@@ -17,7 +17,13 @@ const PRIMARY = '#16a34a';
 const PARCHMENT = '#f5f0e8';
 
 // ── Types ─────────────────────────────────────────────────────────────
-interface ShippingCharge { deliveryInDhaka: number; deliveryOutsideDhaka: number; }
+interface WeightRule { fromGram: number; toGram: number; cost: number; }
+interface ShippingCharge {
+  deliveryInDhaka: number;
+  deliveryOutsideDhaka: number;
+  insideDhakaRules?: WeightRule[];
+  outsideDhakaRules?: WeightRule[];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 const getAuthorName = (author: any): string => {
@@ -335,7 +341,16 @@ export default function CheckoutPage() {
 
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
-  const deliveryFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
+
+  // Weight-based delivery charge lookup
+  const totalGrams = items.reduce((sum, i) => sum + Number(i.product.weight || 0) * i.quantity, 0);
+  const totalKg = totalGrams / 1000;
+  const weightRules = deliveryLocation === 'inside'
+    ? (shippingCharge?.insideDhakaRules ?? [])
+    : (shippingCharge?.outsideDhakaRules ?? []);
+  const matchedRule = weightRules.find(r => totalKg >= r.fromGram && totalKg <= r.toGram);
+  const baseFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
+  const deliveryFee = matchedRule ? matchedRule.cost : baseFee;
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
