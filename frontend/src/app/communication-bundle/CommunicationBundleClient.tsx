@@ -40,7 +40,7 @@ const BOOKS = [
     color: '#8B0000', dark: false, stock: 7, popular: false,
   },
   {
-    slug: 'how-to-win-friends-and-influence-people',
+    slug: 'how-to-win-friends-influence-people',
     title: 'How to Win Friends & Influence People',
     titleShort: 'How to Win Friends',
     tagline: 'সম্পর্ক তৈরির চিরন্তন গাইড',
