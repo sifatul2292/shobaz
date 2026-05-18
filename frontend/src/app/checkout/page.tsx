@@ -17,7 +17,14 @@ const PRIMARY = '#16a34a';
 const PARCHMENT = '#f5f0e8';
 
 // ── Types ─────────────────────────────────────────────────────────────
-interface ShippingCharge { deliveryInDhaka: number; deliveryOutsideDhaka: number; }
+interface WeightRule { fromGram: number; toGram: number; cost: number; }
+interface ShippingCharge {
+  deliveryInDhaka: number;
+  deliveryOutsideDhaka: number;
+  deliveryOutsideBD?: number;
+  insideDhakaRules?: WeightRule[];
+  outsideDhakaRules?: WeightRule[];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 const getAuthorName = (author: any): string => {
