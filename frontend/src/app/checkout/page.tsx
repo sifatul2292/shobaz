@@ -318,6 +318,7 @@ export default function CheckoutPage() {
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
   const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '' });
   const [errors, setErrors] = useState({ name: '', phone: '', address: '' });
+  const [freshWeights, setFreshWeights] = useState<Record<string, number>>({});
   const formRef = useRef<HTMLFormElement>(null);
   const incompleteOrderSaved = useRef(false);
 
@@ -326,6 +327,18 @@ export default function CheckoutPage() {
     api.get('/shipping-charge/get').then(res => {
       if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items.map(i => i.product._id);
+    api.post('/product/get-products-by-ids', { ids }, { params: { select: 'weight' } })
+      .then(res => {
+        const products: any[] = res.data?.data || [];
+        const map: Record<string, number> = {};
+        products.forEach((p: any) => { map[p._id] = Number(p.weight) || 0; });
+        setFreshWeights(map);
+      }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -343,7 +356,10 @@ export default function CheckoutPage() {
 
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
-  const totalWeightGrams = items.reduce((sum, item) => sum + (Number(item.product.weight) || 0) * item.quantity, 0);
+  const totalWeightGrams = items.reduce((sum, item) => {
+    const w = freshWeights[item.product._id] ?? (Number(item.product.weight) || 0);
+    return sum + w * item.quantity;
+  }, 0);
   const calcWeightFee = (rules: { fromGram: number; toGram: number; cost: number }[] | undefined, fallback: number): number => {
     if (!rules || rules.length === 0) return fallback;
     const match = rules.find(r => totalWeightGrams >= r.fromGram && totalWeightGrams <= r.toGram);
