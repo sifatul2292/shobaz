@@ -424,6 +424,11 @@ export default function FinanceBundleClient() {
           padding: 4px 8px; border-radius: 3px;
           box-shadow: 0 4px 10px -4px rgba(210,83,42,.6);
         }
+        .fb-b1 { left:0px; top:40px; transform:rotate(-9deg); }
+        .fb-b2 { left:75px; top:70px; transform:rotate(-4deg); }
+        .fb-b3 { left:140px; top:90px; transform:rotate(0deg); }
+        .fb-b4 { left:205px; top:70px; transform:rotate(4deg); }
+        .fb-b5 { left:270px; top:40px; transform:rotate(9deg); }
         .fb-stack:hover .fb-b1 { transform: rotate(-13deg) translate(-8px, -6px); }
         .fb-stack:hover .fb-b2 { transform: rotate(-6deg) translate(-4px, -4px); }
         .fb-stack:hover .fb-b3 { transform: rotate(0deg) translate(0, -10px); }
@@ -661,12 +666,15 @@ export default function FinanceBundleClient() {
 
 
         @media (max-width:900px) {
-          .fb-hero { padding:40px 0 32px; }
+          .fb-hero { padding:40px 0 32px; overflow:hidden; }
           .fb-hero-grid { grid-template-columns:1fr; gap:16px; }
-          .fb-stack-wrap { height:300px; order:-1; width:100%; overflow:visible; align-items:flex-start; justify-content:center; }
-          .fb-stack { transform:scale(0.78); transform-origin: top center; }
-          .fb-sub { max-width:100%; }
-          .fb-lede-bn { font-size:32px; }
+          .fb-stack-wrap { height:285px; order:-1; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
+          .fb-stack { width:345px; height:285px; transform:none; }
+          .fb-book { width:123px; height:180px; }
+          .fb-book .fb-bttl { font-size:14px; }
+          .fb-b1 { left:0px; top:33px; } .fb-b2 { left:62px; top:57px; } .fb-b3 { left:115px; top:74px; } .fb-b4 { left:168px; top:57px; } .fb-b5 { left:222px; top:33px; }
+          .fb-sub { max-width:100%; overflow-wrap:break-word; word-break:break-word; }
+          .fb-lede-bn { font-size:32px; overflow-wrap:break-word; word-break:break-word; }
           .fb-price-now { font-size:36px; }
           .fb-problems { grid-template-columns:1fr; }
           .fb-benefits-grid { grid-template-columns:1fr; }
@@ -680,11 +688,14 @@ export default function FinanceBundleClient() {
           .fb-strip-row .fb-strip-right-num { display:none; }
           .fb-mobile-bar { display:flex; }
           body { padding-bottom: 76px; }
-          .fb-stack-wrap { height:270px; width:100%; overflow:visible; align-items:flex-start; justify-content:center; }
-          .fb-stack { transform:scale(0.68); transform-origin: top center; }
-          .fb-lede-bn { font-size:27px; }
-          .fb-sub { font-size:15px; max-width:100%; }
-          .fb-price-row { gap:10px; }
+          .fb-stack-wrap { height:220px; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
+          .fb-stack { width:277px; height:220px; transform:none; }
+          .fb-book { width:99px; height:146px; }
+          .fb-book .fb-bttl { font-size:11px; }
+          .fb-b1 { left:0px; top:27px; } .fb-b2 { left:50px; top:46px; } .fb-b3 { left:92px; top:59px; } .fb-b4 { left:135px; top:46px; } .fb-b5 { left:178px; top:27px; }
+          .fb-lede-bn { font-size:26px; overflow-wrap:break-word; word-break:break-word; }
+          .fb-sub { font-size:15px; max-width:100%; overflow-wrap:break-word; word-break:break-word; }
+          .fb-price-row { gap:10px; flex-wrap:wrap; }
           .fb-save-pill { font-size:11px; }
           .fb-cta-row .fb-btn { flex:1 1 100%; }
           .fb-final-cta { padding:64px 0; }
@@ -772,17 +783,11 @@ export default function FinanceBundleClient() {
                     {BOOKS.map((book, i) => {
                       const p = bySlug[book.slug];
                       const src = p ? imgUrl(p.images?.[0]) : null;
-                      const poses = [
-                        { cls: 'fb-b1', left: 0, top: 40, rot: '-9deg' },
-                        { cls: 'fb-b2', left: 75, top: 70, rot: '-4deg' },
-                        { cls: 'fb-b3', left: 140, top: 90, rot: '0deg' },
-                        { cls: 'fb-b4', left: 205, top: 70, rot: '4deg' },
-                        { cls: 'fb-b5', left: 270, top: 40, rot: '9deg' },
-                      ][i];
+                      const cls = ['fb-b1','fb-b2','fb-b3','fb-b4','fb-b5'][i];
                       return (
                         <div key={book.slug}
-                          className={`fb-book ${poses.cls}`}
-                          style={{ left: poses.left, top: poses.top, transform: `rotate(${poses.rot})`, background: book.color, color: book.dark ? '#1a1a1a' : '#fff', border: book.dark ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
+                          className={`fb-book ${cls}`}
+                          style={{ background: book.color, color: book.dark ? '#1a1a1a' : '#fff', border: book.dark ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
                           {src ? (
                             <img src={src} alt={book.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : null}
