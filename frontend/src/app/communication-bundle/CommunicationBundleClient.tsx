@@ -728,14 +728,14 @@ export default function CommunicationBundleClient() {
                 <div>
                   <span className="fb-eyebrow"><span className="dot" />৫টি বইয়ের একচেটিয়া বান্ডেল</span>
                   <h1 className="fb-lede-bn">
-                    <span>কেন বেশিরভাগ মানুষ সারাজীবন কথা বলেও মানুষের মন জয় করতে পারে না?</span>
+                    বিশ্বজুড়ে বহুলপঠিত ৫টি Communication & People Skills বই—<br />
+                    <span>এখন এক বান্ডেলে।</span>
                   </h1>
                   <p className="fb-sub">
-                    স্কুল-কলেজ-বিশ্ববিদ্যালয়ে অনেক কিছু শেখানো হয়।
-                    কিন্তু communication, persuasion, negotiation আর human psychology-র মতো জীবন-বদলানো বিষয়গুলো শেখানো হয় না।
+                    চাকরি, ব্যবসা, freelancing বা personal life—প্রতিটি জায়গায় সফল হতে শুধু skill থাকলেই হয় না। দরকার মানুষকে বোঝা, ঠিকভাবে কথা বলা, negotiate করা এবং influence তৈরি করার ক্ষমতা।
                   </p>
                   <p className="fb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
-                    এই ৫টি বিশ্ববিখ্যাত বই আপনাকে শেখাবে মানুষকে বুঝতে, প্রভাবিত করতে এবং যেকোনো পরিস্থিতিতে জিততে।
+                    জীবনের সবচেয়ে বড় skill যদি কিছু থাকে, তবে তা হলো Communication Skill। এই skill শেখার জন্য এই বইগুলোকে বলা যায়— communication world-এর ultimate guide collection।
                   </p>
                   <div className="fb-price-row">
                     <span className="fb-price-now fb-num">৳{selectedTotal.toLocaleString('en-IN')}</span>
