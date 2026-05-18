@@ -336,7 +336,11 @@ export default function CheckoutPage() {
 
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
-  const deliveryFee = deliveryLocation === 'inside' ? insideFee : outsideFee;
+  const totalWeightGrams = items.reduce((sum, item) => sum + (Number(item.product.weight) || 0) * item.quantity, 0);
+  const weightExtraCharge = deliveryLocation === 'outside' && totalWeightGrams > 2000
+    ? Math.ceil((totalWeightGrams - 2000) / 1000) * 15
+    : 0;
+  const deliveryFee = deliveryLocation === 'inside' ? insideFee : outsideFee + weightExtraCharge;
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
@@ -358,7 +362,7 @@ export default function CheckoutPage() {
     const { name, phone, address } = formData;
     if (!name.trim() || !/^01\d{9}$/.test(phone) || !address.trim()) return;
     incompleteOrderSaved.current = true;
-    const shipping = deliveryLocation === 'inside' ? (shippingCharge?.deliveryInDhaka ?? 60) : (shippingCharge?.deliveryOutsideDhaka ?? 80);
+    const shipping = deliveryFee;
     const total = getTotalPrice() + shipping;
     const orderedItems = items.map(item => {
       const salePrice = item.product.salePrice || item.product.price || 0;
