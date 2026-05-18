@@ -324,10 +324,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     setMounted(true);
     api.get('/shipping-charge/get').then(res => {
-      if (res.data?.data) {
-        console.log('[DEBUG] shippingCharge API response:', JSON.stringify(res.data.data, null, 2));
-        setShippingCharge(res.data.data);
-      }
+      if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
   }, []);
 
@@ -347,13 +344,9 @@ export default function CheckoutPage() {
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
   const outsideFee = shippingCharge?.deliveryOutsideDhaka ?? 80;
   const totalWeightGrams = items.reduce((sum, item) => sum + (Number(item.product.weight) || 0) * item.quantity, 0);
-  const totalWeightKg = totalWeightGrams / 1000;
-  console.log('[DEBUG] items weights:', items.map(i => ({ name: i.product.name, weight: i.product.weight, qty: i.quantity })));
-  console.log('[DEBUG] totalWeightGrams:', totalWeightGrams, 'totalWeightKg:', totalWeightKg);
-  console.log('[DEBUG] rules:', deliveryLocation === 'inside' ? shippingCharge?.insideDhakaRules : shippingCharge?.outsideDhakaRules);
   const calcWeightFee = (rules: { fromGram: number; toGram: number; cost: number }[] | undefined, fallback: number): number => {
     if (!rules || rules.length === 0) return fallback;
-    const match = rules.find(r => totalWeightKg >= r.fromGram && totalWeightKg <= r.toGram);
+    const match = rules.find(r => totalWeightGrams >= r.fromGram && totalWeightGrams <= r.toGram);
     if (match) return match.cost;
     // weight exceeds all rules — use last rule's cost
     return rules[rules.length - 1].cost;
