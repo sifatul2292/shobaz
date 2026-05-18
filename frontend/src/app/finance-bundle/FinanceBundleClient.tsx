@@ -659,23 +659,12 @@ export default function FinanceBundleClient() {
         .fb-mobile-bar .mb-price .now { font-family:"Fraunces",serif;font-weight:600;font-size:21px;line-height:1;color:#161510; }
         .fb-mobile-bar .mb-price .was { font-family:"Inter",sans-serif;text-decoration:line-through;color:#6E685D;font-size:12px; }
 
-        /* WhatsApp */
-        .fb-whatsapp {
-          position:fixed;right:18px;bottom:18px;z-index:49;
-          background:#25D366;color:#fff;
-          padding:12px 18px;border-radius:999px;
-          font-family:"Hind Siliguri",sans-serif;font-weight:600;font-size:14px;
-          display:flex;align-items:center;gap:8px;text-decoration:none;
-          box-shadow:0 10px 22px -10px rgba(37,211,102,0.7);
-          transition:transform .15s ease;
-        }
-        .fb-whatsapp:hover { transform:translateY(-2px); }
 
         @media (max-width:900px) {
           .fb-hero { padding:40px 0 32px; }
-          .fb-hero-grid { grid-template-columns:1fr; gap:28px; }
-          .fb-stack-wrap { height:340px; order:-1; width:100%; overflow:hidden; }
-          .fb-stack { transform:scale(0.82); transform-origin: center top; }
+          .fb-hero-grid { grid-template-columns:1fr; gap:16px; }
+          .fb-stack-wrap { height:240px; order:-1; width:100%; overflow:hidden; align-items:flex-start; }
+          .fb-stack { transform:scale(0.68); transform-origin: top center; margin:0 auto; }
           .fb-sub { max-width:100%; }
           .fb-lede-bn { font-size:32px; }
           .fb-price-now { font-size:36px; }
@@ -691,9 +680,8 @@ export default function FinanceBundleClient() {
           .fb-strip-row .fb-strip-right-num { display:none; }
           .fb-mobile-bar { display:flex; }
           body { padding-bottom: 76px; }
-          .fb-whatsapp { bottom:84px; right:14px; padding:10px 14px; font-size:13px; }
-          .fb-stack-wrap { height:260px; width:100%; overflow:hidden; }
-          .fb-stack { transform:scale(0.62); transform-origin: center top; }
+          .fb-stack-wrap { height:200px; width:100%; overflow:hidden; align-items:flex-start; }
+          .fb-stack { transform:scale(0.52); transform-origin: top center; margin:0 auto; }
           .fb-lede-bn { font-size:27px; }
           .fb-sub { font-size:15px; max-width:100%; }
           .fb-price-row { gap:10px; }
@@ -1159,11 +1147,6 @@ export default function FinanceBundleClient() {
         </div>
       )}
 
-      {/* ── WhatsApp float ────────────────────────────────────────────── */}
-      <a className="fb-whatsapp" href={WA_LINK} target="_blank" rel="noopener noreferrer">
-        <WaIcon size={18} />
-        সাহায্য
-      </a>
     </>
   );
 }
