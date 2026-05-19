@@ -103,18 +103,13 @@ export class GtmService {
 
         const fbApiPayload: any = { ...addGtmPageViewDto };
 
-        // console.log('fbc from client:', addGtmPageViewDto);
         // Ensure user_data exists
         fbApiPayload.user_data = fbApiPayload.user_data || {};
 
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
-            : undefined;
+        const pvRawPh = fbApiPayload.user_data.ph;
+        const pvRawEm = fbApiPayload.user_data.em;
+        fbApiPayload.user_data.ph = hashPii(normalizePhone(pvRawPh));
+        fbApiPayload.user_data.em = hashPii(pvRawEm && pvRawEm !== 'null' ? pvRawEm : undefined);
 
         fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;
         fbApiPayload.user_data.client_user_agent = clientUserAgent || undefined;
@@ -196,17 +191,10 @@ export class GtmService {
         // Ensure user_data exists
         fbApiPayload.user_data = fbApiPayload.user_data || {};
 
-        // console.log('addGtmViewContentDto:', addGtmViewContentDto);
-        // console.log('fbc from client:', fbApiPayload.user_data?.fbc);
-
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
-            : undefined;
+        const vcRawPh = fbApiPayload.user_data.ph;
+        const vcRawEm = fbApiPayload.user_data.em;
+        fbApiPayload.user_data.ph = hashPii(normalizePhone(vcRawPh));
+        fbApiPayload.user_data.em = hashPii(vcRawEm && vcRawEm !== 'null' ? vcRawEm : undefined);
         fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;
         fbApiPayload.user_data.client_user_agent = clientUserAgent || undefined;
 
@@ -286,14 +274,10 @@ export class GtmService {
         // Ensure user_data exists
         fbApiPayload.user_data = fbApiPayload.user_data || {};
 
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
-            : undefined;
+        const atcRawPh = fbApiPayload.user_data.ph;
+        const atcRawEm = fbApiPayload.user_data.em;
+        fbApiPayload.user_data.ph = hashPii(normalizePhone(atcRawPh));
+        fbApiPayload.user_data.em = hashPii(atcRawEm && atcRawEm !== 'null' ? atcRawEm : undefined);
 
         fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;
         fbApiPayload.user_data.client_user_agent = clientUserAgent || undefined;
