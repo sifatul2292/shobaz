@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmPurchase } from '@/lib/gtm';
 import { capiPurchase } from '@/lib/capi';
+import { phPurchase } from '@/lib/posthog';
 import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 
@@ -47,6 +48,7 @@ function OrderSuccessContent() {
             document.title = 'Thank you Page - Shobaz';
             gtmPurchase(orderData);
             capiPurchase(orderData);
+            phPurchase(orderData);
           }
         } catch (err) {
           console.error('Failed to fetch order:', err);

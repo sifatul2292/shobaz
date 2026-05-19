@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
 import { gtmBeginCheckout } from '@/lib/gtm';
 import { capiInitiateCheckout } from '@/lib/capi';
+import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -350,6 +351,7 @@ export default function CheckoutPage() {
       const total = getTotalPrice();
       gtmBeginCheckout(cartProducts, total);
       capiInitiateCheckout(cartProducts, total, formData.phone, formData.name);
+      phBeginCheckout(cartProducts, total);
     }
   }, []);
 

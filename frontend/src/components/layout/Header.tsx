@@ -7,6 +7,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
+import { phSearch } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import { HiOutlineTruck, HiOutlineSparkles, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
@@ -104,6 +105,7 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
+    phSearch(searchQuery.trim(), searchResults?.products?.length ?? 0);
     setOpen(false);
     router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
   };

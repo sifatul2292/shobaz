@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import { Hind_Siliguri, Poppins } from "next/font/google";
+import { Hind_Siliguri, Poppins, Newsreader } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import GTMRouteTracker from "@/components/common/GTMRouteTracker";
@@ -18,6 +18,14 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-english",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
   display: "swap",
 });
 
@@ -51,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="bn">
       <head />
-      <body className={`${hindSiliguri.variable} ${poppins.variable}`}>
+      <body className={`${hindSiliguri.variable} ${poppins.variable} ${newsreader.variable}`}>
         {/* Stape.io Custom Loader */}
         <Script
           id="stape-custom-loader"

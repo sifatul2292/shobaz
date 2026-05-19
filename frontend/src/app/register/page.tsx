@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { phSignUp } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -92,6 +93,7 @@ export default function RegisterPage() {
       });
 
       if (signupRes.data?.success) {
+        phSignUp();
         toast.success('অ্যাকাউন্ট তৈরি হয়েছে! এখন লগইন করুন');
         setStep('done');
         setTimeout(() => router.push('/login'), 1500);

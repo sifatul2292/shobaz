@@ -7,6 +7,7 @@ import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewCart } from '@/lib/gtm';
+import { phViewCart } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 
 // ── Design tokens ─────────────────────────────────────────────────────
@@ -305,6 +306,7 @@ export default function CartPage() {
     document.title = 'কার্ট - Shobaz';
     if (items.length > 0) {
       gtmViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
+      phViewCart(items.map(i => ({ ...i.product, quantity: i.quantity })), getTotalPrice());
     }
     api.get('/shipping-charge/get').then(res => {
       if (res.data?.data) setShippingCharge(res.data.data);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
+import { phSignIn } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -30,6 +31,7 @@ export default function LoginPage() {
       const res = await api.post('/user/login', { username: formData.email, password: formData.password });
       if (res.data?.success && res.data?.token) {
         setAuth(res.data.data || {}, res.data.token);
+        phSignIn(res.data.data?._id);
         toast.success('সফলভাবে লগইন হয়েছে!');
         router.push('/profile');
       } else {
