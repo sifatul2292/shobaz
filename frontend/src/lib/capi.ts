@@ -1,11 +1,20 @@
 import api from '@/lib/api';
 
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.cookie.split('; ').find(r => r.startsWith(`${name}=`))?.split('=')[1];
+}
+
 const buildEvent = (eventName: string, userData: Record<string, any>, customData: Record<string, any>) => ({
   event_name: eventName,
   event_time: Math.floor(Date.now() / 1000),
   event_source_url: typeof window !== 'undefined' ? window.location.href : '',
   action_source: 'website',
-  user_data: userData,
+  user_data: {
+    ...userData,
+    fbp: getCookie('_fbp') || undefined,
+    fbc: getCookie('_fbc') || undefined,
+  },
   custom_data: customData,
 });
 

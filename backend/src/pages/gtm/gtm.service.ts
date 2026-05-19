@@ -11,6 +11,16 @@ function hashPii(value: string | undefined): string | undefined {
   const normalized = value.trim().toLowerCase();
   return createHash('sha256').update(normalized).digest('hex');
 }
+
+function normalizePhone(raw: string | undefined): string | undefined {
+  if (!raw || raw === 'null') return undefined;
+  const digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('880') && digits.length === 13) return `+${digits}`;
+  if (digits.startsWith('88') && digits.length === 12) return `+${digits}`;
+  if (digits.startsWith('0') && digits.length === 11) return `+88${digits.slice(1)}`;
+  if (digits.length === 10) return `+880${digits}`;
+  return raw;
+}
 import {
   AddGtmThemePageViewDto,
   AddGtmThemeViewContentDto,
@@ -369,7 +379,7 @@ export class GtmService {
         const icRawFn = fbApiPayload.user_data.fn;
         const icRawLn = fbApiPayload.user_data.ln;
 
-        fbApiPayload.user_data.ph = hashPii(icRawPh && icRawPh !== 'null' ? icRawPh : undefined);
+        fbApiPayload.user_data.ph = hashPii(normalizePhone(icRawPh));
         fbApiPayload.user_data.em = hashPii(icRawEm && icRawEm !== 'null' ? icRawEm : undefined);
         fbApiPayload.user_data.fn = hashPii(icRawFn && icRawFn !== 'null' ? icRawFn : undefined);
         fbApiPayload.user_data.ln = hashPii(icRawLn && icRawLn !== 'null' ? icRawLn : undefined);
@@ -457,7 +467,7 @@ export class GtmService {
         const rawFn = fbApiPayload.user_data.fn;
         const rawLn = fbApiPayload.user_data.ln;
 
-        fbApiPayload.user_data.ph = hashPii(rawPh && rawPh !== 'null' ? rawPh : undefined);
+        fbApiPayload.user_data.ph = hashPii(normalizePhone(rawPh));
         fbApiPayload.user_data.em = hashPii(rawEm && rawEm !== 'null' ? rawEm : undefined);
         fbApiPayload.user_data.fn = hashPii(rawFn && rawFn !== 'null' ? rawFn : undefined);
         fbApiPayload.user_data.ln = hashPii(rawLn && rawLn !== 'null' ? rawLn : undefined);
