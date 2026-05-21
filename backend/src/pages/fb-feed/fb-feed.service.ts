@@ -17,10 +17,11 @@ export class FbFeedService {
     const items = products.map((p) => {
       const id = String(p._id);
       const title = this.escapeXml(p.nameEn || p.name || '');
+      const rawDesc = p.shortDescription || p.description || p.name || '';
       const description = this.escapeXml(
-        p.shortDescription || p.description || p.name || '',
-      ).slice(0, 5000);
-      const link = `${this.siteUrl}/product-details/${p.slug}`;
+        this.stripHtml(rawDesc),
+      ).slice(0, 5000) || this.escapeXml(p.nameEn || p.name || '');
+      const link = `${this.siteUrl}/product-details/${encodeURIComponent(p.slug || '')}`;
       const imageLink =
         p.images && p.images.length
           ? p.images[0]
@@ -62,6 +63,10 @@ export class FbFeedService {
 ${items.join('\n')}
   </channel>
 </rss>`;
+  }
+
+  private stripHtml(str: string): string {
+    return str.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   private escapeXml(str: string): string {
