@@ -66,6 +66,7 @@ import { AnalyticsModule } from './shared/analytics/analytics.module';
 import { GtmModule } from './pages/gtm/gtm.module';
 import { CourierModule } from './shared/courier/courier.module';
 import { PreOrderModule } from './pages/pre-order/pre-order.module';
+import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -140,6 +141,7 @@ import { PreOrderModule } from './pages/pre-order/pre-order.module';
     FbCatalogModule,
     CourierModule,
     PreOrderModule,
+    FbFeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

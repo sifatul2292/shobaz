@@ -1217,6 +1217,14 @@ export class ProductService {
     return this.productModel.find({}).select('slug title').exec();
   }
 
+  async findAllForFbFeed(): Promise<any[]> {
+    return this.productModel
+      .find({})
+      .select('_id name nameEn slug images salePrice regularPrice discountAmount discountType quantity description shortDescription category brand sku')
+      .lean()
+      .exec();
+  }
+
   /**
    * getBoughtTogetherProducts  – global default (used by admin "Bought Together" page)
    * setBoughtTogetherProducts  – save global default
