@@ -112,11 +112,15 @@ export default function NotebookBundleClient() {
   ];
 
   useEffect(() => {
-    api.get('/product/get-all-data', {
-      params: { 'tags.name': 'notebook', page: 1, limit: 20, status: 'publish' },
-    }).then((res) => {
+    api.get('/product/get-all-data').then((res) => {
       if (res.data?.data) {
-        const prods = res.data.data as Product[];
+        // Filter client-side by tag slug === 'notebook' — same logic as /products?tag=notebook
+        const all = res.data.data as Product[];
+        const prods = all.filter((p) => {
+          const tags = (p as any).tags;
+          if (!Array.isArray(tags)) return false;
+          return tags.some((t: any) => t.slug === 'notebook');
+        });
         setProducts(prods);
         setSelected(new Set(prods.map((p) => p._id)));
       }
