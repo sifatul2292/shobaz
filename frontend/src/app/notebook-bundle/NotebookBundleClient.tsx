@@ -18,54 +18,21 @@ declare global {
 
 const TIMER_KEY = 'nb_bundle_timer_end';
 
-// ── Update slugs to match your actual DB slugs ──
-const NOTEBOOKS = [
-  {
-    slug: 'blue-white-forever',
-    title: 'Blue & White Forever',
-    titleShort: 'Blue & White Forever',
-    tagline: 'আর্জেন্টিনার গর্বের গল্প',
-    badge: 'Argentina', top: 'Legend',
-    color: '#74ACDF', dark: true, stock: 12, popular: true,
-    salePrice: 400, discountAmount: 210, discountPct: 53,
-  },
-  {
-    slug: 'messis-glory',
-    title: "Messi's Glory",
-    titleShort: "Messi's Glory",
-    tagline: 'The GOAT-এর অবিশ্বাস্য যাত্রা',
-    badge: 'GOAT', top: 'Messi',
-    color: '#3D7CC9', dark: false, stock: 9, popular: false,
-    salePrice: 400, discountAmount: 210, discountPct: 53,
-  },
-  {
-    slug: 'hexa-loading',
-    title: 'Hexa Loading',
-    titleShort: 'Hexa Loading',
-    tagline: 'ব্রাজিলের ষষ্ঠ ট্রফির স্বপ্ন',
-    badge: 'Brazil', top: 'Hexa',
-    color: '#009C3B', dark: false, stock: 11, popular: false,
-    salePrice: 400, discountAmount: 210, discountPct: 53,
-  },
-  {
-    slug: 'we-never-stopped-dreaming',
-    title: 'We Never Stopped Dreaming',
-    titleShort: 'Never Stop Dreaming',
-    tagline: 'স্বপ্ন দেখা বন্ধ করিনি',
-    badge: 'Dream', top: 'Inspire',
-    color: '#1B2A4A', dark: false, stock: 14, popular: false,
-    salePrice: 400, discountAmount: 210, discountPct: 53,
-  },
-  {
-    slug: 'generations-of-greatness',
-    title: 'Generations of Greatness',
-    titleShort: 'Generations',
-    tagline: 'মহত্বের এক প্রজন্ম থেকে আরেক প্রজন্মে',
-    badge: 'Legacy', top: 'Legacy',
-    color: '#0D1B3E', dark: false, stock: 8, popular: false,
-    salePrice: 400, discountAmount: 210, discountPct: 53,
-  },
+const NOTEBOOK_COLORS = [
+  { color: '#74ACDF', dark: true },
+  { color: '#3D7CC9', dark: false },
+  { color: '#009C3B', dark: false },
+  { color: '#1B2A4A', dark: false },
+  { color: '#0D1B3E', dark: false },
 ];
+
+function getProductPrice(p: Product): { price: number; original: number; discountPct: number } {
+  const original = p.salePrice || p.price || 0;
+  const discount = p.discountAmount || 0;
+  const price = original - discount;
+  const pct = original > 0 ? Math.round((discount / original) * 100) : 0;
+  return { price, original, discountPct: pct };
+}
 
 const FAQS = [
   { q: 'ডেলিভারি কতদিনে পাবো?', a: 'অর্ডার কনফার্ম হবার পর ঢাকায় ২-৩ কর্মদিবস, ঢাকার বাইরে ৩-৫ কর্মদিবসের মধ্যে পেয়ে যাবেন। সারা দেশে ক্যাশ অন ডেলিভারি সুবিধা রয়েছে।' },
@@ -126,9 +93,10 @@ const fadeStyle: React.CSSProperties = { opacity: 0, transform: 'translateY(28px
 
 export default function NotebookBundleClient() {
   const router = useRouter();
-  const [bySlug, setBySlug] = useState<Record<string, Product>>({});
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set(NOTEBOOKS.map((n) => n.slug)));
+  const [selected, setSelected] = useState<Set<string>>(new Set<string>());
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
   const [visitorCount, setVisitorCount] = useState(87);
   const [visitorFade, setVisitorFade] = useState(true);
@@ -144,15 +112,17 @@ export default function NotebookBundleClient() {
   ];
 
   useEffect(() => {
-    api.get('/product/get-all-data').then((res) => {
+    api.get('/product/get-all-data', {
+      params: { 'tags.name': 'notebook', page: 1, limit: 20, status: 'publish' },
+    }).then((res) => {
       if (res.data?.data) {
-        const map: Record<string, Product> = {};
-        (res.data.data as Product[]).forEach((p) => { if (p.slug) map[p.slug] = p; });
-        setBySlug(map);
+        const prods = res.data.data as Product[];
+        setProducts(prods);
+        setSelected(new Set(prods.map((p) => p._id)));
       }
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoading(false));
     if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'ViewContent', { content_name: 'Notebook Bundle', content_ids: NOTEBOOKS.map((n) => n.slug), content_type: 'product_group' });
+      window.fbq('track', 'ViewContent', { content_name: 'Notebook Bundle', content_type: 'product_group' });
     }
   }, []);
 
@@ -206,49 +176,35 @@ export default function NotebookBundleClient() {
 
   const pad = (n: number) => String(n).padStart(2, '0');
 
-  const getNotebookPricing = (nb: typeof NOTEBOOKS[0]) => {
-    const p = bySlug[nb.slug];
-    if (p?.salePrice) {
-      const original = p.salePrice;
-      const discount = p.discountAmount || 0;
-      const price = original - discount;
-      const pct = original > 0 ? Math.round((discount / original) * 100) : 0;
-      return { price, original, discountPct: pct };
-    }
-    return { price: nb.salePrice - nb.discountAmount, original: nb.salePrice, discountPct: nb.discountPct };
-  };
-
-  const selectedNotebooks = NOTEBOOKS.filter((n) => selected.has(n.slug));
-  const selectedTotal = selectedNotebooks.reduce((s, n) => s + getNotebookPricing(n).price, 0);
-  const selectedOriginal = selectedNotebooks.reduce((s, n) => s + getNotebookPricing(n).original, 0);
+  const selectedProducts = products.filter((p) => selected.has(p._id));
+  const selectedTotal = selectedProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
+  const selectedOriginal = selectedProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
-  const toggleNotebook = (slug: string) => {
+  const toggleNotebook = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(slug)) { if (next.size > 1) next.delete(slug); }
-      else next.add(slug);
+      if (next.has(id)) { if (next.size > 1) next.delete(id); }
+      else next.add(id);
       return next;
     });
   };
 
-  const handleAddToCart = (slug: string, title: string) => {
-    const p = bySlug[slug];
-    if (!p) { toast.error('পণ্য লোড হচ্ছে...'); return; }
-    addItem(p);
-    toast.success(`${title} কার্টে যোগ হয়েছে!`);
+  const handleAddToCart = (product: Product) => {
+    addItem(product, 1);
+    toast.success(`${product.name} কার্টে যোগ হয়েছে!`);
     if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: title, content_ids: [slug], content_type: 'product', currency: 'BDT' });
+      window.fbq('track', 'AddToCart', { content_name: product.name, content_ids: [product._id], content_type: 'product', currency: 'BDT' });
     }
   };
 
   const handleBundleCheckout = () => {
     let added = 0;
-    selectedNotebooks.forEach((nb) => { const p = bySlug[nb.slug]; if (p) { addItem(p); added++; } });
-    if (added === 0) { toast.error('পণ্য লোড হচ্ছে, একটু অপেক্ষা করুন'); return; }
+    selectedProducts.forEach((p) => { addItem(p); added++; });
+    if (added === 0) { toast.error('পণ্য লোড হচ্ছে...'); return; }
     if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: 'Notebook Bundle', content_ids: selectedNotebooks.map((n) => n.slug), value: selectedTotal, currency: 'BDT' });
+      window.fbq('track', 'AddToCart', { content_name: 'Notebook Bundle', content_ids: selectedProducts.map((p) => p._id), value: selectedTotal, currency: 'BDT' });
     }
     router.push('/checkout');
   };
@@ -595,24 +551,25 @@ export default function NotebookBundleClient() {
                 {/* Notebook stack */}
                 <div className="nb-stack-wrap" aria-hidden="true">
                   <div className="nb-stack">
-                    {NOTEBOOKS.map((nb, i) => {
-                      const p = bySlug[nb.slug];
+                    {(products.length > 0 ? products.slice(0, 5) : Array(5).fill(null)).map((p: Product | null, i) => {
                       const src = p ? imgUrl(p.images?.[0]) : null;
                       const cls = ['nb-b1','nb-b2','nb-b3','nb-b4','nb-b5'][i];
+                      const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
+                      const { discountPct: nbDiscPct } = p ? getProductPrice(p) : { discountPct: 0 };
                       return (
-                        <div key={nb.slug}
+                        <div key={p ? p._id : i}
                           className={`nb-book ${cls}`}
-                          style={{ background: nb.color, color: nb.dark ? '#1a1a1a' : '#fff', border: nb.dark ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
+                          style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff', border: col.dark ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
                           {src ? (
-                            <img src={src} alt={nb.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={src} alt={p?.name ?? ''} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div className="nb-cover" style={{ color: nb.dark ? '#1a1a1a' : '#fff' }}>
-                              <div className="nb-btop">{nb.badge}</div>
-                              <div className="nb-bttl" style={{ fontSize: i === 0 ? 22 : 18 }}>{nb.titleShort}</div>
+                            <div className="nb-cover" style={{ color: col.dark ? '#1a1a1a' : '#fff' }}>
+                              <div className="nb-btop">⚽</div>
+                              <div className="nb-bttl" style={{ fontSize: i === 0 ? 22 : 18 }}>{p?.name ?? ''}</div>
                               <div className="nb-bauth">⚽ NOTEBOOK</div>
                             </div>
                           )}
-                          {(i === 0 || i === 2) && <span className="nb-ptag">{getNotebookPricing(nb).discountPct}%</span>}
+                          {(i === 0 || i === 2) && nbDiscPct > 0 && <span className="nb-ptag">{nbDiscPct}%</span>}
                         </div>
                       );
                     })}
@@ -706,46 +663,49 @@ export default function NotebookBundleClient() {
                 <h2 className="nb-section-title">ফুটবলের ৫টি অবিস্মরণীয় গল্প — এখন তোমার হাতের নোটবুকে</h2>
                 <p className="nb-section-sub">প্রতিটি নোটবুক একটি আলাদা ফুটবল legend বা moment-কে সম্মান জানায়।</p>
               </div>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
+              ) : (
               <div style={{ display: 'grid', gridTemplateColumns: bookGridCols, gap: 16 }}>
-                {NOTEBOOKS.map((nb) => {
-                  const p = bySlug[nb.slug];
-                  const src = p ? imgUrl(p.images?.[0]) : null;
-                  const { price, original, discountPct: nbDiscPct } = getNotebookPricing(nb);
-                  const tagline = p?.taglineEn ?? nb.tagline;
+                {products.map((p, i) => {
+                  const src = imgUrl(p.images?.[0]);
+                  const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
                   const ratingCount = p?.ratingCount ?? 0;
                   const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
+                  const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
                   return (
-                    <div key={nb.slug} className="nb-bcard">
+                    <div key={p._id} className="nb-bcard">
                       <div className="nb-thumb" style={{ background: 'linear-gradient(160deg, #E8F5E9, #C8E6C9)' }}>
-                        <span className="nb-bdg">{nbDiscPct}% OFF</span>
-                        {nb.popular && <span className="nb-popular-badge">MOST POPULAR</span>}
+                        {nbDiscPct > 0 && <span className="nb-bdg">{nbDiscPct}% OFF</span>}
+                        {i === 0 && <span className="nb-popular-badge">MOST POPULAR</span>}
                         {src ? (
-                          <img src={src} alt={nb.title} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
+                          <img src={src} alt={p.name} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
                         ) : (
-                          <div className="nb-mini-book" style={{ background: nb.color, color: nb.dark ? '#1a1a1a' : '#fff' }}>
-                            <div className="nb-mb-top">{nb.badge}</div>
-                            <div className="nb-mb-ttl">{nb.titleShort}</div>
+                          <div className="nb-mini-book" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                            <div className="nb-mb-top">⚽</div>
+                            <div className="nb-mb-ttl">{p.name}</div>
                             <div className="nb-mb-auth">⚽ 2026</div>
                           </div>
                         )}
                       </div>
                       <div className="nb-body">
-                        <h4>{nb.title}<span className="en">{tagline}</span></h4>
+                        <h4>{p.name}</h4>
                         <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span>}</div>
                         <div className="nb-pline">
                           <span className="nb-pnow nb-num">৳{price}</span>
                           <span className="nb-pwas nb-num">৳{original}</span>
                         </div>
-                        <div className="nb-scarcity">⚡ মাত্র {nb.stock} টি বাকি</div>
+                        {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
                         <div className="nb-actions">
-                          <Link href={`/${nb.slug}`} className="nb-btn-mini-ghost">বিস্তারিত</Link>
-                          <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(nb.slug, nb.title)}>কার্টে যোগ</button>
+                          <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত</Link>
+                          <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>কার্টে যোগ</button>
                         </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+              )}
             </div>
           </div>
         </section>
@@ -769,26 +729,26 @@ export default function NotebookBundleClient() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: pickGridCols, gap: 12 }}>
-                  {NOTEBOOKS.map((nb) => {
-                    const p = bySlug[nb.slug];
-                    const src = p ? imgUrl(p.images?.[0]) : null;
-                    const isOn = selected.has(nb.slug);
-                    const { price } = getNotebookPricing(nb);
+                  {products.map((p, i) => {
+                    const src = imgUrl(p.images?.[0]);
+                    const isOn = selected.has(p._id);
+                    const { price } = getProductPrice(p);
+                    const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
                     return (
-                      <button key={nb.slug} className={`nb-pick${isOn ? ' on' : ''}`} onClick={() => toggleNotebook(nb.slug)}>
+                      <button key={p._id} className={`nb-pick${isOn ? ' on' : ''}`} onClick={() => toggleNotebook(p._id)}>
                         <div className="nb-pick-check">
                           {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#071A07" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
                         </div>
                         {src ? (
-                          <img src={src} alt={nb.title} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
+                          <img src={src} alt={p.name} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
                         ) : (
-                          <div className="nb-pmini" style={{ background: nb.color, color: nb.dark ? '#1a1a1a' : '#fff' }}>
-                            <div className="pa">{nb.badge}</div>
-                            <div className="pt">{nb.titleShort}</div>
+                          <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                            <div className="pa">⚽</div>
+                            <div className="pt">{p.name}</div>
                             <div className="pa">⚽ 2026</div>
                           </div>
                         )}
-                        <div className="nb-ptitle">{nb.title}</div>
+                        <div className="nb-ptitle">{p.name}</div>
                         <div className="nb-pprice nb-num">৳{price}</div>
                       </button>
                     );
