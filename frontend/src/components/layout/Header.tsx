@@ -27,7 +27,6 @@ const NAV_LINKS = [
   { label: 'অফার', href: '/offers' },
   { label: 'ব্লগ', href: '/blog' },
   { label: 'আমাদের বিশেষিত', href: '/about' },
-  { label: 'Notebook Bundle', href: '/notebook-bundle' },
 ];
 
 const ANNOUNCEMENTS = [
