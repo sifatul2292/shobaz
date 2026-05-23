@@ -752,9 +752,24 @@ export default function NotebookBundleClient() {
                 </div>
 
                 {/* Free shipping banner */}
-                <div style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 12, padding: '10px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>🚚</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif' }}>যেকোনো ৩টি নোটবুক কিনলে ফ্রি ডেলিভারি পাবে!</span>
+                <div style={{
+                  background: 'linear-gradient(90deg, #D4AF37 0%, #E8C84A 50%, #D4AF37 100%)',
+                  borderRadius: 16, padding: '18px 24px', marginBottom: 24,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+                  boxShadow: '0 6px 24px -8px rgba(212,175,55,0.6)',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
+                  <div style={{ position: 'absolute', bottom: -30, left: '30%', width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                  <span style={{ fontSize: 28, position: 'relative', zIndex: 1 }}>🚚</span>
+                  <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                    <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 800, color: '#071A07', fontFamily: '"Hind Siliguri",sans-serif', lineHeight: 1.2 }}>
+                      যেকোনো ৩টি নোটবুক কিনলে ফ্রি ডেলিভারি পাবে!
+                    </div>
+                    <div style={{ fontSize: 12, color: '#2E4A2E', fontFamily: '"Inter",sans-serif', marginTop: 3, fontWeight: 600 }}>
+                      🎁 সারাদেশে — ঢাকা ও ঢাকার বাইরে উভয়ই প্রযোজ্য
+                    </div>
+                  </div>
                 </div>
 
                 {([{ team: 'Argentina Fan', flag: '🇦🇷', teamColor: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', teamColor: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, teamColor, prods }) => (
