@@ -20,13 +20,18 @@ function getDynamicHref(slug: string) {
 }
 
 const NAV_LINKS = [
-  { label: 'মূলপাতা', href: '/' },
-  { label: 'সকল বই', href: '/products' },
-  { label: 'লেখক', href: '/authors' },
-  { label: 'প্রকাশনা', href: '/publishers' },
-  { label: 'অফার', href: '/offers' },
-  { label: 'ব্লগ', href: '/blog' },
-  { label: 'আমাদের বিশেষিত', href: '/about' },
+  { label: 'Home', href: '/' },
+  { label: 'All Books', href: '/products' },
+  { label: 'Bestselling', href: '/products?tag=our-bestselling-books' },
+  { label: 'Business', href: '/products?tag=business-and-entrepreneurship' },
+  { label: 'Marketing', href: '/products?tag=marketing-and-leadership' },
+  { label: 'Finance', href: '/products?tag=finance-and-wealth' },
+  { label: 'Mindset', href: '/products?tag=mindset-and-psychology' },
+  { label: 'Productivity', href: '/products?tag=productivity-and-habits' },
+  { label: 'Communication', href: '/products?tag=people-skill-and-communication' },
+  { label: 'Finance Bundle', href: '/finance-bundle' },
+  { label: 'Communication Bundle', href: '/communication-bundle' },
+  { label: 'Notebook Bundle', href: '/notebook-bundle' },
 ];
 
 const ANNOUNCEMENTS = [
