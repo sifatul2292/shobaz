@@ -26,6 +26,9 @@ const NOTEBOOK_COLORS = [
   { color: '#0D1B3E', dark: false },
 ];
 
+const BRAZIL_SLUGS = ['hexa-loading-46', 'we-never-stopped-dreaming-74', 'generations-of-greatness-15'];
+const ARGENTINA_SLUGS = ['blueandwhite', 'messi-s-glory-15', 'for-every-heart-81'];
+
 function getProductPrice(p: Product): { price: number; original: number; discountPct: number } {
   const original = p.salePrice || p.price || 0;
   const discount = p.discountAmount || 0;
@@ -185,6 +188,9 @@ export default function NotebookBundleClient() {
   const selectedOriginal = selectedProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
+
+  const brazilProducts = products.filter(p => BRAZIL_SLUGS.some(s => p.slug?.toLowerCase() === s.toLowerCase()));
+  const argentinaProducts = products.filter(p => ARGENTINA_SLUGS.some(s => p.slug?.toLowerCase() === s.toLowerCase()));
 
   const toggleNotebook = (id: string) => {
     setSelected((prev) => {
@@ -534,9 +540,9 @@ export default function NotebookBundleClient() {
                     ক্লাস নোট, ডায়েরি, স্বপ্নের তালিকা — সব লিখে রাখো তোমার পছন্দের legend-এর সঙ্গে।
                   </p>
                   <div className="nb-price-row">
-                    <span className="nb-price-now nb-num">৳{selectedTotal.toLocaleString('en-IN')}</span>
-                    <span className="nb-price-was nb-num">৳{selectedOriginal.toLocaleString('en-IN')}</span>
-                    <span className="nb-save-pill">SAVE ৳{savedAmount.toLocaleString('en-IN')}</span>
+                    <span className="nb-price-now nb-num">৳190</span>
+                    <span className="nb-price-was nb-num">৳400</span>
+                    <span className="nb-save-pill">৫৩% ছাড় · প্রতি পিস</span>
                   </div>
                   <div className="nb-cta-row">
                     <a href="#nb-builder" className="nb-btn nb-btn-primary">
@@ -670,45 +676,58 @@ export default function NotebookBundleClient() {
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
               ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: bookGridCols, gap: 16 }}>
-                {products.map((p, i) => {
-                  const src = imgUrl(p.images?.[0]);
-                  const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
-                  const ratingCount = p?.ratingCount ?? 0;
-                  const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
-                  const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
-                  return (
-                    <div key={p._id} className="nb-bcard">
-                      <div className="nb-thumb" style={{ background: 'linear-gradient(160deg, #E8F5E9, #C8E6C9)' }}>
-                        {nbDiscPct > 0 && <span className="nb-bdg">{nbDiscPct}% OFF</span>}
-                        {i === 0 && <span className="nb-popular-badge">MOST POPULAR</span>}
-                        {src ? (
-                          <img src={src} alt={p.name} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
-                        ) : (
-                          <div className="nb-mini-book" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
-                            <div className="nb-mb-top">⚽</div>
-                            <div className="nb-mb-ttl">{p.name}</div>
-                            <div className="nb-mb-auth">⚽ 2026</div>
-                          </div>
-                        )}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 32 }}>
+                  {/* ── Argentina Column ── */}
+                  {([{ team: 'Argentina Fan', flag: '🇦🇷', color: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', color: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, color, prods }) => (
+                    <div key={team}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: color, borderRadius: 14, padding: '12px 18px', marginBottom: 16 }}>
+                        <span style={{ fontSize: 24 }}>{flag}</span>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#fff', opacity: 0.8, fontFamily: '"Inter",sans-serif' }}>For</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: '"Hind Siliguri",sans-serif', lineHeight: 1.1 }}>{team}</div>
+                        </div>
                       </div>
-                      <div className="nb-body">
-                        <h4>{p.name}</h4>
-                        <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span>}</div>
-                        <div className="nb-pline">
-                          <span className="nb-pnow nb-num">৳{price}</span>
-                          <span className="nb-pwas nb-num">৳{original}</span>
-                        </div>
-                        {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
-                        <div className="nb-actions">
-                          <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত</Link>
-                          <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>কার্টে যোগ</button>
-                        </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                        {prods.map((p, i) => {
+                          const src = imgUrl(p.images?.[0]);
+                          const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
+                          const ratingCount = p?.ratingCount ?? 0;
+                          const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
+                          const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
+                          return (
+                            <div key={p._id} className="nb-bcard">
+                              <div className="nb-thumb" style={{ background: 'linear-gradient(160deg, #E8F5E9, #C8E6C9)' }}>
+                                {nbDiscPct > 0 && <span className="nb-bdg">{nbDiscPct}% OFF</span>}
+                                {src ? (
+                                  <img src={src} alt={p.name} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
+                                ) : (
+                                  <div className="nb-mini-book" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                                    <div className="nb-mb-top">⚽</div>
+                                    <div className="nb-mb-ttl">{p.name}</div>
+                                    <div className="nb-mb-auth">⚽ 2026</div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="nb-body">
+                                <h4>{p.name}</h4>
+                                <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span>}</div>
+                                <div className="nb-pline">
+                                  <span className="nb-pnow nb-num">৳{price}</span>
+                                  <span className="nb-pwas nb-num">৳{original}</span>
+                                </div>
+                                {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
+                                <div className="nb-actions">
+                                  <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত</Link>
+                                  <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>কার্টে যোগ</button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -732,32 +751,46 @@ export default function NotebookBundleClient() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: pickGridCols, gap: 12 }}>
-                  {products.map((p, i) => {
-                    const src = imgUrl(p.images?.[0]);
-                    const isOn = selected.has(p._id);
-                    const { price } = getProductPrice(p);
-                    const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
-                    return (
-                      <button key={p._id} className={`nb-pick${isOn ? ' on' : ''}`} onClick={() => toggleNotebook(p._id)}>
-                        <div className="nb-pick-check">
-                          {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#071A07" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
-                        </div>
-                        {src ? (
-                          <img src={src} alt={p.name} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
-                        ) : (
-                          <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
-                            <div className="pa">⚽</div>
-                            <div className="pt">{p.name}</div>
-                            <div className="pa">⚽ 2026</div>
-                          </div>
-                        )}
-                        <div className="nb-ptitle">{p.name}</div>
-                        <div className="nb-pprice nb-num">৳{price}</div>
-                      </button>
-                    );
-                  })}
+                {/* Free shipping banner */}
+                <div style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 12, padding: '10px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>🚚</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif' }}>যেকোনো ৩টি নোটবুক কিনলে ফ্রি ডেলিভারি পাবে!</span>
                 </div>
+
+                {([{ team: 'Argentina Fan', flag: '🇦🇷', teamColor: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', teamColor: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, teamColor, prods }) => (
+                  <div key={team} style={{ marginBottom: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <span style={{ fontSize: 18 }}>{flag}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: teamColor, fontFamily: '"Inter",sans-serif' }}>{team}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12 }}>
+                      {prods.map((p, i) => {
+                        const src = imgUrl(p.images?.[0]);
+                        const isOn = selected.has(p._id);
+                        const { price } = getProductPrice(p);
+                        const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
+                        return (
+                          <button key={p._id} className={`nb-pick${isOn ? ' on' : ''}`} onClick={() => toggleNotebook(p._id)}>
+                            <div className="nb-pick-check">
+                              {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#071A07" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
+                            </div>
+                            {src ? (
+                              <img src={src} alt={p.name} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
+                            ) : (
+                              <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                                <div className="pa">⚽</div>
+                                <div className="pt">{p.name}</div>
+                                <div className="pa">⚽ 2026</div>
+                              </div>
+                            )}
+                            <div className="nb-ptitle">{p.name}</div>
+                            <div className="nb-pprice nb-num">৳{price}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
 
                 <div className="nb-builder-totals">
                   <div className="nb-totals-left">
