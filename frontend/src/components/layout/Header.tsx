@@ -27,8 +27,6 @@ const NAV_LINKS = [
   { label: 'অফার', href: '/offers' },
   { label: 'ব্লগ', href: '/blog' },
   { label: 'আমাদের বিশেষিত', href: '/about' },
-  { label: 'Finance Bundle', href: '/finance-bundle' },
-  { label: 'Communication Bundle', href: '/communication-bundle' },
   { label: 'Notebook Bundle', href: '/notebook-bundle' },
 ];
 
