@@ -371,10 +371,19 @@ export default function CheckoutPage() {
     // weight exceeds all rules — use last rule's cost
     return rules[rules.length - 1].cost;
   };
-  const deliveryFee = deliveryLocation === 'inside'
+  // Notebook free-shipping: 3+ notebook-tagged items → delivery is free
+  const notebookQty = items.reduce((count, item) => {
+    const tags = (item.product as any).tags;
+    if (Array.isArray(tags) && tags.some((t: any) => t.slug === 'notebook')) return count + item.quantity;
+    return count;
+  }, 0);
+  const notebookFreeShipping = notebookQty >= 3;
+
+  const baseDeliveryFee = deliveryLocation === 'inside'
     ? calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)
     : calcWeightFee(shippingCharge?.outsideDhakaRules, outsideFee);
-  console.log('[WEIGHT] totalWeightGrams:', totalWeightGrams, '| deliveryFee:', deliveryFee, '| location:', deliveryLocation);
+  const deliveryFee = notebookFreeShipping ? 0 : baseDeliveryFee;
+  console.log('[WEIGHT] totalWeightGrams:', totalWeightGrams, '| deliveryFee:', deliveryFee, '| notebookQty:', notebookQty, '| location:', deliveryLocation);
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
@@ -549,7 +558,11 @@ export default function CheckoutPage() {
                 {/* price rows */}
                 <div style={{ padding: '16px 24px 0' }}>
                   <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
-                  <SummaryRow label={`ডেলিভারি চার্জ (${deliveryLabel})`} value={`৳${deliveryFee}`} valueColor={PRIMARY}/>
+                  <SummaryRow
+                    label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
+                    value={notebookFreeShipping ? 'ফ্রি!' : `৳${deliveryFee}`}
+                    valueColor={notebookFreeShipping ? '#16a34a' : PRIMARY}
+                  />
                 </div>
 
                 {/* grand total */}
