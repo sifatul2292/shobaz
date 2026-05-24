@@ -16,18 +16,21 @@ export class FbFeedService {
 
     const items = products.map((p) => {
       const id = String(p._id);
-      const title = this.escapeXml(p.nameEn || p.name || '');
+      const title = this.escapeXml(p.name || '');
       const rawDesc = p.shortDescription || p.description || p.name || '';
       const description = this.escapeXml(
         this.stripHtml(rawDesc),
-      ).slice(0, 5000) || this.escapeXml(p.nameEn || p.name || '');
+      ).slice(0, 5000) || this.escapeXml(p.name || '');
       const link = `${this.siteUrl}/product-details/${encodeURIComponent(p.slug || '')}`;
       const imageLink =
         p.images && p.images.length
           ? p.images[0]
           : 'https://cdn.saleecom.com/upload/images/placeholder.png';
       const availability = p.quantity > 0 ? 'in stock' : 'out of stock';
-      const price = `${Number(p.salePrice || 0).toFixed(2)} BDT`;
+      const salePrice = Number(p.salePrice || 0);
+      const discount = Number(p.discountAmount || 0);
+      const finalPrice = Math.max(0, salePrice - discount);
+      const price = `${finalPrice.toFixed(2)} BDT`;
       const brandName = p.brand?.name ? this.escapeXml(p.brand.name) : 'Shobaz';
       const categoryName = p.category?.name ? this.escapeXml(p.category.name) : '';
 
