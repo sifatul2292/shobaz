@@ -21,7 +21,7 @@ export class FbFeedService {
       const description = this.escapeXml(
         this.stripHtml(rawDesc),
       ).slice(0, 5000) || this.escapeXml(p.name || '');
-      const link = `${this.siteUrl}/product-details/${encodeURIComponent(p.slug || '')}`;
+      const link = `${this.siteUrl}/products/${encodeURIComponent(p.slug || '')}`;
       const imageLink =
         p.images && p.images.length
           ? p.images[0]
@@ -30,7 +30,8 @@ export class FbFeedService {
       const salePrice = Number(p.salePrice || 0);
       const discount = Number(p.discountAmount || 0);
       const finalPrice = Math.max(0, salePrice - discount);
-      const price = `${finalPrice.toFixed(2)} BDT`;
+      const price = `${salePrice.toFixed(2)} BDT`;
+      const salePrice2 = `${finalPrice.toFixed(2)} BDT`;
       const brandName = p.brand?.name ? this.escapeXml(p.brand.name) : 'Shobaz';
       const categoryName = p.category?.name ? this.escapeXml(p.category.name) : '';
 
@@ -51,6 +52,7 @@ export class FbFeedService {
       ${additionalImages}
       <g:availability>${availability}</g:availability>
       <g:price>${price}</g:price>
+      <g:sale_price>${salePrice2}</g:sale_price>
       <g:condition>new</g:condition>
       <g:brand>${brandName}</g:brand>
       ${categoryName ? `<g:product_type>${categoryName}</g:product_type>` : ''}
