@@ -222,6 +222,9 @@ export default function CommunicationBundleClient() {
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
+  const cheapestBook = BOOKS.reduce((min, b) => getBookPricing(b).price < getBookPricing(min).price ? b : min, BOOKS[0]);
+  const minPricing = getBookPricing(cheapestBook);
+
   const toggleBook = (slug: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -738,9 +741,9 @@ export default function CommunicationBundleClient() {
                     জীবনের সবচেয়ে বড় skill যদি কিছু থাকে, তবে তা হলো Communication Skill। এই skill শেখার জন্য এই বইগুলোকে বলা যায়— communication world-এর ultimate guide collection।
                   </p>
                   <div className="fb-price-row">
-                    <span className="fb-price-now fb-num">৳{selectedTotal.toLocaleString('en-IN')}</span>
-                    <span className="fb-price-was fb-num">৳{selectedOriginal.toLocaleString('en-IN')}</span>
-                    <span className="fb-save-pill">SAVE ৳{savedAmount.toLocaleString('en-IN')}</span>
+                    <span className="fb-price-now fb-num">৳{minPricing.price.toLocaleString('en-IN')}</span>
+                    <span className="fb-price-was fb-num">৳{minPricing.original.toLocaleString('en-IN')}</span>
+                    <span className="fb-save-pill">{minPricing.discountPct}% ছাড় · প্রতি বই</span>
                   </div>
                   <div className="fb-cta-row">
                     <a href="#builder" className="fb-btn fb-btn-primary">
