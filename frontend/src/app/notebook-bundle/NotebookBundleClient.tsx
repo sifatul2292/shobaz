@@ -334,6 +334,17 @@ export default function NotebookBundleClient() {
         .nb-value-row { max-width: 1180px; margin: 0 auto; padding: 0 22px; display:flex; align-items:center; gap: 40px; justify-content: center; font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.02em; flex-wrap: wrap; }
         .nb-value-row > div { display:flex; align-items:center; gap: 10px; opacity: 0.95; }
 
+        /* Delivery promo */
+        .nb-delivery-promo { background:#071A07; padding:24px 22px 0; }
+        .nb-delivery-card { max-width:1180px; margin:0 auto; min-height:112px; border-radius:20px; background:#D8BF4D; color:#071A07; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; text-align:center; padding:22px 28px; box-shadow:0 18px 34px -24px rgba(7,26,7,0.65); }
+        .nb-delivery-card::before, .nb-delivery-card::after { content:""; position:absolute; border-radius:50%; background:rgba(255,255,255,0.14); pointer-events:none; }
+        .nb-delivery-card::before { width:150px; height:150px; left:30%; bottom:-92px; }
+        .nb-delivery-card::after { width:170px; height:170px; right:-56px; top:-58px; }
+        .nb-delivery-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:7px; }
+        .nb-delivery-title { font-family:"Hind Siliguri",sans-serif; font-weight:800; font-size:clamp(24px,3vw,40px); line-height:1.12; letter-spacing:0; }
+        .nb-delivery-title span { display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; margin-right:12px; vertical-align:middle; border-radius:16px; background:rgba(255,255,255,0.18); font-size:28px; }
+        .nb-delivery-sub { font-family:"Hind Siliguri",sans-serif; font-weight:600; color:#2E4A2E; font-size:15px; line-height:1.35; }
+
         /* Eyebrow */
         .nb-eyebrow { display:inline-flex; align-items:center; gap:10px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #1B6B1B; font-family: "Inter", sans-serif; font-weight: 600; padding: 6px 12px; background: #C8E6C9; border-radius: 999px; margin-bottom: 18px; }
         .nb-eyebrow .dot { width:6px; height:6px; border-radius:50%; background: #1B6B1B; }
@@ -572,6 +583,9 @@ export default function NotebookBundleClient() {
           .nb-price-row { gap:10px; flex-wrap:wrap; }
           .nb-save-pill { font-size:11px; }
           .nb-cta-row .nb-btn { flex:1 1 100%; }
+          .nb-delivery-promo { padding:18px 14px 0; }
+          .nb-delivery-card { min-height:128px; padding:22px 18px; border-radius:16px; }
+          .nb-delivery-title span { display:flex; margin:0 auto 8px; }
           .nb-final-cta { padding:64px 0; }
           .nb-value-row > div:nth-child(n+3) { display:none; }
         }
@@ -693,6 +707,18 @@ export default function NotebookBundleClient() {
           </div>
         </div>
 
+        {/* ── Delivery Promo ── */}
+        <div className="nb-delivery-promo">
+          <div className="nb-delivery-card">
+            <div className="nb-delivery-inner">
+              <div className="nb-delivery-title">
+                <span>🚚</span>যেকোনো ৬টি নোটবুক কিনলে ফ্রি ডেলিভারি
+              </div>
+              <div className="nb-delivery-sub">🎁 সারা দেশে — ঢাকা ও ঢাকার বাইরে একই অফার</div>
+            </div>
+          </div>
+        </div>
+
         {/* ── Package Choices ── */}
         <section id="nb-packages" className="nb-packages-section">
           <div className="nb-container">
@@ -721,7 +747,9 @@ export default function NotebookBundleClient() {
                         <span className="now nb-num">৳{total}</span>
                         <span className="was nb-num">৳{original}</span>
                       </div>
-                      <div className="nb-package-meta">{pack.products.length}টি নোটবুক · Cash on delivery</div>
+                      <div className="nb-package-meta">
+                        {pack.products.length}টি নোটবুক · {pack.products.length >= 6 ? 'Free delivery' : 'Cash on delivery'}
+                      </div>
                       <div className="nb-package-actions">
                         <button className="nb-package-btn" onClick={() => handlePackCheckout(pack.products, pack.name)}>
                           {pack.cta}
@@ -889,6 +917,7 @@ export default function NotebookBundleClient() {
                 <div className="nb-builder-fineprint">
                   <span>✓ ক্যাশ অন ডেলিভারি</span>
                   <span>✓ ৩-৫ দিনে ডেলিভারি</span>
+                  <span>✓ ৬টি নিলে ফ্রি ডেলিভারি</span>
                   <span>✓ পছন্দ না হলে রিটার্ন</span>
                 </div>
               </div>
