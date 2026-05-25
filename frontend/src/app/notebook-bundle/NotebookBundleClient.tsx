@@ -28,8 +28,8 @@ const NOTEBOOK_COLORS = [
   { color: '#0D1B3E', dark: false },
 ];
 
+const ARGENTINA_SLUGS = ['for-every-heart-81', 'messi-s-glory-15', 'blueandwhite'];
 const BRAZIL_SLUGS = ['hexa-loading-46', 'we-never-stopped-dreaming-74', 'generations-of-greatness-15'];
-const ARGENTINA_SLUGS = ['blueandwhite', 'messi-s-glory-15', 'for-every-heart-81'];
 
 function normalizeProducts(payload: any): Product[] {
   const data = payload?.data?.data;
@@ -52,9 +52,22 @@ function isSlugMatch(product: Product, slugs: string[]): boolean {
   return Boolean(slug && slugs.some((s) => s.toLowerCase() === slug));
 }
 
+function sortProductsBySlugOrder(products: Product[], slugs: string[]): Product[] {
+  const bySlug = new Map(products.map((p) => [p.slug?.toLowerCase(), p]));
+  return slugs
+    .map((slug) => bySlug.get(slug.toLowerCase()))
+    .filter((p): p is Product => Boolean(p));
+}
+
 function splitNotebookProducts(products: Product[]) {
-  const argentinaMatches = products.filter((p) => isSlugMatch(p, ARGENTINA_SLUGS));
-  const brazilMatches = products.filter((p) => isSlugMatch(p, BRAZIL_SLUGS));
+  const argentinaMatches = sortProductsBySlugOrder(
+    products.filter((p) => isSlugMatch(p, ARGENTINA_SLUGS)),
+    ARGENTINA_SLUGS,
+  );
+  const brazilMatches = sortProductsBySlugOrder(
+    products.filter((p) => isSlugMatch(p, BRAZIL_SLUGS)),
+    BRAZIL_SLUGS,
+  );
   const groupedIds = new Set([...argentinaMatches, ...brazilMatches].map((p) => p._id));
   const ungrouped = products.filter((p) => !groupedIds.has(p._id));
   const argentinaTarget = Math.ceil(products.length / 2);
