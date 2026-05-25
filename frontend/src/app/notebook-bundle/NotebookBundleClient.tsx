@@ -220,6 +220,18 @@ export default function NotebookBundleClient() {
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
   const { argentinaProducts, brazilProducts } = splitNotebookProducts(products);
+  const fullCollectionProducts = [...argentinaProducts, ...brazilProducts];
+
+  const getPackTotal = (packProducts: Product[]) => packProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
+  const getPackOriginal = (packProducts: Product[]) => packProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
+  const selectPack = (packProducts: Product[]) => {
+    if (packProducts.length === 0) {
+      toast.error('পণ্য লোড হচ্ছে...');
+      return;
+    }
+    setSelected(new Set(packProducts.map((p) => p._id)));
+    document.getElementById('nb-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toggleNotebook = (id: string) => {
     setSelected((prev) => {
@@ -247,6 +259,57 @@ export default function NotebookBundleClient() {
     }
     router.push('/checkout');
   };
+
+  const handlePackCheckout = (packProducts: Product[], packName: string) => {
+    if (packProducts.length === 0) {
+      toast.error('পণ্য লোড হচ্ছে...');
+      return;
+    }
+    packProducts.forEach((p) => addItem(p));
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'AddToCart', {
+        content_name: packName,
+        content_ids: packProducts.map((p) => p._id),
+        value: getPackTotal(packProducts),
+        currency: 'BDT',
+      });
+    }
+    router.push('/checkout');
+  };
+
+  const packageOptions = [
+    {
+      key: 'argentina',
+      name: 'Argentina Fan Pack',
+      bnName: 'Argentina ৩-প্যাক',
+      flag: '🇦🇷',
+      color: '#74ACDF',
+      description: 'For Every Heart, Messi’s Glory, Blue & White Forever',
+      products: argentinaProducts,
+      cta: 'Argentina প্যাক অর্ডার করো',
+    },
+    {
+      key: 'brazil',
+      name: 'Brazil Fan Pack',
+      bnName: 'Brazil ৩-প্যাক',
+      flag: '🇧🇷',
+      color: '#009C3B',
+      description: 'Hexa Loading, We Never Stopped Dreaming, Generations of Greatness',
+      products: brazilProducts,
+      cta: 'Brazil প্যাক অর্ডার করো',
+    },
+    {
+      key: 'full',
+      name: 'Full Collection',
+      bnName: 'পুরো ৬-প্যাক',
+      flag: '🏆',
+      color: '#D4AF37',
+      description: 'Argentina আর Brazil — ৬টি notebook একসাথে',
+      products: fullCollectionProducts,
+      cta: '৬টি একসাথে অর্ডার করো',
+      featured: true,
+    },
+  ];
 
   return (
     <>
@@ -306,6 +369,38 @@ export default function NotebookBundleClient() {
         .nb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #4A6B4A; font-size: 13px; flex-wrap: wrap; }
         .nb-trust-mini b { color: #2E4A2E; font-weight: 600; }
 
+        /* Package choices */
+        .nb-packages-section { background:#EDF4ED; padding:72px 0 86px; }
+        .nb-package-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px; align-items:stretch; }
+        .nb-package-card { position:relative; background:#F1F8F1; border:1px solid #C8E6C9; border-radius:18px; padding:22px; display:flex; flex-direction:column; min-height:100%; box-shadow:0 1px 0 rgba(7,26,7,0.04); }
+        .nb-package-card.featured { background:#071A07; color:#E8F5E9; border-color:#D4AF37; box-shadow:0 22px 48px -28px rgba(7,26,7,0.55); transform:translateY(-8px); }
+        .nb-package-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+        .nb-package-flag { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; font-size:24px; background:#E8F5E9; border:1px solid #C8E6C9; }
+        .nb-package-card.featured .nb-package-flag { background:rgba(212,175,55,0.16); border-color:rgba(212,175,55,0.38); }
+        .nb-package-badge { font-family:"Inter",sans-serif; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#071A07; background:#D4AF37; border-radius:999px; padding:5px 9px; white-space:nowrap; }
+        .nb-package-card h3 { font-family:"Hind Siliguri",sans-serif; font-size:22px; line-height:1.15; margin:0 0 6px; color:#071A07; }
+        .nb-package-card.featured h3 { color:#F1F8F1; }
+        .nb-package-name { font-family:"Inter",sans-serif; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#4A6B4A; font-weight:700; margin-bottom:12px; }
+        .nb-package-card.featured .nb-package-name { color:#D4AF37; }
+        .nb-package-desc { color:#2E4A2E; font-size:14px; line-height:1.55; min-height:44px; margin:0 0 18px; }
+        .nb-package-card.featured .nb-package-desc { color:rgba(232,245,233,0.72); }
+        .nb-package-price { margin-top:auto; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; padding-top:8px; }
+        .nb-package-price .now { font-family:"Fraunces",serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; color:#071A07; }
+        .nb-package-card.featured .nb-package-price .now { color:#F1F8F1; }
+        .nb-package-price .was { font-family:"Inter",sans-serif; color:#4A6B4A; text-decoration:line-through; font-size:15px; }
+        .nb-package-card.featured .nb-package-price .was { color:rgba(232,245,233,0.45); }
+        .nb-package-meta { font-size:12px; color:#4A6B4A; margin:4px 0 18px; }
+        .nb-package-card.featured .nb-package-meta { color:rgba(232,245,233,0.68); }
+        .nb-package-actions { display:grid; grid-template-columns:1fr; gap:8px; }
+        .nb-package-btn { width:100%; border:0; cursor:pointer; border-radius:12px; padding:14px 16px; font-family:"Hind Siliguri",sans-serif; font-weight:700; font-size:15px; background:#1B6B1B; color:#fff; transition:transform .12s ease, background .15s ease; }
+        .nb-package-btn:hover { background:#2E7D32; transform:translateY(-1px); }
+        .nb-package-card.featured .nb-package-btn { background:#D4AF37; color:#071A07; }
+        .nb-package-card.featured .nb-package-btn:hover { background:#E8C84A; }
+        .nb-package-link { width:100%; border:1px solid #A5C8A5; cursor:pointer; border-radius:12px; padding:11px 14px; font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:13px; background:transparent; color:#071A07; }
+        .nb-package-link:hover { background:#E8F5E9; }
+        .nb-package-card.featured .nb-package-link { color:#E8F5E9; border-color:rgba(255,255,255,0.22); }
+        .nb-package-card.featured .nb-package-link:hover { background:rgba(255,255,255,0.07); }
+
         /* Notebook stack */
         .nb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
         .nb-stack { position: relative; width: 485px; height: 420px; }
@@ -354,9 +449,9 @@ export default function NotebookBundleClient() {
         .nb-bcard .nb-pwas { font-family:"Inter",sans-serif; text-decoration:line-through; color:#4A6B4A; font-size:12px; }
         .nb-bcard .nb-scarcity { font-size:11px; color:#C62828; font-weight:600; }
         .nb-bcard .nb-actions { display:flex; gap:6px; margin-top:8px; }
-        .nb-btn-mini-ghost { border:1px solid #A5C8A5; background:transparent; color:#071A07; padding:9px 10px; font-size:12px; border-radius:9px; cursor:pointer; }
+        .nb-btn-mini-ghost { border:0; background:transparent; color:#2E4A2E; padding:5px 0 0; font-size:12px; border-radius:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
         .nb-btn-mini-ghost:hover { background:#E8F5E9; }
-        .nb-btn-mini-primary { background:#1B6B1B; color:#fff; padding:9px 10px; font-size:12px; border-radius:9px; cursor:pointer; border:none; }
+        .nb-btn-mini-primary { background:#1B6B1B; color:#fff; padding:11px 10px; font-size:13px; border-radius:10px; cursor:pointer; border:none; flex:1; font-family:"Hind Siliguri",sans-serif; font-weight:700; }
         .nb-btn-mini-primary:hover { background:#2E7D32; }
 
         /* Builder */
@@ -391,6 +486,11 @@ export default function NotebookBundleClient() {
         .nb-builder-cta { width:100%; margin-top:20px; background:#D4AF37; color:#071A07; padding:18px 26px; border-radius:14px; font-weight:700; font-size:16px; display:inline-flex;align-items:center;justify-content:center;gap:10px; transition:transform .12s ease, background .15s ease; cursor:pointer; border:none; font-family:"Hind Siliguri",sans-serif; }
         .nb-builder-cta:hover { background:#E8C84A; transform:translateY(-1px); }
         .nb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(200,230,201,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
+        .nb-builder-package-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; margin-bottom:26px; }
+        .nb-builder-pack-btn { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:14px; text-align:left; cursor:pointer; color:#E8F5E9; transition:background .15s ease, border-color .15s ease; }
+        .nb-builder-pack-btn:hover { background:rgba(255,255,255,0.09); border-color:rgba(212,175,55,0.55); }
+        .nb-builder-pack-btn strong { display:block; font-family:"Hind Siliguri",sans-serif; font-size:15px; margin-bottom:4px; }
+        .nb-builder-pack-btn span { display:block; color:#D4AF37; font-family:"Inter",sans-serif; font-weight:700; font-size:16px; }
 
         /* Quality */
         .nb-quality-section { background: #EDF4ED; padding: 96px 0; }
@@ -453,6 +553,9 @@ export default function NotebookBundleClient() {
           .nb-builder-head { flex-direction:column; }
           .nb-builder-price { width:100%; text-align:left; min-width:0; }
           .nb-builder { padding:24px; border-radius:20px; }
+          .nb-package-grid { grid-template-columns:1fr; }
+          .nb-package-card.featured { transform:none; }
+          .nb-builder-package-row { grid-template-columns:1fr; }
           section.nb-books-section, .nb-builder-wrap, .nb-quality-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
         }
         @media (max-width:640px) {
@@ -528,11 +631,11 @@ export default function NotebookBundleClient() {
                     <span className="nb-save-pill">৫৩% ছাড় · প্রতি পিস</span>
                   </div>
                   <div className="nb-cta-row">
-                    <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                      পছন্দের নোটবুক বেছে নিন
+                    <a href="#nb-packages" className="nb-btn nb-btn-primary">
+                      প্যাক বেছে এখনই অর্ডার করো
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
-                    <a href="#nb-books" className="nb-btn nb-btn-ghost">সব নোটবুক দেখুন</a>
+                    <a href="#nb-books" className="nb-btn nb-btn-ghost">নোটবুকগুলো দেখো</a>
                   </div>
                   <div className="nb-trust-mini">
                     <div><b>A5</b> ruled pages</div>
@@ -590,6 +693,51 @@ export default function NotebookBundleClient() {
           </div>
         </div>
 
+        {/* ── Package Choices ── */}
+        <section id="nb-packages" className="nb-packages-section">
+          <div className="nb-container">
+            <div className="nb-section-head">
+              <div className="nb-section-eyebrow">দ্রুত অর্ডার</div>
+              <h2 className="nb-section-title">প্রথমে প্যাক বেছে নাও — এরপর অর্ডার</h2>
+              <p className="nb-section-sub">যারা দ্রুত সিদ্ধান্ত নিতে চায় তাদের জন্য ready-made প্যাক। চাইলে নিচে গিয়ে আলাদা notebook-ও বদলাতে পারবে।</p>
+            </div>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
+            ) : (
+              <div className="nb-package-grid">
+                {packageOptions.map((pack) => {
+                  const total = getPackTotal(pack.products);
+                  const original = getPackOriginal(pack.products);
+                  return (
+                    <div key={pack.key} className={`nb-package-card${pack.featured ? ' featured' : ''}`}>
+                      <div className="nb-package-top">
+                        <div className="nb-package-flag" style={pack.featured ? undefined : { borderColor: pack.color }}>{pack.flag}</div>
+                        {pack.featured && <span className="nb-package-badge">Best value</span>}
+                      </div>
+                      <div className="nb-package-name">{pack.name}</div>
+                      <h3>{pack.bnName}</h3>
+                      <p className="nb-package-desc">{pack.description}</p>
+                      <div className="nb-package-price">
+                        <span className="now nb-num">৳{total}</span>
+                        <span className="was nb-num">৳{original}</span>
+                      </div>
+                      <div className="nb-package-meta">{pack.products.length}টি নোটবুক · Cash on delivery</div>
+                      <div className="nb-package-actions">
+                        <button className="nb-package-btn" onClick={() => handlePackCheckout(pack.products, pack.name)}>
+                          {pack.cta}
+                        </button>
+                        <button className="nb-package-link" onClick={() => selectPack(pack.products)}>
+                          আগে সিলেকশন দেখো
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* ── Notebook Cards ── */}
         <section id="nb-books" className="nb-books-section">
           <div className="nb-container">
@@ -613,7 +761,7 @@ export default function NotebookBundleClient() {
                           <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: '"Hind Siliguri",sans-serif', lineHeight: 1.1 }}>{team}</div>
                         </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
                         {prods.map((p, i) => {
                           const src = imgUrl(p.images?.[0]);
                           const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
@@ -639,7 +787,7 @@ export default function NotebookBundleClient() {
                                 {ratingAvg ? (
                                   <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span><span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span></div>
                                 ) : (
-                                  <div className="nb-stars-row" style={{ color: '#4A6B4A', fontSize: 12 }}>New collection</div>
+                                  <div className="nb-stars-row" style={{ color: '#4A6B4A', fontSize: 12 }}>A5 · 70 GSM · Ruled</div>
                                 )}
                                 <div className="nb-pline">
                                   <span className="nb-pnow nb-num">৳{price}</span>
@@ -647,9 +795,9 @@ export default function NotebookBundleClient() {
                                 </div>
                                 {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
                                 <div className="nb-actions">
-                                  <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত</Link>
-                                  <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>কার্টে যোগ</button>
+                                  <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>এখনই কার্টে যোগ</button>
                                 </div>
+                                <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত দেখো</Link>
                               </div>
                             </div>
                           );
@@ -671,14 +819,23 @@ export default function NotebookBundleClient() {
                 <div className="nb-builder-head">
                   <div>
                     <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>বান্ডেল বানাও</div>
-                    <h3>৩টি বা ৬টি বেছে নাও — সরাসরি অর্ডার করো</h3>
-                    <p>পছন্দের দল বা পুরো কালেকশন সিলেক্ট করো, তারপর এক ক্লিকে checkout.</p>
+                    <h3>অর্ডার সারাংশ — প্যাক বদলাও বা নিজের মতো সাজাও</h3>
+                    <p>দ্রুত প্যাক বেছে নাও, অথবা নিচে individual notebook select করে নিজের bundle বানাও।</p>
                   </div>
                   <div className="nb-builder-price">
                     <div className="lbl">তোমার মোট</div>
                     <div className="val nb-num">৳{selectedTotal}</div>
                     <div className="save">{savedAmount.toLocaleString()} টাকা সাশ্রয় · {discountPct}% ছাড়</div>
                   </div>
+                </div>
+
+                <div className="nb-builder-package-row">
+                  {packageOptions.map((pack) => (
+                    <button key={pack.key} className="nb-builder-pack-btn" onClick={() => selectPack(pack.products)}>
+                      <strong>{pack.flag} {pack.bnName}</strong>
+                      <span className="nb-num">৳{getPackTotal(pack.products)}</span>
+                    </button>
+                  ))}
                 </div>
 
                 {([{ team: 'Argentina Fan', flag: '🇦🇷', teamColor: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', teamColor: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, teamColor, prods }) => (
@@ -726,7 +883,7 @@ export default function NotebookBundleClient() {
                 </div>
 
                 <button className="nb-builder-cta" onClick={handleBundleCheckout}>
-                  নির্বাচিত {selected.size}টি নোটবুক checkout করো
+                  নির্বাচিত {selected.size}টি নোটবুক অর্ডার সম্পন্ন করো
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
                 <div className="nb-builder-fineprint">
@@ -808,11 +965,11 @@ export default function NotebookBundleClient() {
         <section className="nb-final-cta">
           <div className="nb-container">
             <div className="nb-section-eyebrow">শেষ ধাপ</div>
-            <h2>পছন্দের দল বেছে নাও, checkout শেষ করো</h2>
+            <h2>Argentina, Brazil, নাকি পুরো ৬-প্যাক?</h2>
             <p>A5 ruled pages, 70 GSM paper, matte laminated cover — সারা দেশে cash on delivery.</p>
             <div className="nb-cta-row" style={{ justifyContent: 'center' }}>
-              <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                নোটবুক বেছে checkout করো
+              <a href="#nb-packages" className="nb-btn nb-btn-primary">
+                প্যাক বেছে অর্ডার করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
               <a href="#nb-books" className="nb-btn nb-btn-ghost">নোটবুকগুলো আবার দেখো</a>
@@ -829,10 +986,10 @@ export default function NotebookBundleClient() {
         <div className="nb-mobile-bar">
           <div className="mb-price">
             <span className="now nb-num">৳{selectedTotal}</span>
-            <span className="was nb-num">৳{selectedOriginal}</span>
+            <span className="was nb-num">{selected.size}টি selected · ৳{selectedOriginal}</span>
           </div>
-          <a href="#nb-builder" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
-            এখনই অর্ডার করো
+          <a href="#nb-packages" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
+            প্যাক বেছে নাও
           </a>
         </div>
       )}
