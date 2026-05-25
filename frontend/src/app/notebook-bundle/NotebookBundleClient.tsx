@@ -30,6 +30,8 @@ const NOTEBOOK_COLORS = [
 
 const ARGENTINA_SLUGS = ['for-every-heart-81', 'messi-s-glory-15', 'blueandwhite'];
 const BRAZIL_SLUGS = ['hexa-loading-46', 'we-never-stopped-dreaming-74', 'generations-of-greatness-15'];
+const ARGENTINA_ORDER = ['for every heart', 'messi', 'blue white', 'blue & white'];
+const BRAZIL_ORDER = ['hexa', 'we never stopped', 'generations'];
 
 function normalizeProducts(payload: any): Product[] {
   const data = payload?.data?.data;
@@ -52,34 +54,37 @@ function isSlugMatch(product: Product, slugs: string[]): boolean {
   return Boolean(slug && slugs.some((s) => s.toLowerCase() === slug));
 }
 
-function sortProductsBySlugOrder(products: Product[], slugs: string[]): Product[] {
-  const bySlug = new Map(products.map((p) => [p.slug?.toLowerCase(), p]));
-  return slugs
-    .map((slug) => bySlug.get(slug.toLowerCase()))
-    .filter((p): p is Product => Boolean(p));
+function getSearchText(product: Product): string {
+  return `${product.name ?? ''} ${product.slug ?? ''}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function getProductRank(product: Product, patterns: string[]): number {
+  const text = getSearchText(product);
+  const rank = patterns.findIndex((pattern) => text.includes(pattern.replace(/[^a-z0-9]+/g, ' ').trim()));
+  return rank === -1 ? patterns.length : rank;
+}
+
+function sortProductsByOrder(products: Product[], patterns: string[]): Product[] {
+  return [...products].sort((a, b) => getProductRank(a, patterns) - getProductRank(b, patterns));
+}
+
+function isArgentinaProduct(product: Product): boolean {
+  const text = getSearchText(product);
+  return text.includes('argentina') || isSlugMatch(product, ARGENTINA_SLUGS);
+}
+
+function isBrazilProduct(product: Product): boolean {
+  const text = getSearchText(product);
+  return text.includes('brazil') || isSlugMatch(product, BRAZIL_SLUGS);
 }
 
 function splitNotebookProducts(products: Product[]) {
-  const argentinaMatches = sortProductsBySlugOrder(
-    products.filter((p) => isSlugMatch(p, ARGENTINA_SLUGS)),
-    ARGENTINA_SLUGS,
-  );
-  const brazilMatches = sortProductsBySlugOrder(
-    products.filter((p) => isSlugMatch(p, BRAZIL_SLUGS)),
-    BRAZIL_SLUGS,
-  );
-  const groupedIds = new Set([...argentinaMatches, ...brazilMatches].map((p) => p._id));
-  const ungrouped = products.filter((p) => !groupedIds.has(p._id));
-  const argentinaTarget = Math.ceil(products.length / 2);
-  const argentinaFill = ungrouped.slice(0, Math.max(0, argentinaTarget - argentinaMatches.length));
-  const argentinaIds = new Set([...argentinaMatches, ...argentinaFill].map((p) => p._id));
-
   return {
-    argentinaProducts: [...argentinaMatches, ...argentinaFill],
-    brazilProducts: [
-      ...brazilMatches,
-      ...ungrouped.filter((p) => !argentinaIds.has(p._id)),
-    ],
+    argentinaProducts: sortProductsByOrder(products.filter(isArgentinaProduct), ARGENTINA_ORDER),
+    brazilProducts: sortProductsByOrder(products.filter(isBrazilProduct), BRAZIL_ORDER),
   };
 }
 
