@@ -17,6 +17,8 @@ declare global {
 }
 
 const TIMER_KEY = 'nb_bundle_timer_end';
+const NOTEBOOK_TAG = 'notebook';
+const NOTEBOOK_COLLECTION_SIZE = 6;
 
 const NOTEBOOK_COLORS = [
   { color: '#74ACDF', dark: true },
@@ -28,6 +30,45 @@ const NOTEBOOK_COLORS = [
 
 const BRAZIL_SLUGS = ['hexa-loading-46', 'we-never-stopped-dreaming-74', 'generations-of-greatness-15'];
 const ARGENTINA_SLUGS = ['blueandwhite', 'messi-s-glory-15', 'for-every-heart-81'];
+
+function normalizeProducts(payload: any): Product[] {
+  const data = payload?.data?.data;
+  const productsData = Array.isArray(data) ? data : data?.items;
+  return Array.isArray(productsData) ? productsData : [];
+}
+
+function hasNotebookTag(product: Product): boolean {
+  const tags = (product as any).tags;
+  if (!Array.isArray(tags)) return false;
+  return tags.some((tag: any) => {
+    const slug = typeof tag?.slug === 'string' ? tag.slug.toLowerCase() : '';
+    const name = typeof tag?.name === 'string' ? tag.name.toLowerCase() : '';
+    return slug === NOTEBOOK_TAG || name === NOTEBOOK_TAG;
+  });
+}
+
+function isSlugMatch(product: Product, slugs: string[]): boolean {
+  const slug = product.slug?.toLowerCase();
+  return Boolean(slug && slugs.some((s) => s.toLowerCase() === slug));
+}
+
+function splitNotebookProducts(products: Product[]) {
+  const argentinaMatches = products.filter((p) => isSlugMatch(p, ARGENTINA_SLUGS));
+  const brazilMatches = products.filter((p) => isSlugMatch(p, BRAZIL_SLUGS));
+  const groupedIds = new Set([...argentinaMatches, ...brazilMatches].map((p) => p._id));
+  const ungrouped = products.filter((p) => !groupedIds.has(p._id));
+  const argentinaTarget = Math.ceil(products.length / 2);
+  const argentinaFill = ungrouped.slice(0, Math.max(0, argentinaTarget - argentinaMatches.length));
+  const argentinaIds = new Set([...argentinaMatches, ...argentinaFill].map((p) => p._id));
+
+  return {
+    argentinaProducts: [...argentinaMatches, ...argentinaFill],
+    brazilProducts: [
+      ...brazilMatches,
+      ...ungrouped.filter((p) => !argentinaIds.has(p._id)),
+    ],
+  };
+}
 
 function getProductPrice(p: Product): { price: number; original: number; discountPct: number } {
   const original = p.salePrice || p.price || 0;
@@ -115,19 +156,44 @@ export default function NotebookBundleClient() {
   ];
 
   useEffect(() => {
-    api.get('/product/get-all-data').then((res) => {
-      if (res.data?.data) {
-        // Filter client-side by tag slug === 'notebook' — same logic as /products?tag=notebook
-        const all = res.data.data as Product[];
-        const prods = all.filter((p) => {
-          const tags = (p as any).tags;
-          if (!Array.isArray(tags)) return false;
-          return tags.some((t: any) => t.slug === 'notebook');
+    const fetchNotebookProducts = async () => {
+      let prods: Product[] = [];
+
+      try {
+        const filteredRes = await api.get('/product/get-all-data', {
+          params: {
+            'tags.name': NOTEBOOK_TAG,
+            page: 1,
+            limit: NOTEBOOK_COLLECTION_SIZE,
+            status: 'publish',
+          },
         });
+        const filteredProducts = normalizeProducts(filteredRes);
+        const taggedProducts = filteredProducts.filter(hasNotebookTag);
+        prods = (taggedProducts.length > 0 ? taggedProducts : filteredProducts).slice(0, NOTEBOOK_COLLECTION_SIZE);
+      } catch {
+      }
+
+      try {
+        if (prods.length < NOTEBOOK_COLLECTION_SIZE) {
+          const allRes = await api.get('/product/get-all-data', {
+            params: { page: 1, limit: 200, status: 'publish' },
+          });
+          const fallbackProducts = normalizeProducts(allRes).filter(hasNotebookTag);
+          const byId = new Map(prods.map((p) => [p._id, p]));
+          fallbackProducts.forEach((p) => byId.set(p._id, p));
+          prods = Array.from(byId.values()).slice(0, NOTEBOOK_COLLECTION_SIZE);
+        }
+
         setProducts(prods);
         setSelected(new Set(prods.map((p) => p._id)));
+      } catch {
+      } finally {
+        setLoading(false);
       }
-    }).catch(() => {}).finally(() => setLoading(false));
+    };
+
+    fetchNotebookProducts();
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'ViewContent', { content_name: 'Notebook Bundle', content_type: 'product_group' });
     }
@@ -189,8 +255,7 @@ export default function NotebookBundleClient() {
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
-  const brazilProducts = products.filter(p => BRAZIL_SLUGS.some(s => p.slug?.toLowerCase() === s.toLowerCase()));
-  const argentinaProducts = products.filter(p => ARGENTINA_SLUGS.some(s => p.slug?.toLowerCase() === s.toLowerCase()));
+  const { argentinaProducts, brazilProducts } = splitNotebookProducts(products);
 
   const toggleNotebook = (id: string) => {
     setSelected((prev) => {
@@ -218,9 +283,6 @@ export default function NotebookBundleClient() {
     }
     router.push('/checkout');
   };
-
-  const bookGridCols = isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)';
-  const pickGridCols = isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)';
 
   return (
     <>
@@ -282,7 +344,7 @@ export default function NotebookBundleClient() {
 
         /* Notebook stack */
         .nb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
-        .nb-stack { position: relative; width: 420px; height: 420px; }
+        .nb-stack { position: relative; width: 485px; height: 420px; }
         .nb-book { position: absolute; width: 150px; height: 220px; border-radius: 3px 6px 6px 3px; box-shadow: 0 24px 36px -18px rgba(7,26,7,0.45), 0 6px 14px -6px rgba(7,26,7,0.30); overflow: hidden; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
         .nb-book::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: linear-gradient(90deg, rgba(0,0,0,0.25), rgba(0,0,0,0)); z-index:1; }
         .nb-book::after { content:""; position:absolute; inset:0; background: linear-gradient(115deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 38%); pointer-events:none; z-index:2; }
@@ -296,11 +358,13 @@ export default function NotebookBundleClient() {
         .nb-b3 { left:140px; top:90px; transform:rotate(0deg); }
         .nb-b4 { left:205px; top:70px; transform:rotate(4deg); }
         .nb-b5 { left:270px; top:40px; transform:rotate(9deg); }
+        .nb-b6 { left:335px; top:75px; transform:rotate(13deg); }
         .nb-stack:hover .nb-b1 { transform: rotate(-13deg) translate(-8px, -6px); }
         .nb-stack:hover .nb-b2 { transform: rotate(-6deg) translate(-4px, -4px); }
         .nb-stack:hover .nb-b3 { transform: rotate(0deg) translate(0, -10px); }
         .nb-stack:hover .nb-b4 { transform: rotate(6deg) translate(4px, -4px); }
         .nb-stack:hover .nb-b5 { transform: rotate(13deg) translate(8px, -6px); }
+        .nb-stack:hover .nb-b6 { transform: rotate(17deg) translate(12px, -4px); }
         .nb-stack-floor { position: absolute; left: 10%; right: 10%; bottom: 0; height: 24px; background: radial-gradient(50% 50% at 50% 50%, rgba(7,26,7,0.18), rgba(0,0,0,0)); filter: blur(6px); }
 
         /* Problems */
@@ -451,10 +515,10 @@ export default function NotebookBundleClient() {
           .nb-hero { padding:40px 0 32px; overflow:hidden; }
           .nb-hero-grid { grid-template-columns:1fr; gap:16px; }
           .nb-stack-wrap { height:285px; order:-1; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
-          .nb-stack { width:345px; height:285px; transform:none; }
-          .nb-book { width:123px; height:180px; }
+          .nb-stack { width:390px; height:285px; transform:none; }
+          .nb-book { width:112px; height:164px; }
           .nb-book .nb-bttl { font-size:14px; }
-          .nb-b1 { left:0px; top:33px; } .nb-b2 { left:62px; top:57px; } .nb-b3 { left:115px; top:74px; } .nb-b4 { left:168px; top:57px; } .nb-b5 { left:222px; top:33px; }
+          .nb-b1 { left:0px; top:33px; } .nb-b2 { left:56px; top:57px; } .nb-b3 { left:104px; top:74px; } .nb-b4 { left:152px; top:57px; } .nb-b5 { left:200px; top:33px; } .nb-b6 { left:248px; top:57px; }
           .nb-sub { max-width:100%; overflow-wrap:break-word; word-break:break-word; }
           .nb-lede-bn { font-size:32px; overflow-wrap:break-word; word-break:break-word; }
           .nb-price-now { font-size:36px; }
@@ -471,10 +535,10 @@ export default function NotebookBundleClient() {
           .nb-mobile-bar { display:flex; }
           body { padding-bottom: 76px; }
           .nb-stack-wrap { height:220px; width:100%; overflow:hidden; align-items:flex-start; justify-content:center; }
-          .nb-stack { width:277px; height:220px; transform:none; }
-          .nb-book { width:99px; height:146px; }
+          .nb-stack { width:310px; height:220px; transform:none; }
+          .nb-book { width:96px; height:142px; }
           .nb-book .nb-bttl { font-size:11px; }
-          .nb-b1 { left:0px; top:27px; } .nb-b2 { left:50px; top:46px; } .nb-b3 { left:92px; top:59px; } .nb-b4 { left:135px; top:46px; } .nb-b5 { left:178px; top:27px; }
+          .nb-b1 { left:0px; top:27px; } .nb-b2 { left:43px; top:46px; } .nb-b3 { left:80px; top:59px; } .nb-b4 { left:117px; top:46px; } .nb-b5 { left:154px; top:27px; } .nb-b6 { left:191px; top:46px; }
           .nb-lede-bn { font-size:26px; overflow-wrap:break-word; word-break:break-word; }
           .nb-sub { font-size:15px; max-width:100%; overflow-wrap:break-word; word-break:break-word; }
           .nb-price-row { gap:10px; flex-wrap:wrap; }
@@ -527,7 +591,7 @@ export default function NotebookBundleClient() {
               <div className="nb-hero-grid">
                 <div>
                   <div className="nb-wc-badge">⚽ FIFA WORLD CUP 2026 — OFFICIAL COLLECTION</div>
-                  <span className="nb-eyebrow"><span className="dot" />৫টি নোটবুকের এক্সক্লুসিভ বান্ডেল</span>
+                  <span className="nb-eyebrow"><span className="dot" />৬টি নোটবুকের এক্সক্লুসিভ বান্ডেল</span>
                   <h1 className="nb-lede-bn">
                     <em>২০২৬ বিশ্বকাপ</em> আসছে।{' '}
                     <span>ফুটবলের উত্তেজনাকে নোটবুকে ধরে রাখো।</span>
@@ -561,9 +625,9 @@ export default function NotebookBundleClient() {
                 {/* Notebook stack */}
                 <div className="nb-stack-wrap" aria-hidden="true">
                   <div className="nb-stack">
-                    {(products.length > 0 ? products.slice(0, 5) : Array(5).fill(null)).map((p: Product | null, i) => {
+                    {(products.length > 0 ? products.slice(0, NOTEBOOK_COLLECTION_SIZE) : Array(NOTEBOOK_COLLECTION_SIZE).fill(null)).map((p: Product | null, i) => {
                       const src = p ? imgUrl(p.images?.[0]) : null;
-                      const cls = ['nb-b1','nb-b2','nb-b3','nb-b4','nb-b5'][i];
+                      const cls = ['nb-b1','nb-b2','nb-b3','nb-b4','nb-b5','nb-b6'][i];
                       const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
                       const { discountPct: nbDiscPct } = p ? getProductPrice(p) : { discountPct: 0 };
                       return (
@@ -670,7 +734,7 @@ export default function NotebookBundleClient() {
             <div ref={r4} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">কালেকশনে কী আছে</div>
-                <h2 className="nb-section-title">ফুটবলের ৫টি অবিস্মরণীয় গল্প — এখন তোমার হাতের নোটবুকে</h2>
+                <h2 className="nb-section-title">ফুটবলের ৬টি অবিস্মরণীয় গল্প — এখন তোমার হাতের নোটবুকে</h2>
                 <p className="nb-section-sub">প্রতিটি নোটবুক একটি আলাদা ফুটবল legend বা moment-কে সম্মান জানায়।</p>
               </div>
               {loading ? (
@@ -836,7 +900,7 @@ export default function NotebookBundleClient() {
             <div ref={r6} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">প্রিমিয়াম কোয়ালিটি</div>
-                <h2 className="nb-section-title">৫টি নোটবুক একসাথে পাচ্ছো ৫৩% ছাড়ে</h2>
+                <h2 className="nb-section-title">৬টি নোটবুক একসাথে পাচ্ছো ৫৩% ছাড়ে</h2>
                 <p className="nb-section-sub">প্রিমিয়াম প্রিন্ট, smooth কাগজ এবং মজবুত binding সহ। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
