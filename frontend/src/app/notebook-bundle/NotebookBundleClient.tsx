@@ -16,7 +16,6 @@ declare global {
   }
 }
 
-const TIMER_KEY = 'nb_bundle_timer_end';
 const NOTEBOOK_TAG = 'notebook';
 const NOTEBOOK_COLLECTION_SIZE = 6;
 
@@ -103,12 +102,6 @@ const FAQS = [
   { q: 'গিফট হিসেবে দেওয়া যাবে?', a: 'অবশ্যই! ফুটবল প্রেমীদের জন্য পারফেক্ট গিফট। বিশেষ গিফট প্যাকেজিং-এর জন্য অর্ডারে নোট করুন।' },
 ];
 
-const REVIEWS = [
-  { name: 'আরিফ হোসেন', location: 'ঢাকা', init: 'আ', color: '#1B6B1B', text: "Blue & White Forever নোটবুকটা পেয়ে মনে হলো আর্জেন্টিনার জার্সি হাতে পেয়েছি! কোয়ালিটি দুর্দান্ত।" },
-  { name: 'রিফাত', location: 'চট্টগ্রাম', init: 'রি', color: '#D4AF37', text: "Hexa Loading নোটবুক Brazil fan হিসেবে আমার must-have। বাঁধাই শক্ত, কাগজ smooth।" },
-  { name: 'সাদমান', location: 'সিলেট', init: 'স', color: '#0D1B3E', text: "বন্ধুকে Messi's Glory gift দিয়েছিলাম — সে কান্নাই করে ফেলল! World Cup 2026-এর আগে পারফেক্ট।" },
-];
-
 const WA_LINK = 'https://wa.me/8801XXXXXXXXX';
 
 function Stars({ n = 5, size = 14 }: { n?: number; size?: number }) {
@@ -159,19 +152,13 @@ export default function NotebookBundleClient() {
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set<string>());
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
-  const [visitorCount, setVisitorCount] = useState(87);
-  const [visitorFade, setVisitorFade] = useState(true);
   const [atBundle, setAtBundle] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const isTablet = bp === 'tablet';
 
-  const [r1, r2, r3, r4, r5, r6, r7, r8] = [
-    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
-    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
-  ];
+  const [r1, r2, r3, r4, r5] = [useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef()];
 
   useEffect(() => {
     const fetchNotebookProducts = async () => {
@@ -217,45 +204,6 @@ export default function NotebookBundleClient() {
     }
   }, []);
 
-  // 72h countdown
-  useEffect(() => {
-    const getOrCreateEnd = () => {
-      try {
-        const stored = localStorage.getItem(TIMER_KEY);
-        if (stored) { const end = parseInt(stored, 10); if (end > Date.now()) return end; }
-      } catch {}
-      const newEnd = Date.now() + 72 * 3600 * 1000;
-      try { localStorage.setItem(TIMER_KEY, String(newEnd)); } catch {}
-      return newEnd;
-    };
-    let end = getOrCreateEnd();
-    const tick = () => {
-      const d = Math.max(0, end - Date.now());
-      setTimeLeft({ h: Math.floor(d / 3600000), m: Math.floor((d % 3600000) / 60000), s: Math.floor((d % 60000) / 1000) });
-      if (d === 0) { const ne = Date.now() + 72 * 3600 * 1000; try { localStorage.setItem(TIMER_KEY, String(ne)); } catch {} end = ne; }
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Dynamic visitor count
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      t = setTimeout(() => {
-        setVisitorFade(false);
-        setTimeout(() => {
-          setVisitorCount((prev) => Math.min(140, Math.max(60, prev + Math.floor(Math.random() * 11) - 5)));
-          setVisitorFade(true);
-          schedule();
-        }, 300);
-      }, 8000 + Math.random() * 4000);
-    };
-    schedule();
-    return () => clearTimeout(t);
-  }, []);
-
   // Bundle section visibility
   useEffect(() => {
     const el = document.getElementById('nb-builder');
@@ -264,8 +212,6 @@ export default function NotebookBundleClient() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
-  const pad = (n: number) => String(n).padStart(2, '0');
 
   const selectedProducts = products.filter((p) => selected.has(p._id));
   const selectedTotal = selectedProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
@@ -385,27 +331,6 @@ export default function NotebookBundleClient() {
         .nb-stack:hover .nb-b6 { transform: rotate(17deg) translate(12px, -4px); }
         .nb-stack-floor { position: absolute; left: 10%; right: 10%; bottom: 0; height: 24px; background: radial-gradient(50% 50% at 50% 50%, rgba(7,26,7,0.18), rgba(0,0,0,0)); filter: blur(6px); }
 
-        /* Problems */
-        .nb-problems { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-        .nb-problem { background: #F1F8F1; border: 1px solid #C8E6C9; border-radius: 18px; padding: 26px; display:flex; flex-direction: column; gap: 12px; position: relative; transition: transform .2s ease, box-shadow .2s ease; }
-        .nb-problem:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(7,26,7,0.04), 0 12px 32px -16px rgba(7,26,7,0.16); }
-        .nb-problem .nb-ico { width:44px;height:44px;border-radius:12px; background:#C8E6C9;color:#1B6B1B; display:grid;place-items:center; font-size:20px; }
-        .nb-problem h3 { font-size: 17px; font-weight: 600; margin: 4px 0 2px; color: #071A07; }
-        .nb-problem p { color: #2E4A2E; font-size: 14px; margin: 0; line-height: 1.65; }
-        .nb-problem .nb-num-mark { position:absolute;top:22px;right:24px; font-family:"Fraunces",serif; font-style:italic; font-weight:500; color:#A5C8A5; font-size:26px; }
-        .nb-problem-cta { margin-top: 26px; background:#C8E6C9; border:1px dashed #1B6B1B; border-radius:14px; padding:18px 22px; display:flex; align-items:center; gap:14px; color:#1B6B1B; font-weight:500; }
-        .nb-problem-cta .nb-check { width:28px;height:28px;border-radius:50%;background:#1B6B1B;color:#fff;display:grid;place-items:center;flex-shrink:0; }
-
-        /* Benefits */
-        .nb-benefits-band { background: #071A07; color: #E8F5E9; padding: 96px 0; }
-        .nb-benefits-band .nb-section-eyebrow { color: rgba(212,175,55,0.8); }
-        .nb-benefits-band .nb-section-title { color: #F1F8F1; }
-        .nb-benefits-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 920px; margin: 0 auto; }
-        .nb-benefit { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px 20px; display:flex; align-items:flex-start; gap:14px; transition: background .2s ease; }
-        .nb-benefit:hover { background: rgba(255,255,255,0.07); }
-        .nb-b-ico { width:36px;height:36px;border-radius:10px; background:rgba(212,175,55,0.18); color:#D4AF37; display:grid;place-items:center;flex-shrink:0; }
-        .nb-benefit p { margin:0;font-size:15px;color:#C8E6C9;line-height:1.55; }
-
         /* Notebook cards */
         .nb-books-section { background: #E8F5E9; padding: 96px 0; }
         .nb-bcard { background: #F1F8F1; border-radius: 16px; overflow: hidden; border: 1px solid #C8E6C9; display:flex; flex-direction:column; transition: transform .2s ease, box-shadow .2s ease; }
@@ -478,17 +403,6 @@ export default function NotebookBundleClient() {
         .nb-promise p { margin:0; color:#071A07; font-size:15px; }
         .nb-promise b { color:#1B6B1B; }
 
-        /* Reviews */
-        .nb-reviews-section { background: #F1F8F1; padding: 96px 0; }
-        .nb-review { background: #EDF4ED; border:1px solid #C8E6C9; border-radius:18px; padding:26px; display:flex; flex-direction:column; gap:14px; }
-        .nb-review .nb-quote { font-family:"Fraunces",serif; font-style:italic; font-size:52px; line-height:1; color:#1B6B1B; margin:-8px 0 -18px; }
-        .nb-review p { margin:0; color:#071A07; font-size:15px; line-height:1.55; }
-        .nb-review .nb-who { display:flex;align-items:center;gap:12px;margin-top:4px; }
-        .nb-review .nb-av { width:38px;height:38px;border-radius:50%; display:grid;place-items:center; font-family:"Fraunces",serif; font-weight:600; font-size:16px; color:#fff; }
-        .nb-review .nb-who-l { display:flex;flex-direction:column;gap:0; }
-        .nb-review .nb-who-l b { font-size:14px;font-weight:600;color:#071A07; }
-        .nb-review .nb-who-l span { font-size:12px;color:#4A6B4A; }
-
         /* FAQ */
         .nb-faq-section { background: #EDF4ED; padding: 96px 0; }
         .nb-faq-list { max-width:760px; margin:0 auto; display:flex;flex-direction:column;gap:8px; }
@@ -511,10 +425,6 @@ export default function NotebookBundleClient() {
         .nb-final-cta .nb-section-eyebrow { color:rgba(212,175,55,0.8); }
         .nb-final-cta h2 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F1F8F1; line-height:1.18; }
         .nb-final-cta p { color:rgba(200,230,201,0.7); max-width:540px; margin:0 auto 26px; }
-        .nb-final-cd { display:flex;gap:16px;justify-content:center;margin-bottom:30px; flex-wrap:wrap; }
-        .nb-cd-box { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 22px;min-width:80px;text-align:center; }
-        .nb-cd-box .n { font-family:"Fraunces",serif;font-weight:600;font-size:34px;line-height:1;color:#F1F8F1; }
-        .nb-cd-box .l { font-family:"Inter",sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(212,175,55,0.75);margin-top:6px; }
         .nb-final-cta .nb-btn-ghost { color:#E8F5E9;border-color:rgba(255,255,255,0.2); }
         .nb-final-cta .nb-btn-ghost:hover { background:rgba(255,255,255,0.05); }
         .nb-final-cta .nb-btn-primary { background:#D4AF37;color:#071A07; }
@@ -540,13 +450,10 @@ export default function NotebookBundleClient() {
           .nb-sub { max-width:100%; overflow-wrap:break-word; word-break:break-word; }
           .nb-lede-bn { font-size:32px; overflow-wrap:break-word; word-break:break-word; }
           .nb-price-now { font-size:36px; }
-          .nb-problems { grid-template-columns:1fr; }
-          .nb-benefits-grid { grid-template-columns:1fr; }
           .nb-builder-head { flex-direction:column; }
           .nb-builder-price { width:100%; text-align:left; min-width:0; }
           .nb-builder { padding:24px; border-radius:20px; }
-          .nb-benefits-band { padding:64px 0; }
-          section.nb-books-section, .nb-builder-wrap, .nb-quality-section, .nb-reviews-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
+          section.nb-books-section, .nb-builder-wrap, .nb-quality-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
         }
         @media (max-width:640px) {
           .nb-strip-row .nb-strip-right-num { display:none; }
@@ -574,16 +481,10 @@ export default function NotebookBundleClient() {
         <div className="nb-strip-row">
           <div className="nb-strip-left">
             <span className="nb-pulse" />
-            <span>⚽ FIFA World Cup 2026 Collection — <b className="nb-num">৫৩% ছাড়</b></span>
+            <span>⚽ World Cup 2026 Inspired Notebook Collection</span>
           </div>
-          <div className="nb-cd">
-            <span style={{ color: 'rgba(200,230,201,0.6)', marginRight: 4, fontFamily: '"Inter",sans-serif', fontSize: 12 }}>অফার শেষ হবে</span>
-            <b className="nb-num">{pad(timeLeft.h)}</b><span>:</span>
-            <b className="nb-num">{pad(timeLeft.m)}</b><span>:</span>
-            <b className="nb-num">{pad(timeLeft.s)}</b>
-          </div>
-          <div className="nb-strip-right-num nb-strip-left" style={{ opacity: visitorFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-            <span>৪.৯ ★ <b>{visitorCount} রিভিউ</b></span>
+          <div className="nb-strip-right-num nb-strip-left">
+            <span>Cash on delivery · ৩-৫ দিনে ডেলিভারি</span>
           </div>
         </div>
       </div>
@@ -608,18 +509,18 @@ export default function NotebookBundleClient() {
             <div ref={r1} style={{ ...fadeStyle }}>
               <div className="nb-hero-grid">
                 <div>
-                  <div className="nb-wc-badge">⚽ FIFA WORLD CUP 2026 — OFFICIAL COLLECTION</div>
+                  <div className="nb-wc-badge">⚽ WORLD CUP 2026 INSPIRED COLLECTION</div>
                   <span className="nb-eyebrow"><span className="dot" />৬টি নোটবুকের এক্সক্লুসিভ বান্ডেল</span>
                   <h1 className="nb-lede-bn">
                     <em>২০২৬ বিশ্বকাপ</em> আসছে।{' '}
                     <span>ফুটবলের উত্তেজনাকে নোটবুকে ধরে রাখো।</span>
                   </h1>
                   <p className="nb-sub">
-                    Messi থেকে Brazil — পৃথিবীর সেরা ফুটবল legends-এর থিমে তৈরি{' '}
-                    <b>প্রিমিয়াম নোটবুক কালেকশন।</b>
+                    Argentina আর Brazil fan-দের জন্য তৈরি ৬টি football-inspired notebook cover.{' '}
+                    <b>A5 ruled pages, 70 GSM paper, matte laminated cover.</b>
                   </p>
                   <p className="nb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
-                    ক্লাস নোট, ডায়েরি, স্বপ্নের তালিকা — সব লিখে রাখো তোমার পছন্দের legend-এর সঙ্গে।
+                    ক্লাস নোট, ডায়েরি, to-do list — প্রতিদিনের লেখায় পছন্দের দলের vibe থাকুক।
                   </p>
                   <div className="nb-price-row">
                     <span className="nb-price-now nb-num">৳190</span>
@@ -628,15 +529,17 @@ export default function NotebookBundleClient() {
                   </div>
                   <div className="nb-cta-row">
                     <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                      ৫৩% ছাড়ে এখনই অর্ডার করুন
+                      পছন্দের নোটবুক বেছে নিন
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
                     <a href="#nb-books" className="nb-btn nb-btn-ghost">সব নোটবুক দেখুন</a>
                   </div>
                   <div className="nb-trust-mini">
-                    <div><Stars size={14} /> <b className="nb-num">4.9</b> <span style={{ color: '#4A6B4A' }}>({visitorCount}+)</span></div>
+                    <div><b>A5</b> ruled pages</div>
                     <div>·</div>
-                    <div><b>২০০+</b> ফুটবল ফ্যান কিনেছেন</div>
+                    <div><b>70 GSM</b> offset paper</div>
+                    <div>·</div>
+                    <div>Cash on delivery</div>
                   </div>
                 </div>
 
@@ -677,79 +580,20 @@ export default function NotebookBundleClient() {
         <div className="nb-value-strip">
           <div className="nb-value-row">
             {[
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: 'সারা দেশে ক্যাশ অন ডেলিভারি' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, label: '৪.৯ ★ — ভেরিফাইড রিভিউ' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>, label: 'World Cup 2026 থিম' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'প্রিমিয়াম কোয়ালিটি প্রিন্ট' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'A5 ruled pages' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: '70 GSM offset paper' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, label: 'Cash on delivery' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l9 4v6c0 5-3.8 9-9 10-5.2-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>, label: 'প্রিন্ট সমস্যা হলে রিটার্ন' },
             ].map((v, i) => (
               <div key={i}>{v.icon}<span>{v.label}</span></div>
             ))}
           </div>
         </div>
 
-        {/* ── Problems ── */}
-        <section style={{ background: '#EDF4ED', padding: '96px 0' }}>
-          <div className="nb-container">
-            <div ref={r2} style={fadeStyle}>
-              <div className="nb-section-head">
-                <div className="nb-section-eyebrow">তোমার কথা বলছি</div>
-                <h2 className="nb-section-title">ফুটবল ভালোবাসো, কিন্তু কিছু একটা মিস করছো?</h2>
-              </div>
-              <div className="nb-problems">
-                {[
-                  { num: '01', ico: '📓', title: 'সাদামাটা নোটবুক bore লাগে', body: 'প্রতিদিন একই রকম generic নোটবুক দেখতে দেখতে লেখার উৎসাহই চলে যায়।' },
-                  { num: '02', ico: '⚽', title: 'World Cup excitement ধরে রাখার জায়গা নেই', body: '২০২৬ বিশ্বকাপের স্মৃতি, পছন্দের দল, goals — কোথায় লিখবে সেটা?', },
-                  { num: '03', ico: '🎁', title: 'ফুটবল fan-দের unique গিফট পাওয়া যায় না', body: 'বন্ধু বা প্রিয়জনকে ফুটবল থিমে কিছু special দিতে চাইলে অপশন নেই।' },
-                ].map((c, i) => (
-                  <div key={i} className="nb-problem">
-                    <div className="nb-num-mark">{c.num}</div>
-                    <div className="nb-ico" style={{ fontSize: 20 }}>{c.ico}</div>
-                    <h3>{c.title}</h3>
-                    <p>{c.body}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="nb-problem-cta">
-                <div className="nb-check">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M5 12l5 5L20 7"/></svg>
-                </div>
-                <div>তোমার ফুটবল প্রেম deserve করে এমন একটা নোটবুক যেটা দেখলেই মনে হয় — এটা আমার জন্যই।</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Benefits ── */}
-        <section className="nb-benefits-band">
-          <div className="nb-container">
-            <div ref={r3} style={fadeStyle}>
-              <div className="nb-section-head">
-                <div className="nb-section-eyebrow">কেন এই কালেকশন</div>
-                <h2 className="nb-section-title">এই নোটবুকগুলো তোমাকে যা দেবে—</h2>
-              </div>
-              <div className="nb-benefits-grid">
-                {[
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>, text: 'পছন্দের football legend-এর সাথে প্রতিদিন থাকো' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>, text: 'ক্লাস নোট, ডায়েরি, to-do list — সব এক জায়গায়' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14M12 2a10 10 0 0 1 0 20"/></svg>, text: 'World Cup 2026 collection — limited edition feel' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, text: 'ফুটবল fan বন্ধু বা প্রিয়জনকে পারফেক্ট গিফট' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'Premium quality — দীর্ঘস্থায়ী, ব্যবহারে আরামদায়ক' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, text: '৫৩% ছাড়ে সারা কালেকশন — সর্বোচ্চ সাশ্রয়' },
-                ].map((b, i) => (
-                  <div key={i} className="nb-benefit">
-                    <div className="nb-b-ico">{b.icon}</div>
-                    <p>{b.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ── Notebook Cards ── */}
         <section id="nb-books" className="nb-books-section">
           <div className="nb-container">
-            <div ref={r4} style={fadeStyle}>
+            <div ref={r2} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">কালেকশনে কী আছে</div>
                 <h2 className="nb-section-title">ফুটবলের ৬টি অবিস্মরণীয় গল্প — এখন তোমার হাতের নোটবুকে</h2>
@@ -774,7 +618,7 @@ export default function NotebookBundleClient() {
                           const src = imgUrl(p.images?.[0]);
                           const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
                           const ratingCount = p?.ratingCount ?? 0;
-                          const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
+                          const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : null;
                           const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
                           return (
                             <div key={p._id} className="nb-bcard">
@@ -792,7 +636,11 @@ export default function NotebookBundleClient() {
                               </div>
                               <div className="nb-body">
                                 <h4>{p.name}</h4>
-                                <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span>}</div>
+                                {ratingAvg ? (
+                                  <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span><span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span></div>
+                                ) : (
+                                  <div className="nb-stars-row" style={{ color: '#4A6B4A', fontSize: 12 }}>New collection</div>
+                                )}
                                 <div className="nb-pline">
                                   <span className="nb-pnow nb-num">৳{price}</span>
                                   <span className="nb-pwas nb-num">৳{original}</span>
@@ -818,13 +666,13 @@ export default function NotebookBundleClient() {
         {/* ── Bundle Builder ── */}
         <section id="nb-builder" className="nb-builder-wrap">
           <div className="nb-container">
-            <div ref={r5} style={fadeStyle}>
+            <div ref={r3} style={fadeStyle}>
               <div className="nb-builder">
                 <div className="nb-builder-head">
                   <div>
                     <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>বান্ডেল বানাও</div>
-                    <h3>নোটবুক বেছে নাও — সরাসরি অর্ডার করো</h3>
-                    <p>সব নোটবুক একসাথে নিলে সর্বোচ্চ ছাড়। যত বেশি, তত বেশি সাশ্রয়।</p>
+                    <h3>৩টি বা ৬টি বেছে নাও — সরাসরি অর্ডার করো</h3>
+                    <p>পছন্দের দল বা পুরো কালেকশন সিলেক্ট করো, তারপর এক ক্লিকে checkout.</p>
                   </div>
                   <div className="nb-builder-price">
                     <div className="lbl">তোমার মোট</div>
@@ -878,7 +726,7 @@ export default function NotebookBundleClient() {
                 </div>
 
                 <button className="nb-builder-cta" onClick={handleBundleCheckout}>
-                  নির্বাচিত {selected.size}টি নোটবুক অর্ডার করো
+                  নির্বাচিত {selected.size}টি নোটবুক checkout করো
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
                 <div className="nb-builder-fineprint">
@@ -894,7 +742,7 @@ export default function NotebookBundleClient() {
         {/* ── Quality ── */}
         <section className="nb-quality-section">
           <div className="nb-container">
-            <div ref={r6} style={fadeStyle}>
+            <div ref={r4} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">প্রিমিয়াম কোয়ালিটি</div>
                 <h2 className="nb-section-title">৬টি নোটবুক একসাথে পাচ্ছো ৫৩% ছাড়ে</h2>
@@ -923,45 +771,10 @@ export default function NotebookBundleClient() {
           </div>
         </section>
 
-        {/* ── Reviews ── */}
-        <section className="nb-reviews-section">
-          <div className="nb-container">
-            <div ref={r7} style={fadeStyle}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 46 }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {REVIEWS.map((r, i) => (
-                    <div key={i} style={{ width: 36, height: 36, borderRadius: '50%', background: r.color, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: '"Fraunces",serif', fontWeight: 600, fontSize: 14, marginLeft: i === 0 ? 0 : -10, border: '2px solid #F1F8F1' }}>{r.init}</div>
-                  ))}
-                </div>
-                <div><Stars size={18} /> <span style={{ fontFamily: '"Inter",sans-serif', fontWeight: 600, color: '#2E4A2E', fontSize: 14 }}><b className="nb-num">4.9</b>/৫ · {visitorCount}+ ফুটবল ফ্যান</span></div>
-              </div>
-              <div className="nb-section-head" style={{ marginBottom: 36 }}>
-                <h2 className="nb-section-title">ফুটবল ফ্যানরা কী বলছেন</h2>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 18 }}>
-                {REVIEWS.map((r, i) => (
-                  <div key={i} className="nb-review">
-                    <Stars size={14} />
-                    <div className="nb-quote">&ldquo;</div>
-                    <p>{r.text}</p>
-                    <div className="nb-who">
-                      <div className="nb-av" style={{ background: r.color }}>{r.init}</div>
-                      <div className="nb-who-l">
-                        <b>{r.name}</b>
-                        <span>ভেরিফাইড ক্রেতা · {r.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ── FAQ ── */}
         <section className="nb-faq-section">
           <div className="nb-container">
-            <div ref={r8} style={fadeStyle}>
+            <div ref={r5} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">প্রশ্ন ও উত্তর</div>
                 <h2 className="nb-section-title">সচরাচর জিজ্ঞাসা</h2>
@@ -994,20 +807,12 @@ export default function NotebookBundleClient() {
         {/* ── Final CTA ── */}
         <section className="nb-final-cta">
           <div className="nb-container">
-            <div className="nb-section-eyebrow">আজই নাও</div>
-            <h2>⚽ World Cup 2026-এর আগেই তোমার কালেকশন সম্পূর্ণ করো</h2>
-            <p>Stock সীমিত — একবার শেষ হলে আর পাবে না।</p>
-            <div className="nb-final-cd">
-              {[{ v: pad(timeLeft.h), l: 'ঘণ্টা' }, { v: pad(timeLeft.m), l: 'মিনিট' }, { v: pad(timeLeft.s), l: 'সেকেন্ড' }].map((c, i) => (
-                <div key={i} className="nb-cd-box">
-                  <div className="n nb-num">{c.v}</div>
-                  <div className="l">{c.l}</div>
-                </div>
-              ))}
-            </div>
+            <div className="nb-section-eyebrow">শেষ ধাপ</div>
+            <h2>পছন্দের দল বেছে নাও, checkout শেষ করো</h2>
+            <p>A5 ruled pages, 70 GSM paper, matte laminated cover — সারা দেশে cash on delivery.</p>
             <div className="nb-cta-row" style={{ justifyContent: 'center' }}>
               <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                এখনই অর্ডার করো
+                নোটবুক বেছে checkout করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
               <a href="#nb-books" className="nb-btn nb-btn-ghost">নোটবুকগুলো আবার দেখো</a>

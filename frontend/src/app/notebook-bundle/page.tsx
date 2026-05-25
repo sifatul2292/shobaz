@@ -5,14 +5,14 @@ import NotebookBundleClient from './NotebookBundleClient';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shobaz.com';
 
 export const metadata: Metadata = {
-  title: 'FIFA World Cup 2026 Notebook Collection | Shobaz',
+  title: 'World Cup 2026 Inspired Notebook Collection | Shobaz',
   description:
-    'ফুটবল legends-এর থিমে তৈরি প্রিমিয়াম নোটবুক কালেকশন — এখন ৫৩% ছাড়ে। Blue & White Forever, Messi\'s Glory, Hexa Loading আরও অনেক।',
+    'Argentina ও Brazil fan-দের জন্য football-inspired A5 ruled notebook collection — 70 GSM paper, matte laminated cover, cash on delivery.',
   keywords: 'football notebook, world cup 2026, messi notebook, brazil notebook, shobaz, ফুটবল নোটবুক',
   alternates: { canonical: `${SITE_URL}/notebook-bundle` },
   openGraph: {
-    title: 'FIFA World Cup 2026 Notebook Collection | Shobaz',
-    description: 'ফুটবল legends-এর থিমে তৈরি প্রিমিয়াম নোটবুক — এখন ৫৩% ছাড়ে',
+    title: 'World Cup 2026 Inspired Notebook Collection | Shobaz',
+    description: 'Argentina ও Brazil fan-দের জন্য football-inspired A5 ruled notebook collection',
     url: `${SITE_URL}/notebook-bundle`,
     siteName: 'Shobaz',
     type: 'website',
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FIFA World Cup 2026 Notebook Collection | Shobaz',
-    description: 'ফুটবল legends-এর থিমে তৈরি প্রিমিয়াম নোটবুক — এখন ৫৩% ছাড়ে',
+    title: 'World Cup 2026 Inspired Notebook Collection | Shobaz',
+    description: 'Argentina ও Brazil fan-দের জন্য football-inspired A5 ruled notebook collection',
   },
 };
 
