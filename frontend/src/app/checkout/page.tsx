@@ -39,6 +39,14 @@ const getCurrentPrice = (product: any): number => {
   const discount = product.discountAmount || 0;
   return discount > 0 ? salePrice - discount : salePrice;
 };
+const hasNotebookTag = (product: any): boolean => {
+  const tags = product?.tags;
+  return Array.isArray(tags) && tags.some((tag: any) => {
+    const slug = typeof tag?.slug === 'string' ? tag.slug.toLowerCase() : '';
+    const name = typeof tag?.name === 'string' ? tag.name.toLowerCase() : '';
+    return slug === 'notebook' || name === 'notebook';
+  });
+};
 
 // ── SVG Icons ─────────────────────────────────────────────────────────
 const IcCheck = ({ size = 16, color = 'white' }: { size?: number; color?: string }) => (
@@ -371,13 +379,12 @@ export default function CheckoutPage() {
     // weight exceeds all rules — use last rule's cost
     return rules[rules.length - 1].cost;
   };
-  // Notebook free-shipping: 3+ notebook-tagged items → delivery is free
+  // Notebook free-shipping: 6+ notebook-tagged items -> delivery is free
   const notebookQty = items.reduce((count, item) => {
-    const tags = (item.product as any).tags;
-    if (Array.isArray(tags) && tags.some((t: any) => t.slug === 'notebook')) return count + item.quantity;
+    if (hasNotebookTag(item.product)) return count + item.quantity;
     return count;
   }, 0);
-  const notebookFreeShipping = notebookQty >= 3;
+  const notebookFreeShipping = notebookQty >= 6;
 
   const baseDeliveryFee = deliveryLocation === 'inside'
     ? calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)
@@ -512,8 +519,8 @@ export default function CheckoutPage() {
                     <DeliveryLocSelector
                       value={deliveryLocation}
                       onChange={setDeliveryLocation}
-                      inside={insideFee}
-                      outside={outsideFee}
+                      inside={notebookFreeShipping ? 0 : insideFee}
+                      outside={notebookFreeShipping ? 0 : outsideFee}
                     />
                   </FormField>
                 </div>
@@ -559,7 +566,7 @@ export default function CheckoutPage() {
                 <div style={{ padding: '16px 24px 0' }}>
                   <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
                   <SummaryRow
-                    label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
+                    label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 ৬টি নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
                     value={notebookFreeShipping ? 'ফ্রি!' : `৳${deliveryFee}`}
                     valueColor={notebookFreeShipping ? '#16a34a' : PRIMARY}
                   />
