@@ -16,8 +16,6 @@ declare global {
   }
 }
 
-const TIMER_KEY = 'cb_bundle_timer_end';
-
 const BOOKS = [
   {
     slug: 'influence-the-psychology-of-persuasion',
@@ -77,12 +75,6 @@ const FAQS = [
   { q: 'পেমেন্ট অপশন কী কী?', a: 'ক্যাশ অন ডেলিভারি, bKash, Nagad, Rocket — সব পেমেন্ট মেথড supported।' },
 ];
 
-const REVIEWS = [
-  { name: 'Rakibul Islam', location: 'ঢাকা', init: 'R', color: '#1E3A2A', text: 'Influence পড়ার পর বুঝলাম কেন আমরা কেনার সিদ্ধান্ত নিই। Sales-এ কাজে লাগছে প্রতিদিন।' },
-  { name: 'Nusrat Jahan', location: 'চট্টগ্রাম', init: 'N', color: '#1B3D6B', text: 'How to Win Friends পড়ে কলিগদের সাথে সম্পর্ক পাল্টে গেছে। এই বই আগে পড়লে কত সমস্যা এড়ানো যেত!' },
-  { name: 'Mahmudul Hasan', location: 'সিলেট', init: 'M', color: '#8B0000', text: 'Never Split the Difference-এর tactics salary negotiation-এ সরাসরি কাজ করেছে। ROI অবিশ্বাস্য।' },
-];
-
 const WA_LINK = 'https://wa.me/8801XXXXXXXXX';
 
 function Stars({ n = 5, size = 14 }: { n?: number; size?: number }) {
@@ -132,18 +124,15 @@ export default function CommunicationBundleClient() {
   const [bySlug, setBySlug] = useState<Record<string, Product>>({});
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set(BOOKS.map((b) => b.slug)));
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
-  const [visitorCount, setVisitorCount] = useState(118);
-  const [visitorFade, setVisitorFade] = useState(true);
   const [atBundle, setAtBundle] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const isTablet = bp === 'tablet';
 
-  const [r1, r2, r3, r4, r5, r6, r7, r8] = [
+  const [r1, r2, r3, r4, r5, r6, r7] = [
     useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
-    useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(),
+    useFadeRef(), useFadeRef(), useFadeRef(),
   ];
 
   useEffect(() => {
@@ -160,43 +149,6 @@ export default function CommunicationBundleClient() {
   }, []);
 
   useEffect(() => {
-    const getOrCreateEnd = () => {
-      try {
-        const stored = localStorage.getItem(TIMER_KEY);
-        if (stored) { const end = parseInt(stored, 10); if (end > Date.now()) return end; }
-      } catch {}
-      const newEnd = Date.now() + 72 * 3600 * 1000;
-      try { localStorage.setItem(TIMER_KEY, String(newEnd)); } catch {}
-      return newEnd;
-    };
-    let end = getOrCreateEnd();
-    const tick = () => {
-      const d = Math.max(0, end - Date.now());
-      setTimeLeft({ h: Math.floor(d / 3600000), m: Math.floor((d % 3600000) / 60000), s: Math.floor((d % 60000) / 1000) });
-      if (d === 0) { const ne = Date.now() + 72 * 3600 * 1000; try { localStorage.setItem(TIMER_KEY, String(ne)); } catch {} end = ne; }
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      t = setTimeout(() => {
-        setVisitorFade(false);
-        setTimeout(() => {
-          setVisitorCount((prev) => Math.min(160, Math.max(100, prev + Math.floor(Math.random() * 11) - 5)));
-          setVisitorFade(true);
-          schedule();
-        }, 300);
-      }, 8000 + Math.random() * 4000);
-    };
-    schedule();
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
     const el = document.getElementById('builder');
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => setAtBundle(e.isIntersecting), { threshold: 0.1 });
@@ -204,7 +156,6 @@ export default function CommunicationBundleClient() {
     return () => obs.disconnect();
   }, []);
 
-  const pad = (n: number) => String(n).padStart(2, '0');
   const getBookPricing = (book: typeof BOOKS[0]) => {
     const p = bySlug[book.slug];
     if (p?.salePrice) {
@@ -221,9 +172,10 @@ export default function CommunicationBundleClient() {
   const selectedOriginal = selectedBooks.reduce((s, b) => s + getBookPricing(b).original, 0);
   const savedAmount = selectedOriginal - selectedTotal;
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
-
-  const cheapestBook = BOOKS.reduce((min, b) => getBookPricing(b).price < getBookPricing(min).price ? b : min, BOOKS[0]);
-  const minPricing = getBookPricing(cheapestBook);
+  const fullBundleTotal = BOOKS.reduce((s, b) => s + getBookPricing(b).price, 0);
+  const fullBundleOriginal = BOOKS.reduce((s, b) => s + getBookPricing(b).original, 0);
+  const fullBundleSaved = fullBundleOriginal - fullBundleTotal;
+  const fullBundleDiscountPct = fullBundleOriginal > 0 ? Math.round((fullBundleSaved / fullBundleOriginal) * 100) : 0;
 
   const toggleBook = (slug: string) => {
     setSelected((prev) => {
@@ -250,6 +202,19 @@ export default function CommunicationBundleClient() {
     if (added === 0) { toast.error('পণ্য লোড হচ্ছে, একটু অপেক্ষা করুন'); return; }
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'AddToCart', { content_name: 'Communication Bundle', content_ids: selectedBooks.map((b) => b.slug), value: selectedTotal, currency: 'BDT' });
+    }
+    router.push('/checkout');
+  };
+
+  const handleFullBundleCheckout = () => {
+    let added = 0;
+    BOOKS.forEach((book) => {
+      const p = bySlug[book.slug];
+      if (p) { addItem(p); added++; }
+    });
+    if (added === 0) { toast.error('পণ্য লোড হচ্ছে, একটু অপেক্ষা করুন'); return; }
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'AddToCart', { content_name: 'Communication Bundle - Full 5 Books', content_ids: BOOKS.map((b) => b.slug), value: fullBundleTotal, currency: 'BDT' });
     }
     router.push('/checkout');
   };
@@ -394,6 +359,24 @@ export default function CommunicationBundleClient() {
         .fb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #6E685D; font-size: 13px; flex-wrap: wrap; }
         .fb-trust-mini b { color: #3F3B33; font-weight: 600; }
 
+        .fb-offer-section { background:#F4EFE6; padding:52px 0 84px; }
+        .fb-offer-card {
+          background:#161510; color:#F8F4EB; border-radius:24px; padding:30px;
+          display:grid; grid-template-columns:1.1fr 0.9fr; gap:24px; align-items:center;
+          border:1px solid rgba(184,137,58,0.36); box-shadow:0 24px 54px -34px rgba(22,21,16,0.65);
+        }
+        .fb-offer-kicker { font-family:"Inter",sans-serif; font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:#E8C075; font-weight:700; margin-bottom:10px; }
+        .fb-offer-card h2 { font-family:"Hind Siliguri",sans-serif; font-size:clamp(26px,3vw,40px); line-height:1.15; margin:0 0 12px; color:#F8F4EB; }
+        .fb-offer-card p { margin:0; color:rgba(248,244,235,0.72); line-height:1.6; font-size:15px; }
+        .fb-offer-price { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:22px; }
+        .fb-offer-price .label { font-family:"Inter",sans-serif; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(248,244,235,0.58); }
+        .fb-offer-price .now { font-family:"Fraunces",serif; font-weight:600; font-size:44px; line-height:1; margin:8px 0 4px; }
+        .fb-offer-price .was { color:rgba(248,244,235,0.48); text-decoration:line-through; font-family:"Inter",sans-serif; }
+        .fb-offer-price .save { color:#E8C075; font-family:"Inter",sans-serif; font-size:13px; font-weight:700; margin-top:6px; }
+        .fb-offer-actions { display:grid; grid-template-columns:1fr; gap:10px; margin-top:18px; }
+        .fb-offer-actions .fb-btn { width:100%; }
+        .fb-outcome-section { background:#F4EFE6; padding:96px 0; }
+
         .fb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
         .fb-stack { position: relative; width: 420px; height: 420px; }
         .fb-book {
@@ -505,9 +488,9 @@ export default function CommunicationBundleClient() {
         .fb-bcard .fb-pwas { font-family:"Inter",sans-serif; text-decoration:line-through; color:#6E685D; font-size:12px; }
         .fb-bcard .fb-scarcity { font-size:11px; color:#D2532A; font-weight:600; }
         .fb-bcard .fb-actions { display:flex; gap:6px; margin-top:8px; }
-        .fb-btn-mini-ghost { border:1px solid #C9BFA8; background:transparent; color:#161510; padding:9px 10px; font-size:12px; border-radius:9px; }
+        .fb-btn-mini-ghost { border:0; background:transparent; color:#3F3B33; padding:5px 0 0; font-size:12px; border-radius:0; text-decoration:underline; text-underline-offset:3px; }
         .fb-btn-mini-ghost:hover { background:#F4EFE6; }
-        .fb-btn-mini-primary { background:#1E3A2A; color:#fff; padding:9px 10px; font-size:12px; border-radius:9px; }
+        .fb-btn-mini-primary { background:#1E3A2A; color:#fff; padding:11px 10px; font-size:13px; border-radius:10px; flex:1; font-family:"Hind Siliguri",sans-serif; font-weight:700; border:none; cursor:pointer; }
         .fb-btn-mini-primary:hover { background:#2A5340; }
 
         .fb-builder-wrap { background: #F4EFE6; padding: 96px 0; }
@@ -572,6 +555,10 @@ export default function CommunicationBundleClient() {
         }
         .fb-builder-cta:hover { background:#F0CF8C; transform:translateY(-1px); }
         .fb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(248,244,235,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
+        .fb-builder-fast { margin-bottom:22px; border:1px solid rgba(232,192,117,0.42); background:rgba(232,192,117,0.12); border-radius:16px; padding:16px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+        .fb-builder-fast strong { font-family:"Hind Siliguri",sans-serif; font-size:17px; color:#F8F4EB; }
+        .fb-builder-fast span { display:block; font-size:13px; color:rgba(248,244,235,0.68); margin-top:2px; }
+        .fb-builder-fast button { border:0; border-radius:12px; padding:12px 16px; background:#E8C075; color:#1E3A2A; font-family:"Hind Siliguri",sans-serif; font-weight:800; cursor:pointer; white-space:nowrap; }
 
         .fb-quality-section { background: #F4EFE6; padding: 96px 0; }
         .fb-qcard { background:#FBF8F2; border:1px solid #E0D8C7; border-radius:16px; padding:24px; position:relative; }
@@ -586,19 +573,6 @@ export default function CommunicationBundleClient() {
         }
         .fb-promise p { margin:0; color:#161510; font-size:15px; }
         .fb-promise b { color:#1E3A2A; }
-
-        .fb-reviews-section { background: #FBF8F2; padding: 96px 0; }
-        .fb-review {
-          background: #F4EFE6; border:1px solid #E0D8C7; border-radius:18px;
-          padding:26px; display:flex; flex-direction:column; gap:14px;
-        }
-        .fb-review .fb-quote { font-family:"Fraunces",serif; font-style:italic; font-size:52px; line-height:1; color:#1E3A2A; margin:-8px 0 -18px; }
-        .fb-review p { margin:0; color:#161510; font-size:15px; line-height:1.55; }
-        .fb-review .fb-who { display:flex;align-items:center;gap:12px;margin-top:4px; }
-        .fb-review .fb-av { width:38px;height:38px;border-radius:50%; display:grid;place-items:center; font-family:"Fraunces",serif; font-weight:600; font-size:16px; color:#F8F4EB; }
-        .fb-review .fb-who-l { display:flex;flex-direction:column;gap:0; }
-        .fb-review .fb-who-l b { font-size:14px;font-weight:600;color:#161510; }
-        .fb-review .fb-who-l span { font-size:12px;color:#6E685D; }
 
         .fb-faq-section { background: #F4EFE6; padding: 96px 0; }
         .fb-faq-list { max-width:760px; margin:0 auto; display:flex;flex-direction:column;gap:8px; }
@@ -627,10 +601,6 @@ export default function CommunicationBundleClient() {
         .fb-final-cta .fb-section-eyebrow { color:rgba(232,192,117,0.8); }
         .fb-final-cta h2 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F8F4EB; line-height:1.18; }
         .fb-final-cta p { color:rgba(242,237,223,0.7); max-width:540px; margin:0 auto 26px; }
-        .fb-final-cd { display:flex;gap:16px;justify-content:center;margin-bottom:30px; flex-wrap:wrap; }
-        .fb-cd-box { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 22px;min-width:80px;text-align:center; }
-        .fb-cd-box .n { font-family:"Fraunces",serif;font-weight:600;font-size:34px;line-height:1;color:#F8F4EB; }
-        .fb-cd-box .l { font-family:"Inter",sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(232,192,117,0.75);margin-top:6px; }
         .fb-final-cta .fb-btn-ghost { color:#F2EDDF;border-color:rgba(255,255,255,0.2); }
         .fb-final-cta .fb-btn-ghost:hover { background:rgba(255,255,255,0.05); }
         .fb-final-cta .fb-btn-primary { background:#E8C075;color:#1E3A2A; }
@@ -660,11 +630,14 @@ export default function CommunicationBundleClient() {
           .fb-price-now { font-size:36px; }
           .fb-problems { grid-template-columns:1fr; }
           .fb-benefits-grid { grid-template-columns:1fr; }
+          .fb-offer-card { grid-template-columns:1fr; }
           .fb-builder-head { flex-direction:column; }
           .fb-builder-price { width:100%; text-align:left; min-width:0; }
+          .fb-builder-fast { flex-direction:column; align-items:flex-start; }
+          .fb-builder-fast button { width:100%; }
           .fb-builder { padding:24px; border-radius:20px; }
           .fb-benefits-band { padding:64px 0; }
-          section.fb-books-section, .fb-builder-wrap, .fb-quality-section, .fb-reviews-section, .fb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
+          section.fb-books-section, .fb-builder-wrap, .fb-quality-section, .fb-faq-section, .fb-outcome-section { padding-top:64px !important; padding-bottom:64px !important; }
         }
         @media (max-width:640px) {
           .fb-strip-row .fb-strip-right-num { display:none; }
@@ -696,18 +669,10 @@ export default function CommunicationBundleClient() {
         <div className="fb-strip-row">
           <div className="fb-strip-left">
             <span className="fb-pulse" />
-            <span>সীমিত অফার শেষ হচ্ছে — <b className="fb-num">৪৩% ছাড়</b></span>
+            <span>৫টি Communication বই একসাথে — <b className="fb-num">{fullBundleDiscountPct}% ছাড়</b></span>
           </div>
-          <div className="fb-cd">
-            <span style={{ color: 'rgba(242,237,223,0.6)', marginRight: 4, fontFamily: '"Inter",sans-serif', fontSize: 12 }}>অফার শেষ হবে</span>
-            <b className="fb-num">{pad(timeLeft.h)}</b>
-            <span>:</span>
-            <b className="fb-num">{pad(timeLeft.m)}</b>
-            <span>:</span>
-            <b className="fb-num">{pad(timeLeft.s)}</b>
-          </div>
-          <div className="fb-strip-right-num fb-strip-left" style={{ opacity: visitorFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-            <span>৪.৯ ★ <b>{visitorCount} রিভিউ</b></span>
+          <div className="fb-strip-right-num fb-strip-left">
+            <span>Cash on delivery · ৩-৫ দিনে ডেলিভারি</span>
           </div>
         </div>
       </div>
@@ -731,31 +696,33 @@ export default function CommunicationBundleClient() {
                 <div>
                   <span className="fb-eyebrow"><span className="dot" />৫টি বইয়ের একচেটিয়া বান্ডেল</span>
                   <h1 className="fb-lede-bn">
-                    বিশ্বজুড়ে বহুলপঠিত ৫টি Communication & People Skills বই—<br />
-                    <span>এখন এক বান্ডেলে।</span>
+                    কথা বলা, influence আর negotiation শেখার জন্য<br />
+                    <span>৫টি bestselling বই একসাথে।</span>
                   </h1>
                   <p className="fb-sub">
-                    চাকরি, ব্যবসা, freelancing বা personal life—প্রতিটি জায়গায় সফল হতে শুধু skill থাকলেই হয় না। দরকার মানুষকে বোঝা, ঠিকভাবে কথা বলা, negotiate করা এবং influence তৈরি করার ক্ষমতা।
+                    চাকরি, ব্যবসা, freelancing, client call, sales pitch বা সম্পর্ক — যেখানে মানুষকে বুঝে কথা বলতে হয়, এই bundle সেখানে কাজে লাগবে।
                   </p>
                   <p className="fb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
-                    জীবনের সবচেয়ে বড় skill যদি কিছু থাকে, তবে তা হলো Communication Skill। এই skill শেখার জন্য এই বইগুলোকে বলা যায়— communication world-এর ultimate guide collection।
+                    প্রতিটি বই আলাদা skill শেখায়: persuasion, networking, power dynamics, negotiation এবং difficult conversation.
                   </p>
                   <div className="fb-price-row">
-                    <span className="fb-price-now fb-num">৳{minPricing.price.toLocaleString('en-IN')}</span>
-                    <span className="fb-price-was fb-num">৳{minPricing.original.toLocaleString('en-IN')}</span>
-                    <span className="fb-save-pill">{minPricing.discountPct}% ছাড় · প্রতি বই</span>
+                    <span className="fb-price-now fb-num">৳{fullBundleTotal.toLocaleString('en-IN')}</span>
+                    <span className="fb-price-was fb-num">৳{fullBundleOriginal.toLocaleString('en-IN')}</span>
+                    <span className="fb-save-pill">{fullBundleDiscountPct}% ছাড় · ৫টি বই</span>
                   </div>
                   <div className="fb-cta-row">
-                    <a href="#builder" className="fb-btn fb-btn-primary">
-                      ৪৩% ছাড়ে এখনই অর্ডার করুন
+                    <button className="fb-btn fb-btn-primary" onClick={handleFullBundleCheckout}>
+                      ৫টি বই একসাথে অর্ডার করুন
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                    </a>
+                    </button>
                     <a href="#books" className="fb-btn fb-btn-ghost">সব বই দেখুন</a>
                   </div>
                   <div className="fb-trust-mini">
-                    <div><Stars size={14} /> <b className="fb-num">4.9</b> <span style={{ color: '#6E685D' }}>(১১৮)</span></div>
+                    <div><b>৫টি</b> communication classics</div>
                     <div>·</div>
-                    <div><b>২৫০+</b> পাঠক কিনেছেন</div>
+                    <div><b>COD</b> সারা দেশে</div>
+                    <div>·</div>
+                    <div>প্রিন্ট সমস্যা হলে রিটার্ন</div>
                   </div>
                 </div>
 
@@ -797,7 +764,7 @@ export default function CommunicationBundleClient() {
           <div className="fb-value-row">
             {[
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: 'সারা দেশে ক্যাশ অন ডেলিভারি' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, label: '৪.৯ ★ — ১১৮ রিভিউ' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, label: '৫টি bestselling title' },
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M4 7h16v12H4zM4 7l8 6 8-6"/></svg>, label: '১০০% অরিজিনাল প্রিন্ট' },
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8893A" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'যত্ন নিয়ে প্যাকেজিং' },
             ].map((v, i) => (
@@ -806,19 +773,45 @@ export default function CommunicationBundleClient() {
           </div>
         </div>
 
-        {/* Problems */}
-        <section style={{ background: '#F4EFE6', padding: '96px 0' }}>
+        {/* Full bundle offer */}
+        <section className="fb-offer-section">
+          <div className="fb-container">
+            <div className="fb-offer-card">
+              <div>
+                <div className="fb-offer-kicker">Best buying choice</div>
+                <h2>সব ৫টি বই একসাথে নিন — আলাদা আলাদা ভাবার দরকার নেই</h2>
+                <p>এই bundle-টা বানানো হয়েছে practical communication skill-এর জন্য: salary negotiation, client handling, sales conversation, networking এবং conflict management.</p>
+              </div>
+              <div className="fb-offer-price">
+                <div className="label">৫টি বইয়ের bundle price</div>
+                <div className="now fb-num">৳{fullBundleTotal.toLocaleString('en-IN')}</div>
+                <div className="was fb-num">৳{fullBundleOriginal.toLocaleString('en-IN')}</div>
+                <div className="save">আপনি সাশ্রয় করছেন ৳{fullBundleSaved.toLocaleString('en-IN')} · {fullBundleDiscountPct}% ছাড়</div>
+                <div className="fb-offer-actions">
+                  <button className="fb-btn fb-btn-primary" onClick={handleFullBundleCheckout}>
+                    ৫টি বই অর্ডার করো
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </button>
+                  <a href="#builder" className="fb-btn fb-btn-ghost" style={{ color: '#F8F4EB', borderColor: 'rgba(255,255,255,0.18)' }}>নিজের মতো bundle সাজাও</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Outcomes */}
+        <section className="fb-outcome-section">
           <div className="fb-container">
             <div ref={r2} style={fadeStyle}>
               <div className="fb-section-head">
-                <div className="fb-section-eyebrow">আপনার পরিচিত সমস্যা</div>
-                <h2 className="fb-section-title">সমস্যা কথা বলতে না পারা নয়, সমস্যা communication literacy-র অভাব</h2>
+                <div className="fb-section-eyebrow">কাদের জন্য</div>
+                <h2 className="fb-section-title">যেখানে কথার উপর ফলাফল নির্ভর করে, এই bundle সেখানে কাজে লাগে</h2>
               </div>
               <div className="fb-problems">
                 {[
-                  { num: '01', ico: '💬', title: 'কথা বলেও মানুষ বোঝে না', body: 'অনেকেই ঘণ্টার পর ঘণ্টা কথা বলেন, কিন্তু কেউ সত্যিকার অর্থে শোনে না বা বোঝে না।' },
-                  { num: '02', ico: '🤝', title: 'সম্পর্ক তৈরি কঠিন মনে হয়', body: 'নতুন মানুষের সাথে connection তৈরি করতে বা পুরোনো সম্পর্ক মজবুত রাখতে পারেন না।' },
-                  { num: '03', ico: '⚡', title: 'Negotiation-এ সবসময় হারেন', body: 'Salary, deal, বা যেকোনো আলোচনায় নিজের মতামত প্রতিষ্ঠা করতে পারেন না।' },
+                  { num: '01', ico: '💼', title: 'Job holder ও manager', body: 'Meeting, feedback, leadership conversation এবং salary discussion আরও পরিষ্কারভাবে handle করতে।' },
+                  { num: '02', ico: '🤝', title: 'Freelancer ও founder', body: 'Client call, proposal, negotiation এবং long-term relationship তৈরির জন্য।' },
+                  { num: '03', ico: '📣', title: 'Sales ও marketing মানুষ', body: 'Customer psychology, persuasion এবং objection handling বুঝে কথা বলার জন্য।' },
                 ].map((c, i) => (
                   <div key={i} className="fb-problem">
                     <div className="fb-num-mark">{c.num}</div>
@@ -832,7 +825,7 @@ export default function CommunicationBundleClient() {
                 <div className="fb-check">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M5 12l5 5L20 7"/></svg>
                 </div>
-                <div>কারণ সফল হতে হলে শুধু কঠোর পরিশ্রম করলেই হয় না — জানতে হয় কীভাবে মানুষকে বুঝতে হয়, প্রভাবিত করতে হয়, আর সঠিক সময়ে সঠিক কথা বলতে হয়।</div>
+                <div>একটা বই inspiration দিতে পারে। এই ৫টি বই মিলে communication skill-এর আলাদা আলাদা জায়গা cover করে।</div>
               </div>
             </div>
           </div>
@@ -848,12 +841,12 @@ export default function CommunicationBundleClient() {
               </div>
               <div className="fb-benefits-grid">
                 {[
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, text: 'Persuasion-এর ৬টি সার্বজনীন নীতি' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>, text: 'মানুষকে instantly পছন্দের মানুষ করার উপায়' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, text: 'High-stakes negotiation tactics' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.7.8 1 1.8 1 2.8v.5h6V17.5c0-1 .3-2 1-2.8A7 7 0 0 0 12 2z"/></svg>, text: 'Power dynamics ও social strategy' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'Difficult conversation-এ শান্ত থাকার কৌশল' },
-                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM3 15h6M15 15h6"/></svg>, text: 'Empathy দিয়ে যেকোনো conflict resolve করা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, text: 'Sales বা interview-তে persuasion ব্যবহার করা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>, text: 'Networking conversation শুরু ও ধরে রাখা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, text: 'Salary, deal ও client negotiation structure করা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.7.8 1 1.8 1 2.8v.5h6V17.5c0-1 .3-2 1-2.8A7 7 0 0 0 12 2z"/></svg>, text: 'Office politics ও power dynamics বোঝা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><path d="M4 17l6-6 4 4 8-8M14 7h6v6"/></svg>, text: 'কঠিন feedback বা conflict calm ভাবে বলা' },
+                  { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#E8C075" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM3 15h6M15 15h6"/></svg>, text: 'মানুষের response বুঝে কথার tone বদলানো' },
                 ].map((b, i) => (
                   <div key={i} className="fb-benefit">
                     <div className="fb-b-ico">{b.icon}</div>
@@ -888,7 +881,7 @@ export default function CommunicationBundleClient() {
                     ? (typeof p.publisher === 'object' ? (p.publisher as any)?.name : p.publisher)
                     : null;
                   const ratingCount = p?.ratingCount ?? 0;
-                  const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : '4.9';
+                  const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : null;
                   return (
                     <div key={book.slug} className="fb-bcard">
                       <div className="fb-thumb" style={{ background: book.dark ? '#EEE7DA' : 'linear-gradient(160deg, #FBF8F2, #EEE7DA)' }}>
@@ -908,16 +901,19 @@ export default function CommunicationBundleClient() {
                         <h4>{book.title}<span className="en">{tagline}</span></h4>
                         <div className="fb-aline">{authorName} · {pages} পেজ</div>
                         {publisherName && <div style={{ fontSize: '0.72rem', color: '#8a7a6a', marginTop: 2 }}>{publisherName}</div>}
-                        <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">{ratingAvg}</span>{ratingCount > 0 && <span style={{ fontSize: '0.7rem', color: '#8a7a6a', marginLeft: 4 }}>({ratingCount})</span>}</div>
+                        {ratingAvg ? (
+                          <div className="fb-stars-row"><Stars size={12} /> <span className="fb-num">{ratingAvg}</span><span style={{ fontSize: '0.7rem', color: '#8a7a6a', marginLeft: 4 }}>({ratingCount})</span></div>
+                        ) : (
+                          <div className="fb-stars-row">Communication skill pick</div>
+                        )}
                         <div className="fb-pline">
                           <span className="fb-pnow fb-num">৳{price}</span>
                           <span className="fb-pwas fb-num">৳{original}</span>
                         </div>
-                        <div className="fb-scarcity">⚡ মাত্র {book.stock} টি বাকি</div>
                         <div className="fb-actions">
-                          <Link href={`/${book.slug}`} className="fb-btn fb-btn-mini-ghost">বিস্তারিত</Link>
-                          <button className="fb-btn fb-btn-mini-primary" onClick={() => handleAddToCart(book.slug, book.title)}>কার্টে যোগ</button>
+                          <button className="fb-btn-mini-primary" onClick={() => handleAddToCart(book.slug, book.title)}>কার্টে যোগ করো</button>
                         </div>
+                        <Link href={`/${book.slug}`} className="fb-btn-mini-ghost">বিস্তারিত দেখো</Link>
                       </div>
                     </div>
                   );
@@ -935,14 +931,22 @@ export default function CommunicationBundleClient() {
                 <div className="fb-builder-head">
                   <div>
                     <div className="fb-section-eyebrow" style={{ color: '#E8C075' }}>বান্ডেল বানান</div>
-                    <h3>বই বেছে নিন — সরাসরি অর্ডার করুন</h3>
-                    <p>সব বই একসাথে নিলে সর্বোচ্চ ছাড়। পছন্দ করে কিছু বই নিন — যত বেশি, তত বেশি সাশ্রয়।</p>
+                    <h3>অর্ডার সারাংশ — ৫টি নিন অথবা নিজের মতো সাজান</h3>
+                    <p>সবচেয়ে ভালো value হলো full 5-book bundle. চাইলে নিচে বই কম-বেশি করে নিতে পারবেন।</p>
                   </div>
                   <div className="fb-builder-price">
                     <div className="lbl">আপনার মোট</div>
                     <div className="val fb-num">৳{selectedTotal}</div>
                     <div className="save">{savedAmount.toLocaleString()} টাকা সাশ্রয় · {discountPct}% ছাড়</div>
                   </div>
+                </div>
+
+                <div className="fb-builder-fast">
+                  <div>
+                    <strong>৫টি বই একসাথে নিলে total ৳{fullBundleTotal.toLocaleString('en-IN')}</strong>
+                    <span>Influence, 48 Laws, How to Win Friends, Never Split the Difference, Crucial Conversations</span>
+                  </div>
+                  <button onClick={handleFullBundleCheckout}>৫টি একসাথে অর্ডার</button>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: pickGridCols, gap: 12 }}>
@@ -1027,45 +1031,10 @@ export default function CommunicationBundleClient() {
           </div>
         </section>
 
-        {/* Reviews */}
-        <section className="fb-reviews-section">
-          <div className="fb-container">
-            <div ref={r7} style={fadeStyle}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 46 }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {REVIEWS.map((r, i) => (
-                    <div key={i} style={{ width: 36, height: 36, borderRadius: '50%', background: r.color, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: '"Fraunces",serif', fontWeight: 600, fontSize: 14, marginLeft: i === 0 ? 0 : -10, border: '2px solid #FBF8F2' }}>{r.init}</div>
-                  ))}
-                </div>
-                <div><Stars size={18} /> <span style={{ fontFamily: '"Inter",sans-serif', fontWeight: 600, color: '#3F3B33', fontSize: 14 }}><b className="fb-num">4.9</b>/৫ · ১১৮ পাঠক</span></div>
-              </div>
-              <div className="fb-section-head" style={{ marginBottom: 36 }}>
-                <h2 className="fb-section-title">পাঠকরা কী বলছেন</h2>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 18 }}>
-                {REVIEWS.map((r, i) => (
-                  <div key={i} className="fb-review">
-                    <Stars size={14} />
-                    <div className="fb-quote">&ldquo;</div>
-                    <p>{r.text}</p>
-                    <div className="fb-who">
-                      <div className="fb-av" style={{ background: r.color }}>{r.init}</div>
-                      <div className="fb-who-l">
-                        <b>{r.name}</b>
-                        <span>ভেরিফাইড ক্রেতা · {r.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* FAQ */}
         <section className="fb-faq-section">
           <div className="fb-container">
-            <div ref={r8} style={fadeStyle}>
+            <div ref={r7} style={fadeStyle}>
               <div className="fb-section-head">
                 <div className="fb-section-eyebrow">প্রশ্ন ও উত্তর</div>
                 <h2 className="fb-section-title">সচরাচর জিজ্ঞাসা</h2>
@@ -1099,21 +1068,13 @@ export default function CommunicationBundleClient() {
         <section className="fb-final-cta">
           <div className="fb-container">
             <div className="fb-section-eyebrow">আজই শুরু করুন</div>
-            <h2>আজই অর্ডার কনফার্ম করুন</h2>
-            <p>shobaz.com অথবা WhatsApp-এর মাধ্যমে।</p>
-            <div className="fb-final-cd">
-              {[{ v: pad(timeLeft.h), l: 'ঘণ্টা' }, { v: pad(timeLeft.m), l: 'মিনিট' }, { v: pad(timeLeft.s), l: 'সেকেন্ড' }].map((c, i) => (
-                <div key={i} className="fb-cd-box">
-                  <div className="n fb-num">{c.v}</div>
-                  <div className="l">{c.l}</div>
-                </div>
-              ))}
-            </div>
+            <h2>৫টি communication বই একসাথে নিন</h2>
+            <p>৳{fullBundleTotal.toLocaleString('en-IN')} bundle price · cash on delivery · print issue হলে return.</p>
             <div className="fb-cta-row" style={{ justifyContent: 'center' }}>
-              <a href="#builder" className="fb-btn fb-btn-primary">
-                এখনই অর্ডার করুন
+              <button className="fb-btn fb-btn-primary" onClick={handleFullBundleCheckout}>
+                ৫টি বই অর্ডার করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </a>
+              </button>
               <a href="#books" className="fb-btn fb-btn-ghost">বইগুলো আবার দেখুন</a>
             </div>
           </div>
