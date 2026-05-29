@@ -2828,7 +2828,8 @@ async updateOrderById(
               'Content-Type': 'application/json',
               'Content-Length': Buffer.byteLength(payload),
               Origin: 'https://shobaz.com',
-              Authorization: apiKey,
+              Authorization: `Bearer ${apiKey}`,
+              'X-API-Key': apiKey,
             },
           },
           (res) => {
