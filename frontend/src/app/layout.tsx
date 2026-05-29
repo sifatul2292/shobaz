@@ -68,14 +68,14 @@ export default function RootLayout({
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://server.shobaz.com/lWhoor22RMay68n/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+'https://server.shobaz.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
           }}
         />
         {/* GTM noscript fallback */}
         <noscript>
           <iframe
-            src="https://server.shobaz.com/lWhoor22RMay68n/ns.html?id=GTM-KW6CXCJK"
+            src="https://server.shobaz.com/ns.html?id=GTM-KW6CXCJK"
             height="0"
             width="0"
             style={{ display: 'none', visibility: 'hidden' }}
