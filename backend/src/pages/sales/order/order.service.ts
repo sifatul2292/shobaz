@@ -2799,11 +2799,19 @@ async updateOrderById(
   }
 
   async checkFraudSpy(phone: string): Promise<ResponsePayload> {
-    const apiKey = process.env.FRAUDSPY_API_KEY;
+    const apiKey =
+      this.configService.get<string>('fraudspyApiKey') ||
+      process.env.FRAUDSPY_API_KEY;
     if (!apiKey) {
       return {
         success: false,
         message: 'FRAUDSPY_API_KEY is not configured in .env',
+      } as ResponsePayload;
+    }
+    if (!phone) {
+      return {
+        success: false,
+        message: 'Phone number is required for FraudSpy check',
       } as ResponsePayload;
     }
     try {
@@ -2826,22 +2834,49 @@ async updateOrderById(
             let body = '';
             res.on('data', (chunk) => (body += chunk));
             res.on('end', () => {
+              const statusCode = res.statusCode || 0;
               try {
-                resolve(JSON.parse(body));
+                const parsed = JSON.parse(body);
+                resolve({ statusCode, body: parsed });
               } catch {
-                resolve(body);
+                resolve({ statusCode, body });
               }
             });
           },
         );
         req.on('error', reject);
+        req.setTimeout(10000, () => {
+          req.destroy(new Error('FraudSpy request timed out'));
+        });
         req.write(payload);
         req.end();
       });
+      const statusCode = data?.statusCode || 0;
+      const fraudSpyBody = data?.body;
+      if (statusCode < 200 || statusCode >= 300) {
+        return {
+          success: false,
+          message:
+            fraudSpyBody?.message ||
+            `FraudSpy request failed with status ${statusCode}`,
+          data: fraudSpyBody,
+        } as ResponsePayload;
+      }
+      if (
+        fraudSpyBody &&
+        typeof fraudSpyBody === 'object' &&
+        fraudSpyBody.ok === false
+      ) {
+        return {
+          success: false,
+          message: fraudSpyBody.message || 'FraudSpy rejected the request',
+          data: fraudSpyBody,
+        } as ResponsePayload;
+      }
       return {
         success: true,
         message: 'FraudSpy result fetched',
-        data,
+        data: fraudSpyBody,
       } as ResponsePayload;
     } catch (err) {
       this.logger.error('FraudSpy API error', err);
