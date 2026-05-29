@@ -2817,41 +2817,72 @@ async updateOrderById(
     try {
       const https = await import('https');
       const payload = JSON.stringify({ phone });
-      const data: any = await new Promise((resolve, reject) => {
-        const req = https.request(
-          {
-            hostname: 'fraudspy.com.bd',
-            path: '/api/v1/search',
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(payload),
-              Authorization: `Bearer ${apiKey}`,
-              'X-API-Key': apiKey,
+      const requestFraudSpy = async (
+        authHeaders: Record<string, string>,
+      ): Promise<any> => {
+        return await new Promise((resolve, reject) => {
+          const req = https.request(
+            {
+              hostname: 'fraudspy.com.bd',
+              path: '/api/v1/search',
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+                ...authHeaders,
+              },
             },
-          },
-          (res) => {
-            let body = '';
-            res.on('data', (chunk) => (body += chunk));
-            res.on('end', () => {
-              const statusCode = res.statusCode || 0;
-              try {
-                const parsed = JSON.parse(body);
-                resolve({ statusCode, body: parsed });
-              } catch {
-                resolve({ statusCode, body });
-              }
-            });
-          },
-        );
-        req.on('error', reject);
-        req.setTimeout(10000, () => {
-          req.destroy(new Error('FraudSpy request timed out'));
+            (res) => {
+              let body = '';
+              res.on('data', (chunk) => (body += chunk));
+              res.on('end', () => {
+                const statusCode = res.statusCode || 0;
+                try {
+                  const parsed = JSON.parse(body);
+                  resolve({ statusCode, body: parsed });
+                } catch {
+                  resolve({ statusCode, body });
+                }
+              });
+            },
+          );
+          req.on('error', reject);
+          req.setTimeout(10000, () => {
+            req.destroy(new Error('FraudSpy request timed out'));
+          });
+          req.write(payload);
+          req.end();
         });
-        req.write(payload);
-        req.end();
-      });
+      };
+      const authAttempts = [
+        {
+          Authorization: `Bearer ${apiKey}`,
+          'X-API-Key': apiKey,
+        },
+        {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        {
+          'X-API-Key': apiKey,
+        },
+        {
+          Authorization: apiKey,
+        },
+      ];
+      let data: any;
+      for (const authHeaders of authAttempts) {
+        data = await requestFraudSpy(authHeaders);
+        const body = data?.body;
+        const code = typeof body === 'object' ? body?.code : undefined;
+        const message = typeof body === 'object' ? body?.message : body;
+        const isMissingApiKey =
+          code === 'API_KEY_MISSING' ||
+          String(message || '')
+            .toLowerCase()
+            .includes('api key missing');
+        if (!isMissingApiKey) break;
+      }
       const statusCode = data?.statusCode || 0;
       const fraudSpyBody = data?.body;
       if (statusCode < 200 || statusCode >= 300) {
