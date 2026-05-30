@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
-import { gtmBeginCheckout } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmPurchase } from '@/lib/gtm';
 import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
@@ -330,9 +330,11 @@ export default function CheckoutPage() {
   const [freshWeights, setFreshWeights] = useState<Record<string, number>>({});
   const formRef = useRef<HTMLFormElement>(null);
   const incompleteOrderSaved = useRef(false);
+  const beginCheckoutTracked = useRef(false);
 
   useEffect(() => {
     setMounted(true);
+    document.title = 'চেকআউট - Shobaz';
     api.get('/shipping-charge/get').then(res => {
       if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
@@ -350,18 +352,18 @@ export default function CheckoutPage() {
         console.log('[WEIGHT] freshWeights map:', map);
         setFreshWeights(map);
       }).catch((err) => { console.error('[WEIGHT] fetch failed:', err); });
-  }, []);
+  }, [items]);
 
   useEffect(() => {
-    document.title = 'চেকআউট - Shobaz';
-    if (items.length > 0) {
-      const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
-      const total = getTotalPrice();
-      gtmBeginCheckout(cartProducts, total);
-      capiInitiateCheckout(cartProducts, total, formData.phone, formData.name);
-      phBeginCheckout(cartProducts, total);
-    }
-  }, []);
+    if (!mounted || beginCheckoutTracked.current || items.length === 0) return;
+
+    beginCheckoutTracked.current = true;
+    const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
+    const total = getTotalPrice();
+    gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
+    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name);
+    phBeginCheckout(cartProducts, total);
+  }, [mounted, items, getTotalPrice, formData.name, formData.phone]);
 
   if (!mounted) return <div style={{ minHeight: '100vh', background: PARCHMENT }}/>;
   if (items.length === 0) return <EmptyCheckout />;
@@ -457,7 +459,14 @@ export default function CheckoutPage() {
       };
       const res = await api.post('/order/add-order-by-anonymous', orderData);
       if (res.data?.success || res.status === 200 || res.status === 201) {
-        const newOrderId = res.data?.data?._id || res.data?._id || res.data?.order?._id;
+        const createdOrder = res.data?.data || res.data?.order || res.data;
+        const newOrderId = createdOrder?._id || res.data?._id || res.data?.order?._id;
+        gtmPurchase({
+          ...orderData,
+          ...(typeof createdOrder === 'object' ? createdOrder : {}),
+          _id: newOrderId,
+          orderId: createdOrder?.orderId || newOrderId,
+        });
         clearCart();
         router.push(`/order-success?orderId=${newOrderId}`);
         toast.success('অর্ডার সফলভাবে গৃহীত হয়েছে!');
