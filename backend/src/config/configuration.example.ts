@@ -61,4 +61,7 @@ export default () => ({
   googleClientSecret: 'your_client_secret',
   googleRefreshToken: 'your_refresh_token',
   accountGmail: 'your-email@gmail.com',
+  sgtmPanelOrderWebhookUrl: process.env.SGTM_PANEL_ORDER_WEBHOOK_URL || '',
+  sgtmPanelOrderWebhookSecret:
+    process.env.SGTM_PANEL_ORDER_WEBHOOK_SECRET || '',
 });

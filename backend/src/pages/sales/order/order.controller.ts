@@ -372,4 +372,15 @@ export class OrderController {
   async getRepeatCustomers(): Promise<ResponsePayload> {
     return await this.orderService.getRepeatCustomers();
   }
+
+  @Version(VERSION_NEUTRAL)
+  @Post('/backfill-sgtm-panel-order-webhook')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.CREATE)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async backfillTodaySgtmPanelOrders(): Promise<ResponsePayload> {
+    return await this.orderService.backfillTodaySgtmPanelOrders();
+  }
 }

@@ -40,6 +40,7 @@ import {
 import { CourierService } from '../../../shared/courier/courier.service';
 import * as schedule from 'node-schedule';
 import { Admin } from '../../../interfaces/admin/admin.interface';
+import axios from 'axios';
 const ObjectId = Types.ObjectId;
 
 @Injectable()
@@ -123,6 +124,7 @@ export class OrderService {
 
     try {
       const saveData = await newData.save();
+      this.notifySgtmPanelOrder(saveData);
 
       // if (saveData.email) {
       //
@@ -253,6 +255,7 @@ export class OrderService {
       const newData = new this.orderModel(mData);
 
       const saveData = await newData.save();
+      this.notifySgtmPanelOrder(saveData);
 
       // Prepare response data immediately
       const data = {
@@ -377,6 +380,113 @@ export class OrderService {
       );
       // Don't throw - background tasks should not fail the order
     }
+  }
+
+  private notifySgtmPanelOrder(order: any): void {
+    this.sendSgtmPanelOrderWebhook(order).catch((error) => {
+      this.logger.warn(
+        `SGTM panel order webhook failed for order ${order?.orderId || order?._id}: ${error?.message || error}`,
+      );
+    });
+  }
+
+  private async sendSgtmPanelOrderWebhook(order: any): Promise<void> {
+    const webhookUrl =
+      process.env.SGTM_PANEL_ORDER_WEBHOOK_URL ||
+      this.configService.get<string>('sgtmPanelOrderWebhookUrl');
+    const webhookSecret =
+      process.env.SGTM_PANEL_ORDER_WEBHOOK_SECRET ||
+      this.configService.get<string>('sgtmPanelOrderWebhookSecret');
+
+    if (!webhookUrl || !webhookSecret) {
+      this.logger.warn(
+        `SGTM panel order webhook skipped for order ${order?.orderId || order?._id}: missing webhook URL or secret`,
+      );
+      return;
+    }
+
+    const createdAt = order?.createdAt ? new Date(order.createdAt) : new Date();
+    const payload = {
+      order_id: String(order?.orderId || order?._id),
+      total: Number(order?.grandTotal ?? order?.totalAmount ?? order?.subTotal ?? 0),
+      currency: 'BDT',
+      created_at: createdAt.toISOString(),
+      source: 'shobaz',
+    };
+
+    const response = await axios.post(webhookUrl, payload, {
+      headers: {
+        'content-type': 'application/json',
+        'x-order-webhook-secret': webhookSecret,
+      },
+      timeout: 10000,
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`unexpected status ${response.status}`);
+    }
+  }
+
+  private getTodayDhakaDateRange(): { start: Date; end: Date } {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(new Date())
+      .reduce((acc, part) => {
+        if (part.type !== 'literal') {
+          acc[part.type] = part.value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+
+    const start = new Date(
+      `${parts.year}-${parts.month}-${parts.day}T00:00:00+06:00`,
+    );
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+
+    return { start, end };
+  }
+
+  async backfillTodaySgtmPanelOrders(): Promise<ResponsePayload> {
+    const { start, end } = this.getTodayDhakaDateRange();
+    const orders = await this.orderModel
+      .find({
+        createdAt: { $gte: start, $lt: end },
+      })
+      .sort({ createdAt: 1 });
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const order of orders) {
+      try {
+        await this.sendSgtmPanelOrderWebhook(order);
+        sent += 1;
+      } catch (error) {
+        failed += 1;
+        this.logger.warn(
+          `SGTM panel order webhook backfill failed for order ${order?.orderId || order?._id}: ${error?.message || error}`,
+        );
+      }
+    }
+
+    return {
+      success: true,
+      message: `SGTM panel order webhook backfill completed for today's orders`,
+      data: {
+        matched: orders.length,
+        sent,
+        failed,
+        dateRange: {
+          start: start.toISOString(),
+          end: end.toISOString(),
+          timezone: 'Asia/Dhaka',
+        },
+      },
+    } as ResponsePayload;
   }
 
   async addOrderByUser(
@@ -770,6 +880,7 @@ export class OrderService {
     });
     try {
       const saveData = await this.orderModel.insertMany(mData);
+      saveData.forEach((order) => this.notifySgtmPanelOrder(order));
       return {
         success: true,
         message: `${
@@ -826,6 +937,7 @@ export class OrderService {
 
     try {
       const saved = await this.orderModel.insertMany(mData, { ordered: false } as any) as unknown as any[];
+      saved.forEach((order) => this.notifySgtmPanelOrder(order));
       return {
         success: true,
         message: `${(saved?.length ?? count)} of ${count} orders imported successfully`,
