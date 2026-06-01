@@ -3,11 +3,13 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Logger,
   Param,
   Post,
   Put,
   Query,
+  UnauthorizedException,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -381,6 +383,21 @@ export class OrderController {
   @UseGuards(AdminPermissionGuard)
   @UseGuards(AdminJwtAuthGuard)
   async backfillTodaySgtmPanelOrders(): Promise<ResponsePayload> {
+    return await this.orderService.backfillTodaySgtmPanelOrders();
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Post('/internal/backfill-sgtm-panel-order-webhook')
+  async internalBackfillTodaySgtmPanelOrders(
+    @Headers('x-order-webhook-secret') webhookSecret: string,
+  ): Promise<ResponsePayload> {
+    if (
+      !webhookSecret ||
+      webhookSecret !== process.env.SGTM_PANEL_ORDER_WEBHOOK_SECRET
+    ) {
+      throw new UnauthorizedException('Invalid order webhook secret');
+    }
+
     return await this.orderService.backfillTodaySgtmPanelOrders();
   }
 }

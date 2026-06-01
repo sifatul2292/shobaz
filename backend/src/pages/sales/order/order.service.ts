@@ -450,13 +450,33 @@ export class OrderService {
     return { start, end };
   }
 
+  private formatWebhookError(error: any): string {
+    const status = error?.response?.status ?? 'n/a';
+    const body = error?.response?.data;
+    const bodyText =
+      body === undefined
+        ? 'n/a'
+        : typeof body === 'string'
+        ? body
+        : JSON.stringify(body);
+
+    return `status=${status} body=${bodyText} message=${error?.message || error}`;
+  }
+
   async backfillTodaySgtmPanelOrders(): Promise<ResponsePayload> {
     const { start, end } = this.getTodayDhakaDateRange();
+    this.logger.log(
+      `SGTM panel order webhook backfill started for ${start.toISOString()} to ${end.toISOString()}`,
+    );
+
     const orders = await this.orderModel
       .find({
         createdAt: { $gte: start, $lt: end },
       })
       .sort({ createdAt: 1 });
+    this.logger.log(
+      `SGTM panel order webhook backfill found ${orders.length} orders`,
+    );
 
     let sent = 0;
     let failed = 0;
@@ -468,10 +488,13 @@ export class OrderService {
       } catch (error) {
         failed += 1;
         this.logger.warn(
-          `SGTM panel order webhook backfill failed for order ${order?.orderId || order?._id}: ${error?.message || error}`,
+          `SGTM panel order webhook backfill failed for order ${order?.orderId || order?._id}: ${this.formatWebhookError(error)}`,
         );
       }
     }
+    this.logger.log(
+      `SGTM panel order webhook backfill sent ${sent} orders successfully to SGTM; failures=${failed}`,
+    );
 
     return {
       success: true,
