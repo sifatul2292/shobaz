@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { Hind_Siliguri, Poppins, Newsreader } from "next/font/google";
-import Script from "next/script";
 import { Suspense } from "react";
 import GTMRouteTracker from "@/components/common/GTMRouteTracker";
 import FloatingCart from "@/components/common/FloatingCart";
@@ -58,29 +57,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn">
-      <head />
-      <body className={`${hindSiliguri.variable} ${poppins.variable} ${newsreader.variable}`}>
-        {/* GTM via server-side container */}
-        <Script
-          id="gtm-script"
-          strategy="afterInteractive"
+      <head>
+        <script
           dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://server.shobaz.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
+            __html: `window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});`,
           }}
         />
-        {/* GTM noscript fallback */}
-        <noscript>
-          <iframe
-            src="https://server.shobaz.com/ns.html?id=GTM-KW6CXCJK"
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
+        <script
+          async
+          src="https://server.shobaz.com/gtm.js?id=GTM-KW6CXCJK"
+        />
+      </head>
+      <body className={`${hindSiliguri.variable} ${poppins.variable} ${newsreader.variable}`}>
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              '<iframe src="https://server.shobaz.com/ns.html?id=GTM-KW6CXCJK" height="0" width="0" style="display:none;visibility:hidden"></iframe>',
+          }}
+        />
         <Suspense fallback={null}>
           <GTMRouteTracker />
         </Suspense>
