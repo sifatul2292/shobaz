@@ -60,12 +60,8 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});`,
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://server.shobaz.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
           }}
-        />
-        <script
-          async
-          src="https://server.shobaz.com/gtm.js?id=GTM-KW6CXCJK"
         />
       </head>
       <body className={`${hindSiliguri.variable} ${poppins.variable} ${newsreader.variable}`}>
