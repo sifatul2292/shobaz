@@ -171,6 +171,7 @@ export default function NotebookBundleClient() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set<string>());
   const [atBundle, setAtBundle] = useState(false);
+  const [activePhoto, setActivePhoto] = useState<(typeof REAL_NOTEBOOK_PHOTOS)[number] | null>(null);
   const addItem = useCartStore((s) => s.addItem);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
@@ -386,38 +387,7 @@ export default function NotebookBundleClient() {
         .nb-btn-ghost:hover { background: #E8F5E9; }
         .nb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #4A6B4A; font-size: 13px; flex-wrap: wrap; }
         .nb-trust-mini b { color: #2E4A2E; font-weight: 600; }
-
-        /* Package choices */
-        .nb-packages-section { background:#EDF4ED; padding:72px 0 86px; }
-        .nb-package-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px; align-items:stretch; }
-        .nb-package-card { position:relative; background:#F1F8F1; border:1px solid #C8E6C9; border-radius:18px; padding:22px; display:flex; flex-direction:column; min-height:100%; box-shadow:0 1px 0 rgba(7,26,7,0.04); }
-        .nb-package-card.featured { background:#071A07; color:#E8F5E9; border-color:#D4AF37; box-shadow:0 22px 48px -28px rgba(7,26,7,0.55); transform:translateY(-8px); }
-        .nb-package-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
-        .nb-package-flag { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; font-size:24px; background:#E8F5E9; border:1px solid #C8E6C9; }
-        .nb-package-card.featured .nb-package-flag { background:rgba(212,175,55,0.16); border-color:rgba(212,175,55,0.38); }
-        .nb-package-badge { font-family:"Inter",sans-serif; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#071A07; background:#D4AF37; border-radius:999px; padding:5px 9px; white-space:nowrap; }
-        .nb-package-card h3 { font-family:"Hind Siliguri",sans-serif; font-size:22px; line-height:1.15; margin:0 0 6px; color:#071A07; }
-        .nb-package-card.featured h3 { color:#F1F8F1; }
-        .nb-package-name { font-family:"Inter",sans-serif; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#4A6B4A; font-weight:700; margin-bottom:12px; }
-        .nb-package-card.featured .nb-package-name { color:#D4AF37; }
-        .nb-package-desc { color:#2E4A2E; font-size:14px; line-height:1.55; min-height:44px; margin:0 0 18px; }
-        .nb-package-card.featured .nb-package-desc { color:rgba(232,245,233,0.72); }
-        .nb-package-price { margin-top:auto; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; padding-top:8px; }
-        .nb-package-price .now { font-family:"Fraunces",serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; color:#071A07; }
-        .nb-package-card.featured .nb-package-price .now { color:#F1F8F1; }
-        .nb-package-price .was { font-family:"Inter",sans-serif; color:#4A6B4A; text-decoration:line-through; font-size:15px; }
-        .nb-package-card.featured .nb-package-price .was { color:rgba(232,245,233,0.45); }
-        .nb-package-meta { font-size:12px; color:#4A6B4A; margin:4px 0 18px; }
-        .nb-package-card.featured .nb-package-meta { color:rgba(232,245,233,0.68); }
-        .nb-package-actions { display:grid; grid-template-columns:1fr; gap:8px; }
-        .nb-package-btn { width:100%; border:0; cursor:pointer; border-radius:12px; padding:14px 16px; font-family:"Hind Siliguri",sans-serif; font-weight:700; font-size:15px; background:#1B6B1B; color:#fff; transition:transform .12s ease, background .15s ease; }
-        .nb-package-btn:hover { background:#2E7D32; transform:translateY(-1px); }
-        .nb-package-card.featured .nb-package-btn { background:#D4AF37; color:#071A07; }
-        .nb-package-card.featured .nb-package-btn:hover { background:#E8C84A; }
-        .nb-package-link { width:100%; border:1px solid #A5C8A5; cursor:pointer; border-radius:12px; padding:11px 14px; font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:13px; background:transparent; color:#071A07; }
-        .nb-package-link:hover { background:#E8F5E9; }
-        .nb-package-card.featured .nb-package-link { color:#E8F5E9; border-color:rgba(255,255,255,0.22); }
-        .nb-package-card.featured .nb-package-link:hover { background:rgba(255,255,255,0.07); }
+        .nb-free-pill { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 14px; border-radius:12px; background:#D4AF37; color:#071A07; font-family:"Hind Siliguri",sans-serif; font-weight:800; font-size:15px; box-shadow:0 12px 24px -18px rgba(7,26,7,0.5); }
 
         /* Notebook stack */
         .nb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
@@ -483,11 +453,16 @@ export default function NotebookBundleClient() {
         .nb-real-note span { width:24px; height:24px; border-radius:999px; display:grid; place-items:center; flex-shrink:0; background:#C8E6C9; color:#1B6B1B; font-family:"Inter",sans-serif; font-size:12px; font-weight:800; }
         .nb-real-gallery { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); grid-auto-rows:132px; gap:12px; }
         .nb-real-photo { position:relative; margin:0; border-radius:14px; overflow:hidden; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 18px 38px -28px rgba(7,26,7,0.45); }
+        .nb-real-photo button { width:100%; height:100%; padding:0; border:0; cursor:zoom-in; background:transparent; display:block; }
         .nb-real-photo.lead { grid-column:span 2; grid-row:span 3; border-radius:18px; }
         .nb-real-photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s cubic-bezier(.2,.7,.2,1); }
         .nb-real-photo:hover img { transform:scale(1.035); }
         .nb-real-photo::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,26,7,0) 62%, rgba(7,26,7,0.28)); pointer-events:none; }
         .nb-real-caption { margin-top:16px; color:#4A6B4A; font-family:"Inter",sans-serif; font-size:12px; line-height:1.6; }
+        .nb-photo-modal { position:fixed; inset:0; z-index:100; background:rgba(7,26,7,0.82); backdrop-filter:blur(8px); display:grid; place-items:center; padding:22px; }
+        .nb-photo-dialog { position:relative; width:min(920px, 100%); max-height:92vh; border-radius:18px; overflow:hidden; background:#071A07; box-shadow:0 30px 80px rgba(0,0,0,0.42); }
+        .nb-photo-dialog img { width:100%; max-height:92vh; object-fit:contain; display:block; background:#071A07; }
+        .nb-photo-close { position:absolute; top:12px; right:12px; width:38px; height:38px; border:1px solid rgba(255,255,255,0.26); border-radius:999px; background:rgba(7,26,7,0.72); color:#fff; cursor:pointer; font-size:22px; line-height:1; display:grid; place-items:center; }
 
         /* Builder */
         .nb-builder-wrap { background: #EDF4ED; padding: 96px 0; }
@@ -500,16 +475,20 @@ export default function NotebookBundleClient() {
         .nb-builder-price .lbl { font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(200,230,201,0.6);font-family:"Inter",sans-serif; }
         .nb-builder-price .val { font-family:"Fraunces",serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; line-height:1.1; }
         .nb-builder-price .save { font-family:"Inter",sans-serif; font-size:12px; color:#D4AF37; font-weight:600; }
-        .nb-pick { background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px; cursor:pointer; position:relative; transition:all .18s ease; text-align:left; }
+        .nb-builder-product-list { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+        .nb-pick { background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.12); border-radius:16px; padding:10px 46px 10px 10px; cursor:pointer; position:relative; transition:all .18s ease; text-align:left; display:flex; align-items:center; gap:12px; min-height:92px; }
         .nb-pick:hover { background:rgba(255,255,255,0.07); }
         .nb-pick.on { background:rgba(212,175,55,0.18); border-color:#D4AF37; }
-        .nb-pick .nb-pick-check { position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3); background:transparent; display:grid; place-items:center; transition:all .18s ease; }
+        .nb-pick .nb-pick-check { position:absolute; top:50%; right:12px; transform:translateY(-50%); width:26px; height:26px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3); background:transparent; display:grid; place-items:center; transition:all .18s ease; }
         .nb-pick.on .nb-pick-check { background:#D4AF37; border-color:#D4AF37; }
-        .nb-pmini { width:100%; aspect-ratio:2/3; border-radius:2px 4px 4px 2px; margin-bottom:10px; padding:8px 6px; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 8px 14px -6px rgba(0,0,0,0.4); }
+        .nb-pick-thumb { width:54px; height:72px; flex-shrink:0; border-radius:8px; overflow:hidden; background:rgba(255,255,255,0.06); box-shadow:0 8px 14px -8px rgba(0,0,0,0.42); display:grid; place-items:center; }
+        .nb-pick-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+        .nb-pmini { width:100%; height:100%; border-radius:2px 4px 4px 2px; padding:8px 6px; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 8px 14px -6px rgba(0,0,0,0.4); }
         .nb-pmini::before { content:""; position:absolute; left:0;top:0;bottom:0;width:2px; background:rgba(0,0,0,0.2); }
         .nb-pmini .pt { font-family:"Fraunces",serif; font-weight:700; font-size:11px; line-height:1.05; }
         .nb-pmini .pa { font-family:"Inter",sans-serif; font-size:7px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
-        .nb-pick .nb-ptitle { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:12px; line-height:1.25; margin-bottom:2px; color:#E8F5E9; }
+        .nb-pick-copy { min-width:0; }
+        .nb-pick .nb-ptitle { font-family:"Hind Siliguri",sans-serif; font-weight:700; font-size:14px; line-height:1.25; margin-bottom:4px; color:#E8F5E9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
         .nb-pick .nb-pprice { font-family:"Inter",sans-serif; font-weight:600; font-size:13px; opacity:0.85; color:#E8F5E9; }
         .nb-builder-totals { margin-top:24px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.12); }
         .nb-totals-left { display:flex; gap:24px; flex-wrap:wrap; }
@@ -596,6 +575,7 @@ export default function NotebookBundleClient() {
           .nb-builder-delivery { flex-direction:column; align-items:flex-start; }
           .nb-builder-delivery span { text-align:left; }
           .nb-builder-package-row { grid-template-columns:1fr; }
+          .nb-builder-product-list { grid-template-columns:1fr; }
           .nb-real-wrap { grid-template-columns:1fr; gap:26px; }
           .nb-real-copy { position:static; padding-top:0; }
           .nb-real-gallery { grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-rows:118px; }
@@ -621,6 +601,13 @@ export default function NotebookBundleClient() {
           .nb-real-gallery { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:0 22px 4px; margin:0 -22px; }
           .nb-real-photo, .nb-real-photo.lead { flex:0 0 76%; height:360px; grid-column:auto; grid-row:auto; scroll-snap-align:center; border-radius:16px; }
           .nb-real-photo:first-child { margin-left:0; }
+          .nb-books-section .nb-container { padding:0 14px; }
+          .nb-books-section .nb-bcard .nb-thumb { aspect-ratio: 1 / 1.35; }
+          .nb-books-section .nb-bcard .nb-body { padding:10px; }
+          .nb-books-section .nb-bcard h4 { font-size:12px; }
+          .nb-books-section .nb-bcard .nb-pnow { font-size:15px; }
+          .nb-books-section .nb-btn-mini-primary { font-size:12px; padding:10px 8px; }
+          .nb-photo-modal { padding:12px; }
         }
         @media (max-width:1100px) { .nb-book-grid-3 { grid-template-columns: repeat(3, 1fr) !important; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
@@ -662,8 +649,8 @@ export default function NotebookBundleClient() {
                   <div className="nb-wc-badge">⚽ WORLD CUP 2026 INSPIRED COLLECTION</div>
                   <span className="nb-eyebrow"><span className="dot" />৬টি নোটবুকের এক্সক্লুসিভ বান্ডেল</span>
                   <h1 className="nb-lede-bn">
-                    <em>২০২৬ বিশ্বকাপ</em> আসছে।{' '}
-                    <span>ফুটবলের উত্তেজনাকে নোটবুকে ধরে রাখো।</span>
+                    <em>২০২৬ বিশকাপে</em>{' '}
+                    <span>ফুটবলের উত্তেজনাকে নোটবুকে ধরে রাখুন</span>
                   </h1>
                   <p className="nb-sub">
                     Argentina আর Brazil fan-দের জন্য তৈরি ৬টি football-inspired notebook cover.{' '}
@@ -678,7 +665,7 @@ export default function NotebookBundleClient() {
                     <span className="nb-save-pill">৫৩% ছাড় · প্রতি পিস</span>
                   </div>
                   <div className="nb-cta-row">
-                    <a href="#nb-packages" className="nb-btn nb-btn-primary">
+                    <a href="#nb-builder" className="nb-btn nb-btn-primary">
                       প্যাক বেছে এখনই অর্ডার করো
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
@@ -691,6 +678,7 @@ export default function NotebookBundleClient() {
                     <div>·</div>
                     <div>Cash on delivery</div>
                   </div>
+                  <div className="nb-free-pill">যেকোনো ৩ টি নোটবুক কিনলে ফ্রি ডেলিভারি</div>
                 </div>
 
                 {/* Notebook stack */}
@@ -732,7 +720,7 @@ export default function NotebookBundleClient() {
             {[
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'A5 ruled pages' },
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: '70 GSM offset paper' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, label: 'Cash on delivery' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, label: '৩টি নোটবুকে ফ্রি ডেলিভারি' },
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l9 4v6c0 5-3.8 9-9 10-5.2-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>, label: 'প্রিন্ট সমস্যা হলে রিটার্ন' },
             ].map((v, i) => (
               <div key={i}>{v.icon}<span>{v.label}</span></div>
@@ -740,60 +728,13 @@ export default function NotebookBundleClient() {
           </div>
         </div>
 
-        {/* ── Package Choices ── */}
-        <section id="nb-packages" className="nb-packages-section">
-          <div className="nb-container">
-            <div className="nb-section-head">
-              <div className="nb-section-eyebrow">দ্রুত অর্ডার</div>
-              <h2 className="nb-section-title">প্রথমে প্যাক বেছে নাও — এরপর অর্ডার</h2>
-              <p className="nb-section-sub">যারা দ্রুত সিদ্ধান্ত নিতে চায় তাদের জন্য ready-made প্যাক। চাইলে নিচে গিয়ে আলাদা notebook-ও বদলাতে পারবে।</p>
-            </div>
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
-            ) : (
-              <div className="nb-package-grid">
-                {packageOptions.map((pack) => {
-                  const total = getPackTotal(pack.products);
-                  const original = getPackOriginal(pack.products);
-                  return (
-                    <div key={pack.key} className={`nb-package-card${pack.featured ? ' featured' : ''}`}>
-                      <div className="nb-package-top">
-                        <div className="nb-package-flag" style={pack.featured ? undefined : { borderColor: pack.color }}>{pack.flag}</div>
-                        {pack.featured && <span className="nb-package-badge">Best value</span>}
-                      </div>
-                      <div className="nb-package-name">{pack.name}</div>
-                      <h3>{pack.bnName}</h3>
-                      <p className="nb-package-desc">{pack.description}</p>
-                      <div className="nb-package-price">
-                        <span className="now nb-num">৳{total}</span>
-                        <span className="was nb-num">৳{original}</span>
-                      </div>
-                      <div className="nb-package-meta">
-                        {pack.products.length}টি নোটবুক · {pack.products.length >= 6 ? 'Free delivery' : 'Cash on delivery'}
-                      </div>
-                      <div className="nb-package-actions">
-                        <button className="nb-package-btn" onClick={() => handlePackCheckout(pack.products, pack.name)}>
-                          {pack.cta}
-                        </button>
-                        <button className="nb-package-link" onClick={() => selectPack(pack.products)}>
-                          আগে সিলেকশন দেখো
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-
         {/* ── Notebook Cards ── */}
         <section id="nb-books" className="nb-books-section">
           <div className="nb-container">
             <div ref={r2} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">কালেকশনে কী আছে</div>
-                <h2 className="nb-section-title">ফুটবলের ৬টি অবিস্মরণীয় গল্প — এখন তোমার হাতের নোটবুকে</h2>
+                <h2 className="nb-section-title">ফুটবলের ৬টি অবিস্মরণীয় গল্প — এখন আপনার হাতের নোটবুকে</h2>
                 <p className="nb-section-sub">প্রতিটি নোটবুক একটি আলাদা ফুটবল legend বা moment-কে সম্মান জানায়।</p>
               </div>
               {loading ? (
@@ -810,7 +751,7 @@ export default function NotebookBundleClient() {
                           <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: '"Hind Siliguri",sans-serif', lineHeight: 1.1 }}>{team}</div>
                         </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
                         {prods.map((p, i) => {
                           const src = imgUrl(p.images?.[0]);
                           const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
@@ -867,9 +808,9 @@ export default function NotebookBundleClient() {
               <div className="nb-real-wrap">
                 <div className="nb-real-copy">
                   <div className="nb-section-eyebrow">বাস্তব ছবি</div>
-                  <h2 className="nb-section-title">হাতে ধরা আসল নোটবুক — কভার, কাগজের পুরুত্ব, প্রিন্ট সব পরিষ্কার</h2>
+                  <h2 className="nb-section-title">Argentina and Brazil Edition</h2>
                   <p className="nb-section-sub">
-                    Product mockup নয়। এগুলো একই notebook collection-এর real outdoor photos, যাতে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারো।
+                    Product mockup নয়। Outdoor photos, তে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারেন।
                   </p>
                   <div className="nb-real-note">
                     <div><span>1</span>Matte laminated cover daylight-এ কেমন দেখায়</div>
@@ -883,7 +824,9 @@ export default function NotebookBundleClient() {
                 <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
                   {REAL_NOTEBOOK_PHOTOS.map((photo) => (
                     <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
-                      <img src={photo.src} alt={photo.alt} loading="lazy" />
+                      <button type="button" onClick={() => setActivePhoto(photo)} aria-label={`${photo.alt} বড় করে দেখুন`}>
+                        <img src={photo.src} alt={photo.alt} loading="lazy" />
+                      </button>
                     </figure>
                   ))}
                 </div>
@@ -900,18 +843,18 @@ export default function NotebookBundleClient() {
                 <div className="nb-builder-head">
                   <div>
                     <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>বান্ডেল বানাও</div>
-                    <h3>অর্ডার সারাংশ — প্যাক বদলাও বা নিজের মতো সাজাও</h3>
+                    <h3>Order Summary</h3>
                     <p>দ্রুত প্যাক বেছে নাও, অথবা নিচে individual notebook select করে নিজের bundle বানাও।</p>
                   </div>
                   <div className="nb-builder-price">
-                    <div className="lbl">তোমার মোট</div>
+                    <div className="lbl">আপনার মোট</div>
                     <div className="val nb-num">৳{selectedTotal}</div>
                     <div className="save">{savedAmount.toLocaleString()} টাকা সাশ্রয় · {discountPct}% ছাড়</div>
                   </div>
                 </div>
 
                 <div className="nb-builder-delivery">
-                  <strong>🚚 যেকোনো ৬টি নোটবুক কিনলে ফ্রি ডেলিভারি</strong>
+                  <strong>যেকোনো ৩ টি নোটবুক কিনলে ফ্রি ডেলিভারি</strong>
                   <span>সারা দেশে — ঢাকা ও ঢাকার বাইরে একই অফার</span>
                 </div>
 
@@ -930,7 +873,7 @@ export default function NotebookBundleClient() {
                       <span style={{ fontSize: 18 }}>{flag}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: teamColor, fontFamily: '"Inter",sans-serif' }}>{team}</span>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12 }}>
+                    <div className="nb-builder-product-list">
                       {prods.map((p, i) => {
                         const src = imgUrl(p.images?.[0]);
                         const isOn = selected.has(p._id);
@@ -941,17 +884,21 @@ export default function NotebookBundleClient() {
                             <div className="nb-pick-check">
                               {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#071A07" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
                             </div>
-                            {src ? (
-                              <img src={src} alt={p.name} loading="lazy" style={{ width: '100%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', marginBottom: 10, boxShadow: '0 8px 14px -6px rgba(0,0,0,0.4)', filter: isOn ? 'none' : 'grayscale(20%)' }} />
-                            ) : (
-                              <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
-                                <div className="pa">⚽</div>
-                                <div className="pt">{p.name}</div>
-                                <div className="pa">⚽ 2026</div>
-                              </div>
-                            )}
-                            <div className="nb-ptitle">{p.name}</div>
-                            <div className="nb-pprice nb-num">৳{price}</div>
+                            <div className="nb-pick-thumb">
+                              {src ? (
+                                <img src={src} alt={p.name} loading="lazy" style={{ filter: isOn ? 'none' : 'grayscale(20%)' }} />
+                              ) : (
+                                <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                                  <div className="pa">⚽</div>
+                                  <div className="pt">{p.name}</div>
+                                  <div className="pa">⚽ 2026</div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="nb-pick-copy">
+                              <div className="nb-ptitle">{p.name}</div>
+                              <div className="nb-pprice nb-num">৳{price}</div>
+                            </div>
                           </button>
                         );
                       })}
@@ -964,7 +911,7 @@ export default function NotebookBundleClient() {
                     <div><span className="l">নোটবুক</span><span className="v nb-num">{selected.size} টি</span></div>
                     <div><span className="l">আসল দাম</span><span className="v strike nb-num">৳{selectedOriginal}</span></div>
                     <div><span className="l">ছাড়</span><span className="v gold nb-num">{discountPct}%</span></div>
-                    <div><span className="l">তুমি দিচ্ছ</span><span className="v nb-num">৳{selectedTotal}</span></div>
+                    <div><span className="l">আপনি দিচ্ছেন</span><span className="v nb-num">৳{selectedTotal}</span></div>
                   </div>
                 </div>
 
@@ -975,7 +922,7 @@ export default function NotebookBundleClient() {
                 <div className="nb-builder-fineprint">
                   <span>✓ ক্যাশ অন ডেলিভারি</span>
                   <span>✓ ৩-৫ দিনে ডেলিভারি</span>
-                  <span>✓ ৬টি নিলে ফ্রি ডেলিভারি</span>
+                  <span>✓ ৩টি নিলে ফ্রি ডেলিভারি</span>
                   <span>✓ পছন্দ না হলে রিটার্ন</span>
                 </div>
               </div>
@@ -1055,7 +1002,7 @@ export default function NotebookBundleClient() {
             <h2>Argentina, Brazil, নাকি পুরো ৬-প্যাক?</h2>
             <p>A5 ruled pages, 70 GSM paper, matte laminated cover — সারা দেশে cash on delivery.</p>
             <div className="nb-cta-row" style={{ justifyContent: 'center' }}>
-              <a href="#nb-packages" className="nb-btn nb-btn-primary">
+              <a href="#nb-builder" className="nb-btn nb-btn-primary">
                 প্যাক বেছে অর্ডার করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
@@ -1068,6 +1015,15 @@ export default function NotebookBundleClient() {
 
       <Footer />
 
+      {activePhoto && (
+        <div className="nb-photo-modal" role="dialog" aria-modal="true" aria-label="Notebook photo preview" onClick={() => setActivePhoto(null)}>
+          <div className="nb-photo-dialog" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="nb-photo-close" onClick={() => setActivePhoto(null)} aria-label="বন্ধ করুন">×</button>
+            <img src={activePhoto.src} alt={activePhoto.alt} />
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile sticky bar ── */}
       {!atBundle && (
         <div className="nb-mobile-bar">
@@ -1075,7 +1031,7 @@ export default function NotebookBundleClient() {
             <span className="now nb-num">৳{selectedTotal}</span>
             <span className="was nb-num">{selected.size}টি selected · ৳{selectedOriginal}</span>
           </div>
-          <a href="#nb-packages" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
+          <a href="#nb-builder" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
             প্যাক বেছে নাও
           </a>
         </div>
