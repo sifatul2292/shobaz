@@ -32,6 +32,24 @@ const BRAZIL_SLUGS = ['hexa-loading-46', 'we-never-stopped-dreaming-74', 'genera
 const ARGENTINA_ORDER = ['for every heart', 'messi', 'blue white', 'blue & white'];
 const BRAZIL_ORDER = ['hexa', 'we never stopped', 'generations'];
 
+const REAL_NOTEBOOK_PHOTOS = [
+  { src: '/images/notebook-bundle/real-notebook-02.webp', alt: 'Hexa Loading notebook front cover held outdoors', span: 'lead' },
+  { src: '/images/notebook-bundle/real-notebook-08.webp', alt: 'Argentina For Every Heart notebook front cover held outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-06.webp', alt: 'Generations of Greatness notebook front cover held outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-15.webp', alt: 'Messi Glory notebook front cover held outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-11.webp', alt: 'Blue and White Forever notebook front cover held outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-07.webp', alt: 'We Never Stopped Dreaming notebook angle showing thickness' },
+  { src: '/images/notebook-bundle/real-notebook-01.webp', alt: 'Hexa Loading notebook pages and cover angle outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-13.webp', alt: 'Messi Glory notebook side angle showing pages' },
+  { src: '/images/notebook-bundle/real-notebook-03.webp', alt: 'Hexa Loading notebook open cover photo outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-04.webp', alt: 'Hexa Loading notebook straight front cover photo' },
+  { src: '/images/notebook-bundle/real-notebook-05.webp', alt: 'Generations of Greatness notebook side photo outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-09.webp', alt: 'We Never Stopped Dreaming notebook angled photo outdoors' },
+  { src: '/images/notebook-bundle/real-notebook-10.webp', alt: 'Argentina notebook front cover photo with flowers' },
+  { src: '/images/notebook-bundle/real-notebook-12.webp', alt: 'We Never Stopped Dreaming notebook side photo with sky' },
+  { src: '/images/notebook-bundle/real-notebook-14.webp', alt: 'Blue and White Forever notebook angled photo outdoors' },
+];
+
 function normalizeProducts(payload: any): Product[] {
   const data = payload?.data?.data;
   const productsData = Array.isArray(data) ? data : data?.items;
@@ -158,7 +176,7 @@ export default function NotebookBundleClient() {
   const isMobile = bp === 'mobile';
   const isTablet = bp === 'tablet';
 
-  const [r1, r2, r3, r4, r5] = [useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef()];
+  const [r1, r2, r3, r4, r5, r6] = [useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef(), useFadeRef()];
 
   useEffect(() => {
     const fetchNotebookProducts = async () => {
@@ -454,6 +472,23 @@ export default function NotebookBundleClient() {
         .nb-btn-mini-primary { background:#1B6B1B; color:#fff; padding:11px 10px; font-size:13px; border-radius:10px; cursor:pointer; border:none; flex:1; font-family:"Hind Siliguri",sans-serif; font-weight:700; }
         .nb-btn-mini-primary:hover { background:#2E7D32; }
 
+        /* Real photo proof */
+        .nb-real-section { background:#F1F8F1; padding:96px 0; border-top:1px solid #C8E6C9; border-bottom:1px solid #C8E6C9; }
+        .nb-real-wrap { display:grid; grid-template-columns:minmax(0, 0.82fr) minmax(0, 1.18fr); gap:42px; align-items:start; }
+        .nb-real-copy { position:sticky; top:92px; padding-top:8px; }
+        .nb-real-copy .nb-section-title { text-align:left; margin-bottom:14px; }
+        .nb-real-copy .nb-section-sub { margin:0; max-width:430px; }
+        .nb-real-note { margin-top:24px; display:grid; gap:10px; max-width:430px; }
+        .nb-real-note div { display:flex; align-items:center; gap:10px; color:#2E4A2E; font-family:"Hind Siliguri",sans-serif; font-size:14px; line-height:1.35; }
+        .nb-real-note span { width:24px; height:24px; border-radius:999px; display:grid; place-items:center; flex-shrink:0; background:#C8E6C9; color:#1B6B1B; font-family:"Inter",sans-serif; font-size:12px; font-weight:800; }
+        .nb-real-gallery { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); grid-auto-rows:132px; gap:12px; }
+        .nb-real-photo { position:relative; margin:0; border-radius:14px; overflow:hidden; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 18px 38px -28px rgba(7,26,7,0.45); }
+        .nb-real-photo.lead { grid-column:span 2; grid-row:span 3; border-radius:18px; }
+        .nb-real-photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s cubic-bezier(.2,.7,.2,1); }
+        .nb-real-photo:hover img { transform:scale(1.035); }
+        .nb-real-photo::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,26,7,0) 62%, rgba(7,26,7,0.28)); pointer-events:none; }
+        .nb-real-caption { margin-top:16px; color:#4A6B4A; font-family:"Inter",sans-serif; font-size:12px; line-height:1.6; }
+
         /* Builder */
         .nb-builder-wrap { background: #EDF4ED; padding: 96px 0; }
         .nb-builder { background: linear-gradient(180deg, #071A07 0%, #1B3D1B 100%); color: #E8F5E9; border-radius: 28px; padding: 38px; box-shadow: 0 30px 60px -30px rgba(7,26,7,0.5); }
@@ -561,7 +596,11 @@ export default function NotebookBundleClient() {
           .nb-builder-delivery { flex-direction:column; align-items:flex-start; }
           .nb-builder-delivery span { text-align:left; }
           .nb-builder-package-row { grid-template-columns:1fr; }
-          section.nb-books-section, .nb-builder-wrap, .nb-quality-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
+          .nb-real-wrap { grid-template-columns:1fr; gap:26px; }
+          .nb-real-copy { position:static; padding-top:0; }
+          .nb-real-gallery { grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-rows:118px; }
+          .nb-real-photo.lead { grid-column:span 2; grid-row:span 2; }
+          section.nb-books-section, .nb-real-section, .nb-builder-wrap, .nb-quality-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
         }
         @media (max-width:640px) {
           .nb-strip-row .nb-strip-right-num { display:none; }
@@ -579,6 +618,9 @@ export default function NotebookBundleClient() {
           .nb-cta-row .nb-btn { flex:1 1 100%; }
           .nb-final-cta { padding:64px 0; }
           .nb-value-row > div:nth-child(n+3) { display:none; }
+          .nb-real-gallery { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:0 22px 4px; margin:0 -22px; }
+          .nb-real-photo, .nb-real-photo.lead { flex:0 0 76%; height:360px; grid-column:auto; grid-row:auto; scroll-snap-align:center; border-radius:16px; }
+          .nb-real-photo:first-child { margin-left:0; }
         }
         @media (max-width:1100px) { .nb-book-grid-3 { grid-template-columns: repeat(3, 1fr) !important; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
@@ -814,6 +856,38 @@ export default function NotebookBundleClient() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Real Product Photos ── */}
+        <section className="nb-real-section">
+          <div className="nb-container">
+            <div ref={r6} style={fadeStyle}>
+              <div className="nb-real-wrap">
+                <div className="nb-real-copy">
+                  <div className="nb-section-eyebrow">বাস্তব ছবি</div>
+                  <h2 className="nb-section-title">হাতে ধরা আসল নোটবুক — কভার, কাগজের পুরুত্ব, প্রিন্ট সব পরিষ্কার</h2>
+                  <p className="nb-section-sub">
+                    Product mockup নয়। এগুলো একই notebook collection-এর real outdoor photos, যাতে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারো।
+                  </p>
+                  <div className="nb-real-note">
+                    <div><span>1</span>Matte laminated cover daylight-এ কেমন দেখায়</div>
+                    <div><span>2</span>Side angle থেকে notebook thickness এবং binding</div>
+                    <div><span>3</span>Argentina ও Brazil — দুই fan pack-এর real covers</div>
+                  </div>
+                  <div className="nb-real-caption">
+                    Swipe করে সব ছবি দেখো। Desktop-এ ছবির উপর hover করলে cover detail বড় করে বোঝা যাবে।
+                  </div>
+                </div>
+                <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
+                  {REAL_NOTEBOOK_PHOTOS.map((photo) => (
+                    <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
+                      <img src={photo.src} alt={photo.alt} loading="lazy" />
+                    </figure>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
