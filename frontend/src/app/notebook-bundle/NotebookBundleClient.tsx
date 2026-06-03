@@ -121,6 +121,7 @@ const FAQS = [
 ];
 
 const WA_LINK = 'https://wa.me/8801XXXXXXXXX';
+const NOTEBOOK_TIMER_KEY = 'nb_bundle_discount_timer_end';
 
 function Stars({ n = 5, size = 14 }: { n?: number; size?: number }) {
   return <span style={{ color: '#D4AF37', fontSize: size, letterSpacing: 1 }}>{'★'.repeat(n)}</span>;
@@ -163,6 +164,7 @@ function useFadeRef() {
 }
 
 const fadeStyle: React.CSSProperties = { opacity: 0, transform: 'translateY(28px)', transition: 'opacity 0.55s ease, transform 0.55s ease' };
+const padTime = (value: number) => String(value).padStart(2, '0');
 
 export default function NotebookBundleClient() {
   const router = useRouter();
@@ -171,7 +173,8 @@ export default function NotebookBundleClient() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set<string>());
   const [atBundle, setAtBundle] = useState(false);
-  const [activePhoto, setActivePhoto] = useState<(typeof REAL_NOTEBOOK_PHOTOS)[number] | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [discountTimeLeft, setDiscountTimeLeft] = useState({ h: 23, m: 59, s: 59 });
   const addItem = useCartStore((s) => s.addItem);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
@@ -232,6 +235,31 @@ export default function NotebookBundleClient() {
     return () => obs.disconnect();
   }, []);
 
+  useEffect(() => {
+    const getTimerEnd = () => {
+      const now = Date.now();
+      const stored = Number(localStorage.getItem(NOTEBOOK_TIMER_KEY));
+      if (stored && stored > now) return stored;
+      const next = now + 24 * 60 * 60 * 1000;
+      localStorage.setItem(NOTEBOOK_TIMER_KEY, String(next));
+      return next;
+    };
+    let timerEnd = getTimerEnd();
+    const tick = () => {
+      const now = Date.now();
+      if (timerEnd <= now) timerEnd = getTimerEnd();
+      const diff = Math.max(0, timerEnd - now);
+      setDiscountTimeLeft({
+        h: Math.floor(diff / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const selectedProducts = products.filter((p) => selected.has(p._id));
   const selectedTotal = selectedProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
   const selectedOriginal = selectedProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
@@ -239,19 +267,6 @@ export default function NotebookBundleClient() {
   const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
 
   const { argentinaProducts, brazilProducts } = splitNotebookProducts(products);
-  const fullCollectionProducts = [...argentinaProducts, ...brazilProducts];
-
-  const getPackTotal = (packProducts: Product[]) => packProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
-  const getPackOriginal = (packProducts: Product[]) => packProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
-  const selectPack = (packProducts: Product[]) => {
-    if (packProducts.length === 0) {
-      toast.error('পণ্য লোড হচ্ছে...');
-      return;
-    }
-    setSelected(new Set(packProducts.map((p) => p._id)));
-    document.getElementById('nb-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const toggleNotebook = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -279,56 +294,20 @@ export default function NotebookBundleClient() {
     router.push('/checkout');
   };
 
-  const handlePackCheckout = (packProducts: Product[], packName: string) => {
-    if (packProducts.length === 0) {
-      toast.error('পণ্য লোড হচ্ছে...');
-      return;
-    }
-    packProducts.forEach((p) => addItem(p));
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', {
-        content_name: packName,
-        content_ids: packProducts.map((p) => p._id),
-        value: getPackTotal(packProducts),
-        currency: 'BDT',
-      });
-    }
-    router.push('/checkout');
-  };
+  const activePhoto = activePhotoIndex === null ? null : REAL_NOTEBOOK_PHOTOS[activePhotoIndex];
+  const showNextPhoto = () => setActivePhotoIndex((i) => (i === null ? 0 : (i + 1) % REAL_NOTEBOOK_PHOTOS.length));
+  const showPrevPhoto = () => setActivePhotoIndex((i) => (i === null ? 0 : (i - 1 + REAL_NOTEBOOK_PHOTOS.length) % REAL_NOTEBOOK_PHOTOS.length));
 
-  const packageOptions = [
-    {
-      key: 'argentina',
-      name: 'Argentina Fan Pack',
-      bnName: 'Argentina ৩-প্যাক',
-      flag: '🇦🇷',
-      color: '#74ACDF',
-      description: 'For Every Heart, Messi’s Glory, Blue & White Forever',
-      products: argentinaProducts,
-      cta: 'Argentina প্যাক অর্ডার করো',
-    },
-    {
-      key: 'brazil',
-      name: 'Brazil Fan Pack',
-      bnName: 'Brazil ৩-প্যাক',
-      flag: '🇧🇷',
-      color: '#009C3B',
-      description: 'Hexa Loading, We Never Stopped Dreaming, Generations of Greatness',
-      products: brazilProducts,
-      cta: 'Brazil প্যাক অর্ডার করো',
-    },
-    {
-      key: 'full',
-      name: 'Full Collection',
-      bnName: 'পুরো ৬-প্যাক',
-      flag: '🏆',
-      color: '#D4AF37',
-      description: 'Argentina আর Brazil — ৬টি notebook একসাথে',
-      products: fullCollectionProducts,
-      cta: '৬টি একসাথে অর্ডার করো',
-      featured: true,
-    },
-  ];
+  useEffect(() => {
+    if (activePhotoIndex === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setActivePhotoIndex(null);
+      if (event.key === 'ArrowRight') showNextPhoto();
+      if (event.key === 'ArrowLeft') showPrevPhoto();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activePhotoIndex]);
 
   return (
     <>
@@ -463,6 +442,10 @@ export default function NotebookBundleClient() {
         .nb-photo-dialog { position:relative; width:min(920px, 100%); max-height:92vh; border-radius:18px; overflow:hidden; background:#071A07; box-shadow:0 30px 80px rgba(0,0,0,0.42); }
         .nb-photo-dialog img { width:100%; max-height:92vh; object-fit:contain; display:block; background:#071A07; }
         .nb-photo-close { position:absolute; top:12px; right:12px; width:38px; height:38px; border:1px solid rgba(255,255,255,0.26); border-radius:999px; background:rgba(7,26,7,0.72); color:#fff; cursor:pointer; font-size:22px; line-height:1; display:grid; place-items:center; }
+        .nb-photo-nav { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border:1px solid rgba(255,255,255,0.28); border-radius:999px; background:rgba(7,26,7,0.72); color:#fff; cursor:pointer; font-size:28px; line-height:1; display:grid; place-items:center; }
+        .nb-photo-prev { left:14px; }
+        .nb-photo-next { right:14px; }
+        .nb-photo-count { position:absolute; left:14px; bottom:14px; padding:6px 10px; border-radius:999px; background:rgba(7,26,7,0.74); color:#E8F5E9; font-family:"Inter",sans-serif; font-size:12px; font-weight:700; }
 
         /* Builder */
         .nb-builder-wrap { background: #EDF4ED; padding: 96px 0; }
@@ -500,17 +483,20 @@ export default function NotebookBundleClient() {
         .nb-builder-cta { width:100%; margin-top:20px; background:#D4AF37; color:#071A07; padding:18px 26px; border-radius:14px; font-weight:700; font-size:16px; display:inline-flex;align-items:center;justify-content:center;gap:10px; transition:transform .12s ease, background .15s ease; cursor:pointer; border:none; font-family:"Hind Siliguri",sans-serif; }
         .nb-builder-cta:hover { background:#E8C84A; transform:translateY(-1px); }
         .nb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(200,230,201,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
-        .nb-builder-delivery { margin:0 0 18px; border:1px solid rgba(212,175,55,0.45); background:rgba(212,175,55,0.14); color:#F1F8F1; border-radius:16px; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-        .nb-builder-delivery strong { display:flex; align-items:center; gap:10px; font-family:"Hind Siliguri",sans-serif; font-size:18px; line-height:1.25; color:#F1F8F1; }
-        .nb-builder-delivery span { font-family:"Hind Siliguri",sans-serif; font-size:13px; color:rgba(232,245,233,0.72); text-align:right; }
-        .nb-builder-package-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; margin-bottom:26px; }
-        .nb-builder-pack-btn { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:14px; text-align:left; cursor:pointer; color:#E8F5E9; transition:background .15s ease, border-color .15s ease; }
-        .nb-builder-pack-btn:hover { background:rgba(255,255,255,0.09); border-color:rgba(212,175,55,0.55); }
-        .nb-builder-pack-btn strong { display:block; font-family:"Hind Siliguri",sans-serif; font-size:15px; margin-bottom:4px; }
-        .nb-builder-pack-btn span { display:block; color:#D4AF37; font-family:"Inter",sans-serif; font-weight:700; font-size:16px; }
+        .nb-builder-delivery { margin:0 0 28px; border:2px solid #D4AF37; background:linear-gradient(135deg,#D4AF37 0%,#F4DF79 58%,#FFF5B8 100%); color:#071A07; border-radius:18px; padding:20px 22px; display:flex; align-items:center; justify-content:space-between; gap:18px; box-shadow:0 24px 42px -28px rgba(212,175,55,0.95), 0 0 0 6px rgba(212,175,55,0.10); position:relative; overflow:hidden; }
+        .nb-builder-delivery::before { content:"FREE DELIVERY"; position:absolute; right:18px; top:10px; font-family:"Inter",sans-serif; font-size:10px; font-weight:900; letter-spacing:0.18em; color:rgba(7,26,7,0.34); }
+        .nb-builder-delivery strong { display:flex; align-items:center; gap:10px; font-family:"Hind Siliguri",sans-serif; font-size:24px; font-weight:900; line-height:1.18; color:#071A07; padding-right:118px; }
+        .nb-builder-delivery strong::before { content:"🚚"; width:42px; height:42px; border-radius:999px; background:#071A07; display:grid; place-items:center; flex-shrink:0; font-size:22px; }
+        .nb-builder-delivery span { font-family:"Hind Siliguri",sans-serif; font-size:14px; font-weight:800; color:#1B3D1B; text-align:right; position:relative; z-index:1; }
 
         /* Quality */
         .nb-quality-section { background: #EDF4ED; padding: 96px 0; }
+        .nb-timer-box { margin:24px auto 0; max-width:520px; border:1px solid #D4AF37; background:#071A07; color:#E8F5E9; border-radius:18px; padding:18px; box-shadow:0 20px 42px -30px rgba(7,26,7,0.7); }
+        .nb-timer-label { font-family:"Hind Siliguri",sans-serif; font-size:14px; color:#D4AF37; font-weight:800; margin-bottom:10px; }
+        .nb-timer-row { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+        .nb-timer-cell { border:1px solid rgba(212,175,55,0.28); background:rgba(255,255,255,0.06); border-radius:12px; padding:10px 6px; }
+        .nb-timer-num { display:block; font-family:"Inter",sans-serif; font-size:30px; font-weight:900; line-height:1; color:#F4DF79; font-feature-settings:"tnum" 1; }
+        .nb-timer-unit { display:block; margin-top:6px; font-family:"Inter",sans-serif; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(232,245,233,0.68); }
         .nb-qcard { background:#F1F8F1; border:1px solid #C8E6C9; border-radius:16px; padding:24px; position:relative; }
         .nb-qcard .qno { font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:14px; color:#4A6B4A; margin-bottom:14px; }
         .nb-qcard .qico { width:44px;height:44px;border-radius:12px; background:#C8E6C9;color:#1B6B1B; display:grid;place-items:center; margin-bottom:16px; }
@@ -574,7 +560,8 @@ export default function NotebookBundleClient() {
           .nb-package-card.featured { transform:none; }
           .nb-builder-delivery { flex-direction:column; align-items:flex-start; }
           .nb-builder-delivery span { text-align:left; }
-          .nb-builder-package-row { grid-template-columns:1fr; }
+          .nb-builder-delivery::before { right:16px; top:12px; }
+          .nb-builder-delivery strong { padding-right:0; font-size:20px; }
           .nb-builder-product-list { grid-template-columns:1fr; }
           .nb-real-wrap { grid-template-columns:1fr; gap:26px; }
           .nb-real-copy { position:static; padding-top:0; }
@@ -608,6 +595,10 @@ export default function NotebookBundleClient() {
           .nb-books-section .nb-bcard .nb-pnow { font-size:15px; }
           .nb-books-section .nb-btn-mini-primary { font-size:12px; padding:10px 8px; }
           .nb-photo-modal { padding:12px; }
+          .nb-photo-nav { width:38px; height:38px; font-size:24px; }
+          .nb-photo-prev { left:8px; }
+          .nb-photo-next { right:8px; }
+          .nb-timer-num { font-size:24px; }
         }
         @media (max-width:1100px) { .nb-book-grid-3 { grid-template-columns: repeat(3, 1fr) !important; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
@@ -822,9 +813,9 @@ export default function NotebookBundleClient() {
                   </div>
                 </div>
                 <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
-                  {REAL_NOTEBOOK_PHOTOS.map((photo) => (
+                  {REAL_NOTEBOOK_PHOTOS.map((photo, index) => (
                     <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
-                      <button type="button" onClick={() => setActivePhoto(photo)} aria-label={`${photo.alt} বড় করে দেখুন`}>
+                      <button type="button" onClick={() => setActivePhotoIndex(index)} aria-label={`${photo.alt} বড় করে দেখুন`}>
                         <img src={photo.src} alt={photo.alt} loading="lazy" />
                       </button>
                     </figure>
@@ -856,15 +847,6 @@ export default function NotebookBundleClient() {
                 <div className="nb-builder-delivery">
                   <strong>যেকোনো ৩ টি নোটবুক কিনলে ফ্রি ডেলিভারি</strong>
                   <span>সারা দেশে — ঢাকা ও ঢাকার বাইরে একই অফার</span>
-                </div>
-
-                <div className="nb-builder-package-row">
-                  {packageOptions.map((pack) => (
-                    <button key={pack.key} className="nb-builder-pack-btn" onClick={() => selectPack(pack.products)}>
-                      <strong>{pack.flag} {pack.bnName}</strong>
-                      <span className="nb-num">৳{getPackTotal(pack.products)}</span>
-                    </button>
-                  ))}
                 </div>
 
                 {([{ team: 'Argentina Fan', flag: '🇦🇷', teamColor: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', teamColor: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, teamColor, prods }) => (
@@ -936,8 +918,16 @@ export default function NotebookBundleClient() {
             <div ref={r4} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">প্রিমিয়াম কোয়ালিটি</div>
-                <h2 className="nb-section-title">৬টি নোটবুক একসাথে পাচ্ছো ৫৩% ছাড়ে</h2>
+                <h2 className="nb-section-title">৫৩% ছাড়ে ৬ টি Notebook নিন</h2>
                 <p className="nb-section-sub">প্রিমিয়াম প্রিন্ট, smooth কাগজ এবং মজবুত binding সহ। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
+                <div className="nb-timer-box" aria-label="২৪ ঘণ্টার অফার টাইমার">
+                  <div className="nb-timer-label">অফার শেষ হতে বাকি</div>
+                  <div className="nb-timer-row">
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.h)}</span><span className="nb-timer-unit">Hours</span></div>
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.m)}</span><span className="nb-timer-unit">Minutes</span></div>
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.s)}</span><span className="nb-timer-unit">Seconds</span></div>
+                  </div>
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
                 {[
@@ -1016,9 +1006,12 @@ export default function NotebookBundleClient() {
       <Footer />
 
       {activePhoto && (
-        <div className="nb-photo-modal" role="dialog" aria-modal="true" aria-label="Notebook photo preview" onClick={() => setActivePhoto(null)}>
+        <div className="nb-photo-modal" role="dialog" aria-modal="true" aria-label="Notebook photo preview" onClick={() => setActivePhotoIndex(null)}>
           <div className="nb-photo-dialog" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="nb-photo-close" onClick={() => setActivePhoto(null)} aria-label="বন্ধ করুন">×</button>
+            <button type="button" className="nb-photo-close" onClick={() => setActivePhotoIndex(null)} aria-label="বন্ধ করুন">×</button>
+            <button type="button" className="nb-photo-nav nb-photo-prev" onClick={showPrevPhoto} aria-label="আগের ছবি">‹</button>
+            <button type="button" className="nb-photo-nav nb-photo-next" onClick={showNextPhoto} aria-label="পরের ছবি">›</button>
+            <div className="nb-photo-count">{(activePhotoIndex ?? 0) + 1} / {REAL_NOTEBOOK_PHOTOS.length}</div>
             <img src={activePhoto.src} alt={activePhoto.alt} />
           </div>
         </div>
