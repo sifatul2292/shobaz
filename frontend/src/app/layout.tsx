@@ -60,7 +60,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://server.shobaz.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://track.shobaz.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KW6CXCJK');`,
           }}
         />
       </head>
@@ -68,7 +68,7 @@ export default function RootLayout({
         <noscript
           dangerouslySetInnerHTML={{
             __html:
-              '<iframe src="https://server.shobaz.com/ns.html?id=GTM-KW6CXCJK" height="0" width="0" style="display:none;visibility:hidden"></iframe>',
+              '<iframe src="https://track.shobaz.com/ns.html?id=GTM-KW6CXCJK" height="0" width="0" style="display:none;visibility:hidden"></iframe>',
           }}
         />
         <Suspense fallback={null}>
