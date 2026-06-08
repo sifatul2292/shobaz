@@ -30,6 +30,7 @@ export interface Product {
   discountType?: number;
   discountAmount?: number;
   images?: string[];
+  showcaseImages?: string[];
   trackQuantity?: boolean;
   quantity?: number;
   cartLimit?: number;

@@ -100,6 +100,7 @@ export class UpdateProductDto {
   @IsOptional() afterDiscountPrice: number;
   @IsOptional() emiAmount: number;
   @IsOptional() images: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) showcaseImages: string[];
   @IsOptional() quantity: number;
   @IsOptional() threeMonth: number;
   @IsOptional() sixMonth: number;

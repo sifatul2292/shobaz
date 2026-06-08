@@ -5,6 +5,7 @@ export interface Product {
   description?: string;
   shortDescription?: string;
   images?: string[];
+  showcaseImages?: string[];
   videoUrl?: string;
   price: number;
   salePrice?: number;

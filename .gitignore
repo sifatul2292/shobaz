@@ -8,6 +8,10 @@ node_modules/
 out/
 dist/
 build/
+!admin/
+!admin/dist/
+!admin/dist/angular-ui/
+!admin/dist/angular-ui/product-showcase-widget.js
 
 # Environment
 .env

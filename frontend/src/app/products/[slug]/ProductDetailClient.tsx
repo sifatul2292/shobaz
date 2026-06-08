@@ -37,6 +37,7 @@ function cvClass(id: string) {
 const PRIMARY = '#16a34a';
 const ORANGE = '#ea580c';
 const PARCHMENT = '#f5f0e8';
+const API_IMAGE_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
 // SVG Icon components
 const IcRefresh = () => (
@@ -132,6 +133,12 @@ function decodeHTML(str: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
+function showcaseImgUrl(path?: string | null): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${API_IMAGE_BASE}/api/upload/images/${path}`;
+}
+
 const dividerStyle: React.CSSProperties = { border: 0, borderTop: '1px solid #f1f5f9', margin: '20px 0' };
 const tinyLabel: React.CSSProperties = { fontSize: 12, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' };
 const sideCardStyle: React.CSSProperties = {
@@ -196,6 +203,8 @@ export default function ProductDetailClient({ params }: Props) {
   const [newReview, setNewReview] = useState({ rating: 5, review: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const bestsellerScrollRef = useRef<HTMLDivElement>(null);
+  const showcaseTouchStartX = useRef<number | null>(null);
+  const [showcaseLightboxIndex, setShowcaseLightboxIndex] = useState<number | null>(null);
 
   const { addItem, items } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
@@ -207,6 +216,22 @@ export default function ProductDetailClient({ params }: Props) {
   useEffect(() => {
     if (slug) fetchProduct();
   }, [slug]);
+
+  useEffect(() => {
+    if (showcaseLightboxIndex === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowcaseLightboxIndex(null);
+      if (event.key === 'ArrowLeft') moveShowcaseLightbox(-1);
+      if (event.key === 'ArrowRight') moveShowcaseLightbox(1);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showcaseLightboxIndex]);
 
   const fetchProduct = async () => {
     setLoading(true);
@@ -392,6 +417,22 @@ export default function ProductDetailClient({ params }: Props) {
 
   const starStr = (n: number) => '★'.repeat(Math.min(5, Math.max(0, Math.round(n)))) + '☆'.repeat(5 - Math.min(5, Math.max(0, Math.round(n))));
 
+  const moveShowcaseLightbox = (direction: number) => {
+    setShowcaseLightboxIndex((current) => {
+      const count = product?.showcaseImages?.filter(Boolean).length || 0;
+      if (current === null || count === 0) return current;
+      return (current + direction + count) % count;
+    });
+  };
+
+  const onShowcaseTouchEnd = (clientX: number) => {
+    if (showcaseTouchStartX.current === null) return;
+    const delta = clientX - showcaseTouchStartX.current;
+    showcaseTouchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    moveShowcaseLightbox(delta > 0 ? -1 : 1);
+  };
+
   if (loading) {
     return (
       <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -435,6 +476,8 @@ export default function ProductDetailClient({ params }: Props) {
   }
 
   const images = product.images || [];
+  const showcaseImages = (product.showcaseImages || []).filter(Boolean);
+  const showcaseTrackImages = showcaseImages.length > 2 ? [...showcaseImages, ...showcaseImages] : showcaseImages;
   const currentPrice = getCurrentPrice(product);
   const originalPrice = getOriginalPrice(product);
   const discountPercent = getDiscountPercent(product);
@@ -458,6 +501,16 @@ export default function ProductDetailClient({ params }: Props) {
   }, 0);
 
   const sideRelated = relatedProducts.slice(0, 5);
+  const productSpecRows = [
+    ['শিরোনাম', product.name],
+    authorName ? ['লেখক', authorName] : null,
+    publisherName ? ['প্রকাশনী', publisherName] : null,
+    product.edition ? ['সংস্করণ', product.edition] : null,
+    product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
+    product.country ? ['দেশ', product.country] : null,
+    product.language ? ['ভাষা', product.language] : null,
+    product.weight ? ['ওজন', `${product.weight}g`] : null,
+  ].filter((row): row is [string, string] => Boolean(row));
 
   return (
     <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
@@ -838,6 +891,39 @@ export default function ProductDetailClient({ params }: Props) {
           </div>
         </section>
 
+        {/* ── Product showcase slider ── */}
+        {showcaseImages.length > 0 && (
+          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
+            <div className="pd-showcase">
+              <div className="pd-showcase-head">
+                <div>
+                  <h3>আরও ভালো করে দেখুন</h3>
+                  <p>ছবিতে ট্যাপ করলে বড় করে দেখা যাবে</p>
+                </div>
+                <span>{showcaseImages.length} ছবি</span>
+              </div>
+              <div className="pd-showcase-viewport">
+                <div className={showcaseImages.length > 2 ? 'pd-showcase-track is-moving' : 'pd-showcase-track'}>
+                  {showcaseTrackImages.map((image, index) => {
+                    const realIndex = index % showcaseImages.length;
+                    return (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        className="pd-showcase-item"
+                        onClick={() => setShowcaseLightboxIndex(realIndex)}
+                        aria-label={`${product.name} image ${realIndex + 1}`}
+                      >
+                        <img src={showcaseImgUrl(image)} alt={`${product.name} showcase ${realIndex + 1}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── Bundle section ── */}
         {bundleProducts.length > 0 && (
           <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
@@ -1011,17 +1097,8 @@ export default function ProductDetailClient({ params }: Props) {
                 {activeTab === 'specifications' && (
                   <table style={{ width: '100%', maxWidth: 720, borderCollapse: 'collapse', fontSize: 15 }}>
                     <tbody>
-                      {[
-                        ['শিরোনাম', product.name],
-                        authorName ? ['লেখক', authorName] : null,
-                        publisherName ? ['প্রকাশনী', publisherName] : null,
-                        product.edition ? ['সংস্করণ', product.edition] : null,
-                        product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
-                        product.country ? ['দেশ', product.country] : null,
-                        product.language ? ['ভাষা', product.language] : null,
-                        product.weight ? ['ওজন', `${product.weight}g`] : null,
-                      ].filter(Boolean).map(([k, v], i) => (
-                        <tr key={k as string} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
+                      {productSpecRows.map(([k, v], i) => (
+                        <tr key={k} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
                           <td style={{ padding: '14px 18px', color: '#6b7280', width: 200, fontWeight: 600 }}>{k}</td>
                           <td style={{ padding: '14px 18px', color: '#0f172a', fontWeight: 600 }}>{v}</td>
                         </tr>
@@ -1277,6 +1354,189 @@ export default function ProductDetailClient({ params }: Props) {
           </div>
         </div>
       )}
+
+      {showcaseLightboxIndex !== null && showcaseImages[showcaseLightboxIndex] && (
+        <div
+          className="pd-showcase-modal"
+          onClick={() => setShowcaseLightboxIndex(null)}
+          onTouchStart={(event) => { showcaseTouchStartX.current = event.touches[0]?.clientX ?? null; }}
+          onTouchEnd={(event) => onShowcaseTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+        >
+          <button className="pd-showcase-close" type="button" onClick={() => setShowcaseLightboxIndex(null)} aria-label="Close image preview">×</button>
+          {showcaseImages.length > 1 && (
+            <button className="pd-showcase-nav prev" type="button" onClick={(event) => { event.stopPropagation(); moveShowcaseLightbox(-1); }} aria-label="Previous image">
+              <IcChevL />
+            </button>
+          )}
+          <div className="pd-showcase-frame" onClick={(event) => event.stopPropagation()}>
+            <img src={showcaseImgUrl(showcaseImages[showcaseLightboxIndex])} alt={`${product.name} large preview`} />
+            <div className="pd-showcase-count">{showcaseLightboxIndex + 1} / {showcaseImages.length}</div>
+          </div>
+          {showcaseImages.length > 1 && (
+            <button className="pd-showcase-nav next" type="button" onClick={(event) => { event.stopPropagation(); moveShowcaseLightbox(1); }} aria-label="Next image">
+              <IcChevR />
+            </button>
+          )}
+        </div>
+      )}
+
+      <style jsx global>{`
+        .pd-showcase {
+          background: #ffffff;
+          border: 1px solid #f1f5f9;
+          border-radius: 20px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+          overflow: hidden;
+          padding: 20px 0 22px;
+        }
+        .pd-showcase-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 22px 16px;
+        }
+        .pd-showcase-head h3 {
+          margin: 0;
+          font-size: 19px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: var(--bn);
+        }
+        .pd-showcase-head p {
+          margin: 3px 0 0;
+          color: #94a3b8;
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .pd-showcase-head span {
+          background: #f0fdf4;
+          color: #16a34a;
+          border-radius: 999px;
+          padding: 6px 13px;
+          font-weight: 800;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+        .pd-showcase-viewport {
+          overflow: hidden;
+        }
+        .pd-showcase-track {
+          display: flex;
+          gap: 16px;
+          width: max-content;
+          padding: 0 22px;
+        }
+        .pd-showcase-track.is-moving {
+          animation: pd-showcase-slide 26s linear infinite;
+        }
+        .pd-showcase-track.is-moving:hover {
+          animation-play-state: paused;
+        }
+        .pd-showcase-item {
+          width: clamp(190px, 24vw, 320px);
+          aspect-ratio: 4 / 3;
+          border: 0;
+          border-radius: 14px;
+          overflow: hidden;
+          padding: 0;
+          background: #f8fafc;
+          box-shadow: 0 8px 18px rgba(15,23,42,0.10);
+          cursor: zoom-in;
+          flex: 0 0 auto;
+        }
+        .pd-showcase-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform .25s ease;
+        }
+        .pd-showcase-item:hover img {
+          transform: scale(1.04);
+        }
+        @keyframes pd-showcase-slide {
+          from { transform: translateX(0); }
+          to { transform: translateX(calc(-50% - 8px)); }
+        }
+        .pd-showcase-modal {
+          position: fixed;
+          inset: 0;
+          z-index: 120;
+          background: rgba(2, 6, 23, .88);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 22px;
+        }
+        .pd-showcase-frame {
+          position: relative;
+          max-width: min(94vw, 1040px);
+          max-height: 88vh;
+        }
+        .pd-showcase-frame img {
+          max-width: 100%;
+          max-height: 88vh;
+          border-radius: 14px;
+          display: block;
+          object-fit: contain;
+          box-shadow: 0 24px 60px rgba(0,0,0,.35);
+        }
+        .pd-showcase-count {
+          position: absolute;
+          left: 50%;
+          bottom: 14px;
+          transform: translateX(-50%);
+          background: rgba(15,23,42,.72);
+          color: #fff;
+          border-radius: 999px;
+          padding: 5px 12px;
+          font-size: 12px;
+          font-weight: 800;
+        }
+        .pd-showcase-close,
+        .pd-showcase-nav {
+          position: fixed;
+          border: 0;
+          background: rgba(255,255,255,.94);
+          color: #0f172a;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 28px rgba(0,0,0,.25);
+        }
+        .pd-showcase-close {
+          top: 18px;
+          right: 18px;
+          width: 42px;
+          height: 42px;
+          border-radius: 999px;
+          font-size: 28px;
+          line-height: 1;
+        }
+        .pd-showcase-nav {
+          top: 50%;
+          transform: translateY(-50%);
+          width: 46px;
+          height: 46px;
+          border-radius: 999px;
+        }
+        .pd-showcase-nav.prev { left: 22px; }
+        .pd-showcase-nav.next { right: 22px; }
+        @media (max-width: 720px) {
+          .pd-showcase { border-radius: 16px; padding-top: 16px; }
+          .pd-showcase-head { padding: 0 16px 14px; }
+          .pd-showcase-head h3 { font-size: 17px; }
+          .pd-showcase-head p { display: none; }
+          .pd-showcase-track { gap: 12px; padding: 0 16px; }
+          .pd-showcase-item { width: 72vw; border-radius: 12px; }
+          .pd-showcase-nav { width: 40px; height: 40px; }
+          .pd-showcase-nav.prev { left: 12px; }
+          .pd-showcase-nav.next { right: 12px; }
+        }
+      `}</style>
 
       <Footer />
     </div>

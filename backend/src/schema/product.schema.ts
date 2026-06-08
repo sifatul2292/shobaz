@@ -116,6 +116,11 @@ export const ProductSchema = new mongoose.Schema(
       type: [String],
       required: false,
     },
+    showcaseImages: {
+      type: [String],
+      required: false,
+      default: [],
+    },
     quantity: {
       type: Number,
       required: false,
