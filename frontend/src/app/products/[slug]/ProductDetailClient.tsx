@@ -500,7 +500,7 @@ export default function ProductDetailClient({ params }: Props) {
     return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
   }, 0);
 
-  const sideRelated = relatedProducts.slice(0, 5);
+  const sideRelated = bestSellers.slice(0, 5);
   const productSpecRows = [
     ['শিরোনাম', product.name],
     authorName ? ['লেখক', authorName] : null,
@@ -845,10 +845,10 @@ export default function ProductDetailClient({ params }: Props) {
                 </div>
               </div>
 
-              {/* Related books */}
+              {/* Bestseller books */}
               {sideRelated.length > 0 && (
                 <div style={sideCardStyle}>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>সম্পর্কিত বই</h3>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>বেস্টসেলার বই</h3>
                   <div>
                     {sideRelated.map((b, i) => {
                       const bPrice = getCurrentPrice(b);
