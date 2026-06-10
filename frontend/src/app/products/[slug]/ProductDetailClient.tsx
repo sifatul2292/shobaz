@@ -260,7 +260,7 @@ export default function ProductDetailClient({ params }: Props) {
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 10));
 
-          const sortedByRating = [...filtered].sort((a: Product, b: Product) => (b.ratingAvr || 0) - (a.ratingAvr || 0));
+          const sortedByRating = [...filtered].sort((a: Product, b: Product) => (b.totalSold || 0) - (a.totalSold || 0));
           setBestSellers(sortedByRating.slice(0, 10));
 
           const backendBoughtTogether = productData.boughtTogetherProducts || [];

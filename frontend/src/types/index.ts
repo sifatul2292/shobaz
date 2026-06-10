@@ -31,6 +31,7 @@ export interface Product {
   ratingAvr?: number;
   ratingCount?: number;
   ratingTotal?: number;
+  totalSold?: number;
   ratingDetails?: { stars: number; count: number }[];
   reviews?: Review[];
   boughtTogether?: Product[];
