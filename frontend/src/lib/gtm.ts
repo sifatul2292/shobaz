@@ -130,11 +130,12 @@ export const gtmSearch = (searchTerm: string, results: any[]) => {
 };
 
 export const gtmPurchase = (order: any) => {
-  const transactionId = order.orderId || order._id;
-  if (wasPurchaseTracked(transactionId)) return;
+  const transactionId = String(order.orderId || order._id || '');
+  if (!transactionId || wasPurchaseTracked(transactionId)) return;
 
   pushEvent({
     event: 'purchase_stape',
+    event_id: transactionId, // dedup key for GA4 + Meta CAPI (must equal transaction_id)
     user_data: getUserData(order),
     ecommerce: {
       transaction_id: transactionId,

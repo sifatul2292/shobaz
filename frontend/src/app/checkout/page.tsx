@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
-import { gtmBeginCheckout, gtmPurchase } from '@/lib/gtm';
+import { gtmBeginCheckout } from '@/lib/gtm';
 import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
@@ -461,12 +461,8 @@ export default function CheckoutPage() {
       if (res.data?.success || res.status === 200 || res.status === 201) {
         const createdOrder = res.data?.data || res.data?.order || res.data;
         const newOrderId = createdOrder?._id || res.data?._id || res.data?.order?._id;
-        gtmPurchase({
-          ...orderData,
-          ...(typeof createdOrder === 'object' ? createdOrder : {}),
-          _id: newOrderId,
-          orderId: createdOrder?.orderId || newOrderId,
-        });
+        // purchase event fires once on /order-success (thank-you page), keyed by
+        // canonical orderId — do NOT push it here (premature, duplicate, wrong txn id)
         clearCart();
         router.push(`/order-success?orderId=${newOrderId}`);
         toast.success('অর্ডার সফলভাবে গৃহীত হয়েছে!');

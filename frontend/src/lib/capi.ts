@@ -1,15 +1,23 @@
 import api from '@/lib/api';
 
-const buildEvent = (eventName: string, userData: Record<string, any>, customData: Record<string, any>) => ({
+const buildEvent = (
+  eventName: string,
+  userData: Record<string, any>,
+  customData: Record<string, any>,
+  eventId?: string,
+) => ({
   event_name: eventName,
   event_time: Math.floor(Date.now() / 1000),
   event_source_url: typeof window !== 'undefined' ? window.location.href : '',
   action_source: 'website',
+  // event_id lets Meta dedup this server event against the browser pixel fire
+  ...(eventId ? { event_id: eventId } : {}),
   user_data: userData,
   custom_data: customData,
 });
 
 export const capiPurchase = (order: any) => {
+  const eventId = String(order.orderId || order._id || '');
   const nameParts = (order.name || '').trim().split(/\s+/);
   const userData = {
     ph: order.phoneNo || undefined,
@@ -30,7 +38,7 @@ export const capiPurchase = (order: any) => {
     num_items: (order.orderedItems || []).length,
     order_id: order.orderId,
   };
-  return api.post('/gtag/track-theme-purchase', buildEvent('Purchase', userData, customData)).catch(() => null);
+  return api.post('/gtag/track-theme-purchase', buildEvent('Purchase', userData, customData, eventId)).catch(() => null);
 };
 
 export const capiViewContent = (product: any) => {

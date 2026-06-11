@@ -46,9 +46,16 @@ function OrderSuccessContent() {
           if (orderData) {
             setOrder(orderData);
             document.title = 'Thank you Page - Shobaz';
-            gtmPurchase(orderData);
-            capiPurchase(orderData);
-            phPurchase(orderData);
+            // Fire purchase exactly once per order. Guard by canonical order id so
+            // reloads / re-mounts never re-fire any tracker (GTM + Meta CAPI + PostHog).
+            const txnId = String(orderData.orderId || orderData._id || '');
+            const guardKey = `purchase_sent_${txnId}`;
+            if (txnId && typeof window !== 'undefined' && !window.sessionStorage.getItem(guardKey)) {
+              window.sessionStorage.setItem(guardKey, '1');
+              gtmPurchase(orderData);
+              capiPurchase(orderData);
+              phPurchase(orderData);
+            }
           }
         } catch (err) {
           console.error('Failed to fetch order:', err);
