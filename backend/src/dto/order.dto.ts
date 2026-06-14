@@ -147,6 +147,10 @@ export class UpdateOrderDto {
   note: string;
 
   @IsOptional()
+  @IsString()
+  adminNote: string;
+
+  @IsOptional()
   email: string;
 
   @IsOptional()

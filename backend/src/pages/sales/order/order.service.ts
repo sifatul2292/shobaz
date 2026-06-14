@@ -1544,6 +1544,10 @@ export class OrderService {
       updatePayload.note = updateOrderDto.note;
     }
 
+    if (updateOrderDto?.adminNote !== undefined) {
+      updatePayload.adminNote = updateOrderDto.adminNote;
+    }
+
     if (updateOrderDto?.email !== undefined) {
       updatePayload.email = updateOrderDto.email;
     }
