@@ -137,6 +137,29 @@ export class OrderService {
         _id: saveData._id,
         orderId: saveData.orderId,
       };
+
+      // A real order now exists for this phone — drop any abandoned checkout for
+      // it from the Incomplete Orders page. The record converted from that page
+      // (incompleteOrderId) is kept and marked 'converted' as an audit row.
+      await this.cleanupIncompleteOrdersForPlacedOrder(
+        saveData,
+        addOrderDto.incompleteOrderId,
+      );
+      if (addOrderDto.incompleteOrderId) {
+        try {
+          await this.markIncompleteOrderConverted(
+            addOrderDto.incompleteOrderId,
+            saveData.orderId,
+          );
+        } catch (error) {
+          this.logger.warn(
+            `Order ${saveData.orderId} created, but incomplete order conversion marking failed: ${
+              error?.message || error
+            }`,
+          );
+        }
+      }
+
       if (addOrderDto.user) {
         await this.cartModel.deleteMany({
           user: new ObjectId(addOrderDto.user),
@@ -538,26 +561,108 @@ export class OrderService {
 
   async addIncompleteOrder(dto: any): Promise<ResponsePayload> {
     try {
-      await this.incompleteOrderModel.findOneAndUpdate(
+      const saveData = await this.incompleteOrderModel.findOneAndUpdate(
         { phoneNo: dto.phoneNo },
         {
           $set: {
             name: dto.name,
             phoneNo: dto.phoneNo,
+            email: dto.email,
+            city: dto.city,
             shippingAddress: dto.shippingAddress,
             paymentType: dto.paymentType || 'cod',
             deliveryCharge: dto.deliveryCharge || 0,
             subTotal: dto.subTotal || 0,
+            discount: dto.discount || 0,
             grandTotal: dto.grandTotal || 0,
             orderedItems: dto.orderedItems || [],
+            note: dto.note,
             checkoutDate: new Date(),
           },
         },
         { upsert: true, new: true },
       );
+
+      // Auto-run fraud check the moment an abandoned checkout arrives, so the
+      // result is already populated when admin opens the Incomplete Orders page.
+      // Fire-and-forget: never block / fail the save on a fraud-API hiccup.
+      if (saveData?.phoneNo) {
+        this.runIncompleteOrderFraudCheck(
+          String(saveData._id),
+          saveData.phoneNo,
+        ).catch((error) => {
+          this.logger.warn(
+            `Auto fraud check failed for incomplete order ${saveData._id}: ${
+              error?.message || error
+            }`,
+          );
+        });
+      }
+
       return { success: true, message: 'Incomplete order saved' };
     } catch (err) {
       return { success: false, message: err.message };
+    }
+  }
+
+  private async runIncompleteOrderFraudCheck(
+    incompleteOrderId: string,
+    phoneNo: string,
+  ): Promise<void> {
+    const fraudCheckerData = await this.courierService.checkFraudOrder(phoneNo);
+    if (fraudCheckerData) {
+      await this.incompleteOrderModel.updateOne(
+        { _id: incompleteOrderId },
+        { $set: { fraudChecker: fraudCheckerData } },
+      );
+    }
+  }
+
+  private async markIncompleteOrderConverted(
+    incompleteOrderId: string,
+    orderId: string,
+  ): Promise<void> {
+    if (!ObjectId.isValid(incompleteOrderId)) {
+      this.logger.warn(`Invalid incomplete order id: ${incompleteOrderId}`);
+      return;
+    }
+    await this.incompleteOrderModel.findByIdAndUpdate(incompleteOrderId, {
+      $set: { status: 'converted', orderId },
+    });
+  }
+
+  private async cleanupIncompleteOrdersForPlacedOrder(
+    saveData: any,
+    exceptIncompleteOrderId?: string,
+  ): Promise<void> {
+    if (!saveData?.phoneNo) {
+      return;
+    }
+    // A real order now exists for this phone, so any abandoned checkout for it
+    // is no longer abandoned — DELETE it. The single record converted from the
+    // incomplete page (exceptIncompleteOrderId) is kept and marked 'converted'.
+    const createdAt = saveData.createdAt || new Date();
+    const match: any = {
+      phoneNo: saveData.phoneNo,
+      createdAt: { $lte: createdAt },
+    };
+    if (exceptIncompleteOrderId && ObjectId.isValid(exceptIncompleteOrderId)) {
+      match._id = { $ne: new ObjectId(exceptIncompleteOrderId) };
+    }
+    await this.incompleteOrderModel.deleteMany(match);
+  }
+
+  async deleteMultipleIncompleteOrderById(
+    ids: string[],
+  ): Promise<ResponsePayload> {
+    try {
+      await this.incompleteOrderModel.deleteMany({ _id: { $in: ids } });
+      return {
+        success: true,
+        message: 'Incomplete orders deleted successfully',
+      } as ResponsePayload;
+    } catch (err) {
+      return { success: false, message: err.message } as ResponsePayload;
     }
   }
 
@@ -565,19 +670,31 @@ export class OrderService {
     filterOrderDto: FilterAndPaginationOrderDto,
     searchQuery?: string,
   ): Promise<ResponsePayload> {
-    const { filter } = filterOrderDto;
-    const { pagination } = filterOrderDto;
-    const { sort } = filterOrderDto;
-    const { select } = filterOrderDto;
+    const { filter, pagination, sort, select } = filterOrderDto;
 
-    const aggregateStages = [];
+    const aggregateStages: any[] = [];
     let mFilter: any = {};
-    let mSort: any = {};
+    let mSort: any = { createdAt: -1 };
     let mSelect: any = {};
     let mPagination: any = {};
 
     if (filter) {
       mFilter = { ...mFilter, ...filter };
+    }
+
+    // Coerce YYYY-MM-DD string date filters to Date objects (timestamps store Date)
+    const mf = mFilter as any;
+    const coerceDate = (dateStr: string, endOfDay: boolean): Date => {
+      const iso = endOfDay
+        ? dateStr + 'T23:59:59.999+06:00'
+        : dateStr + 'T00:00:00.000+06:00';
+      return new Date(iso);
+    };
+    if (mf.createdAt && typeof mf.createdAt === 'object') {
+      if (mf.createdAt.$gte && typeof mf.createdAt.$gte === 'string')
+        mf.createdAt.$gte = coerceDate(mf.createdAt.$gte, false);
+      if (mf.createdAt.$lte && typeof mf.createdAt.$lte === 'string')
+        mf.createdAt.$lte = coerceDate(mf.createdAt.$lte, true);
     }
 
     if (searchQuery) {
@@ -586,8 +703,9 @@ export class OrderService {
           mFilter,
           {
             $or: [
-              { phoneNo: { $regex: searchQuery, $options: 'i' } },
               { name: { $regex: searchQuery, $options: 'i' } },
+              { phoneNo: { $regex: searchQuery, $options: 'i' } },
+              { orderId: { $regex: searchQuery, $options: 'i' } },
             ],
           },
         ],
@@ -596,66 +714,99 @@ export class OrderService {
 
     if (sort) {
       mSort = sort;
-    } else {
-      mSort = { createdAt: -1 };
     }
 
     if (select) {
       mSelect = { ...select };
-    } else {
-      mSelect = { name: 1 };
     }
 
     if (Object.keys(mFilter).length) {
       aggregateStages.push({ $match: mFilter });
     }
 
+    aggregateStages.push(
+      {
+        $lookup: {
+          from: 'orders',
+          let: {
+            incompletePhoneNo: '$phoneNo',
+            incompleteCreatedAt: '$createdAt',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$phoneNo', '$$incompletePhoneNo'] },
+                    { $gte: ['$createdAt', '$$incompleteCreatedAt'] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'placedOrders',
+        },
+      },
+      {
+        // Hide records where the customer placed the order themselves on the
+        // website (a matching order exists) — those are not abandoned. But keep
+        // admin-converted records (status 'converted') so they stay on this page
+        // marked converted, even though a real order now exists for them.
+        $match: {
+          $or: [{ status: 'converted' }, { placedOrders: { $size: 0 } }],
+        },
+      },
+    );
+
     if (Object.keys(mSort).length) {
       aggregateStages.push({ $sort: mSort });
     }
 
-    if (!pagination) {
+    const countStages = [...aggregateStages];
+
+    if (pagination) {
+      const pageSize =
+        pagination.pageSize && Number(pagination.pageSize) > 0
+          ? Number(pagination.pageSize)
+          : 25;
+      const currentPage =
+        pagination.currentPage && Number(pagination.currentPage) > 0
+          ? Number(pagination.currentPage)
+          : 1;
+      mPagination = {
+        skip: pageSize * (currentPage - 1),
+        limit: pageSize,
+      };
+      aggregateStages.push({ $skip: mPagination.skip });
+      aggregateStages.push({ $limit: mPagination.limit });
+    }
+
+    if (Object.keys(mSelect).length) {
       aggregateStages.push({ $project: mSelect });
     }
 
-    if (pagination) {
-      mPagination = {
-        $facet: {
-          metadata: [{ $count: 'total' }],
-          data: [
-            { $skip: Math.max(0, pagination.pageSize * pagination.currentPage) },
-            { $limit: pagination.pageSize },
-            { $project: mSelect },
-          ],
-        },
-      };
-      aggregateStages.push(mPagination);
-      aggregateStages.push({
-        $project: {
-          data: 1,
-          count: { $arrayElemAt: ['$metadata.total', 0] },
-        },
-      });
-    }
-
     try {
-      const dataAggregates =
-        await this.incompleteOrderModel.aggregate(aggregateStages);
-      if (pagination) {
-        return {
-          success: true,
-          message: 'Success',
-          data: dataAggregates[0]?.data || [],
-          count: dataAggregates[0]?.count || 0,
-        } as ResponsePayload;
-      } else {
-        return {
-          success: true,
-          message: 'Success',
-          data: dataAggregates,
-          count: dataAggregates.length,
-        } as ResponsePayload;
-      }
+      const data = await this.incompleteOrderModel.aggregate(aggregateStages);
+      const countAgg = await this.incompleteOrderModel.aggregate([
+        ...countStages,
+        { $count: 'count' },
+      ]);
+      const count = countAgg[0]?.count || 0;
+      const calculationAgg = await this.incompleteOrderModel.aggregate([
+        ...countStages,
+        { $group: { _id: null, grandTotal: { $sum: '$grandTotal' } } },
+      ]);
+      const calculation = {
+        grandTotal: calculationAgg[0]?.grandTotal || 0,
+      };
+      return {
+        success: true,
+        message: 'Success',
+        data,
+        count,
+        calculation,
+      } as ResponsePayload;
     } catch (err) {
       return { success: false, message: err.message } as ResponsePayload;
     }

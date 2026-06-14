@@ -184,6 +184,13 @@ export class OrderController {
     return this.orderService.updateIncompleteOrderById(id, dto);
   }
 
+  @Post('/delete-multiple-incomplete-orders')
+  async deleteMultipleIncompleteOrderById(
+    @Body() body: { ids: string[] },
+  ): Promise<ResponsePayload> {
+    return this.orderService.deleteMultipleIncompleteOrderById(body.ids);
+  }
+
   /**
    * getAllOrders
    * getOrderById

@@ -54,6 +54,10 @@ export class AddOrderDto {
   coupon: string;
 
   @IsOptional()
+  @IsString()
+  incompleteOrderId: string;
+
+  @IsOptional()
   @IsArray()
   carts: string[];
 
