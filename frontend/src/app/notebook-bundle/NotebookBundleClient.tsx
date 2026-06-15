@@ -323,6 +323,11 @@ export default function NotebookBundleClient() {
         .nb-strip-left { display:flex; align-items:center; gap:10px; }
         .nb-pulse { width:8px; height:8px; border-radius:50%; background: #4CAF50; animation: nbPulse 1.6s infinite; flex-shrink:0; }
         @keyframes nbPulse { 0% { box-shadow:0 0 0 0 rgba(76,175,80,0.6); } 70% { box-shadow:0 0 0 8px rgba(76,175,80,0); } 100% { box-shadow:0 0 0 0 rgba(76,175,80,0); } }
+        @keyframes nbGiftReveal { 0% { opacity:0; transform: translateY(18px) scale(0.96); } 60% { transform: translateY(-2px) scale(1.01); } 100% { opacity:1; transform: translateY(0) scale(1); } }
+        @keyframes nbGiftGlow { 0%,100% { box-shadow:0 0 0 0 rgba(212,175,55,0); } 50% { box-shadow:0 0 0 6px rgba(212,175,55,0.18); } }
+        .nb-gift-reveal { animation: nbGiftReveal 0.55s cubic-bezier(.2,.7,.2,1), nbGiftGlow 2.4s ease-in-out 0.55s infinite; }
+        @keyframes nbGiftConfirm { 0% { opacity:0; transform: scale(0.92); } 100% { opacity:1; transform: scale(1); } }
+        .nb-gift-confirm { animation: nbGiftConfirm 0.35s ease; }
         .nb-cd { display:flex; align-items:center; gap:6px; }
         .nb-cd b { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 2px 7px; min-width: 28px; text-align: center; font-family: "Inter", sans-serif; font-weight: 600; font-feature-settings: "tnum" 1; }
 
@@ -717,14 +722,48 @@ export default function NotebookBundleClient() {
           </div>
         </div>
 
+        {/* ── Real Product Photos ── */}
+        <section className="nb-real-section">
+          <div className="nb-container">
+            <div ref={r6} style={fadeStyle}>
+              <div className="nb-real-wrap">
+                <div className="nb-real-copy">
+                  <div className="nb-section-eyebrow">বাস্তব ছবি</div>
+                  <h2 className="nb-section-title">Argentina and Brazil Edition</h2>
+                  <p className="nb-section-sub">
+                    Product mockup নয়। Outdoor photos, তে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারেন।
+                  </p>
+                  <div className="nb-real-note">
+                    <div><span>1</span>Matte laminated cover daylight-এ কেমন দেখায়</div>
+                    <div><span>2</span>Side angle থেকে notebook thickness এবং binding</div>
+                    <div><span>3</span>Argentina ও Brazil — দুই fan pack-এর real covers</div>
+                  </div>
+                  <div className="nb-real-caption">
+                    Swipe করে সব ছবি দেখো। Desktop-এ ছবির উপর hover করলে cover detail বড় করে বোঝা যাবে।
+                  </div>
+                </div>
+                <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
+                  {REAL_NOTEBOOK_PHOTOS.map((photo, index) => (
+                    <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
+                      <button type="button" onClick={() => setActivePhotoIndex(index)} aria-label={`${photo.alt} বড় করে দেখুন`}>
+                        <img src={photo.src} alt={photo.alt} loading="lazy" />
+                      </button>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Notebook Cards ── */}
         <section id="nb-books" className="nb-books-section">
           <div className="nb-container">
             <div ref={r2} style={fadeStyle}>
               <div className="nb-section-head">
-                <div className="nb-section-eyebrow">আমাদের নোটবুক</div>
-                <h2 className="nb-section-title">৩টি প্রিমিয়াম ফুটবল নোটবুক — যেকোনো পরিমাণে অর্ডার করুন</h2>
-                <p className="nb-section-sub">৮০ GSM অফ-হোয়াইট পেপার, Rounded Corner ডিজাইন, টেকসই পেপারব্যাক কভার। ২টি নিলে ১টি ফ্রি।</p>
+                <div className="nb-section-eyebrow">২টি নিলে ১টি ফ্রি</div>
+                <h2 className="nb-section-title">২টি নোটবুক নিলে ১টি একদম ফ্রি</h2>
+                <p className="nb-section-sub">পছন্দের নোটবুক কার্টে যোগ করুন — কার্টে ২টি নোটবুক হলেই নিচে ফ্রি নোটবুক বেছে নেওয়ার অপশন আসবে।</p>
               </div>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
@@ -775,54 +814,15 @@ export default function NotebookBundleClient() {
                   })}
                 </div>
               )}
-            </div>
-          </div>
-        </section>
 
-        {/* ── Real Product Photos ── */}
-        <section className="nb-real-section">
-          <div className="nb-container">
-            <div ref={r6} style={fadeStyle}>
-              <div className="nb-real-wrap">
-                <div className="nb-real-copy">
-                  <div className="nb-section-eyebrow">বাস্তব ছবি</div>
-                  <h2 className="nb-section-title">Argentina and Brazil Edition</h2>
-                  <p className="nb-section-sub">
-                    Product mockup নয়। Outdoor photos, তে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারেন।
-                  </p>
-                  <div className="nb-real-note">
-                    <div><span>1</span>Matte laminated cover daylight-এ কেমন দেখায়</div>
-                    <div><span>2</span>Side angle থেকে notebook thickness এবং binding</div>
-                    <div><span>3</span>Argentina ও Brazil — দুই fan pack-এর real covers</div>
-                  </div>
-                  <div className="nb-real-caption">
-                    Swipe করে সব ছবি দেখো। Desktop-এ ছবির উপর hover করলে cover detail বড় করে বোঝা যাবে।
-                  </div>
-                </div>
-                <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
-                  {REAL_NOTEBOOK_PHOTOS.map((photo, index) => (
-                    <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
-                      <button type="button" onClick={() => setActivePhotoIndex(index)} aria-label={`${photo.alt} বড় করে দেখুন`}>
-                        <img src={photo.src} alt={photo.alt} loading="lazy" />
-                      </button>
-                    </figure>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Free Notebook Offer Panel ── */}
-        <section id="nb-builder" className="nb-builder-wrap">
-          <div className="nb-container">
-            <div ref={r3} style={fadeStyle}>
-              <div className="nb-builder">
+              {/* ── Free offer (merged into cards section) ── */}
+              <div id="nb-builder" ref={r3} style={{ ...fadeStyle, marginTop: 44 }}>
+                <div className="nb-builder">
                 <div className="nb-builder-head">
                   <div>
                     <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>ফ্রি নোটবুক</div>
-                    <h3>🎁 আপনার ফ্রি নোটবুক বেছে নিন</h3>
-                    <p>২টি নোটবুক কিনলে অথবা ৳৫০০+ অর্ডারে — যেকোনো একটি প্রিমিয়াম নোটবুক সম্পূর্ণ বিনামূল্যে।</p>
+                    <h3>🎁 ২টি নোটবুক নিলে ১টি ফ্রি</h3>
+                    <p>উপরে থেকে ২টি নোটবুক কার্টে যোগ করুন (অথবা ৳৫০০+ অর্ডার) — যেকোনো একটি প্রিমিয়াম নোটবুক সম্পূর্ণ বিনামূল্যে বেছে নিন।</p>
                   </div>
                   <div className="nb-builder-price">
                     <div className="lbl">কার্টে নোটবুক</div>
@@ -837,14 +837,17 @@ export default function NotebookBundleClient() {
                 </div>
 
                 {eligible ? (
-                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 14, marginBottom: 8 }}>
+                  <div className="nb-gift-reveal" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 16, padding: 16, marginBottom: 8 }}>
+                    <div style={{ textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 800, fontSize: 15, marginBottom: 12 }}>
+                      🎉 ফ্রি নোটবুক আনলকড — যেকোনো একটি বেছে নিন
+                    </div>
                     <FreeNotebookPicker
                       notebooks={products}
                       selectedId={giftItem?.product._id}
                       onPick={handlePickFreeGift}
                     />
                     {giftItem && (
-                      <div style={{ marginTop: 12, textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 700, fontSize: 14 }}>
+                      <div className="nb-gift-confirm" style={{ marginTop: 12, textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 700, fontSize: 14 }}>
                         ✓ {giftItem.product.name} ফ্রি উপহার হিসেবে যুক্ত হয়েছে
                       </div>
                     )}
@@ -866,6 +869,7 @@ export default function NotebookBundleClient() {
                   <span>✓ ৫০০৳+ অর্ডারে নোটবুক ফ্রি</span>
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </section>
@@ -876,7 +880,7 @@ export default function NotebookBundleClient() {
             <div className="nb-container">
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">আমাদের ব্র্যান্ড</div>
-                <h2 className="nb-section-title">সবাজের বেস্ট সেলিং বইসমূহ</h2>
+                <h2 className="nb-section-title">Best Selling Books</h2>
                 <p className="nb-section-sub">শুধু নোটবুক নয় — সবাজে আছে আরও দারুণ সব বই। ৫০০৳+ অর্ডারে একটি নোটবুক ফ্রি!</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : isTablet ? 'repeat(3, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: isMobile ? 12 : 20 }}>
