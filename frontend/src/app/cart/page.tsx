@@ -9,6 +9,9 @@ import api, { imgUrl } from '@/lib/api';
 import { gtmViewCart } from '@/lib/gtm';
 import { phViewCart } from '@/lib/posthog';
 import toast from 'react-hot-toast';
+import FreeNotebookPicker from '@/components/common/FreeNotebookPicker';
+import { isFreeNotebookEligible, remainingForThreshold } from '@/lib/notebookOffer';
+import { Product } from '@/types';
 
 // ── Design tokens ─────────────────────────────────────────────────────
 const PRIMARY = '#16a34a';
@@ -247,6 +250,41 @@ function CartRow({ item, onQty, onRemove, last }: {
   );
 }
 
+// ── Gift Row (free notebook) ──────────────────────────────────────────
+function GiftRow({ item, onRemove }: { item: any; onRemove: () => void }) {
+  const product = item.product;
+  const name = product.name || 'Notebook';
+  const img = product.images?.[0];
+  const original = getCurrentPrice(product);
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 18, padding: '20px 24px', alignItems: 'flex-start', borderTop: '1px solid #f5f5f5', background: '#F6FBF6' }}>
+      <Link href={`/products/${product.slug}`} style={{ width: 80, height: 104, borderRadius: 8, overflow: 'hidden', display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', flexShrink: 0, background: '#f8fafc', position: 'relative' }}>
+        {img ? (
+          <img src={imgUrl(img)!} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IcCart size={28} color="#cbd5e1" /></div>
+        )}
+      </Link>
+      <div style={{ minWidth: 0 }}>
+        <span style={{ display: 'inline-block', background: PRIMARY, color: 'white', borderRadius: 999, padding: '3px 12px', fontSize: 11, fontWeight: 800, marginBottom: 6, letterSpacing: '0.04em' }}>🎁 ফ্রি উপহার</span>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{name}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: PRIMARY, fontFamily: "'Inter', sans-serif" }}>৳0</span>
+          {original > 0 && <span style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'line-through' }}>৳{original}</span>}
+          <span style={{ background: '#ecfdf5', color: PRIMARY, border: '1px solid #a7f3d0', borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>সম্পূর্ণ বিনামূল্যে</span>
+        </div>
+        <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>অর্ডার শর্ত পূরণ হলে উপহারটি প্রযোজ্য</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 14, minWidth: 100 }}>
+        <button onClick={onRemove} title="উপহার বদলান / সরান" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+          <IcTrash size={18} color="#9ca3af" />
+        </button>
+        <div style={{ fontSize: 15, fontWeight: 700, color: PRIMARY }}>= ৳0</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Summary Row ───────────────────────────────────────────────────────
 function SummaryRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
@@ -297,7 +335,7 @@ interface ShippingCharge {
 
 // ── Page ──────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotalPrice, clearCart, setFreeGift, removeFreeGift } = useCartStore();
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -317,7 +355,15 @@ export default function CartPage() {
   if (items.length === 0) return <EmptyCart />;
 
   const subtotal = getTotalPrice();
-  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
+  const paidItems = items.filter((i) => !i.isFreeGift);
+  const giftItem = items.find((i) => i.isFreeGift);
+  const itemCount = paidItems.reduce((s, i) => s + i.quantity, 0);
+  const eligible = isFreeNotebookEligible(items);
+  const remaining = remainingForThreshold(items);
+  const handlePickGift = (product: Product) => {
+    setFreeGift(product);
+    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে! 🎁`);
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT, fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
@@ -343,15 +389,33 @@ export default function CartPage() {
               </div>
 
               {/* rows */}
-              {items.map((item, i) => (
+              {paidItems.map((item, i) => (
                 <CartRow
                   key={item._id || item.product._id}
                   item={item}
-                  last={i === items.length - 1}
+                  last={!giftItem && i === paidItems.length - 1}
                   onQty={(q) => updateQuantity(item.product._id, Math.max(1, q))}
                   onRemove={() => { removeItem(item.product._id); toast.success('পণ্য সরানো হয়েছে'); }}
                 />
               ))}
+
+              {/* ── Free notebook offer ── */}
+              {giftItem ? (
+                <GiftRow item={giftItem} onRemove={() => { removeFreeGift(); toast.success('ফ্রি উপহার সরানো হয়েছে'); }} />
+              ) : eligible ? (
+                <div style={{ padding: '18px 24px', borderTop: '1px solid #f5f5f5', background: '#FBF8EC' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#071A07', marginBottom: 4 }}>🎁 আপনি একটি নোটবুক ফ্রি পাচ্ছেন!</div>
+                  <div style={{ fontSize: 13, color: '#4A6B4A', marginBottom: 12 }}>নিচের যেকোনো একটি প্রিমিয়াম নোটবুক বেছে নিন — সম্পূর্ণ বিনামূল্যে।</div>
+                  <FreeNotebookPicker onPick={handlePickGift} compact />
+                </div>
+              ) : (
+                <div style={{ padding: '16px 24px', borderTop: '1px solid #f5f5f5', background: '#FBF8EC', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>🎁</span>
+                  <div style={{ fontSize: 13.5, color: '#2E4A2E', fontWeight: 600, lineHeight: 1.5 }}>
+                    আর <b style={{ color: '#C62828' }}>৳{remaining}</b> যোগ করুন (অথবা ২টি নোটবুক) — সঙ্গে একটি প্রিমিয়াম নোটবুক <b>ফ্রি</b>!
+                  </div>
+                </div>
+              )}
 
               {/* footer */}
               <div style={{ background: '#fafafa', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -381,6 +445,7 @@ export default function CartPage() {
                 {/* price rows */}
                 <div style={{ padding: '8px 24px 0' }}>
                   <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
+                  {giftItem && <SummaryRow label="🎁 ফ্রি নোটবুক" value="৳0" valueColor={PRIMARY}/>}
                   <SummaryRow label="ঢাকার ভেতরে" value={shippingCharge ? `৳${shippingCharge.deliveryInDhaka}` : '৳৬০'}/>
                   <SummaryRow label="ঢাকার বাইরে" value={shippingCharge ? `৳${shippingCharge.deliveryOutsideDhaka}` : '৳৮০'}/>
                   <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9ca3af', fontStyle: 'italic' }}>

@@ -12,6 +12,7 @@ import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { hasNotebookTag } from '@/lib/notebookOffer';
 
 // ── Design tokens ─────────────────────────────────────────────────────
 const PRIMARY = '#16a34a';
@@ -39,15 +40,6 @@ const getCurrentPrice = (product: any): number => {
   const discount = product.discountAmount || 0;
   return discount > 0 ? salePrice - discount : salePrice;
 };
-const hasNotebookTag = (product: any): boolean => {
-  const tags = product?.tags;
-  return Array.isArray(tags) && tags.some((tag: any) => {
-    const slug = typeof tag?.slug === 'string' ? tag.slug.toLowerCase() : '';
-    const name = typeof tag?.name === 'string' ? tag.name.toLowerCase() : '';
-    return slug === 'notebook' || name === 'notebook';
-  });
-};
-
 // ── SVG Icons ─────────────────────────────────────────────────────────
 const IcCheck = ({ size = 16, color = 'white' }: { size?: number; color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -319,7 +311,7 @@ function EmptyCheckout() {
 // ── Page ──────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart, reconcileFreeGift } = useCartStore();
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -335,6 +327,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     setMounted(true);
     document.title = 'চেকআউট - Shobaz';
+    reconcileFreeGift();
     api.get('/shipping-charge/get').then(res => {
       if (res.data?.data) setShippingCharge(res.data.data);
     }).catch(() => {});
@@ -383,7 +376,7 @@ export default function CheckoutPage() {
   };
   // Notebook free-shipping: 3+ notebook-tagged items -> delivery is free
   const notebookQty = items.reduce((count, item) => {
-    if (hasNotebookTag(item.product)) return count + item.quantity;
+    if (!item.isFreeGift && hasNotebookTag(item.product)) return count + item.quantity;
     return count;
   }, 0);
   const notebookFreeShipping = notebookQty >= 3;
@@ -396,6 +389,7 @@ export default function CheckoutPage() {
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
+  const giftItem = items.find(i => i.isFreeGift);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const validateForm = () => {
@@ -437,6 +431,18 @@ export default function CheckoutPage() {
       const shipping = deliveryFee;
       const total = subtotal + shipping;
       const orderedItems = items.map(item => {
+        if (item.isFreeGift) {
+          // Free notebook — zero priced so it never adds to subtotal/grandTotal.
+          return {
+            _id: item.product._id, name: item.product.name, nameEn: item.product.name,
+            slug: item.product.slug, image: item.product.images?.[0] || null,
+            category: item.product.category, author: item.product.author,
+            publisher: item.product.publisher, subCategory: null, brand: null,
+            discountType: 0, discountAmount: 0,
+            regularPrice: 0, unitPrice: 0, salePrice: 0,
+            quantity: 1, selectedQty: 1, orderType: 'free', isFreeGift: true,
+          };
+        }
         const salePrice = item.product.salePrice || item.product.price || 0;
         const discountAmt = item.product.discountAmount || 0;
         const afterDiscountPrice = discountAmt > 0 ? salePrice - discountAmt : salePrice;
@@ -570,6 +576,7 @@ export default function CheckoutPage() {
                 {/* price rows */}
                 <div style={{ padding: '16px 24px 0' }}>
                   <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
+                  {giftItem && <SummaryRow label="🎁 ফ্রি নোটবুক" value="৳0" valueColor={PRIMARY}/>}
                   <SummaryRow
                     label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 ৩টি নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
                     value={notebookFreeShipping ? 'ফ্রি!' : `৳${deliveryFee}`}

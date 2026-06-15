@@ -9,6 +9,14 @@ import { Product } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import ProductCard from '@/components/common/ProductCard';
+import FreeNotebookPicker from '@/components/common/FreeNotebookPicker';
+import {
+  hasNotebookTag,
+  isFreeNotebookEligible,
+  getPaidNotebookQty,
+  remainingForThreshold,
+} from '@/lib/notebookOffer';
 
 declare global {
   interface Window {
@@ -17,7 +25,7 @@ declare global {
 }
 
 const NOTEBOOK_TAG = 'notebook';
-const NOTEBOOK_COLLECTION_SIZE = 6;
+const NOTEBOOK_COLLECTION_SIZE = 3;
 
 const NOTEBOOK_COLORS = [
   { color: '#74ACDF', dark: true },
@@ -54,16 +62,6 @@ function normalizeProducts(payload: any): Product[] {
   const data = payload?.data?.data;
   const productsData = Array.isArray(data) ? data : data?.items;
   return Array.isArray(productsData) ? productsData : [];
-}
-
-function hasNotebookTag(product: Product): boolean {
-  const tags = (product as any).tags;
-  if (!Array.isArray(tags)) return false;
-  return tags.some((tag: any) => {
-    const slug = typeof tag?.slug === 'string' ? tag.slug.toLowerCase() : '';
-    const name = typeof tag?.name === 'string' ? tag.name.toLowerCase() : '';
-    return slug === NOTEBOOK_TAG || name === NOTEBOOK_TAG;
-  });
 }
 
 function isSlugMatch(product: Product, slugs: string[]): boolean {
@@ -114,10 +112,10 @@ function getProductPrice(p: Product): { price: number; original: number; discoun
 }
 
 const FAQS = [
-  { q: 'ডেলিভারি কতদিনে পাবো?', a: 'অর্ডার কনফার্ম হবার পর ঢাকায় ২-৩ কর্মদিবস, ঢাকার বাইরে ৩-৫ কর্মদিবসের মধ্যে পেয়ে যাবেন। সারা দেশে ক্যাশ অন ডেলিভারি সুবিধা রয়েছে।' },
-  { q: 'নোটবুকের কাগজ কেমন?', a: '৭০ GSM premium offset paper — হাতে লিখতে আরামদায়ক, কালি ব্লিড করে না। রুলড লাইন সহ।' },
+  { q: 'ফ্রি নোটবুক কীভাবে পাবো?', a: '২টি নোটবুক একসাথে কিনলে অথবা ৫০০ টাকার উপরে যেকোনো অর্ডার করলে — কার্টে গিয়ে যেকোনো একটি নোটবুক ফ্রি বেছে নিতে পারবেন। প্রতি অর্ডারে ১টি নোটবুক ফ্রি।' },
+  { q: 'ডেলিভারি কতদিনে পাবো?', a: 'অর্ডার কনফার্ম হবার পর ঢাকায় ২-৩ কর্মদিবস, ঢাকার বাইরে ৩-৫ কর্মদিবসের মধ্যে পেয়ে যাবেন। অগ্রিম পেমেন্ট ছাড়াই সারা দেশে ক্যাশ অন ডেলিভারি।' },
+  { q: 'নোটবুকের কাগজ কেমন?', a: '৮০ GSM অফসেট অফ-হোয়াইট পেপার — হাতে লিখতে আরামদায়ক, কালি ব্লিড করে না। সুন্দর Rounded Corner ডিজাইন।' },
   { q: 'পেমেন্ট অপশন কী কী?', a: 'ক্যাশ অন ডেলিভারি, bKash, Nagad, Rocket — সব পেমেন্ট মেথড supported।' },
-  { q: 'গিফট হিসেবে দেওয়া যাবে?', a: 'অবশ্যই! ফুটবল প্রেমীদের জন্য পারফেক্ট গিফট। বিশেষ গিফট প্যাকেজিং-এর জন্য অর্ডারে নোট করুন।' },
 ];
 
 const WA_LINK = 'https://wa.me/8801XXXXXXXXX';
@@ -169,13 +167,17 @@ const padTime = (value: number) => String(value).padStart(2, '0');
 export default function NotebookBundleClient() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
+  const [bestsellers, setBestsellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set<string>());
+  const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
   const [atBundle, setAtBundle] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [discountTimeLeft, setDiscountTimeLeft] = useState({ h: 23, m: 59, s: 59 });
   const addItem = useCartStore((s) => s.addItem);
+  const setFreeGift = useCartStore((s) => s.setFreeGift);
+  const cartItems = useCartStore((s) => s.items);
+  const giftItem = cartItems.find((i) => i.isFreeGift);
   const bp = useBreakpoint();
   const isMobile = bp === 'mobile';
   const isTablet = bp === 'tablet';
@@ -202,18 +204,27 @@ export default function NotebookBundleClient() {
       }
 
       try {
+        const allRes = await api.get('/product/get-all-data', {
+          params: { page: 1, limit: 200, status: 'publish' },
+        });
+        const allProducts = normalizeProducts(allRes);
+
         if (prods.length < NOTEBOOK_COLLECTION_SIZE) {
-          const allRes = await api.get('/product/get-all-data', {
-            params: { page: 1, limit: 200, status: 'publish' },
-          });
-          const fallbackProducts = normalizeProducts(allRes).filter(hasNotebookTag);
+          const fallbackProducts = allProducts.filter(hasNotebookTag);
           const byId = new Map(prods.map((p) => [p._id, p]));
           fallbackProducts.forEach((p) => byId.set(p._id, p));
           prods = Array.from(byId.values()).slice(0, NOTEBOOK_COLLECTION_SIZE);
         }
 
+        // Best sellers: non-notebook products, ranked by totalSold.
+        const topSellers = allProducts
+          .filter((p) => !hasNotebookTag(p))
+          .sort((a, b) => (b.totalSold || 0) - (a.totalSold || 0))
+          .slice(0, 8);
+        setBestsellers(topSellers);
+
         setProducts(prods);
-        setSelected(new Set(prods.map((p) => p._id)));
+        setQtyMap(Object.fromEntries(prods.map((p) => [p._id, 1])));
       } catch {
       } finally {
         setLoading(false);
@@ -260,38 +271,26 @@ export default function NotebookBundleClient() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const selectedProducts = products.filter((p) => selected.has(p._id));
-  const selectedTotal = selectedProducts.reduce((s, p) => s + getProductPrice(p).price, 0);
-  const selectedOriginal = selectedProducts.reduce((s, p) => s + getProductPrice(p).original, 0);
-  const savedAmount = selectedOriginal - selectedTotal;
-  const discountPct = selectedOriginal > 0 ? Math.round((savedAmount / selectedOriginal) * 100) : 0;
+  // Offer state derived from the real cart.
+  const paidNotebookQty = getPaidNotebookQty(cartItems);
+  const eligible = isFreeNotebookEligible(cartItems);
+  const remaining = remainingForThreshold(cartItems);
 
-  const { argentinaProducts, brazilProducts } = splitNotebookProducts(products);
-  const toggleNotebook = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) { if (next.size > 1) next.delete(id); }
-      else next.add(id);
-      return next;
-    });
-  };
+  const getQty = (id: string) => qtyMap[id] ?? 1;
+  const setQty = (id: string, q: number) =>
+    setQtyMap((prev) => ({ ...prev, [id]: Math.max(1, q) }));
 
-  const handleAddToCart = (product: Product) => {
-    addItem(product, 1);
-    toast.success(`${product.name} কার্টে যোগ হয়েছে!`);
+  const handleAddToCart = (product: Product, qty = 1) => {
+    addItem(product, qty);
+    toast.success(`${qty} টি ${product.name} কার্টে যোগ হয়েছে!`);
     if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: product.name, content_ids: [product._id], content_type: 'product', currency: 'BDT' });
+      window.fbq('track', 'AddToCart', { content_name: product.name, content_ids: [product._id], content_type: 'product', quantity: qty, currency: 'BDT' });
     }
   };
 
-  const handleBundleCheckout = () => {
-    let added = 0;
-    selectedProducts.forEach((p) => { addItem(p); added++; });
-    if (added === 0) { toast.error('পণ্য লোড হচ্ছে...'); return; }
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: 'Notebook Bundle', content_ids: selectedProducts.map((p) => p._id), value: selectedTotal, currency: 'BDT' });
-    }
-    router.push('/checkout');
+  const handlePickFreeGift = (product: Product) => {
+    setFreeGift(product);
+    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে! 🎁`);
   };
 
   const activePhoto = activePhotoIndex === null ? null : REAL_NOTEBOOK_PHOTOS[activePhotoIndex];
@@ -638,38 +637,37 @@ export default function NotebookBundleClient() {
               <div className="nb-hero-grid">
                 <div>
                   <div className="nb-wc-badge">⚽ WORLD CUP 2026 INSPIRED COLLECTION</div>
-                  <span className="nb-eyebrow"><span className="dot" />৬টি নোটবুকের এক্সক্লুসিভ বান্ডেল</span>
+                  <span className="nb-eyebrow"><span className="dot" />🎁 ফ্রি নোটবুক অফার চলছে</span>
                   <h1 className="nb-lede-bn">
-                    <em>২০২৬ বিশকাপে</em>{' '}
-                    <span>ফুটবলের উত্তেজনাকে নোটবুকে ধরে রাখুন</span>
+                    <em>২টি নোটবুক কিনলে</em>{' '}
+                    <span>১টি নোটবুক একদম ফ্রি</span>
                   </h1>
                   <p className="nb-sub">
-                    Argentina আর Brazil fan-দের জন্য তৈরি ৬টি football-inspired notebook cover.{' '}
-                    <b>A5 ruled pages, 70 GSM paper, matte laminated cover.</b>
+                    সবাজ থেকে মাত্র ২টি নোটবুক কিনলেই সঙ্গে পাচ্ছেন আরও ১টি নোটবুক <b>একদম বিনামূল্যে।</b>{' '}
+                    আর <b>৫০০ টাকার উপরে যেকোনো অর্ডারেই</b> উপহার হিসেবে থাকছে এই প্রিমিয়াম নোটবুকগুলো।
                   </p>
                   <p className="nb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
                     ক্লাস নোট, ডায়েরি, to-do list — প্রতিদিনের লেখায় পছন্দের দলের vibe থাকুক।
                   </p>
                   <div className="nb-price-row">
-                    <span className="nb-price-now nb-num">৳190</span>
-                    <span className="nb-price-was nb-num">৳400</span>
-                    <span className="nb-save-pill">৫৩% ছাড় · প্রতি পিস</span>
+                    <span className="nb-price-now nb-num">৳400</span>
+                    <span className="nb-save-pill">প্রতি নোটবুক · ২ কিনলে ১ ফ্রি</span>
                   </div>
                   <div className="nb-cta-row">
-                    <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                      প্যাক বেছে এখনই অর্ডার করো
+                    <a href="#nb-books" className="nb-btn nb-btn-primary">
+                      নোটবুক বেছে অর্ডার করো
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
-                    <a href="#nb-books" className="nb-btn nb-btn-ghost">নোটবুকগুলো দেখো</a>
+                    <a href="#nb-builder" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
                   </div>
                   <div className="nb-trust-mini">
-                    <div><b>A5</b> ruled pages</div>
+                    <div><b>৮০ GSM</b> অফসেট পেপার</div>
                     <div>·</div>
-                    <div><b>70 GSM</b> offset paper</div>
+                    <div><b>Rounded Corner</b> ডিজাইন</div>
                     <div>·</div>
                     <div>Cash on delivery</div>
                   </div>
-                  <div className="nb-free-pill">যেকোনো ৩ টি নোটবুক কিনলে ফ্রি ডেলিভারি</div>
+                  <div className="nb-free-pill">৫০০৳+ অর্ডারে অথবা ২টি নোটবুকে — ১টি নোটবুক ফ্রি</div>
                 </div>
 
                 {/* Notebook stack */}
@@ -709,10 +707,10 @@ export default function NotebookBundleClient() {
         <div className="nb-value-strip">
           <div className="nb-value-row">
             {[
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: 'A5 ruled pages' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: '70 GSM offset paper' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, label: '৩টি নোটবুকে ফ্রি ডেলিভারি' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l9 4v6c0 5-3.8 9-9 10-5.2-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>, label: 'প্রিন্ট সমস্যা হলে রিটার্ন' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>, label: '৮০ GSM অফ-হোয়াইট পেপার' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M5 7l3 3 11-11M5 17l3 3 11-11"/></svg>, label: 'Rounded Corner ডিজাইন' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M20 12V6H4v12h7"/><path d="M16 19l2 2 4-4"/></svg>, label: '২ কিনলে ১ নোটবুক ফ্রি' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.6"><path d="M12 2l9 4v6c0 5-3.8 9-9 10-5.2-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg>, label: 'সারাদেশে হোম ডেলিভারি' },
             ].map((v, i) => (
               <div key={i}>{v.icon}<span>{v.label}</span></div>
             ))}
@@ -724,68 +722,57 @@ export default function NotebookBundleClient() {
           <div className="nb-container">
             <div ref={r2} style={fadeStyle}>
               <div className="nb-section-head">
-                <div className="nb-section-eyebrow">কালেকশনে কী আছে</div>
-                <h2 className="nb-section-title">ফুটবলের ৬টি অবিস্মরণীয় গল্প — এখন আপনার হাতের নোটবুকে</h2>
-                <p className="nb-section-sub">প্রতিটি নোটবুক একটি আলাদা ফুটবল legend বা moment-কে সম্মান জানায়।</p>
+                <div className="nb-section-eyebrow">আমাদের নোটবুক</div>
+                <h2 className="nb-section-title">৩টি প্রিমিয়াম ফুটবল নোটবুক — যেকোনো পরিমাণে অর্ডার করুন</h2>
+                <p className="nb-section-sub">৮০ GSM অফ-হোয়াইট পেপার, Rounded Corner ডিজাইন, টেকসই পেপারব্যাক কভার। ২টি নিলে ১টি ফ্রি।</p>
               </div>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 32 }}>
-                  {/* ── Argentina Column ── */}
-                  {([{ team: 'Argentina Fan', flag: '🇦🇷', color: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', color: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, color, prods }) => (
-                    <div key={team}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: color, borderRadius: 14, padding: '12px 18px', marginBottom: 16 }}>
-                        <span style={{ fontSize: 24 }}>{flag}</span>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#fff', opacity: 0.8, fontFamily: '"Inter",sans-serif' }}>For</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: '"Hind Siliguri",sans-serif', lineHeight: 1.1 }}>{team}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 12 : 20, maxWidth: 880, margin: '0 auto' }}>
+                  {products.map((p, i) => {
+                    const src = imgUrl(p.images?.[0]);
+                    const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
+                    const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
+                    const qty = getQty(p._id);
+                    return (
+                      <div key={p._id} className="nb-bcard">
+                        <div className="nb-thumb" style={{ background: 'linear-gradient(160deg, #E8F5E9, #C8E6C9)' }}>
+                          {nbDiscPct > 0 && <span className="nb-bdg">{nbDiscPct}% OFF</span>}
+                          {src ? (
+                            <img src={src} alt={p.name} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
+                          ) : (
+                            <div className="nb-mini-book" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
+                              <div className="nb-mb-top">⚽</div>
+                              <div className="nb-mb-ttl">{p.name}</div>
+                              <div className="nb-mb-auth">⚽ 2026</div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="nb-body">
+                          <h4>{p.name}</h4>
+                          <div className="nb-stars-row" style={{ color: '#4A6B4A', fontSize: 12 }}>৮০ GSM · Rounded Corner</div>
+                          <div className="nb-pline">
+                            <span className="nb-pnow nb-num">৳{price}</span>
+                            {original > price && <span className="nb-pwas nb-num">৳{original}</span>}
+                          </div>
+                          {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
+                          {/* Quantity stepper */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 4px' }}>
+                            <button aria-label="কমান" onClick={() => setQty(p._id, qty - 1)} disabled={qty <= 1}
+                              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #C8E6C9', background: '#F1F8F1', cursor: qty <= 1 ? 'not-allowed' : 'pointer', fontSize: 17, fontWeight: 700, color: '#1B6B1B', opacity: qty <= 1 ? 0.5 : 1 }}>−</button>
+                            <span className="nb-num" style={{ minWidth: 24, textAlign: 'center', fontWeight: 700, fontSize: 15, color: '#071A07' }}>{qty}</span>
+                            <button aria-label="বাড়ান" onClick={() => setQty(p._id, qty + 1)}
+                              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #C8E6C9', background: '#F1F8F1', cursor: 'pointer', fontSize: 17, fontWeight: 700, color: '#1B6B1B' }}>+</button>
+                          </div>
+                          <div className="nb-actions">
+                            <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p, qty)}>কার্টে যোগ করুন</button>
+                          </div>
+                          <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত দেখো</Link>
                         </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
-                        {prods.map((p, i) => {
-                          const src = imgUrl(p.images?.[0]);
-                          const { price, original, discountPct: nbDiscPct } = getProductPrice(p);
-                          const ratingCount = p?.ratingCount ?? 0;
-                          const ratingAvg = ratingCount > 0 ? ((p?.ratingTotal ?? 0) / ratingCount).toFixed(1) : null;
-                          const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
-                          return (
-                            <div key={p._id} className="nb-bcard">
-                              <div className="nb-thumb" style={{ background: 'linear-gradient(160deg, #E8F5E9, #C8E6C9)' }}>
-                                {nbDiscPct > 0 && <span className="nb-bdg">{nbDiscPct}% OFF</span>}
-                                {src ? (
-                                  <img src={src} alt={p.name} loading="lazy" style={{ width: '62%', aspectRatio: '2/3', objectFit: 'contain', borderRadius: '2px 4px 4px 2px', boxShadow: '0 16px 24px -12px rgba(0,0,0,0.4)' }} />
-                                ) : (
-                                  <div className="nb-mini-book" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
-                                    <div className="nb-mb-top">⚽</div>
-                                    <div className="nb-mb-ttl">{p.name}</div>
-                                    <div className="nb-mb-auth">⚽ 2026</div>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="nb-body">
-                                <h4>{p.name}</h4>
-                                {ratingAvg ? (
-                                  <div className="nb-stars-row"><Stars size={12} /> <span className="nb-num">{ratingAvg}</span><span style={{ fontSize: '0.7rem', color: '#4A6B4A', marginLeft: 4 }}>({ratingCount})</span></div>
-                                ) : (
-                                  <div className="nb-stars-row" style={{ color: '#4A6B4A', fontSize: 12 }}>A5 · 70 GSM · Ruled</div>
-                                )}
-                                <div className="nb-pline">
-                                  <span className="nb-pnow nb-num">৳{price}</span>
-                                  <span className="nb-pwas nb-num">৳{original}</span>
-                                </div>
-                                {(p.stock ?? 0) > 0 && <div className="nb-scarcity">⚡ মাত্র {p.stock} টি বাকি</div>}
-                                <div className="nb-actions">
-                                  <button className="nb-btn-mini-primary" onClick={() => handleAddToCart(p)}>এখনই কার্টে যোগ</button>
-                                </div>
-                                <Link href={`/${p.slug}`} className="nb-btn-mini-ghost">বিস্তারিত দেখো</Link>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -826,91 +813,80 @@ export default function NotebookBundleClient() {
           </div>
         </section>
 
-        {/* ── Bundle Builder ── */}
+        {/* ── Free Notebook Offer Panel ── */}
         <section id="nb-builder" className="nb-builder-wrap">
           <div className="nb-container">
             <div ref={r3} style={fadeStyle}>
               <div className="nb-builder">
                 <div className="nb-builder-head">
                   <div>
-                    <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>বান্ডেল বানাও</div>
-                    <h3>Order Summary</h3>
-                    <p>দ্রুত প্যাক বেছে নাও, অথবা নিচে individual notebook select করে নিজের bundle বানাও।</p>
+                    <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>ফ্রি নোটবুক</div>
+                    <h3>🎁 আপনার ফ্রি নোটবুক বেছে নিন</h3>
+                    <p>২টি নোটবুক কিনলে অথবা ৳৫০০+ অর্ডারে — যেকোনো একটি প্রিমিয়াম নোটবুক সম্পূর্ণ বিনামূল্যে।</p>
                   </div>
                   <div className="nb-builder-price">
-                    <div className="lbl">আপনার মোট</div>
-                    <div className="val nb-num">৳{selectedTotal}</div>
-                    <div className="save">{savedAmount.toLocaleString()} টাকা সাশ্রয় · {discountPct}% ছাড়</div>
+                    <div className="lbl">কার্টে নোটবুক</div>
+                    <div className="val nb-num">{paidNotebookQty} টি</div>
+                    <div className="save">{eligible ? '✓ ফ্রি নোটবুক আনলকড' : '২টি নিলে ফ্রি'}</div>
                   </div>
                 </div>
 
                 <div className="nb-builder-delivery">
-                  <strong>যেকোনো ৩ টি নোটবুক কিনলে ফ্রি ডেলিভারি</strong>
-                  <span>সারা দেশে — ঢাকা ও ঢাকার বাইরে একই অফার</span>
+                  <strong>{eligible ? 'অভিনন্দন! একটি নোটবুক ফ্রি পাচ্ছেন' : 'আর একটু — ফ্রি নোটবুক আনলক করুন'}</strong>
+                  <span>{eligible ? 'নিচ থেকে আপনার পছন্দের ফ্রি নোটবুকটি বেছে নিন' : `আর ৳${remaining} যোগ করুন অথবা ২টি নোটবুক নিন`}</span>
                 </div>
 
-                {([{ team: 'Argentina Fan', flag: '🇦🇷', teamColor: '#74ACDF', prods: argentinaProducts }, { team: 'Brazil Fan', flag: '🇧🇷', teamColor: '#009C3B', prods: brazilProducts }] as const).map(({ team, flag, teamColor, prods }) => (
-                  <div key={team} style={{ marginBottom: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span style={{ fontSize: 18 }}>{flag}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: teamColor, fontFamily: '"Inter",sans-serif' }}>{team}</span>
-                    </div>
-                    <div className="nb-builder-product-list">
-                      {prods.map((p, i) => {
-                        const src = imgUrl(p.images?.[0]);
-                        const isOn = selected.has(p._id);
-                        const { price } = getProductPrice(p);
-                        const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
-                        return (
-                          <button key={p._id} className={`nb-pick${isOn ? ' on' : ''}`} onClick={() => toggleNotebook(p._id)}>
-                            <div className="nb-pick-check">
-                              {isOn && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#071A07" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>}
-                            </div>
-                            <div className="nb-pick-thumb">
-                              {src ? (
-                                <img src={src} alt={p.name} loading="lazy" style={{ filter: isOn ? 'none' : 'grayscale(20%)' }} />
-                              ) : (
-                                <div className="nb-pmini" style={{ background: col.color, color: col.dark ? '#1a1a1a' : '#fff' }}>
-                                  <div className="pa">⚽</div>
-                                  <div className="pt">{p.name}</div>
-                                  <div className="pa">⚽ 2026</div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="nb-pick-copy">
-                              <div className="nb-ptitle">{p.name}</div>
-                              <div className="nb-pprice nb-num">৳{price}</div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                {eligible ? (
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 14, marginBottom: 8 }}>
+                    <FreeNotebookPicker
+                      notebooks={products}
+                      selectedId={giftItem?.product._id}
+                      onPick={handlePickFreeGift}
+                    />
+                    {giftItem && (
+                      <div style={{ marginTop: 12, textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 700, fontSize: 14 }}>
+                        ✓ {giftItem.product.name} ফ্রি উপহার হিসেবে যুক্ত হয়েছে
+                      </div>
+                    )}
                   </div>
-                ))}
-
-                <div className="nb-builder-totals">
-                  <div className="nb-totals-left">
-                    <div><span className="l">নোটবুক</span><span className="v nb-num">{selected.size} টি</span></div>
-                    <div><span className="l">আসল দাম</span><span className="v strike nb-num">৳{selectedOriginal}</span></div>
-                    <div><span className="l">ছাড়</span><span className="v gold nb-num">{discountPct}%</span></div>
-                    <div><span className="l">আপনি দিচ্ছেন</span><span className="v nb-num">৳{selectedTotal}</span></div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '18px 12px', color: 'rgba(200,230,201,0.85)', fontFamily: '"Hind Siliguri",sans-serif', fontSize: 14, lineHeight: 1.6 }}>
+                    উপরে থেকে নোটবুক কার্টে যোগ করুন — যোগ্যতা পূরণ হলেই এখানে ফ্রি নোটবুক বেছে নেওয়ার অপশন আসবে।
                   </div>
-                </div>
+                )}
 
-                <button className="nb-builder-cta" onClick={handleBundleCheckout}>
-                  নির্বাচিত {selected.size}টি নোটবুক অর্ডার সম্পন্ন করো
+                <button className="nb-builder-cta" onClick={() => router.push('/cart')}>
+                  কার্টে যান ও অর্ডার সম্পন্ন করুন
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
                 <div className="nb-builder-fineprint">
                   <span>✓ ক্যাশ অন ডেলিভারি</span>
-                  <span>✓ ৩-৫ দিনে ডেলিভারি</span>
-                  <span>✓ ৩টি নিলে ফ্রি ডেলিভারি</span>
-                  <span>✓ পছন্দ না হলে রিটার্ন</span>
+                  <span>✓ সারাদেশে হোম ডেলিভারি</span>
+                  <span>✓ ২ কিনলে ১ ফ্রি</span>
+                  <span>✓ ৫০০৳+ অর্ডারে নোটবুক ফ্রি</span>
                 </div>
               </div>
             </div>
           </div>
         </section>
+
+        {/* ── Best Sellers ── */}
+        {bestsellers.length > 0 && (
+          <section className="nb-books-section" style={{ background: '#F1F8F1' }}>
+            <div className="nb-container">
+              <div className="nb-section-head">
+                <div className="nb-section-eyebrow">আমাদের ব্র্যান্ড</div>
+                <h2 className="nb-section-title">সবাজের বেস্ট সেলিং বইসমূহ</h2>
+                <p className="nb-section-sub">শুধু নোটবুক নয় — সবাজে আছে আরও দারুণ সব বই। ৫০০৳+ অর্ডারে একটি নোটবুক ফ্রি!</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : isTablet ? 'repeat(3, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: isMobile ? 12 : 20 }}>
+                {bestsellers.map((p) => (
+                  <ProductCard key={p._id} product={p} onAddToCart={() => handleAddToCart(p, 1)} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Quality ── */}
         <section className="nb-quality-section">
@@ -918,8 +894,8 @@ export default function NotebookBundleClient() {
             <div ref={r4} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">প্রিমিয়াম কোয়ালিটি</div>
-                <h2 className="nb-section-title">৫৩% ছাড়ে ৬ টি Notebook নিন</h2>
-                <p className="nb-section-sub">প্রিমিয়াম প্রিন্ট, smooth কাগজ এবং মজবুত binding সহ। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
+                <h2 className="nb-section-title">কেন এই নোটবুক প্রিমিয়াম</h2>
+                <p className="nb-section-sub">৮০ GSM অফ-হোয়াইট পেপার, Rounded Corner ডিজাইন ও টেকসই পেপারব্যাক কভার। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
                 <div className="nb-timer-box" aria-label="২৪ ঘণ্টার অফার টাইমার">
                   <div className="nb-timer-label">অফার শেষ হতে বাকি</div>
                   <div className="nb-timer-row">
@@ -931,10 +907,10 @@ export default function NotebookBundleClient() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
                 {[
-                  { n: 'i.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/><path d="M8 12h8M8 16h6"/></svg>, title: '৭০ GSM Offset Paper', body: 'Smooth, ম্যাট ফিনিশের কাগজ — লিখতে আরামদায়ক, কালি ব্লিড করে না।' },
-                  { n: 'ii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><path d="M4 4v16h16"/><path d="M4 4h4v16M16 4h4v16"/></svg>, title: 'Perfect Binding', body: 'মজবুত binding — বহু বছর পরও পাতা খুলে যাবে না।' },
-                  { n: 'iii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18M8 3v18"/></svg>, title: '৩০০ GSM Art Cover', body: 'Matte-laminated প্রিমিয়াম কভার — vibrant রঙ, দীর্ঘস্থায়ী।' },
-                  { n: 'iv.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, title: 'A5 Ruled Pages', body: 'Standard A5 সাইজ, ruled pages — ব্যাগে বহনে সহজ।' },
+                  { n: 'i.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/><path d="M8 12h8M8 16h6"/></svg>, title: '৮০ GSM অফসেট পেপার', body: 'প্রিমিয়াম অফ-হোয়াইট কাগজ — লিখতে আরামদায়ক, কালি ব্লিড করে না।' },
+                  { n: 'ii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/></svg>, title: 'Rounded Corner ডিজাইন', body: 'সুন্দর গোলাকার কোণা — আরও প্রিমিয়াম ও এলিগ্যান্ট লুক।' },
+                  { n: 'iii.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18M8 3v18"/></svg>, title: 'টেকসই পেপারব্যাক কভার', body: 'মজবুত পেপারব্যাক কভার ও প্রিমিয়াম ফিনিশ — দীর্ঘস্থায়ী।' },
+                  { n: 'iv.', icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B6B1B" strokeWidth="1.5"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>, title: 'অগ্রিম পেমেন্ট ছাড়াই', body: 'সারাদেশে হোম ডেলিভারি — হাতে পেয়ে টাকা পরিশোধ করুন।' },
                 ].map((q, i) => (
                   <div key={i} className="nb-qcard">
                     <div className="qno">{q.n}</div>
@@ -989,14 +965,14 @@ export default function NotebookBundleClient() {
         <section className="nb-final-cta">
           <div className="nb-container">
             <div className="nb-section-eyebrow">শেষ ধাপ</div>
-            <h2>Argentina, Brazil, নাকি পুরো ৬-প্যাক?</h2>
-            <p>A5 ruled pages, 70 GSM paper, matte laminated cover — সারা দেশে cash on delivery.</p>
+            <h2>২টি কিনুন, ১টি নোটবুক ফ্রি নিন</h2>
+            <p>৮০ GSM অফ-হোয়াইট পেপার, Rounded Corner ডিজাইন — সারাদেশে cash on delivery। অফার শেষ হওয়ার আগেই অর্ডার করুন।</p>
             <div className="nb-cta-row" style={{ justifyContent: 'center' }}>
-              <a href="#nb-builder" className="nb-btn nb-btn-primary">
-                প্যাক বেছে অর্ডার করো
+              <a href="#nb-books" className="nb-btn nb-btn-primary">
+                নোটবুক বেছে অর্ডার করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
-              <a href="#nb-books" className="nb-btn nb-btn-ghost">নোটবুকগুলো আবার দেখো</a>
+              <a href="#nb-builder" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
             </div>
           </div>
         </section>
@@ -1021,11 +997,11 @@ export default function NotebookBundleClient() {
       {!atBundle && (
         <div className="nb-mobile-bar">
           <div className="mb-price">
-            <span className="now nb-num">৳{selectedTotal}</span>
-            <span className="was nb-num">{selected.size}টি selected · ৳{selectedOriginal}</span>
+            <span className="now nb-num" style={{ fontSize: 16 }}>{eligible ? '🎁 ফ্রি নোটবুক আনলকড' : '২ কিনলে ১ ফ্রি'}</span>
+            <span className="was nb-num">{paidNotebookQty}টি নোটবুক কার্টে</span>
           </div>
-          <a href="#nb-builder" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
-            প্যাক বেছে নাও
+          <a href="#nb-books" className="nb-btn nb-btn-primary" style={{ padding: '12px 18px', fontSize: 14 }}>
+            অর্ডার করো
           </a>
         </div>
       )}

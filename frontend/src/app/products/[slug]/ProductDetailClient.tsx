@@ -778,6 +778,22 @@ export default function ProductDetailClient({ params }: Props) {
                 )}
               </div>
 
+              {/* Free notebook offer banner */}
+              <a
+                href="/notebook-bundle"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  background: 'linear-gradient(135deg, #FBF8EC, #F4EFD8)',
+                  border: '1px solid #E5D9A8', borderRadius: 14, padding: '12px 14px',
+                  textDecoration: 'none', marginBottom: 4,
+                }}
+              >
+                <span style={{ fontSize: 26, lineHeight: 1 }}>🎁</span>
+                <span style={{ fontFamily: "'Hind Siliguri', sans-serif", fontSize: 13.5, color: '#5a4a12', lineHeight: 1.5, fontWeight: 600 }}>
+                  <b style={{ color: '#071A07' }}>৳৫০০+ অর্ডার</b> বা <b style={{ color: '#071A07' }}>২টি নোটবুক</b> কিনলে একটি প্রিমিয়াম নোটবুক <b style={{ color: '#1B6B1B' }}>ফ্রি</b> — কার্টে গিয়ে বেছে নিন →
+                </span>
+              </a>
+
               {/* CTA buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
