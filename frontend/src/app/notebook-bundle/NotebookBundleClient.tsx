@@ -291,7 +291,7 @@ export default function NotebookBundleClient() {
 
   // Bundle section visibility
   useEffect(() => {
-    const el = document.getElementById('nb-builder');
+    const el = document.getElementById('nb-books');
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => setAtBundle(e.isIntersecting), { threshold: 0.1 });
     obs.observe(el);
@@ -753,22 +753,12 @@ export default function NotebookBundleClient() {
                     <span className="nb-price-now nb-num">৳160</span>
                     <span className="nb-save-pill">প্রতি নোটবুক · ২ কিনলে ১ ফ্রি</span>
                   </div>
-                  <div className="nb-offer-chips" aria-label="Current offers">
-                    <div className="nb-offer-chip">
-                      <strong>২ টি নোটবুক কিনলে ১ টি ফ্রি</strong>
-                      <span>কার্টে ২টি নোটবুক হলেই free notebook picker খুলে যাবে।</span>
-                    </div>
-                    <div className="nb-offer-chip">
-                      <strong>৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি</strong>
-                      <span>Best selling books থেকেও ৫০০৳+ হলে একই গিফট পাবেন।</span>
-                    </div>
-                  </div>
                   <div className="nb-cta-row">
                     <a href="#nb-books" className="nb-btn nb-btn-primary">
                       নোটবুক বেছে অর্ডার করো
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
-                    <a href="#nb-builder" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
+                    <a href="#nb-books" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
                   </div>
                   <div className="nb-trust-mini">
                     <div><b>৮০ GSM</b> অফসেট পেপার</div>
@@ -846,6 +836,14 @@ export default function NotebookBundleClient() {
                   <div className="nb-real-caption">
                     ছবিগুলো automatic slide হবে। কোনো ছবি বড় করে দেখতে ছবির ওপর tap করুন।
                   </div>
+                <div className="nb-timer-box" aria-label="২৪ ঘণ্টার অফার টাইমার">
+                  <div className="nb-timer-label">অফার শেষ হতে বাকি</div>
+                  <div className="nb-timer-row">
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.h)}</span><span className="nb-timer-unit">Hours</span></div>
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.m)}</span><span className="nb-timer-unit">Minutes</span></div>
+                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.s)}</span><span className="nb-timer-unit">Seconds</span></div>
+                  </div>
+                </div>
                 </div>
                 <div className="nb-photo-slider" aria-label="Real notebook product photo slider">
                   <div className="nb-slide-track">
@@ -874,6 +872,16 @@ export default function NotebookBundleClient() {
                 <div className="nb-section-eyebrow">২টি নিলে ১টি ফ্রি</div>
                 <h2 className="nb-section-title">২ টি নোটবুক কিনলে ১ টি ফ্রি</h2>
                 <p className="nb-section-sub">এই তিনটি published notebook থেকে যেকোনো ২টি কার্টে যোগ করুন। সঙ্গে সঙ্গে একটি animation popup খুলবে, সেখান থেকে ৩টির মধ্যে যেকোনো ১টি free notebook বেছে checkout-এ যেতে পারবেন।</p>
+              </div>
+              <div className="nb-offer-chips" aria-label="Current offers" style={{ maxWidth: 880, margin: '0 auto 28px' }}>
+                <div className="nb-offer-chip">
+                  <strong>২ টি নোটবুক কিনলে ১ টি ফ্রি</strong>
+                  <span>নিচের ৩টি নোটবুক থেকে যেকোনো ২টি কার্টে যোগ করলেই free notebook picker খুলবে।</span>
+                </div>
+                <div className="nb-offer-chip">
+                  <strong>৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি</strong>
+                  <span>Best selling books বা site-এর যেকোনো বই মিলিয়ে ৫০০৳+ হলেই gift notebook পাবেন।</span>
+                </div>
               </div>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
@@ -925,71 +933,6 @@ export default function NotebookBundleClient() {
                 </div>
               )}
 
-              {/* ── Free offer (merged into cards section) ── */}
-              <div id="nb-builder" ref={r3} style={{ ...fadeStyle, marginTop: 44 }}>
-                <div className="nb-builder">
-                <div className="nb-offer-panel">
-                  <div className="nb-offer-panel-card">
-                    <b>২ টি নোটবুক কিনলে ১ টি ফ্রি</b>
-                    <span>নোটবুক section থেকে যেকোনো ২টি নোটবুক কার্টে যোগ করলেই free notebook picker খুলবে।</span>
-                  </div>
-                  <div className="nb-offer-panel-card">
-                    <b>৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি</b>
-                    <span>Best selling books section বা site-এর যেকোনো বই মিলিয়ে ৫০০৳+ হলেই gift notebook পাবেন।</span>
-                  </div>
-                </div>
-                <div className="nb-builder-head">
-                  <div>
-                    <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>ফ্রি নোটবুক</div>
-                    <h3>অফার আনলক হলে গিফট বেছে নিন</h3>
-                    <p>যোগ্যতা পূরণ হলেই popup-এ এই একই ৩টি notebook দেখাবে। আপনার পছন্দের একটি বেছে নিলে সেটি কার্টে ৳0 gift হিসেবে যুক্ত হবে।</p>
-                  </div>
-                  <div className="nb-builder-price">
-                    <div className="lbl">কার্টে নোটবুক</div>
-                    <div className="val nb-num">{paidNotebookQty} টি</div>
-                    <div className="save">{eligible ? '✓ ফ্রি নোটবুক আনলকড' : '২টি নিলে ফ্রি'}</div>
-                  </div>
-                </div>
-
-                <div className="nb-builder-delivery">
-                  <strong>{eligible ? 'অভিনন্দন! একটি নোটবুক ফ্রি পাচ্ছেন' : 'আর একটু — ফ্রি নোটবুক আনলক করুন'}</strong>
-                  <span>{eligible ? 'নিচ থেকে আপনার পছন্দের ফ্রি নোটবুকটি বেছে নিন' : `আর ৳${remaining} যোগ করুন অথবা ২টি নোটবুক নিন`}</span>
-                </div>
-
-                {eligible ? (
-                  <div className="nb-gift-reveal" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 16, padding: 16, marginBottom: 8 }}>
-                    <div style={{ textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 800, fontSize: 15, marginBottom: 12 }}>
-                      🎉 ফ্রি নোটবুক আনলকড — যেকোনো একটি বেছে নিন
-                    </div>
-                    <FreeNotebookPicker
-                      notebooks={products}
-                      selectedId={giftItem?.product._id}
-                      onPick={handlePickFreeGift}
-                    />
-                    {giftItem && (
-                      <div className="nb-gift-confirm" style={{ marginTop: 12, textAlign: 'center', color: '#D4AF37', fontFamily: '"Hind Siliguri",sans-serif', fontWeight: 700, fontSize: 14 }}>
-                        ✓ {giftItem.product.name} ফ্রি উপহার হিসেবে যুক্ত হয়েছে
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '18px 12px', color: 'rgba(200,230,201,0.85)', fontFamily: '"Hind Siliguri",sans-serif', fontSize: 14, lineHeight: 1.6 }}>
-                    উপরে থেকে নোটবুক কার্টে যোগ করুন — যোগ্যতা পূরণ হলেই এখানে ফ্রি নোটবুক বেছে নেওয়ার অপশন আসবে।
-                  </div>
-                )}
-
-                <button className="nb-builder-cta" onClick={() => router.push('/cart')}>
-                  কার্টে যান ও অর্ডার সম্পন্ন করুন
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </button>
-                <div className="nb-builder-fineprint">
-                  <span>✓ ক্যাশ অন ডেলিভারি</span>
-                  <span>✓ সারাদেশে হোম ডেলিভারি</span>
-                  <span>✓ ২ কিনলে ১ ফ্রি</span>
-                  <span>✓ ৫০০৳+ অর্ডারে নোটবুক ফ্রি</span>
-                </div>
-              </div>
-              </div>
             </div>
           </div>
         </section>
@@ -1026,14 +969,6 @@ export default function NotebookBundleClient() {
                 <div className="nb-section-eyebrow">প্রিমিয়াম কোয়ালিটি</div>
                 <h2 className="nb-section-title">কেন এই নোটবুক প্রিমিয়াম</h2>
                 <p className="nb-section-sub">৮০ GSM অফ-হোয়াইট পেপার, Rounded Corner ডিজাইন ও টেকসই পেপারব্যাক কভার। দেশের যেকোনো প্রান্তে হোম ডেলিভারি।</p>
-                <div className="nb-timer-box" aria-label="২৪ ঘণ্টার অফার টাইমার">
-                  <div className="nb-timer-label">অফার শেষ হতে বাকি</div>
-                  <div className="nb-timer-row">
-                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.h)}</span><span className="nb-timer-unit">Hours</span></div>
-                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.m)}</span><span className="nb-timer-unit">Minutes</span></div>
-                    <div className="nb-timer-cell"><span className="nb-timer-num">{padTime(discountTimeLeft.s)}</span><span className="nb-timer-unit">Seconds</span></div>
-                  </div>
-                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14 }}>
                 {[
@@ -1102,7 +1037,7 @@ export default function NotebookBundleClient() {
                 নোটবুক বেছে অর্ডার করো
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
-              <a href="#nb-builder" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
+              <a href="#nb-books" className="nb-btn nb-btn-ghost">ফ্রি নোটবুক বেছে নাও</a>
             </div>
           </div>
         </section>
