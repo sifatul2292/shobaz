@@ -88,20 +88,25 @@ export default function GlobalFreeGiftModal() {
 
         <FreeNotebookPicker selectedId={giftItem?.product._id} onPick={handlePick} />
 
-        {giftItem ? (
-          <div className="gfm-actions">
+        <div className="gfm-actions">
+          {giftItem ? (
             <div className="gfm-picked">✓ {giftItem.product.name} ফ্রি গিফট হিসেবে যুক্ত হয়েছে</div>
-            <div className="gfm-btn-row">
-              <button type="button" className="gfm-btn gfm-btn-primary" onClick={() => { setOpen(false); router.push('/checkout'); }}>
-                চেকআউটে যান
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </button>
-              <button type="button" className="gfm-btn gfm-btn-ghost" onClick={close}>আরও কেনাকাটা করুন</button>
-            </div>
+          ) : (
+            <div className="gfm-foot">উপরের ৩টি থেকে আপনার পছন্দের ১টি নোটবুক বেছে নিন</div>
+          )}
+          <div className="gfm-btn-row">
+            <button type="button" className="gfm-btn gfm-btn-ghost" onClick={close}>Continue Shopping</button>
+            <button
+              type="button"
+              className="gfm-btn gfm-btn-primary"
+              disabled={!giftItem}
+              onClick={() => { if (!giftItem) return; setOpen(false); router.push('/checkout'); }}
+            >
+              Go to Checkout
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
           </div>
-        ) : (
-          <div className="gfm-foot">উপরের ৩টি থেকে আপনার পছন্দের ১টি নোটবুক বেছে নিন</div>
-        )}
+        </div>
 
         <div className="gfm-meta">কার্টে নোটবুক: {paidNotebookQty} টি · অর্ডার ভ্যালু: ৳{paidSubtotal}</div>
       </div>
@@ -122,6 +127,7 @@ export default function GlobalFreeGiftModal() {
         .gfm-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .gfm-btn { flex: 1 1 200px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 15px 20px; border-radius: 14px; font-weight: 800; font-size: 15px; cursor: pointer; border: 1px solid transparent; font-family: inherit; transition: transform .12s ease, background .15s ease; }
         .gfm-btn:hover { transform: translateY(-1px); }
+        .gfm-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
         .gfm-btn-primary { background: #1B6B1B; color: #fff; box-shadow: 0 12px 24px -14px rgba(27,107,27,0.7); }
         .gfm-btn-primary:hover { background: #2E7D32; }
         .gfm-btn-ghost { background: transparent; color: #2E4A2E; border-color: #A5C8A5; }

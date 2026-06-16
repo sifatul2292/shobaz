@@ -69,18 +69,35 @@ function normalizeProducts(payload: any): Product[] {
   return Array.isArray(list) ? list : [];
 }
 
+const pickBySlug = (list: Product[]): Product[] =>
+  FREE_NOTEBOOK_SLUGS
+    .map((slug) => list.find((p) => p.slug?.toLowerCase() === slug.toLowerCase()))
+    .filter((p): p is Product => Boolean(p));
+
 export async function fetchFreeNotebooks(): Promise<Product[]> {
+  // 1) Tag-filtered query (fast path).
   try {
     const res = await api.get('/product/get-all-data', {
       params: { 'tags.name': NOTEBOOK_TAG, page: 1, limit: 50, status: 'publish' },
     });
-    const all = normalizeProducts(res).filter(hasNotebookTag);
-    // Prefer the explicit campaign slugs, ordered as listed.
-    const bySlug = FREE_NOTEBOOK_SLUGS
-      .map((slug) => all.find((p) => p.slug?.toLowerCase() === slug.toLowerCase()))
-      .filter((p): p is Product => Boolean(p));
+    const tagged = normalizeProducts(res).filter(hasNotebookTag);
+    const bySlug = pickBySlug(tagged);
     if (bySlug.length > 0) return bySlug.slice(0, 3);
-    return all.slice(0, 3);
+    if (tagged.length >= 3) return tagged.slice(0, 3);
+  } catch {
+    /* fall through to broad query */
+  }
+
+  // 2) Fallback: fetch all published products, then filter — same approach the
+  // landing page uses, so the picker works even if the tag param is ignored.
+  try {
+    const res = await api.get('/product/get-all-data', {
+      params: { page: 1, limit: 200, status: 'publish' },
+    });
+    const all = normalizeProducts(res);
+    const bySlug = pickBySlug(all);
+    if (bySlug.length > 0) return bySlug.slice(0, 3);
+    return all.filter(hasNotebookTag).slice(0, 3);
   } catch {
     return [];
   }
