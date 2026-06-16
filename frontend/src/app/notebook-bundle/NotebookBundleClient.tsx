@@ -12,9 +12,11 @@ import toast from 'react-hot-toast';
 import ProductCard from '@/components/common/ProductCard';
 import FreeNotebookPicker from '@/components/common/FreeNotebookPicker';
 import {
+  FREE_NOTEBOOK_SLUGS,
   hasNotebookTag,
   isFreeNotebookEligible,
   getPaidNotebookQty,
+  getPaidSubtotal,
   remainingForThreshold,
 } from '@/lib/notebookOffer';
 
@@ -41,22 +43,61 @@ const ARGENTINA_ORDER = ['for every heart', 'messi', 'blue white', 'blue & white
 const BRAZIL_ORDER = ['hexa', 'we never stopped', 'generations'];
 
 const REAL_NOTEBOOK_PHOTOS = [
-  { src: '/images/notebook-bundle/real-notebook-02.webp', alt: 'Hexa Loading notebook front cover held outdoors', span: 'lead' },
-  { src: '/images/notebook-bundle/real-notebook-08.webp', alt: 'Argentina For Every Heart notebook front cover held outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-06.webp', alt: 'Generations of Greatness notebook front cover held outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-15.webp', alt: 'Messi Glory notebook front cover held outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-11.webp', alt: 'Blue and White Forever notebook front cover held outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-07.webp', alt: 'We Never Stopped Dreaming notebook angle showing thickness' },
-  { src: '/images/notebook-bundle/real-notebook-01.webp', alt: 'Hexa Loading notebook pages and cover angle outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-13.webp', alt: 'Messi Glory notebook side angle showing pages' },
-  { src: '/images/notebook-bundle/real-notebook-03.webp', alt: 'Hexa Loading notebook open cover photo outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-04.webp', alt: 'Hexa Loading notebook straight front cover photo' },
-  { src: '/images/notebook-bundle/real-notebook-05.webp', alt: 'Generations of Greatness notebook side photo outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-09.webp', alt: 'We Never Stopped Dreaming notebook angled photo outdoors' },
-  { src: '/images/notebook-bundle/real-notebook-10.webp', alt: 'Argentina notebook front cover photo with flowers' },
-  { src: '/images/notebook-bundle/real-notebook-12.webp', alt: 'We Never Stopped Dreaming notebook side photo with sky' },
-  { src: '/images/notebook-bundle/real-notebook-14.webp', alt: 'Blue and White Forever notebook angled photo outdoors' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-set-01.webp', alt: 'Three published Shobaz football notebooks together' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-video-01.webp', alt: 'Argentina and Brazil notebooks close up' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-video-02.webp', alt: 'Hexa Loading notebook close up' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-video-03.webp', alt: 'Blue and White Forever notebook stack' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-balcony-01.webp', alt: 'Blue and White Forever notebook held outside' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-pages-01.webp', alt: 'Notebook off-white pages and rounded corners' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-balcony-02.webp', alt: 'Argentina notebook held outside' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-balcony-03.webp', alt: 'Hexa Loading notebook held outside' },
+  { src: '/images/notebook-bundle/offer-gallery/notebook-detail-01.webp', alt: 'Rounded corner notebook detail' },
 ];
+
+const HERO_NOTEBOOK_PHOTOS = [
+  '/images/notebook-bundle/offer-gallery/notebook-balcony-02.webp',
+  '/images/notebook-bundle/offer-gallery/notebook-balcony-03.webp',
+  '/images/notebook-bundle/offer-gallery/notebook-balcony-01.webp',
+];
+
+const FALLBACK_NOTEBOOK_PRODUCTS = [
+  {
+    _id: 'campaign-notebook-argentina-heart',
+    name: 'Argentina - For Every Heart',
+    slug: 'for-every-heart-81',
+    images: ['/images/notebook-bundle/offer-gallery/notebook-balcony-02.webp'],
+    price: 400,
+    salePrice: 400,
+    discountAmount: 240,
+    stock: 24,
+    status: 'publish',
+    tags: [{ name: NOTEBOOK_TAG, slug: NOTEBOOK_TAG }],
+  },
+  {
+    _id: 'campaign-notebook-hexa-loading',
+    name: 'Brazil - Hexa Loading',
+    slug: 'hexa-loading-46',
+    images: ['/images/notebook-bundle/offer-gallery/notebook-balcony-03.webp'],
+    price: 400,
+    salePrice: 400,
+    discountAmount: 240,
+    stock: 26,
+    status: 'publish',
+    tags: [{ name: NOTEBOOK_TAG, slug: NOTEBOOK_TAG }],
+  },
+  {
+    _id: 'campaign-notebook-blue-white',
+    name: 'Argentina - Blue & White Forever',
+    slug: 'blueandwhite',
+    images: ['/images/notebook-bundle/offer-gallery/notebook-balcony-01.webp'],
+    price: 400,
+    salePrice: 400,
+    discountAmount: 240,
+    stock: 21,
+    status: 'publish',
+    tags: [{ name: NOTEBOOK_TAG, slug: NOTEBOOK_TAG }],
+  },
+] as unknown as Product[];
 
 function normalizeProducts(payload: any): Product[] {
   const data = payload?.data?.data;
@@ -173,6 +214,7 @@ export default function NotebookBundleClient() {
   const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
   const [atBundle, setAtBundle] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
   const [discountTimeLeft, setDiscountTimeLeft] = useState({ h: 23, m: 59, s: 59 });
   const addItem = useCartStore((s) => s.addItem);
   const setFreeGift = useCartStore((s) => s.setFreeGift);
@@ -216,6 +258,13 @@ export default function NotebookBundleClient() {
           prods = Array.from(byId.values()).slice(0, NOTEBOOK_COLLECTION_SIZE);
         }
 
+        const campaignProducts = FREE_NOTEBOOK_SLUGS
+          .map((slug) => allProducts.find((p) => p.slug?.toLowerCase() === slug.toLowerCase() && hasNotebookTag(p)))
+          .filter((p): p is Product => Boolean(p));
+        if (campaignProducts.length > 0) {
+          prods = campaignProducts.slice(0, NOTEBOOK_COLLECTION_SIZE);
+        }
+
         // Best sellers: non-notebook products, ranked by totalSold.
         const topSellers = allProducts
           .filter((p) => !hasNotebookTag(p))
@@ -226,6 +275,9 @@ export default function NotebookBundleClient() {
         setProducts(prods);
         setQtyMap(Object.fromEntries(prods.map((p) => [p._id, 1])));
       } catch {
+        const fallback = prods.length > 0 ? prods : FALLBACK_NOTEBOOK_PRODUCTS;
+        setProducts(fallback);
+        setQtyMap(Object.fromEntries(fallback.map((p) => [p._id, 1])));
       } finally {
         setLoading(false);
       }
@@ -273,8 +325,21 @@ export default function NotebookBundleClient() {
 
   // Offer state derived from the real cart.
   const paidNotebookQty = getPaidNotebookQty(cartItems);
+  const paidSubtotal = getPaidSubtotal(cartItems);
   const eligible = isFreeNotebookEligible(cartItems);
   const remaining = remainingForThreshold(cartItems);
+  const modalOfferTitle = paidNotebookQty >= 2
+    ? '২ টি নোটবুক কিনলে ১ টি ফ্রি'
+    : '৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি';
+  const modalOfferCopy = paidNotebookQty >= 2
+    ? 'আপনার কার্টে ২টি নোটবুক আছে। এখন যেকোনো একটি নোটবুক ফ্রি বেছে নিন, তারপর checkout-এ চলে যান।'
+    : 'আপনার অর্ডার ৫০০ টাকার বেশি হয়েছে। উপহার হিসেবে যেকোনো একটি প্রিমিয়াম নোটবুক বেছে নিন।';
+
+  useEffect(() => {
+    if (eligible && !giftItem && cartItems.some((item) => !item.isFreeGift)) {
+      setGiftModalOpen(true);
+    }
+  }, [eligible, giftItem, cartItems]);
 
   const getQty = (id: string) => qtyMap[id] ?? 1;
   const setQty = (id: string, q: number) =>
@@ -290,7 +355,14 @@ export default function NotebookBundleClient() {
 
   const handlePickFreeGift = (product: Product) => {
     setFreeGift(product);
-    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে! 🎁`);
+    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে!`);
+  };
+
+  const handlePickFreeGiftAndCheckout = (product: Product) => {
+    setFreeGift(product);
+    setGiftModalOpen(false);
+    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে!`);
+    window.setTimeout(() => router.push('/checkout'), 80);
   };
 
   const activePhoto = activePhotoIndex === null ? null : REAL_NOTEBOOK_PHOTOS[activePhotoIndex];
@@ -371,6 +443,10 @@ export default function NotebookBundleClient() {
         .nb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #4A6B4A; font-size: 13px; flex-wrap: wrap; }
         .nb-trust-mini b { color: #2E4A2E; font-weight: 600; }
         .nb-free-pill { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 14px; border-radius:12px; background:#D4AF37; color:#071A07; font-family:"Hind Siliguri",sans-serif; font-weight:800; font-size:15px; box-shadow:0 12px 24px -18px rgba(7,26,7,0.5); }
+        .nb-offer-chips { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; max-width:540px; margin:18px 0 0; }
+        .nb-offer-chip { border:1px solid #B7D9B7; background:#F6FBF6; border-radius:14px; padding:12px 14px; color:#071A07; box-shadow:0 16px 32px -28px rgba(7,26,7,0.42); }
+        .nb-offer-chip strong { display:block; font-family:"Hind Siliguri",sans-serif; font-size:17px; line-height:1.25; margin-bottom:4px; }
+        .nb-offer-chip span { display:block; font-size:12px; color:#4A6B4A; line-height:1.45; }
 
         /* Notebook stack */
         .nb-stack-wrap { position: relative; height: 460px; display:flex; align-items:center; justify-content:center; }
@@ -434,10 +510,12 @@ export default function NotebookBundleClient() {
         .nb-real-note { margin-top:24px; display:grid; gap:10px; max-width:430px; }
         .nb-real-note div { display:flex; align-items:center; gap:10px; color:#2E4A2E; font-family:"Hind Siliguri",sans-serif; font-size:14px; line-height:1.35; }
         .nb-real-note span { width:24px; height:24px; border-radius:999px; display:grid; place-items:center; flex-shrink:0; background:#C8E6C9; color:#1B6B1B; font-family:"Inter",sans-serif; font-size:12px; font-weight:800; }
-        .nb-real-gallery { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); grid-auto-rows:132px; gap:12px; }
-        .nb-real-photo { position:relative; margin:0; border-radius:14px; overflow:hidden; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 18px 38px -28px rgba(7,26,7,0.45); }
+        .nb-photo-slider { overflow:hidden; border-radius:22px; padding:10px; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 28px 58px -36px rgba(7,26,7,0.5); }
+        .nb-slide-track { display:flex; gap:14px; width:max-content; animation:nbAutoSlide 36s linear infinite; }
+        .nb-photo-slider:hover .nb-slide-track { animation-play-state:paused; }
+        @keyframes nbAutoSlide { from { transform:translateX(0); } to { transform:translateX(calc(-50% - 7px)); } }
+        .nb-real-photo { position:relative; margin:0; border-radius:16px; overflow:hidden; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 18px 38px -28px rgba(7,26,7,0.45); flex:0 0 clamp(210px, 22vw, 310px); height:390px; }
         .nb-real-photo button { width:100%; height:100%; padding:0; border:0; cursor:zoom-in; background:transparent; display:block; }
-        .nb-real-photo.lead { grid-column:span 2; grid-row:span 3; border-radius:18px; }
         .nb-real-photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s cubic-bezier(.2,.7,.2,1); }
         .nb-real-photo:hover img { transform:scale(1.035); }
         .nb-real-photo::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,26,7,0) 62%, rgba(7,26,7,0.28)); pointer-events:none; }
@@ -492,6 +570,22 @@ export default function NotebookBundleClient() {
         .nb-builder-delivery strong { display:flex; align-items:center; gap:10px; font-family:"Hind Siliguri",sans-serif; font-size:24px; font-weight:900; line-height:1.18; color:#071A07; padding-right:118px; }
         .nb-builder-delivery strong::before { content:"🚚"; width:42px; height:42px; border-radius:999px; background:#071A07; display:grid; place-items:center; flex-shrink:0; font-size:22px; }
         .nb-builder-delivery span { font-family:"Hind Siliguri",sans-serif; font-size:14px; font-weight:800; color:#1B3D1B; text-align:right; position:relative; z-index:1; }
+        .nb-offer-panel { margin:0 0 22px; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+        .nb-offer-panel-card { border:1px solid rgba(212,175,55,0.35); background:rgba(255,255,255,0.05); border-radius:16px; padding:16px; }
+        .nb-offer-panel-card b { display:block; color:#F4DF79; font-family:"Hind Siliguri",sans-serif; font-size:20px; line-height:1.25; margin-bottom:6px; }
+        .nb-offer-panel-card span { color:rgba(232,245,233,0.74); font-size:13px; line-height:1.55; }
+
+        /* Gift modal */
+        .nb-gift-modal { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:18px; background:rgba(7,26,7,0.72); backdrop-filter:blur(8px); animation:nbGiftBackdrop .2s ease; }
+        .nb-gift-modal-card { width:min(760px, 100%); max-height:92vh; overflow:auto; background:#F6FBF6; color:#071A07; border-radius:24px; border:1px solid #C8E6C9; box-shadow:0 34px 90px rgba(7,26,7,0.38); padding:24px; animation:nbGiftPop .42s cubic-bezier(.2,.75,.18,1); }
+        @keyframes nbGiftBackdrop { from { opacity:0; } to { opacity:1; } }
+        @keyframes nbGiftPop { 0% { opacity:0; transform:translateY(18px) scale(.96); } 70% { transform:translateY(-3px) scale(1.01); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+        .nb-gift-modal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px; }
+        .nb-gift-modal-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 11px; border-radius:999px; background:#D4AF37; color:#071A07; font-family:"Hind Siliguri",sans-serif; font-weight:900; font-size:13px; margin-bottom:10px; }
+        .nb-gift-modal h3 { margin:0 0 8px; font-family:"Hind Siliguri",sans-serif; font-size:30px; line-height:1.14; }
+        .nb-gift-modal p { margin:0; color:#2E4A2E; font-size:15px; line-height:1.65; max-width:580px; }
+        .nb-gift-close { width:38px; height:38px; border-radius:999px; border:1px solid #B7D9B7; background:#fff; color:#071A07; cursor:pointer; font-size:22px; line-height:1; display:grid; place-items:center; flex-shrink:0; }
+        .nb-gift-modal-foot { margin-top:14px; text-align:center; color:#4A6B4A; font-family:"Hind Siliguri",sans-serif; font-size:13px; }
 
         /* Quality */
         .nb-quality-section { background: #EDF4ED; padding: 96px 0; }
@@ -569,8 +663,7 @@ export default function NotebookBundleClient() {
           .nb-builder-product-list { grid-template-columns:1fr; }
           .nb-real-wrap { grid-template-columns:1fr; gap:26px; }
           .nb-real-copy { position:static; padding-top:0; }
-          .nb-real-gallery { grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-rows:118px; }
-          .nb-real-photo.lead { grid-column:span 2; grid-row:span 2; }
+          .nb-offer-panel { grid-template-columns:1fr; }
           section.nb-books-section, .nb-real-section, .nb-builder-wrap, .nb-quality-section, .nb-faq-section { padding-top:64px !important; padding-bottom:64px !important; }
         }
         @media (max-width:640px) {
@@ -587,11 +680,11 @@ export default function NotebookBundleClient() {
           .nb-price-row { gap:10px; flex-wrap:wrap; }
           .nb-save-pill { font-size:11px; }
           .nb-cta-row .nb-btn { flex:1 1 100%; }
+          .nb-offer-chips { grid-template-columns:1fr; }
           .nb-final-cta { padding:64px 0; }
           .nb-value-row > div:nth-child(n+3) { display:none; }
-          .nb-real-gallery { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:0 22px 4px; margin:0 -22px; }
-          .nb-real-photo, .nb-real-photo.lead { flex:0 0 76%; height:360px; grid-column:auto; grid-row:auto; scroll-snap-align:center; border-radius:16px; }
-          .nb-real-photo:first-child { margin-left:0; }
+          .nb-photo-slider { margin:0 -22px; border-radius:0; border-left:0; border-right:0; }
+          .nb-real-photo { flex-basis:76vw; height:360px; }
           .nb-books-section .nb-container { padding:0 14px; }
           .nb-books-section .nb-bcard .nb-thumb { aspect-ratio: 1 / 1.35; }
           .nb-books-section .nb-bcard .nb-body { padding:10px; }
@@ -603,6 +696,8 @@ export default function NotebookBundleClient() {
           .nb-photo-prev { left:8px; }
           .nb-photo-next { right:8px; }
           .nb-timer-num { font-size:24px; }
+          .nb-gift-modal-card { padding:18px; border-radius:18px; }
+          .nb-gift-modal h3 { font-size:24px; }
         }
         @media (max-width:1100px) { .nb-book-grid-3 { grid-template-columns: repeat(3, 1fr) !important; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
@@ -644,19 +739,29 @@ export default function NotebookBundleClient() {
                   <div className="nb-wc-badge">⚽ WORLD CUP 2026 INSPIRED COLLECTION</div>
                   <span className="nb-eyebrow"><span className="dot" />🎁 ফ্রি নোটবুক অফার চলছে</span>
                   <h1 className="nb-lede-bn">
-                    <em>২টি নোটবুক কিনলে</em>{' '}
-                    <span>১টি নোটবুক একদম ফ্রি</span>
+                    <em>৳১৬০-তে প্রিমিয়াম ফুটবল নোটবুক</em>{' '}
+                    <span>আর ফ্রি গিফট অফার</span>
                   </h1>
                   <p className="nb-sub">
                     সবাজ থেকে মাত্র ২টি নোটবুক কিনলেই সঙ্গে পাচ্ছেন আরও ১টি নোটবুক <b>একদম বিনামূল্যে।</b>{' '}
-                    আর <b>৫০০ টাকার উপরে যেকোনো অর্ডারেই</b> উপহার হিসেবে থাকছে এই প্রিমিয়াম নোটবুকগুলো।
+                    আর <b>৫০০ টাকার উপর যেকোনো বই কিনলে</b> উপহার হিসেবে থাকছে এই প্রিমিয়াম নোটবুকগুলো।
                   </p>
                   <p className="nb-sub" style={{ fontStyle: 'italic', marginTop: -10 }}>
                     ক্লাস নোট, ডায়েরি, to-do list — প্রতিদিনের লেখায় পছন্দের দলের vibe থাকুক।
                   </p>
                   <div className="nb-price-row">
-                    <span className="nb-price-now nb-num">৳400</span>
+                    <span className="nb-price-now nb-num">৳160</span>
                     <span className="nb-save-pill">প্রতি নোটবুক · ২ কিনলে ১ ফ্রি</span>
+                  </div>
+                  <div className="nb-offer-chips" aria-label="Current offers">
+                    <div className="nb-offer-chip">
+                      <strong>২ টি নোটবুক কিনলে ১ টি ফ্রি</strong>
+                      <span>কার্টে ২টি নোটবুক হলেই free notebook picker খুলে যাবে।</span>
+                    </div>
+                    <div className="nb-offer-chip">
+                      <strong>৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি</strong>
+                      <span>Best selling books থেকেও ৫০০৳+ হলে একই গিফট পাবেন।</span>
+                    </div>
                   </div>
                   <div className="nb-cta-row">
                     <a href="#nb-books" className="nb-btn nb-btn-primary">
@@ -672,15 +777,15 @@ export default function NotebookBundleClient() {
                     <div>·</div>
                     <div>Cash on delivery</div>
                   </div>
-                  <div className="nb-free-pill">৫০০৳+ অর্ডারে অথবা ২টি নোটবুকে — ১টি নোটবুক ফ্রি</div>
+                  <div className="nb-free-pill">অফার আনলক হলে ৩টির মধ্যে যেকোনো ১টি নোটবুক ফ্রি বেছে নিন</div>
                 </div>
 
                 {/* Notebook stack */}
                 <div className="nb-stack-wrap" aria-hidden="true">
                   <div className="nb-stack">
                     {(products.length > 0 ? products.slice(0, NOTEBOOK_COLLECTION_SIZE) : Array(NOTEBOOK_COLLECTION_SIZE).fill(null)).map((p: Product | null, i) => {
-                      const src = p ? imgUrl(p.images?.[0]) : null;
-                      const cls = ['nb-b1','nb-b2','nb-b3','nb-b4','nb-b5','nb-b6'][i];
+                      const src = HERO_NOTEBOOK_PHOTOS[i] ?? (p ? imgUrl(p.images?.[0]) : null);
+                      const cls = ['nb-b1','nb-b3','nb-b5'][i] ?? 'nb-b3';
                       const col = NOTEBOOK_COLORS[i % NOTEBOOK_COLORS.length];
                       const { discountPct: nbDiscPct } = p ? getProductPrice(p) : { discountPct: 0 };
                       return (
@@ -729,27 +834,32 @@ export default function NotebookBundleClient() {
               <div className="nb-real-wrap">
                 <div className="nb-real-copy">
                   <div className="nb-section-eyebrow">বাস্তব ছবি</div>
-                  <h2 className="nb-section-title">Argentina and Brazil Edition</h2>
+                  <h2 className="nb-section-title">৩টি প্রিমিয়াম নোটবুক, বাস্তব ছবিতে</h2>
                   <p className="nb-section-sub">
-                    Product mockup নয়। Outdoor photos, তে অর্ডার করার আগে size, finish আর cover print বুঝে নিতে পারেন।
+                    Product mockup নয়। অর্ডার করার আগে cover print, rounded corner, paper finish আর notebook size ভালোভাবে দেখে নিতে পারেন।
                   </p>
                   <div className="nb-real-note">
-                    <div><span>1</span>Matte laminated cover daylight-এ কেমন দেখায়</div>
-                    <div><span>2</span>Side angle থেকে notebook thickness এবং binding</div>
-                    <div><span>3</span>Argentina ও Brazil — দুই fan pack-এর real covers</div>
+                    <div><span>1</span>Blue & White Forever, For Every Heart, Hexa Loading — এই ৩টি published design</div>
+                    <div><span>2</span>Rounded corner ও off-white page quality পরিষ্কারভাবে দেখা যায়</div>
+                    <div><span>3</span>Slider pause করতে ছবির ওপর hover করুন, বড় করে দেখতে ছবিতে click করুন</div>
                   </div>
                   <div className="nb-real-caption">
-                    Swipe করে সব ছবি দেখো। Desktop-এ ছবির উপর hover করলে cover detail বড় করে বোঝা যাবে।
+                    ছবিগুলো automatic slide হবে। কোনো ছবি বড় করে দেখতে ছবির ওপর tap করুন।
                   </div>
                 </div>
-                <div className="nb-real-gallery" aria-label="Real notebook product photo gallery">
-                  {REAL_NOTEBOOK_PHOTOS.map((photo, index) => (
-                    <figure key={photo.src} className={`nb-real-photo${photo.span === 'lead' ? ' lead' : ''}`}>
-                      <button type="button" onClick={() => setActivePhotoIndex(index)} aria-label={`${photo.alt} বড় করে দেখুন`}>
-                        <img src={photo.src} alt={photo.alt} loading="lazy" />
-                      </button>
-                    </figure>
-                  ))}
+                <div className="nb-photo-slider" aria-label="Real notebook product photo slider">
+                  <div className="nb-slide-track">
+                    {[...REAL_NOTEBOOK_PHOTOS, ...REAL_NOTEBOOK_PHOTOS].map((photo, index) => {
+                      const realIndex = index % REAL_NOTEBOOK_PHOTOS.length;
+                      return (
+                        <figure key={`${photo.src}-${index}`} className="nb-real-photo">
+                          <button type="button" onClick={() => setActivePhotoIndex(realIndex)} aria-label={`${photo.alt} বড় করে দেখুন`}>
+                            <img src={photo.src} alt={photo.alt} loading="lazy" />
+                          </button>
+                        </figure>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -762,8 +872,8 @@ export default function NotebookBundleClient() {
             <div ref={r2} style={fadeStyle}>
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">২টি নিলে ১টি ফ্রি</div>
-                <h2 className="nb-section-title">২টি নোটবুক নিলে ১টি একদম ফ্রি</h2>
-                <p className="nb-section-sub">পছন্দের নোটবুক কার্টে যোগ করুন — কার্টে ২টি নোটবুক হলেই নিচে ফ্রি নোটবুক বেছে নেওয়ার অপশন আসবে।</p>
+                <h2 className="nb-section-title">২ টি নোটবুক কিনলে ১ টি ফ্রি</h2>
+                <p className="nb-section-sub">এই তিনটি published notebook থেকে যেকোনো ২টি কার্টে যোগ করুন। সঙ্গে সঙ্গে একটি animation popup খুলবে, সেখান থেকে ৩টির মধ্যে যেকোনো ১টি free notebook বেছে checkout-এ যেতে পারবেন।</p>
               </div>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#4A6B4A', fontSize: 16 }}>লোড হচ্ছে...</div>
@@ -818,11 +928,21 @@ export default function NotebookBundleClient() {
               {/* ── Free offer (merged into cards section) ── */}
               <div id="nb-builder" ref={r3} style={{ ...fadeStyle, marginTop: 44 }}>
                 <div className="nb-builder">
+                <div className="nb-offer-panel">
+                  <div className="nb-offer-panel-card">
+                    <b>২ টি নোটবুক কিনলে ১ টি ফ্রি</b>
+                    <span>নোটবুক section থেকে যেকোনো ২টি নোটবুক কার্টে যোগ করলেই free notebook picker খুলবে।</span>
+                  </div>
+                  <div className="nb-offer-panel-card">
+                    <b>৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি</b>
+                    <span>Best selling books section বা site-এর যেকোনো বই মিলিয়ে ৫০০৳+ হলেই gift notebook পাবেন।</span>
+                  </div>
+                </div>
                 <div className="nb-builder-head">
                   <div>
                     <div className="nb-section-eyebrow" style={{ color: '#D4AF37' }}>ফ্রি নোটবুক</div>
-                    <h3>🎁 ২টি নোটবুক নিলে ১টি ফ্রি</h3>
-                    <p>উপরে থেকে ২টি নোটবুক কার্টে যোগ করুন (অথবা ৳৫০০+ অর্ডার) — যেকোনো একটি প্রিমিয়াম নোটবুক সম্পূর্ণ বিনামূল্যে বেছে নিন।</p>
+                    <h3>অফার আনলক হলে গিফট বেছে নিন</h3>
+                    <p>যোগ্যতা পূরণ হলেই popup-এ এই একই ৩টি notebook দেখাবে। আপনার পছন্দের একটি বেছে নিলে সেটি কার্টে ৳0 gift হিসেবে যুক্ত হবে।</p>
                   </div>
                   <div className="nb-builder-price">
                     <div className="lbl">কার্টে নোটবুক</div>
@@ -881,7 +1001,13 @@ export default function NotebookBundleClient() {
               <div className="nb-section-head">
                 <div className="nb-section-eyebrow">আমাদের ব্র্যান্ড</div>
                 <h2 className="nb-section-title">Best Selling Books</h2>
-                <p className="nb-section-sub">শুধু নোটবুক নয় — সবাজে আছে আরও দারুণ সব বই। ৫০০৳+ অর্ডারে একটি নোটবুক ফ্রি!</p>
+                <p className="nb-section-sub">৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি। বই কার্টে যোগ করে order value ৫০০৳+ হলেই popup থেকে আপনার gift notebook বেছে নিতে পারবেন।</p>
+                <div style={{ marginTop: 22 }}>
+                  <Link href="/products" className="nb-btn nb-btn-primary">
+                    সব বই দেখুন
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </Link>
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : isTablet ? 'repeat(3, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: isMobile ? 12 : 20 }}>
                 {bestsellers.map((p) => (
@@ -993,6 +1119,29 @@ export default function NotebookBundleClient() {
             <button type="button" className="nb-photo-nav nb-photo-next" onClick={showNextPhoto} aria-label="পরের ছবি">›</button>
             <div className="nb-photo-count">{(activePhotoIndex ?? 0) + 1} / {REAL_NOTEBOOK_PHOTOS.length}</div>
             <img src={activePhoto.src} alt={activePhoto.alt} />
+          </div>
+        </div>
+      )}
+
+      {giftModalOpen && eligible && !giftItem && (
+        <div className="nb-gift-modal" role="dialog" aria-modal="true" aria-label="Free notebook offer">
+          <div className="nb-gift-modal-card">
+            <div className="nb-gift-modal-top">
+              <div>
+                <div className="nb-gift-modal-badge">ফ্রি গিফট আনলকড</div>
+                <h3>{modalOfferTitle}</h3>
+                <p>{modalOfferCopy}</p>
+              </div>
+              <button type="button" className="nb-gift-close" onClick={() => setGiftModalOpen(false)} aria-label="বন্ধ করুন">×</button>
+            </div>
+            <FreeNotebookPicker
+              notebooks={products}
+              selectedId={undefined}
+              onPick={handlePickFreeGiftAndCheckout}
+            />
+            <div className="nb-gift-modal-foot">
+              কার্টে নোটবুক: {paidNotebookQty} টি · অর্ডার ভ্যালু: ৳{paidSubtotal}
+            </div>
           </div>
         </div>
       )}
