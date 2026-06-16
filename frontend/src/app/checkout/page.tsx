@@ -119,7 +119,12 @@ function StepProgress({ step }: { step: number }) {
             const completed = s.n < step;
             return (
               <Fragment key={s.n}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <Link
+                  href={s.n === 1 ? '/cart' : '#'}
+                  onClick={(e) => { if (s.n !== 1) e.preventDefault(); }}
+                  aria-label={s.n === 1 ? 'কার্টে ফিরে যান' : undefined}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: s.n === 1 ? 'pointer' : 'default' }}
+                >
                   <div style={{ position: 'relative' }}>
                     {active && (
                       <div style={{
@@ -146,7 +151,7 @@ function StepProgress({ step }: { step: number }) {
                   <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: (completed || active) ? '#0f172a' : '#9ca3af', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
                     {s.label}
                   </span>
-                </div>
+                </Link>
                 {i < STEPS.length - 1 && (
                   <div style={{ flex: 1, height: 3, background: '#f1f5f9', margin: '0 16px', marginBottom: 26, borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: `linear-gradient(90deg, ${PRIMARY}, #22c55e)`, transition: 'width .5s ease', borderRadius: 999 }}/>
@@ -556,6 +561,7 @@ export default function CheckoutPage() {
                   {items.map((item, i) => {
                     const price = getCurrentPrice(item.product);
                     const img = item.product.images?.[0];
+                    const isGift = item.isFreeGift;
                     return (
                       <div key={item._id || item.product._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < items.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
                         <div style={{ width: 52, height: 68, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', background: '#f8fafc' }}>
@@ -565,9 +571,18 @@ export default function CheckoutPage() {
                           <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                             {item.product.name}
                           </div>
-                          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>পরিমাণ: {item.quantity}</div>
+                          {isGift
+                            ? <div style={{ fontSize: 11, fontWeight: 800, color: PRIMARY, marginTop: 3, display: 'inline-block', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 999, padding: '1px 8px' }}>🎁 ফ্রি উপহার</div>
+                            : <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>পরিমাণ: {item.quantity}</div>}
                         </div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY }}>৳{price * item.quantity}</div>
+                        {isGift ? (
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontSize: 14, fontWeight: 800, color: PRIMARY }}>৳0</span>
+                            <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through', marginLeft: 6 }}>৳{price}</span>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY }}>৳{price * item.quantity}</div>
+                        )}
                       </div>
                     );
                   })}

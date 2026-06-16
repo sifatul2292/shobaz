@@ -659,8 +659,8 @@ export default function HomePage() {
           const COMM_SLUGS = ['influence-the-psychology-of-persuasion', 'the-48-laws-of-power', 'how-to-win-friends-influence-people', 'never-split-the-difference', 'crucial-conversations'];
           const BUNDLES = [
             { name: 'Finance Bundle', label: 'অর্থনৈতিক স্বাধীনতার পথে ৫টি সেরা বই', href: '/finance-bundle', slugs: FINANCE_SLUGS, total: 1786, original: 2985, pct: 40, accent: '#1E3A2A', products: [] as any[] },
-            { name: 'Communication Bundle', label: 'মানুষের মন জয় করার ৫টি সেরা বই', href: '/communication-bundle', slugs: COMM_SLUGS, total: 1682, original: 2769, pct: 39, accent: '#1B3D6B', products: [] as any[] },
-            { name: 'Notebook Bundle', label: 'বিশ্বকাপ ২০২৬ থিমে ৫টি প্রিমিয়াম নোটবুক', href: '/notebook-bundle', slugs: [] as string[], total: 950, original: 2000, pct: 53, accent: '#0D5C2A', products: notebookProducts },
+            { name: 'Communication Bundle', label: 'মানুষের মন জয় করার ৫টি সেরা বই', href: '/communication-bundle', slugs: COMM_SLUGS, total: 1682, original: 2769, pct: 39, accent: '#1B3D6B', products: [] as any[], note: '৫টি একসাথে · ৳১০৮৭ সাশ্রয়' },
+            { name: 'Notebook Bundle', label: '২টি নোটবুক কিনলে ১টি ফ্রি · ৫০০৳+ অর্ডারে নোটবুক উপহার', href: '/notebook-bundle', slugs: [] as string[], total: 160, original: 400, pct: 60, accent: '#0D5C2A', products: notebookProducts, note: '২টি কিনলে ১টি নোটবুক ফ্রি · প্রতি নোটবুক ৳১৬০' },
           ];
           return (
             <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 8px' }}>
@@ -727,7 +727,7 @@ export default function HomePage() {
                             <span style={{ fontSize: 14, color: '#94a3b8', textDecoration: 'line-through', fontFamily: 'var(--sans)' }}>৳{bundle.original.toLocaleString('en-IN')}</span>
                             <span style={{ background: '#fee2e2', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4, fontFamily: 'var(--sans)' }}>{bundle.pct}% OFF</span>
                           </div>
-                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'var(--bn)' }}>৫টি একসাথে · ৳{(bundle.original - bundle.total).toLocaleString('en-IN')} সাশ্রয়</div>
+                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'var(--bn)' }}>{bundle.note}</div>
                           {/* Countdown */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, marginBottom: 14 }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e97316" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>

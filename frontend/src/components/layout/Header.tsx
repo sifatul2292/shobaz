@@ -9,7 +9,7 @@ import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
 import { phSearch } from '@/lib/posthog';
 import toast from 'react-hot-toast';
-import { HiOutlineTruck, HiOutlineSparkles, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
+import { HiOutlineSparkles, HiOutlineShieldCheck, HiOutlineBookOpen } from 'react-icons/hi';
 
 const CORE_ROUTES = ['products', 'authors', 'publishers', 'offers', 'blog', 'about', 'contact'];
 
@@ -35,7 +35,8 @@ const NAV_LINKS = [
 ];
 
 const ANNOUNCEMENTS = [
-  { icon: HiOutlineTruck, text: '৯৫০ টাকার উপরে অর্ডার করলে একটি নোটবুক ফ্রি' },
+  { icon: HiOutlineSparkles, text: '🎁 ২টি নোটবুক কিনলে ১টি নোটবুক ফ্রি' },
+  { icon: HiOutlineSparkles, text: '🎁 ৫০০ টাকার উপরে যেকোনো বই কিনলে ১টি নোটবুক ফ্রি' },
   { icon: HiOutlineBookOpen, text: 'নির্বাচিত বইয়ে ৩০% পর্যন্ত ছাড়' },
   { icon: HiOutlineSparkles, text: 'ঢাকায় মাত্র ৬০ টাকায় ডেলিভারি' },
   { icon: HiOutlineShieldCheck, text: 'প্রতিটি অর্ডারে বিশেষ উপহার' },
