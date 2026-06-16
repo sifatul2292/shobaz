@@ -401,7 +401,13 @@ export default function CartPage() {
 
               {/* ── Free notebook offer ── */}
               {giftItem ? (
-                <GiftRow item={giftItem} onRemove={() => { removeFreeGift(); toast.success('ফ্রি উপহার সরানো হয়েছে'); }} />
+                <>
+                  <GiftRow item={giftItem} onRemove={() => { removeFreeGift(); toast.success('ফ্রি উপহার সরানো হয়েছে'); }} />
+                  <div style={{ padding: '0 24px 18px', background: '#F6FBF6' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#4A6B4A', margin: '4px 0 10px' }}>অন্য নোটবুক বেছে নিতে চাইলে নিচে ট্যাপ করুন:</div>
+                    <FreeNotebookPicker selectedId={giftItem.product._id} onPick={handlePickGift} compact />
+                  </div>
+                </>
               ) : eligible ? (
                 <div style={{ padding: '18px 24px', borderTop: '1px solid #f5f5f5', background: '#FBF8EC' }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#071A07', marginBottom: 4 }}>🎁 আপনি একটি নোটবুক ফ্রি পাচ্ছেন!</div>

@@ -5,6 +5,7 @@ import { Hind_Siliguri, Poppins, Newsreader } from "next/font/google";
 import { Suspense } from "react";
 import GTMRouteTracker from "@/components/common/GTMRouteTracker";
 import FloatingCart from "@/components/common/FloatingCart";
+import GlobalFreeGiftModal from "@/components/common/GlobalFreeGiftModal";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["latin", "bengali"],
@@ -77,6 +78,7 @@ export default function RootLayout({
         <Toaster position="top-right" />
         {children}
         <FloatingCart />
+        <GlobalFreeGiftModal />
       </body>
     </html>
   );

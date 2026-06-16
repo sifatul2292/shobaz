@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
@@ -10,13 +9,11 @@ import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import ProductCard from '@/components/common/ProductCard';
-import FreeNotebookPicker from '@/components/common/FreeNotebookPicker';
 import {
   FREE_NOTEBOOK_SLUGS,
   hasNotebookTag,
   isFreeNotebookEligible,
   getPaidNotebookQty,
-  getPaidSubtotal,
   remainingForThreshold,
 } from '@/lib/notebookOffer';
 
@@ -206,7 +203,6 @@ const fadeStyle: React.CSSProperties = { opacity: 0, transform: 'translateY(28px
 const padTime = (value: number) => String(value).padStart(2, '0');
 
 export default function NotebookBundleClient() {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [bestsellers, setBestsellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,10 +210,8 @@ export default function NotebookBundleClient() {
   const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
   const [atBundle, setAtBundle] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
-  const [giftModalOpen, setGiftModalOpen] = useState(false);
   const [discountTimeLeft, setDiscountTimeLeft] = useState({ h: 23, m: 59, s: 59 });
   const addItem = useCartStore((s) => s.addItem);
-  const setFreeGift = useCartStore((s) => s.setFreeGift);
   const cartItems = useCartStore((s) => s.items);
   const giftItem = cartItems.find((i) => i.isFreeGift);
   const bp = useBreakpoint();
@@ -325,21 +319,8 @@ export default function NotebookBundleClient() {
 
   // Offer state derived from the real cart.
   const paidNotebookQty = getPaidNotebookQty(cartItems);
-  const paidSubtotal = getPaidSubtotal(cartItems);
   const eligible = isFreeNotebookEligible(cartItems);
   const remaining = remainingForThreshold(cartItems);
-  const modalOfferTitle = paidNotebookQty >= 2
-    ? '২ টি নোটবুক কিনলে ১ টি ফ্রি'
-    : '৫০০ টাকার উপর যেকোনো বই কিনলে ১ টি নোটবুক ফ্রি';
-  const modalOfferCopy = paidNotebookQty >= 2
-    ? 'আপনার কার্টে ২টি নোটবুক আছে। এখন যেকোনো একটি নোটবুক ফ্রি বেছে নিন, তারপর checkout-এ চলে যান।'
-    : 'আপনার অর্ডার ৫০০ টাকার বেশি হয়েছে। উপহার হিসেবে যেকোনো একটি প্রিমিয়াম নোটবুক বেছে নিন।';
-
-  useEffect(() => {
-    if (eligible && !giftItem && cartItems.some((item) => !item.isFreeGift)) {
-      setGiftModalOpen(true);
-    }
-  }, [eligible, giftItem, cartItems]);
 
   const getQty = (id: string) => qtyMap[id] ?? 1;
   const setQty = (id: string, q: number) =>
@@ -351,18 +332,6 @@ export default function NotebookBundleClient() {
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'AddToCart', { content_name: product.name, content_ids: [product._id], content_type: 'product', quantity: qty, currency: 'BDT' });
     }
-  };
-
-  const handlePickFreeGift = (product: Product) => {
-    setFreeGift(product);
-    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে!`);
-  };
-
-  const handlePickFreeGiftAndCheckout = (product: Product) => {
-    setFreeGift(product);
-    setGiftModalOpen(false);
-    toast.success(`${product.name} ফ্রি উপহার হিসেবে যোগ হয়েছে!`);
-    window.setTimeout(() => router.push('/checkout'), 80);
   };
 
   const activePhoto = activePhotoIndex === null ? null : REAL_NOTEBOOK_PHOTOS[activePhotoIndex];
@@ -1054,29 +1023,6 @@ export default function NotebookBundleClient() {
             <button type="button" className="nb-photo-nav nb-photo-next" onClick={showNextPhoto} aria-label="পরের ছবি">›</button>
             <div className="nb-photo-count">{(activePhotoIndex ?? 0) + 1} / {REAL_NOTEBOOK_PHOTOS.length}</div>
             <img src={activePhoto.src} alt={activePhoto.alt} />
-          </div>
-        </div>
-      )}
-
-      {giftModalOpen && eligible && !giftItem && (
-        <div className="nb-gift-modal" role="dialog" aria-modal="true" aria-label="Free notebook offer">
-          <div className="nb-gift-modal-card">
-            <div className="nb-gift-modal-top">
-              <div>
-                <div className="nb-gift-modal-badge">ফ্রি গিফট আনলকড</div>
-                <h3>{modalOfferTitle}</h3>
-                <p>{modalOfferCopy}</p>
-              </div>
-              <button type="button" className="nb-gift-close" onClick={() => setGiftModalOpen(false)} aria-label="বন্ধ করুন">×</button>
-            </div>
-            <FreeNotebookPicker
-              notebooks={products}
-              selectedId={undefined}
-              onPick={handlePickFreeGiftAndCheckout}
-            />
-            <div className="nb-gift-modal-foot">
-              কার্টে নোটবুক: {paidNotebookQty} টি · অর্ডার ভ্যালু: ৳{paidSubtotal}
-            </div>
           </div>
         </div>
       )}
