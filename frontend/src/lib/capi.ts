@@ -1,5 +1,27 @@
 import api from '@/lib/api';
 
+// Read a cookie value by name (browser only).
+const getCookie = (name: string): string | undefined => {
+  if (typeof document === 'undefined') return undefined;
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : undefined;
+};
+
+// Meta browser identifiers. _fbp is set by the pixel on ~every session.
+// _fbc is set when the visitor arrives from an ad click; if the cookie is
+// missing but the URL has fbclid, synthesize _fbc per Meta's spec.
+// These MUST be sent raw (never hashed) so Meta can match them to the pixel.
+const getFbIds = (): { fbp?: string; fbc?: string } => {
+  if (typeof window === 'undefined') return {};
+  const fbp = getCookie('_fbp');
+  let fbc = getCookie('_fbc');
+  if (!fbc) {
+    const fbclid = new URLSearchParams(window.location.search).get('fbclid');
+    if (fbclid) fbc = `fb.1.${Date.now()}.${fbclid}`;
+  }
+  return { fbp: fbp || undefined, fbc: fbc || undefined };
+};
+
 const buildEvent = (
   eventName: string,
   userData: Record<string, any>,
@@ -12,7 +34,8 @@ const buildEvent = (
   action_source: 'website',
   // event_id lets Meta dedup this server event against the browser pixel fire
   ...(eventId ? { event_id: eventId } : {}),
-  user_data: userData,
+  // fbp/fbc auto-attached to every event for browser↔server matching
+  user_data: { ...getFbIds(), ...userData },
   custom_data: customData,
 });
 
