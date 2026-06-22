@@ -10,7 +10,7 @@ import api, { imgUrl } from '@/lib/api';
 import { gtmPurchase } from '@/lib/gtm';
 import { capiPurchase } from '@/lib/capi';
 import { phPurchase } from '@/lib/posthog';
-import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
+import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser, FaEnvelope } from 'react-icons/fa';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 
 interface Order {
@@ -18,6 +18,7 @@ interface Order {
   orderId: string;
   name: string;
   phoneNo: string;
+  email?: string;
   shippingAddress: string;
   orderedItems: any[];
   subTotal: number;
@@ -116,7 +117,16 @@ function OrderSuccessContent() {
                     <p className="font-medium text-gray-800">{order.phoneNo}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl md:col-span-2">
+                {order.email && (
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                    <FaEnvelope className="text-green-500 mt-1" />
+                    <div>
+                      <p className="text-gray-500 text-sm">ইমেইল</p>
+                      <p className="font-medium text-gray-800">{order.email}</p>
+                    </div>
+                  </div>
+                )}
+                <div className={`flex items-start gap-3 p-4 bg-gray-50 rounded-xl ${order.email ? 'md:col-span-2' : 'md:col-span-2'}`}>
                   <FaMapMarkerAlt className="text-green-500 mt-1" />
                   <div>
                     <p className="text-gray-500 text-sm">ঠিকানা</p>

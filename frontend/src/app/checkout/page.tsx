@@ -322,8 +322,8 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
-  const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '' });
-  const [errors, setErrors] = useState({ name: '', phone: '', address: '' });
+  const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '', email: '' });
+  const [errors, setErrors] = useState({ name: '', phone: '', address: '', email: '' });
   const [freshWeights, setFreshWeights] = useState<Record<string, number>>({});
   const formRef = useRef<HTMLFormElement>(null);
   const incompleteOrderSaved = useRef(false);
@@ -359,7 +359,7 @@ export default function CheckoutPage() {
     const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
     const total = getTotalPrice();
     gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
-    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name);
+    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name, formData.email);
     phBeginCheckout(cartProducts, total);
   }, [mounted, items, getTotalPrice, formData.name, formData.phone]);
 
@@ -398,12 +398,13 @@ export default function CheckoutPage() {
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const validateForm = () => {
-    const newErrors = { name: '', phone: '', address: '' };
+    const newErrors = { name: '', phone: '', address: '', email: '' };
     let valid = true;
     if (!formData.name.trim()) { newErrors.name = 'নাম প্রয়োজন'; valid = false; }
     if (!formData.phone.trim()) { newErrors.phone = 'ফোন নম্বর প্রয়োজন'; valid = false; }
     else if (!/^01\d{9}$/.test(formData.phone)) { newErrors.phone = 'সঠিক বাংলাদেশি নম্বর দিন (01XXXXXXXXX)'; valid = false; }
     if (!formData.address.trim()) { newErrors.address = 'ঠিকানা প্রয়োজন'; valid = false; }
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { newErrors.email = 'সঠিক ইমেইল দিন'; valid = false; }
     setErrors(newErrors);
     return valid;
   };
@@ -423,6 +424,7 @@ export default function CheckoutPage() {
     });
     api.post('/order/add-incomplete-order', {
       name: name.trim(), phoneNo: phone, shippingAddress: address.trim(),
+      email: formData.email.trim() || undefined,
       paymentType: 'cod', deliveryCharge: shipping,
       subTotal: getTotalPrice(), grandTotal: total, orderedItems,
     }).catch(() => {});
@@ -463,6 +465,7 @@ export default function CheckoutPage() {
       });
       const orderData = {
         name: formData.name, phoneNo: formData.phone, shippingAddress: formData.address,
+        email: formData.email.trim() || undefined,
         paymentType: 'cod', deliveryLocation, deliveryCharge: shipping,
         subTotal: subtotal, grandTotal: total, orderedItems,
         carts: items.map(item => item.product._id),
@@ -518,6 +521,17 @@ export default function CheckoutPage() {
                       onFocus={focusIn} onBlur={focusOut}
                       placeholder="01XXXXXXXXX"
                       style={errors.phone ? inputError : inputBase}
+                    />
+                  </FormField>
+
+                  <FormField label="ইমেইল (ঐচ্ছিক)" error={errors.email}>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={e => { setFormData(d => ({ ...d, email: e.target.value })); if (errors.email) setErrors(v => ({ ...v, email: '' })); }}
+                      onFocus={focusIn} onBlur={focusOut}
+                      placeholder="example@email.com"
+                      style={errors.email ? inputError : inputBase}
                     />
                   </FormField>
 
