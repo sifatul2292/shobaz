@@ -1600,12 +1600,14 @@
       emailLabel.parentNode.insertBefore(emailEl, emailLabel.nextSibling);
     }
     if (email && emailLabel && emailEl) {
+      emailLabel.removeAttribute('hidden');
+      emailEl.removeAttribute('hidden');
       emailLabel.style.display = '';
       emailEl.style.display = '';
       emailEl.innerHTML = '<a href="mailto:' + esc(email) + '" style="color:#0284c7;text-decoration:none"><i class="fas fa-envelope" style="font-size:10px;margin-right:4px"></i>' + esc(email) + '</a>';
     } else if (emailLabel && emailEl) {
-      emailLabel.style.display = 'none';
-      emailEl.style.display = 'none';
+      emailLabel.setAttribute('hidden', '');
+      emailEl.setAttribute('hidden', '');
     }
 
     // Address card
