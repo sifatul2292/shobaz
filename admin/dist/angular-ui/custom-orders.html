@@ -1583,15 +1583,29 @@
       ? '<a href="tel:' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:4px"></i>' + esc(phone) + '</a>'
       : '—';
     var email = order.email || '';
+    var phoneEl = document.getElementById('modalPhone');
     var emailLabel = document.getElementById('modalEmailLabel');
     var emailEl = document.getElementById('modalEmail');
-    if (email) {
-      emailLabel.hidden = false;
-      emailEl.hidden = false;
+    // Create elements dynamically if static HTML wasn't deployed
+    if (!emailLabel && phoneEl) {
+      emailLabel = document.createElement('div');
+      emailLabel.id = 'modalEmailLabel';
+      emailLabel.className = 'mic-label';
+      emailLabel.style.marginTop = '8px';
+      emailLabel.textContent = 'Email';
+      phoneEl.parentNode.insertBefore(emailLabel, phoneEl.nextSibling);
+      emailEl = document.createElement('div');
+      emailEl.id = 'modalEmail';
+      emailEl.className = 'mic-value';
+      emailLabel.parentNode.insertBefore(emailEl, emailLabel.nextSibling);
+    }
+    if (email && emailLabel && emailEl) {
+      emailLabel.style.display = '';
+      emailEl.style.display = '';
       emailEl.innerHTML = '<a href="mailto:' + esc(email) + '" style="color:#0284c7;text-decoration:none"><i class="fas fa-envelope" style="font-size:10px;margin-right:4px"></i>' + esc(email) + '</a>';
-    } else {
-      emailLabel.hidden = true;
-      emailEl.hidden = true;
+    } else if (emailLabel && emailEl) {
+      emailLabel.style.display = 'none';
+      emailEl.style.display = 'none';
     }
 
     // Address card
