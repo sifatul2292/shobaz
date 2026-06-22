@@ -1037,6 +1037,8 @@
           <div class="mic-value" id="modalCustomerName">—</div>
           <div class="mic-label" style="margin-top:8px">Phone</div>
           <div class="mic-value" id="modalPhone">—</div>
+          <div class="mic-label" style="margin-top:8px" id="modalEmailLabel" hidden>Email</div>
+          <div class="mic-value" id="modalEmail" hidden>—</div>
         </div>
         <div class="modal-info-card">
           <div class="mic-icon green"><i class="fas fa-map-marker-alt"></i></div>
@@ -1349,7 +1351,7 @@
       pagination: { pageSize: state.pageSize, currentPage: state.page },
       sort: { createdAt: -1 },
       select: {
-        orderId: 1, name: 1, phoneNo: 1, grandTotal: 1,
+        orderId: 1, name: 1, phoneNo: 1, email: 1, grandTotal: 1,
         subTotal: 1, deliveryCharge: 1, discount: 1,
         orderStatus: 1, paymentStatus: 1, paymentType: 1,
         createdAt: 1, checkoutDate: 1, shippingAddress: 1,
@@ -1580,6 +1582,17 @@
     document.getElementById('modalPhone').innerHTML = phone
       ? '<a href="tel:' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:4px"></i>' + esc(phone) + '</a>'
       : '—';
+    var email = order.email || '';
+    var emailLabel = document.getElementById('modalEmailLabel');
+    var emailEl = document.getElementById('modalEmail');
+    if (email) {
+      emailLabel.hidden = false;
+      emailEl.hidden = false;
+      emailEl.innerHTML = '<a href="mailto:' + esc(email) + '" style="color:#0284c7;text-decoration:none"><i class="fas fa-envelope" style="font-size:10px;margin-right:4px"></i>' + esc(email) + '</a>';
+    } else {
+      emailLabel.hidden = true;
+      emailEl.hidden = true;
+    }
 
     // Address card
     document.getElementById('modalAddress').textContent = order.shippingAddress || order.address || '—';
