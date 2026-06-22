@@ -322,7 +322,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [shippingCharge, setShippingCharge] = useState<ShippingCharge | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState<'inside' | 'outside'>('inside');
-  const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '', email: '' });
+  const [formData, setFormData] = useState({ name: user?.name || '', phone: '', address: '', email: user?.email || '' });
   const [errors, setErrors] = useState({ name: '', phone: '', address: '', email: '' });
   const [freshWeights, setFreshWeights] = useState<Record<string, number>>({});
   const formRef = useRef<HTMLFormElement>(null);

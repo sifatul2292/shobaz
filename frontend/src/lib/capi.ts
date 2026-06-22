@@ -22,6 +22,27 @@ const getFbIds = (): { fbp?: string; fbc?: string } => {
   return { fbp: fbp || undefined, fbc: fbc || undefined };
 };
 
+// Stable per-device id sent as external_id on EVERY event. Gives Meta a
+// persistent anchor to stitch a visitor's whole funnel (view→cart→checkout
+// →purchase) into one user → big match-quality boost. Random UUID, not PII,
+// so sent raw. Persisted in localStorage so it survives across sessions.
+const getExternalId = (): string | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    let id = localStorage.getItem('sb_ext_id');
+    if (!id) {
+      id =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('sb_ext_id', id);
+    }
+    return id;
+  } catch {
+    return undefined;
+  }
+};
+
 const buildEvent = (
   eventName: string,
   userData: Record<string, any>,
@@ -34,8 +55,8 @@ const buildEvent = (
   action_source: 'website',
   // event_id lets Meta dedup this server event against the browser pixel fire
   ...(eventId ? { event_id: eventId } : {}),
-  // fbp/fbc auto-attached to every event for browser↔server matching
-  user_data: { ...getFbIds(), ...userData },
+  // fbp/fbc + external_id auto-attached to every event for browser↔server matching
+  user_data: { ...getFbIds(), external_id: getExternalId(), ...userData },
   custom_data: customData,
 });
 
@@ -47,7 +68,6 @@ export const capiPurchase = (order: any) => {
     em: order.email || undefined,
     fn: nameParts[0] || undefined,
     ln: nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined,
-    external_id: order.orderId || undefined,
   };
   const customData = {
     currency: 'BDT',
