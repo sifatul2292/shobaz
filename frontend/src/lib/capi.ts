@@ -110,7 +110,7 @@ export const capiAddToCart = (product: any, quantity: number) => {
   return api.post('/gtag/track-theme-add-to-cart', buildEvent('AddToCart', {}, customData)).catch(() => null);
 };
 
-export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: string, name?: string, email?: string) => {
+export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: string, name?: string, email?: string, eventId?: string) => {
   const customData = {
     currency: 'BDT',
     value: total,
@@ -130,5 +130,5 @@ export const capiInitiateCheckout = (cartItems: any[], total: number, phone?: st
     fn: nameParts[0] || undefined,
     ln: nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined,
   };
-  return api.post('/gtag/track-theme-initial-checkout', buildEvent('InitiateCheckout', userData, customData)).catch(() => null);
+  return api.post('/gtag/track-theme-initial-checkout', buildEvent('InitiateCheckout', userData, customData, eventId)).catch(() => null);
 };

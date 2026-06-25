@@ -9,12 +9,7 @@ import { Product } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-
-declare global {
-  interface Window {
-    fbq?: (event: string, name: string, params?: Record<string, unknown>) => void;
-  }
-}
+import { gtmViewContent, gtmAddToCart, gtmAddToCartItems } from '@/lib/gtm';
 
 const TIMER_KEY = 'fb_bundle_timer_end';
 
@@ -156,9 +151,11 @@ export default function FinanceBundleClient() {
         setBySlug(map);
       }
     }).catch(() => {});
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'ViewContent', { content_name: 'Finance Bundle', content_ids: BOOKS.map((b) => b.slug), content_type: 'product_group' });
-    }
+    // ViewContent twin: GA4 view_item -> sGTM + Meta pixel, one shared event_id.
+    gtmViewContent(
+      'Finance Bundle',
+      BOOKS.map((b) => ({ item_id: b.slug, name: b.title, price: b.salePrice - b.discountAmount, quantity: 1 })),
+    );
   }, []);
 
   // 72h localStorage countdown
@@ -241,18 +238,19 @@ export default function FinanceBundleClient() {
     if (!p) { toast.error('পণ্য লোড হচ্ছে...'); return; }
     addItem(p);
     toast.success(`${title} কার্টে যোগ হয়েছে!`);
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: title, content_ids: [slug], content_type: 'product', currency: 'BDT' });
-    }
+    // AddToCart twin: GA4 add_to_cart -> sGTM + Meta pixel, one shared event_id.
+    gtmAddToCart(p, 1);
   };
 
   const handleBundleCheckout = () => {
     let added = 0;
     selectedBooks.forEach((book) => { const p = bySlug[book.slug]; if (p) { addItem(p); added++; } });
     if (added === 0) { toast.error('পণ্য লোড হচ্ছে, একটু অপেক্ষা করুন'); return; }
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: 'Finance Bundle', content_ids: selectedBooks.map((b) => b.slug), value: selectedTotal, currency: 'BDT' });
-    }
+    gtmAddToCartItems(
+      'Finance Bundle',
+      selectedBooks.map((b) => ({ item_id: b.slug, name: b.title, price: getBookPricing(b).price, quantity: 1 })),
+      selectedTotal,
+    );
     router.push('/checkout');
   };
 

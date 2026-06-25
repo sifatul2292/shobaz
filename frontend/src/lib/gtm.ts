@@ -1,8 +1,11 @@
 declare global {
   interface Window {
     dataLayer: any[];
+    fbq?: (...args: any[]) => void;
   }
 }
+
+const CURRENCY = 'BDT';
 
 const getPrice = (item: any) => {
   const salePrice = item.salePrice || item.unitPrice || item.regularPrice || item.price || 0;
@@ -37,118 +40,198 @@ const wasPurchaseTracked = (transactionId?: string) => {
   return false;
 };
 
+// One id shared by the browser pixel (eventID) and the GA4-to-sGTM twin (event_id)
+// so Meta dedupes browser + server into a single event.
+const genEventId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+// Explicit page context on EVERY event — without it sGTM defaults page_location
+// to the homepage, which corrupts reporting for AJAX-fired events like add_to_cart.
+const pageContext = () =>
+  typeof window === 'undefined'
+    ? {}
+    : { page_location: window.location.href, page_title: document.title };
+
+// Normalized line item shape used to build both GA4 items and Meta contents.
+type LineItem = { item_id: string; item_name: string; price: number; quantity: number };
+
+const toItems = (source: any[]): LineItem[] =>
+  (source || []).map((item) => ({
+    item_id: item._id || item.item_id || item.id || item.slug,
+    item_name: item.name || item.item_name || item.title,
+    price: item.price != null ? item.price : getPrice(item),
+    quantity: item.quantity || 1,
+  }));
+
+// Mirror GA4 ecommerce items into Meta pixel params.
+const metaParams = (
+  contentName: string | undefined,
+  items: LineItem[],
+  value: number,
+  extra: Record<string, unknown> = {},
+) => ({
+  ...(contentName ? { content_name: contentName } : {}),
+  content_type: 'product',
+  content_ids: items.map((i) => i.item_id),
+  contents: items.map((i) => ({ id: i.item_id, quantity: i.quantity, item_price: i.price })),
+  currency: CURRENCY,
+  value,
+  ...extra,
+});
+
+const fireFbq = (metaName: string, params: Record<string, unknown>, eventId: string) => {
+  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+  window.fbq('track', metaName, params, { eventID: eventId });
+};
+
 export const pushEvent = (event: object) => {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ ecommerce: null }); // clear previous ecommerce data
-  window.dataLayer.push(event);
+  window.dataLayer.push({ ...pageContext(), ...event });
 };
 
+// page_view -> PageView
+export const gtmPageView = (pathname?: string) => {
+  const eventId = genEventId();
+  pushEvent({
+    event: 'page_view_stape',
+    event_id: eventId,
+    ...(pathname ? { page_path: pathname } : {}),
+  });
+  fireFbq('PageView', {}, eventId);
+};
+
+// view_item -> ViewContent (single product, e.g. product detail page)
 export const gtmViewItem = (product: any) => {
-  const price = getPrice(product);
+  const eventId = genEventId();
+  const items = toItems([{ ...product, price: getPrice(product), quantity: 1 }]);
+  const value = items[0]?.price ?? 0;
   pushEvent({
     event: 'view_item_stape',
-    ecommerce: {
-      currency: 'BDT',
-      value: price,
-      items: [{
-        item_id: product._id,
-        item_name: product.name,
-        price,
-        quantity: 1,
-      }],
-    },
+    event_id: eventId,
+    ecommerce: { currency: CURRENCY, value, items },
   });
+  fireFbq('ViewContent', metaParams(product.name, items, value), eventId);
 };
 
+// view_item -> ViewContent (group of items, e.g. bundle landing pages)
+export const gtmViewContent = (contentName: string, source: any[], value?: number) => {
+  const eventId = genEventId();
+  const items = toItems(source);
+  const total = value ?? items.reduce((s, i) => s + i.price * i.quantity, 0);
+  pushEvent({
+    event: 'view_item_stape',
+    event_id: eventId,
+    ecommerce: { currency: CURRENCY, value: total, items },
+  });
+  fireFbq('ViewContent', metaParams(contentName, items, total), eventId);
+};
+
+// add_to_cart -> AddToCart (single product)
 export const gtmAddToCart = (product: any, quantity: number) => {
+  const eventId = genEventId();
   const price = getPrice(product);
+  const items = toItems([{ ...product, price, quantity }]);
+  const value = price * quantity;
   pushEvent({
     event: 'add_to_cart_stape',
-    ecommerce: {
-      currency: 'BDT',
-      value: price * quantity,
-      items: [{
-        item_id: product._id,
-        item_name: product.name,
-        price,
-        quantity,
-      }],
-    },
+    event_id: eventId,
+    ecommerce: { currency: CURRENCY, value, items },
   });
+  fireFbq('AddToCart', metaParams(product.name, items, value), eventId);
 };
 
+// add_to_cart -> AddToCart (group of items, e.g. "add whole bundle" buttons)
+export const gtmAddToCartItems = (contentName: string, source: any[], value?: number) => {
+  const eventId = genEventId();
+  const items = toItems(source);
+  const total = value ?? items.reduce((s, i) => s + i.price * i.quantity, 0);
+  pushEvent({
+    event: 'add_to_cart_stape',
+    event_id: eventId,
+    ecommerce: { currency: CURRENCY, value: total, items },
+  });
+  fireFbq('AddToCart', metaParams(contentName, items, total), eventId);
+};
+
+// begin_checkout -> InitiateCheckout
 export const gtmBeginCheckout = (cartItems: any[], total: number, userData: any = {}) => {
+  const eventId = genEventId();
+  const items = toItems(cartItems).map((it, index) => ({ ...it, index }));
   pushEvent({
     event: 'begin_checkout_stape',
+    event_id: eventId,
     user_data: getUserData(userData),
+    ecommerce: { currency: CURRENCY, value: total, items },
+  });
+  fireFbq('InitiateCheckout', metaParams(undefined, items, total, { num_items: items.length }), eventId);
+  return eventId;
+};
+
+// add_payment_info -> AddPaymentInfo
+export const gtmAddPaymentInfo = (cartItems: any[], total: number, paymentType?: string) => {
+  const eventId = genEventId();
+  const items = toItems(cartItems).map((it, index) => ({ ...it, index }));
+  pushEvent({
+    event: 'add_payment_info_stape',
+    event_id: eventId,
     ecommerce: {
-      currency: 'BDT',
+      currency: CURRENCY,
       value: total,
-      items: cartItems.map((item, idx) => ({
-        item_id: item._id,
-        item_name: item.name,
-        price: getPrice(item),
-        quantity: item.quantity || 1,
-        index: idx,
-      })),
+      ...(paymentType ? { payment_type: paymentType } : {}),
+      items,
     },
   });
+  fireFbq('AddPaymentInfo', metaParams(undefined, items, total), eventId);
 };
 
 export const gtmViewCart = (cartItems: any[], total: number) => {
+  const eventId = genEventId();
+  const items = toItems(cartItems).map((it, index) => ({ ...it, index }));
   pushEvent({
     event: 'view_cart_stape',
-    ecommerce: {
-      currency: 'BDT',
-      value: total,
-      items: cartItems.map((item, idx) => ({
-        item_id: item._id,
-        item_name: item.name,
-        price: getPrice(item),
-        quantity: item.quantity || 1,
-        index: idx,
-      })),
-    },
+    event_id: eventId,
+    ecommerce: { currency: CURRENCY, value: total, items },
   });
 };
 
 export const gtmSearch = (searchTerm: string, results: any[]) => {
+  const eventId = genEventId();
   pushEvent({
     event: 'search_submitted_stape',
+    event_id: eventId,
     ecommerce: {
-      currency: 'BDT',
+      currency: CURRENCY,
       search_term: searchTerm,
-      items: results.slice(0, 10).map((item, idx) => ({
-        item_id: item._id,
-        item_name: item.name,
-        price: getPrice(item),
-        index: idx,
-      })),
+      items: toItems(results.slice(0, 10)).map((it, index) => ({ ...it, index })),
     },
   });
 };
 
+// purchase -> Purchase. event_id = transaction id (NOT a UUID) so it dedupes
+// with the server-side recovery that also keys on the order id.
 export const gtmPurchase = (order: any) => {
   const transactionId = String(order.orderId || order._id || '');
   if (!transactionId || wasPurchaseTracked(transactionId)) return;
 
+  const items = toItems(order.orderedItems || []).map((it, index) => ({ ...it, index }));
+  const value = order.grandTotal;
   pushEvent({
     event: 'purchase_stape',
     event_id: transactionId, // dedup key for GA4 + Meta CAPI (must equal transaction_id)
     user_data: getUserData(order),
     ecommerce: {
       transaction_id: transactionId,
-      value: order.grandTotal,
-      currency: 'BDT',
+      value,
+      currency: CURRENCY,
       shipping: order.deliveryCharge || 0,
-      items: (order.orderedItems || []).map((item: any, idx: number) => ({
-        item_id: item._id,
-        item_name: item.name,
-        price: getPrice(item),
-        quantity: item.quantity || 1,
-        index: idx,
-      })),
+      items,
     },
   });
+  fireFbq('Purchase', metaParams(undefined, items, value), transactionId);
 };

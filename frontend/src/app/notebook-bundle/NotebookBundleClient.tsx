@@ -16,12 +16,7 @@ import {
   getPaidNotebookQty,
   remainingForThreshold,
 } from '@/lib/notebookOffer';
-
-declare global {
-  interface Window {
-    fbq?: (event: string, name: string, params?: Record<string, unknown>) => void;
-  }
-}
+import { gtmViewContent, gtmAddToCart } from '@/lib/gtm';
 
 const NOTEBOOK_TAG = 'notebook';
 const NOTEBOOK_COLLECTION_SIZE = 3;
@@ -278,10 +273,15 @@ export default function NotebookBundleClient() {
     };
 
     fetchNotebookProducts();
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'ViewContent', { content_name: 'Notebook Bundle', content_type: 'product_group' });
-    }
   }, []);
+
+  // ViewContent twin (GA4 view_item -> sGTM + Meta pixel, shared event_id) once products load.
+  const viewContentFired = useRef(false);
+  useEffect(() => {
+    if (viewContentFired.current || products.length === 0) return;
+    viewContentFired.current = true;
+    gtmViewContent('Notebook Bundle', products.map((p) => ({ ...p, quantity: 1 })));
+  }, [products]);
 
   // Bundle section visibility
   useEffect(() => {
@@ -329,9 +329,8 @@ export default function NotebookBundleClient() {
   const handleAddToCart = (product: Product, qty = 1) => {
     addItem(product, qty);
     toast.success(`${qty} টি ${product.name} কার্টে যোগ হয়েছে!`);
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'AddToCart', { content_name: product.name, content_ids: [product._id], content_type: 'product', quantity: qty, currency: 'BDT' });
-    }
+    // AddToCart twin: GA4 add_to_cart -> sGTM + Meta pixel, one shared event_id.
+    gtmAddToCart(product, qty);
   };
 
   const activePhoto = activePhotoIndex === null ? null : REAL_NOTEBOOK_PHOTOS[activePhotoIndex];

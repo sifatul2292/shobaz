@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
-import { gtmBeginCheckout } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmAddPaymentInfo } from '@/lib/gtm';
 import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
@@ -358,8 +358,9 @@ export default function CheckoutPage() {
     beginCheckoutTracked.current = true;
     const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
     const total = getTotalPrice();
-    gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
-    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name, formData.email);
+    // Shared event_id across browser pixel + GA4-to-sGTM twin + direct CAPI so Meta dedupes to one.
+    const checkoutEventId = gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
+    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name, formData.email, checkoutEventId);
     phBeginCheckout(cartProducts, total);
   }, [mounted, items, getTotalPrice, formData.name, formData.phone]);
 
@@ -437,6 +438,9 @@ export default function CheckoutPage() {
     try {
       const shipping = deliveryFee;
       const total = subtotal + shipping;
+      // AddPaymentInfo twin: GA4 add_payment_info -> sGTM + Meta pixel, one shared event_id.
+      // COD-only checkout: payment intent is committed at order submission.
+      gtmAddPaymentInfo(items.map(i => ({ ...i.product, quantity: i.quantity })), total, 'cod');
       const orderedItems = items.map(item => {
         if (item.isFreeGift) {
           // Free notebook — zero priced so it never adds to subtotal/grandTotal.
