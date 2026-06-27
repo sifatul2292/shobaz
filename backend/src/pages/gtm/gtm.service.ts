@@ -26,29 +26,6 @@ import { Setting } from '../customization/setting/interface/setting.interface';
 export class GtmService {
   private logger = new Logger(GtmService.name);
 
-  // Non-browser traffic that must NOT generate a server PageView (bots, crawlers,
-  // link previews, headless tooling, server-side HTTP clients).
-  private readonly NON_BROWSER_UA_REGEX =
-    /bot|crawl|spider|slurp|headless|monitor|preview|facebookexternalhit|googlebot|bingbot|ahrefs|semrush|petalbot|yandex|curl|wget|python-requests|node-fetch|axios/i;
-
-  /**
-   * Gate the server-side PageView send to real browser traffic only.
-   * Skip (return true) when the request is a bot/crawler by User-Agent OR is
-   * missing the `_fbp` cookie (set by the browser Meta Pixel on real sessions).
-   * Scope: PageView only — conversion events are unaffected.
-   */
-  private isNonBrowserPageView(req: Request): boolean {
-    const userAgent = String(req.headers['user-agent'] || '');
-    if (!userAgent || this.NON_BROWSER_UA_REGEX.test(userAgent)) {
-      return true;
-    }
-    const cookieHeader = String(req.headers['cookie'] || '');
-    if (!/(?:^|;\s*)_fbp=/.test(cookieHeader)) {
-      return true;
-    }
-    return false;
-  }
-
   constructor(
     @InjectModel('Setting')
     private readonly settingModel: Model<Setting>,
@@ -78,94 +55,20 @@ export class GtmService {
     addGtmPageViewDto: AddGtmThemePageViewDto,
   ): Promise<ResponsePayload> {
     try {
-      // Skip the Meta CAPI PageView for bot/non-browser traffic. No HTTP call,
-      // no DB read — kills the rogue server PageView flood at the door.
-      if (this.isNonBrowserPageView(req)) {
-        return {
-          success: true,
-          message: 'Skipped PageView (non-browser request)',
-        } as ResponsePayload;
-      }
-
-      const fSetting = await this.settingModel.findOne().select('analytics');
-      if (
-        fSetting &&
-        fSetting.analytics &&
-        fSetting.analytics.facebookPixelId &&
-        fSetting.analytics.facebookPixelAccessToken
-      ) {
-        if (
-          !this.utilsService.isValidFacebookPixelId(
-            fSetting.analytics.facebookPixelId,
-          )
-        ) {
-          return {
-            success: false,
-            message: 'Sorry! Invalid Facebook Pixel ID',
-          } as ResponsePayload;
-        }
-
-        if (
-          !this.utilsService.isValidFacebookAccessTokenFormat(
-            fSetting.analytics.facebookPixelAccessToken,
-          )
-        ) {
-          return {
-            success: false,
-            message: 'Sorry! Invalid Facebook Access Token',
-          } as ResponsePayload;
-        }
-
-        const clientIpAddress = this.utilsService.getClientIp(req);
-        const clientUserAgent = req.headers['user-agent'];
-
-        const hostname = req.hostname || '';
-        console.log('Hostname: [PageView] ', hostname);
-        console.log('clientIpAddress', clientIpAddress);
-
-        const fbApiPayload: any = { ...addGtmPageViewDto };
-
-        // console.log('fbc from client:', addGtmPageViewDto);
-        // Ensure user_data exists
-        fbApiPayload.user_data = fbApiPayload.user_data || {};
-
-        fbApiPayload.user_data.em =
-          fbApiPayload.user_data.em && fbApiPayload.user_data.em !== 'null'
-            ? fbApiPayload.user_data.em
-            : undefined;
-        fbApiPayload.user_data.ph =
-          fbApiPayload.user_data.ph && fbApiPayload.user_data.ph !== 'null'
-            ? fbApiPayload.user_data.ph
-            : undefined;
-
-        fbApiPayload.user_data.client_ip_address = clientIpAddress || undefined;
-        fbApiPayload.user_data.client_user_agent = clientUserAgent || undefined;
-
-        let payloadData = {};
-        if (
-          fSetting.analytics.isEnablePixelTestEvent &&
-          fSetting.analytics.facebookPixelTestEventId
-        ) {
-          payloadData = {
-            data: [fbApiPayload],
-            test_event_code: fSetting.analytics.facebookPixelTestEventId,
-          };
-        } else {
-          payloadData = { data: [fbApiPayload] };
-        }
-        console.log('payloadData', payloadData);
-        const result = await this.analyticsService.trackFbConversionEventClient(
-          fSetting.analytics.facebookPixelId,
-          fSetting.analytics.facebookPixelAccessToken,
-          payloadData,
-        );
-
-        console.log('result', result);
-      }
-
+      // The browser Meta Pixel already fires PageView; this server-side CAPI
+      // PageView is redundant and was the source of the Meta dataset flood.
+      // Hard-disabled. The unique log line below is a DEPLOY PROOF: if you
+      // still see PageView spam in Meta but DON'T see "[PAGEVIEW-GATE v2]" in
+      // the backend logs, the spam is NOT coming from this backend (check
+      // sGTM/Stape server container instead).
+      const ua = String(req.headers['user-agent'] || '');
+      const hasFbp = /(?:^|;\s*)_fbp=/.test(String(req.headers['cookie'] || ''));
+      this.logger.warn(
+        `[PAGEVIEW-GATE v2] server PageView blocked. ua="${ua}" _fbp=${hasFbp}`,
+      );
       return {
         success: true,
-        message: 'Success',
+        message: 'PageView skipped (server-side PageView disabled)',
       } as ResponsePayload;
     } catch (error) {
       console.log(error);
