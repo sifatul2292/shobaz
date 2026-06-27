@@ -26,6 +26,29 @@ import { Setting } from '../customization/setting/interface/setting.interface';
 export class GtmService {
   private logger = new Logger(GtmService.name);
 
+  // Non-browser traffic that must NOT generate a server PageView (bots, crawlers,
+  // link previews, headless tooling, server-side HTTP clients).
+  private readonly NON_BROWSER_UA_REGEX =
+    /bot|crawl|spider|slurp|headless|monitor|preview|facebookexternalhit|googlebot|bingbot|ahrefs|semrush|petalbot|yandex|curl|wget|python-requests|node-fetch|axios/i;
+
+  /**
+   * Gate the server-side PageView send to real browser traffic only.
+   * Skip (return true) when the request is a bot/crawler by User-Agent OR is
+   * missing the `_fbp` cookie (set by the browser Meta Pixel on real sessions).
+   * Scope: PageView only — conversion events are unaffected.
+   */
+  private isNonBrowserPageView(req: Request): boolean {
+    const userAgent = String(req.headers['user-agent'] || '');
+    if (!userAgent || this.NON_BROWSER_UA_REGEX.test(userAgent)) {
+      return true;
+    }
+    const cookieHeader = String(req.headers['cookie'] || '');
+    if (!/(?:^|;\s*)_fbp=/.test(cookieHeader)) {
+      return true;
+    }
+    return false;
+  }
+
   constructor(
     @InjectModel('Setting')
     private readonly settingModel: Model<Setting>,
@@ -55,6 +78,15 @@ export class GtmService {
     addGtmPageViewDto: AddGtmThemePageViewDto,
   ): Promise<ResponsePayload> {
     try {
+      // Skip the Meta CAPI PageView for bot/non-browser traffic. No HTTP call,
+      // no DB read — kills the rogue server PageView flood at the door.
+      if (this.isNonBrowserPageView(req)) {
+        return {
+          success: true,
+          message: 'Skipped PageView (non-browser request)',
+        } as ResponsePayload;
+      }
+
       const fSetting = await this.settingModel.findOne().select('analytics');
       if (
         fSetting &&
