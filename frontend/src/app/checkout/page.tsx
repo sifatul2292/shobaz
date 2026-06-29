@@ -12,7 +12,6 @@ import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { hasNotebookTag } from '@/lib/notebookOffer';
 
 // ── Design tokens ─────────────────────────────────────────────────────
 const PRIMARY = '#16a34a';
@@ -380,18 +379,14 @@ export default function CheckoutPage() {
     // weight exceeds all rules — use last rule's cost
     return rules[rules.length - 1].cost;
   };
-  // Notebook free-shipping: 3+ notebook-tagged items -> delivery is free
-  const notebookQty = items.reduce((count, item) => {
-    if (!item.isFreeGift && hasNotebookTag(item.product)) return count + item.quantity;
-    return count;
-  }, 0);
-  const notebookFreeShipping = notebookQty >= 3;
+  // Notebook free-shipping removed: delivery charge must never be zero
+  const notebookFreeShipping = false;
 
   const baseDeliveryFee = deliveryLocation === 'inside'
     ? calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)
     : calcWeightFee(shippingCharge?.outsideDhakaRules, outsideFee);
   const deliveryFee = notebookFreeShipping ? 0 : baseDeliveryFee;
-  console.log('[WEIGHT] totalWeightGrams:', totalWeightGrams, '| deliveryFee:', deliveryFee, '| notebookQty:', notebookQty, '| location:', deliveryLocation);
+  console.log('[WEIGHT] totalWeightGrams:', totalWeightGrams, '| deliveryFee:', deliveryFee, '| location:', deliveryLocation);
   const deliveryLabel = deliveryLocation === 'inside' ? 'ঢাকার ভিতরে' : 'ঢাকার বাইরে';
   const subtotal = getTotalPrice();
   const grandTotal = subtotal + deliveryFee;
