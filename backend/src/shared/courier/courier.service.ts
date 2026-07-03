@@ -352,32 +352,56 @@ export class CourierService {
   }
 
   async getMetroWingsCities(): Promise<any[]> {
-    const res = await firstValueFrom(
-      this.httpService.get(`${this.metrowingsBaseUrl}/v1/city-list`, {
-        headers: { Accept: 'application/json' },
-      }),
-    );
-    return res.data?.data?.data || [];
+    try {
+      const res = await firstValueFrom(
+        this.httpService.get(`${this.metrowingsBaseUrl}/v1/city-list`, {
+          headers: { Accept: 'application/json' },
+        }),
+      );
+      return res.data?.data?.data || [];
+    } catch (err) {
+      console.error(
+        'MetroWings city-list fetch error:',
+        err?.response?.data || err.message,
+      );
+      return [];
+    }
   }
 
   async getMetroWingsZones(cityId: number): Promise<any[]> {
-    const res = await firstValueFrom(
-      this.httpService.get(
-        `${this.metrowingsBaseUrl}/v1/cities/${cityId}/zones`,
-        { headers: { Accept: 'application/json' } },
-      ),
-    );
-    return res.data?.data?.data || [];
+    try {
+      const res = await firstValueFrom(
+        this.httpService.get(
+          `${this.metrowingsBaseUrl}/v1/cities/${cityId}/zones`,
+          { headers: { Accept: 'application/json' } },
+        ),
+      );
+      return res.data?.data?.data || [];
+    } catch (err) {
+      console.error(
+        `MetroWings zones fetch error (city ${cityId}):`,
+        err?.response?.data || err.message,
+      );
+      return [];
+    }
   }
 
   async getMetroWingsAreas(zoneId: number): Promise<any[]> {
-    const res = await firstValueFrom(
-      this.httpService.get(
-        `${this.metrowingsBaseUrl}/v1/zones/${zoneId}/areas`,
-        { headers: { Accept: 'application/json' } },
-      ),
-    );
-    return res.data?.data?.data || [];
+    try {
+      const res = await firstValueFrom(
+        this.httpService.get(
+          `${this.metrowingsBaseUrl}/v1/zones/${zoneId}/areas`,
+          { headers: { Accept: 'application/json' } },
+        ),
+      );
+      return res.data?.data?.data || [];
+    } catch (err) {
+      console.error(
+        `MetroWings areas fetch error (zone ${zoneId}):`,
+        err?.response?.data || err.message,
+      );
+      return [];
+    }
   }
 
   async resolveMetroWingsLocation(
