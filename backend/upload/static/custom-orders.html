@@ -1233,6 +1233,8 @@
           <div class="mic-value" id="modalCustomerName">—</div>
           <div class="mic-label" style="margin-top:8px">Phone</div>
           <div class="mic-value" id="modalPhone">—</div>
+          <div class="mic-label" style="margin-top:8px" id="modalEmailLabel" hidden>Email</div>
+          <div class="mic-value" id="modalEmail" hidden>—</div>
         </div>
         <div class="modal-info-card">
           <div class="mic-icon green"><i class="fas fa-map-marker-alt"></i></div>
@@ -1985,6 +1987,17 @@
     document.getElementById('modalPhone').innerHTML = phone
       ? '<a href="tel:' + esc(phone) + '"><i class="fas fa-phone" style="font-size:10px;margin-right:4px"></i>' + esc(phone) + '</a>'
       : '—';
+    var email = order.email || '';
+    var emailLabel = document.getElementById('modalEmailLabel');
+    var emailEl = document.getElementById('modalEmail');
+    if (email && emailLabel && emailEl) {
+      emailLabel.removeAttribute('hidden');
+      emailEl.removeAttribute('hidden');
+      emailEl.innerHTML = '<a href="mailto:' + esc(email) + '" style="color:#0284c7;text-decoration:none"><i class="fas fa-envelope" style="font-size:10px;margin-right:4px"></i>' + esc(email) + '</a>';
+    } else if (emailLabel && emailEl) {
+      emailLabel.setAttribute('hidden', '');
+      emailEl.setAttribute('hidden', '');
+    }
 
     // Address card
     document.getElementById('modalAddress').textContent = order.shippingAddress || order.address || '—';
@@ -2291,7 +2304,6 @@
 
   /* ── Send to Courier ── */
   window.sendToCourier = function (id) {
-    if (!confirm('Send this order to courier?')) return;
     // Step 1: Always update status to Confirmed (8) immediately
     fetch(API + '/api/order/update/' + id, {
       method: 'PUT',
