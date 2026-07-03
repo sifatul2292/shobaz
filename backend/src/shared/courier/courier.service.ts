@@ -495,7 +495,11 @@ export class CourierService {
       delivery_type: order?.deliveryType === 'express' ? 12 : 48,
       special_instruction: specialInstruction || '',
       item_desc:
-        order?.orderedItems?.map((item) => item.name).join(', ') || '',
+        order?.orderedItems
+          ?.map((item) =>
+            item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name,
+          )
+          .join(', ') || '',
     };
 
     const res = await firstValueFrom(
