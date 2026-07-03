@@ -2,13 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, VersioningType } from '@nestjs/common';
 import { json, urlencoded } from 'express';
-import { join } from 'path';
+import { basename, join } from 'path';
 import * as express from 'express';
 import * as compression from 'compression';
 import { SpaFilter } from './spa.filter';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { cors: true });
+  // Trust reverse proxy (Cloudflare/nginx) so forwarded client IP headers are honored.
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
   // Allow Cors
   app.enableCors({
     origin: [
@@ -57,12 +59,38 @@ async function bootstrap() {
   // Serve Angular admin SPA — must be registered BEFORE setGlobalPrefix/NestJS router
   // so these middleware run first and non-API paths never reach NestJS's 404 handler.
   const adminDist = join(__dirname, '..', '..', 'admin', 'dist', 'angular-ui');
-  app.use(express.static(adminDist));
+  app.use(
+    express.static(adminDist, {
+      setHeaders: (res, filePath) => {
+        const fileName = basename(filePath);
+
+        if (fileName === 'index.html') {
+          res.setHeader('Cache-Control', 'no-store');
+          return;
+        }
+
+        if (/\.[a-f0-9]{8,}\.(js|css)$/.test(fileName)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          return;
+        }
+
+        if (/\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf|eot)$/i.test(fileName)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          return;
+        }
+
+        if (/\.(js|css)$/i.test(fileName)) {
+          res.setHeader('Cache-Control', 'public, max-age=300');
+        }
+      },
+    }),
+  );
   app.use((req: any, res: any, next: any) => {
     const p: string = req.path;
     if (p.startsWith('/api') || p.startsWith('/upload') || p.startsWith('/invoice') || /\.\w+$/.test(p)) {
       return next();
     }
+    res.setHeader('Cache-Control', 'no-store');
     res.sendFile(join(adminDist, 'index.html'), (err) => {
       if (err) next(err);
     });

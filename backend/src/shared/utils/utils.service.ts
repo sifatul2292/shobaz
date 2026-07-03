@@ -86,21 +86,28 @@ export class UtilsService {
   }
 
   getClientIp(req: Request): string | undefined {
-    const xff = (req.headers['x-forwarded-for'] ||
-      req.headers['cf-connecting-ip'] ||
+    // Cloudflare/edge real-client headers first; XFF can be a proxy chain.
+    const raw = (req.headers['cf-connecting-ip'] ||
+      req.headers['true-client-ip'] ||
+      req.headers['x-forwarded-for'] ||
+      req.socket?.remoteAddress ||
       '') as string;
-    const remote = (req.socket?.remoteAddress || '') as string;
 
-    const candidates = String(xff || remote)
+    // strip IPv4-mapped IPv6 prefix (::ffff:1.2.3.4 -> 1.2.3.4)
+    const norm = (ip: string): string => ip.replace(/^::ffff:/i, '');
+
+    const candidates = String(raw)
       .split(',')
-      .map((s) => s.trim())
+      .map((s) => norm(s.trim()))
       .filter(Boolean);
 
-    // প্রথম public IP
-    for (const ip of candidates) {
-      if (!this.isPrivateOrLoopback(ip)) return ip;
-    }
-    return undefined;
+    const publicIps = candidates.filter(
+      (ip) => !this.isPrivateOrLoopback(ip),
+    );
+
+    // Prefer IPv6 so server CAPI matches the IPv6 the browser pixel sends.
+    const v6 = publicIps.find((ip) => ip.includes(':'));
+    return v6 || publicIps[0] || undefined;
   }
   private isPrivateOrLoopback(ip: string): boolean {
     // খুব সরল চেক; চাইলে আরও রোবাস্ট প্যাকেজ ব্যবহার করতে পারেন (e.g., ipaddr.js)
@@ -415,31 +422,6 @@ export class UtilsService {
     writeStream.on('error', (err) => {
       console.error('Error generating PDF:', err);
     });
-  }
-  isValidFacebookPixelId(pixelId: string): boolean {
-    if (!pixelId || typeof pixelId !== 'string') return false;
-
-    // Check: Only digits and at least 10-20 characters long
-    const pixelIdRegex = /^\d{10,20}$/;
-
-    return pixelIdRegex.test(pixelId);
-  }
-  isValidFacebookAccessTokenFormat(token: string) {
-    if (!token || typeof token !== 'string') return false;
-
-    // Must start with EAA or EAAB/EAAC... (valid Facebook app token prefix)
-    const validPrefixes = ['EAA', 'EAAB', 'EAAC', 'EAAD', 'EAAF', 'EAAG'];
-    const startsWithValidPrefix = validPrefixes.some((prefix) =>
-      token.startsWith(prefix),
-    );
-
-    // Check if token is reasonably long (to avoid short or malformed tokens)
-    const isLengthValid = token.length >= 100;
-
-    // Check for invalid characters (spaces, control characters)
-    const hasInvalidCharacters = /\s/.test(token);
-
-    return startsWithValidPrefix && isLengthValid && !hasInvalidCharacters;
   }
   calculateDiscount(item, type) {
     const { discountType, discountAmount, salePrice, quantity } = item;

@@ -6,7 +6,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
-import { capiViewContent, capiAddToCart } from '@/lib/capi';
 import { phViewItem, phAddToCart } from '@/lib/posthog';
 import { Product, ShippingCharge, Review } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
@@ -250,7 +249,6 @@ export default function ProductDetailClient({ params }: Props) {
         document.title = `${productData.name} | Shobaz`;
         gtmViewItem(productData);
         phViewItem(productData);
-        capiViewContent(productData);
 
         if (relatedRes.data?.data) {
           let allProducts = relatedRes.data.data;
@@ -323,7 +321,6 @@ export default function ProductDetailClient({ params }: Props) {
     if (product) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
-      capiAddToCart(product, quantity);
       phAddToCart(product, quantity);
       toast.success('কার্টে যোগ হয়েছে');
     }
@@ -333,7 +330,6 @@ export default function ProductDetailClient({ params }: Props) {
     if (product) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
-      capiAddToCart(product, quantity);
       phAddToCart(product, quantity);
       window.location.href = '/checkout';
     }

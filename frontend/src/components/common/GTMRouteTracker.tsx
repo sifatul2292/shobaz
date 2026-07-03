@@ -11,7 +11,8 @@ export default function GTMRouteTracker() {
   useEffect(() => {
     // Small delay to let Next.js update document.title before we read it
     const timer = setTimeout(() => {
-      // Fires page_view_stape (GA4 -> sGTM) + Meta PageView with one shared event_id.
+      // Pushes page_view to dataLayer; Tagioo web/server containers forward to
+      // GA4 and fire Meta PageView from this same event.
       gtmPageView(pathname);
     }, 300);
     return () => clearTimeout(timer);

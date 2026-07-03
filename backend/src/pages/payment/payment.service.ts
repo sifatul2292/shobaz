@@ -184,6 +184,8 @@ export class PaymentService {
                 paidAmount: Number(response.amount ?? 0),
               },
             );
+            // Server-side purchase recovery — fire-and-forget, no await.
+            this.reportPaidOrderToSgtm(order);
           }
           // for (const f of order['packages']) {
           //   for (const g of f['orderItems']) {
@@ -396,6 +398,8 @@ export class PaymentService {
           await this.orderModel.findByIdAndUpdate(orderData._id, {
             paymentStatus: 'paid',
           });
+          // Server-side purchase recovery — fire-and-forget, no await.
+          this.reportPaidOrderToSgtm(orderData);
           // Sent SMS to User
           const message = `Hi ${orderData.name} \nThanks for Shopping with redgrocer.com. Please wait for confirmation.`;
           this.bulkSmsService.sentSingleSms(orderData.phoneNo, message);
@@ -436,5 +440,60 @@ export class PaymentService {
       console.warn(error);
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  /**
+   * Server-side purchase recovery.
+   * POSTs every paid order to the sGTM panel webhook (server-to-server) so
+   * purchases blocked client-side (Brave Shields / iOS / adblock) still reach
+   * Meta CAPI. Deduped against the browser pixel by order_id.
+   *
+   * Fire-and-forget: callers MUST NOT await this. A network hiccup to the panel
+   * must never slow or break the buyer's payment confirmation.
+   */
+  private reportPaidOrderToSgtm(order: Order): void {
+    // order_id MUST equal the browser pixel's transaction_id/event_id so Meta
+    // dedups to a single Purchase. Browser sends String(order.orderId || order._id).
+    const orderId = String(order.orderId || order._id || '');
+    const url = this.configService.get<string>('sgtmPanelOrderWebhookUrl');
+    const secret = this.configService.get<string>(
+      'sgtmPanelOrderWebhookSecret',
+    );
+    const tenantId = this.configService.get<string>('sgtmPanelTenantId');
+
+    if (!url || !secret || !tenantId || !orderId) {
+      this.logger.warn(
+        '[sgtm] order report skipped: missing url/secret/tenantId/orderId',
+      );
+      return;
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-order-webhook-secret': secret,
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        tenant_id: tenantId,
+        amount: order.grandTotal,
+        currency: 'BDT',
+        created_at: new Date().toISOString(),
+        order_type: 'online',
+        status: 'paid',
+      }),
+    })
+      .then(async (res) => {
+        if (res.status !== 202) {
+          this.logger.warn(
+            `[sgtm] order report failed ${res.status} ${await res.text()}`,
+          );
+        }
+      })
+      .catch((err) => {
+        // fire-and-forget, never block checkout
+        this.logger.warn(`[sgtm] order report error ${err?.message}`);
+      });
   }
 }

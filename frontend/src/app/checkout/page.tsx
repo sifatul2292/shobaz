@@ -8,7 +8,6 @@ import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import api, { imgUrl } from '@/lib/api';
 import { gtmBeginCheckout, gtmAddPaymentInfo } from '@/lib/gtm';
-import { capiInitiateCheckout } from '@/lib/capi';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -357,9 +356,8 @@ export default function CheckoutPage() {
     beginCheckoutTracked.current = true;
     const cartProducts = items.map(i => ({ ...i.product, quantity: i.quantity }));
     const total = getTotalPrice();
-    // Shared event_id across browser pixel + GA4-to-sGTM twin + direct CAPI so Meta dedupes to one.
-    const checkoutEventId = gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
-    capiInitiateCheckout(cartProducts, total, formData.phone, formData.name, formData.email, checkoutEventId);
+    // event_id shared with Tagioo's GA4-forwarded browser pixel + server CAPI tags.
+    gtmBeginCheckout(cartProducts, total, { name: formData.name, phone: formData.phone });
     phBeginCheckout(cartProducts, total);
   }, [mounted, items, getTotalPrice, formData.name, formData.phone]);
 

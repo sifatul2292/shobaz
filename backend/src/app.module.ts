@@ -62,8 +62,6 @@ import { SitemapModule } from './pages/sitemap/sitemap.module';
 import { RedirectUrlModule } from './pages/redirect-url/redirect-url.module';
 import { SettingModule } from './pages/customization/setting/setting.module';
 import { FbCatalogModule } from './shared/fb-catalog/fb-catalog.module';
-import { AnalyticsModule } from './shared/analytics/analytics.module';
-import { GtmModule } from './pages/gtm/gtm.module';
 import { CourierModule } from './shared/courier/courier.module';
 import { PreOrderModule } from './pages/pre-order/pre-order.module';
 import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
@@ -136,8 +134,6 @@ import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
     SitemapModule,
     RedirectUrlModule,
     SettingModule,
-    AnalyticsModule,
-    GtmModule,
     FbCatalogModule,
     CourierModule,
     PreOrderModule,

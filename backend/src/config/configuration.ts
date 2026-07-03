@@ -58,4 +58,5 @@ export default () => ({
   sgtmPanelOrderWebhookUrl: process.env.SGTM_PANEL_ORDER_WEBHOOK_URL || '',
   sgtmPanelOrderWebhookSecret:
     process.env.SGTM_PANEL_ORDER_WEBHOOK_SECRET || '',
+  sgtmPanelTenantId: process.env.SGTM_PANEL_TENANT_ID || '',
 });

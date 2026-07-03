@@ -1,7 +1,6 @@
 declare global {
   interface Window {
     dataLayer: any[];
-    fbq?: (...args: any[]) => void;
   }
 }
 
@@ -56,7 +55,8 @@ const pageContext = () =>
     ? {}
     : { page_location: window.location.href, page_title: document.title };
 
-// Normalized line item shape used to build both GA4 items and Meta contents.
+// Normalized line item shape used to build GA4 items (Tagioo's web/server
+// containers derive Meta content_ids/contents from this same ecommerce.items).
 type LineItem = { item_id: string; item_name: string; price: number; quantity: number };
 
 const toItems = (source: any[]): LineItem[] =>
@@ -67,27 +67,6 @@ const toItems = (source: any[]): LineItem[] =>
     quantity: item.quantity || 1,
   }));
 
-// Mirror GA4 ecommerce items into Meta pixel params.
-const metaParams = (
-  contentName: string | undefined,
-  items: LineItem[],
-  value: number,
-  extra: Record<string, unknown> = {},
-) => ({
-  ...(contentName ? { content_name: contentName } : {}),
-  content_type: 'product',
-  content_ids: items.map((i) => i.item_id),
-  contents: items.map((i) => ({ id: i.item_id, quantity: i.quantity, item_price: i.price })),
-  currency: CURRENCY,
-  value,
-  ...extra,
-});
-
-const fireFbq = (metaName: string, params: Record<string, unknown>, eventId: string) => {
-  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
-  window.fbq('track', metaName, params, { eventID: eventId });
-};
-
 export const pushEvent = (event: object) => {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer || [];
@@ -95,90 +74,84 @@ export const pushEvent = (event: object) => {
   window.dataLayer.push({ ...pageContext(), ...event });
 };
 
-// page_view -> PageView
+// page_view -> Tagioo web container forwards to GA4 + fires Meta PageView (DOM_READY tag).
 export const gtmPageView = (pathname?: string) => {
   const eventId = genEventId();
   pushEvent({
-    event: 'page_view_stape',
+    event: 'page_view',
     event_id: eventId,
     ...(pathname ? { page_path: pathname } : {}),
   });
-  fireFbq('PageView', {}, eventId);
 };
 
-// view_item -> ViewContent (single product, e.g. product detail page)
+// view_item -> Tagioo GA4 + Meta ViewContent tags (single product, e.g. product detail page)
 export const gtmViewItem = (product: any) => {
   const eventId = genEventId();
   const items = toItems([{ ...product, price: getPrice(product), quantity: 1 }]);
   const value = items[0]?.price ?? 0;
   pushEvent({
-    event: 'view_item_stape',
+    event: 'view_item',
     event_id: eventId,
     ecommerce: { currency: CURRENCY, value, items },
   });
-  fireFbq('ViewContent', metaParams(product.name, items, value), eventId);
 };
 
-// view_item -> ViewContent (group of items, e.g. bundle landing pages)
+// view_item -> Tagioo GA4 + Meta ViewContent tags (group of items, e.g. bundle landing pages)
 export const gtmViewContent = (contentName: string, source: any[], value?: number) => {
   const eventId = genEventId();
   const items = toItems(source);
   const total = value ?? items.reduce((s, i) => s + i.price * i.quantity, 0);
   pushEvent({
-    event: 'view_item_stape',
+    event: 'view_item',
     event_id: eventId,
     ecommerce: { currency: CURRENCY, value: total, items },
   });
-  fireFbq('ViewContent', metaParams(contentName, items, total), eventId);
 };
 
-// add_to_cart -> AddToCart (single product)
+// add_to_cart -> Tagioo GA4 + Meta AddToCart tags (single product)
 export const gtmAddToCart = (product: any, quantity: number) => {
   const eventId = genEventId();
   const price = getPrice(product);
   const items = toItems([{ ...product, price, quantity }]);
   const value = price * quantity;
   pushEvent({
-    event: 'add_to_cart_stape',
+    event: 'add_to_cart',
     event_id: eventId,
     ecommerce: { currency: CURRENCY, value, items },
   });
-  fireFbq('AddToCart', metaParams(product.name, items, value), eventId);
 };
 
-// add_to_cart -> AddToCart (group of items, e.g. "add whole bundle" buttons)
+// add_to_cart -> Tagioo GA4 + Meta AddToCart tags (group of items, e.g. "add whole bundle" buttons)
 export const gtmAddToCartItems = (contentName: string, source: any[], value?: number) => {
   const eventId = genEventId();
   const items = toItems(source);
   const total = value ?? items.reduce((s, i) => s + i.price * i.quantity, 0);
   pushEvent({
-    event: 'add_to_cart_stape',
+    event: 'add_to_cart',
     event_id: eventId,
     ecommerce: { currency: CURRENCY, value: total, items },
   });
-  fireFbq('AddToCart', metaParams(contentName, items, total), eventId);
 };
 
-// begin_checkout -> InitiateCheckout
+// begin_checkout -> Tagioo GA4 + Meta InitiateCheckout tags
 export const gtmBeginCheckout = (cartItems: any[], total: number, userData: any = {}) => {
   const eventId = genEventId();
   const items = toItems(cartItems).map((it, index) => ({ ...it, index }));
   pushEvent({
-    event: 'begin_checkout_stape',
+    event: 'begin_checkout',
     event_id: eventId,
     user_data: getUserData(userData),
     ecommerce: { currency: CURRENCY, value: total, items },
   });
-  fireFbq('InitiateCheckout', metaParams(undefined, items, total, { num_items: items.length }), eventId);
   return eventId;
 };
 
-// add_payment_info -> AddPaymentInfo
+// add_payment_info -> Tagioo GA4 + Meta AddPaymentInfo tags
 export const gtmAddPaymentInfo = (cartItems: any[], total: number, paymentType?: string) => {
   const eventId = genEventId();
   const items = toItems(cartItems).map((it, index) => ({ ...it, index }));
   pushEvent({
-    event: 'add_payment_info_stape',
+    event: 'add_payment_info',
     event_id: eventId,
     ecommerce: {
       currency: CURRENCY,
@@ -187,7 +160,6 @@ export const gtmAddPaymentInfo = (cartItems: any[], total: number, paymentType?:
       items,
     },
   });
-  fireFbq('AddPaymentInfo', metaParams(undefined, items, total), eventId);
 };
 
 export const gtmViewCart = (cartItems: any[], total: number) => {
@@ -213,8 +185,10 @@ export const gtmSearch = (searchTerm: string, results: any[]) => {
   });
 };
 
-// purchase -> Purchase. event_id = transaction id (NOT a UUID) so it dedupes
-// with the server-side recovery that also keys on the order id.
+// purchase -> Tagioo GA4 + Meta Purchase tags (browser pixel + server CAPI both
+// owned by the Tagioo web/server containers now). event_id = transaction id
+// (NOT a UUID) so it dedupes with the sgtm order-recovery webhook, which also
+// keys on the order id.
 export const gtmPurchase = (order: any) => {
   const transactionId = String(order.orderId || order._id || '');
   if (!transactionId || wasPurchaseTracked(transactionId)) return;
@@ -222,7 +196,7 @@ export const gtmPurchase = (order: any) => {
   const items = toItems(order.orderedItems || []).map((it, index) => ({ ...it, index }));
   const value = order.grandTotal;
   pushEvent({
-    event: 'purchase_stape',
+    event: 'purchase',
     event_id: transactionId, // dedup key for GA4 + Meta CAPI (must equal transaction_id)
     user_data: getUserData(order),
     ecommerce: {
@@ -233,5 +207,4 @@ export const gtmPurchase = (order: any) => {
       items,
     },
   });
-  fireFbq('Purchase', metaParams(undefined, items, value), transactionId);
 };

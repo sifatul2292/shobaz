@@ -8,7 +8,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmPurchase } from '@/lib/gtm';
-import { capiPurchase } from '@/lib/capi';
 import { phPurchase } from '@/lib/posthog';
 import { FaCheckCircle, FaShoppingCart, FaBox, FaPhone, FaMapMarkerAlt, FaUser, FaEnvelope } from 'react-icons/fa';
 import { HiOutlineBookOpen } from 'react-icons/hi';
@@ -48,13 +47,12 @@ function OrderSuccessContent() {
             setOrder(orderData);
             document.title = 'Thank you Page - Shobaz';
             // Fire purchase exactly once per order. Guard by canonical order id so
-            // reloads / re-mounts never re-fire any tracker (GTM + Meta CAPI + PostHog).
+            // reloads / re-mounts never re-fire any tracker (GTM/Tagioo + PostHog).
             const txnId = String(orderData.orderId || orderData._id || '');
             const guardKey = `purchase_sent_${txnId}`;
             if (txnId && typeof window !== 'undefined' && !window.sessionStorage.getItem(guardKey)) {
               window.sessionStorage.setItem(guardKey, '1');
               gtmPurchase(orderData);
-              capiPurchase(orderData);
               phPurchase(orderData);
             }
           }
