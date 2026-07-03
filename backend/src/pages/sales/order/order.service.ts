@@ -1876,6 +1876,30 @@ async updateOrderById(
           }
         }
       }
+      if (courierMethod?.providerName === 'MetroWings Courier') {
+        if (fOrder?.courierData && fOrder?.courierData?.consignmentId) {
+        } else {
+          const courierResponse =
+            await this.courierService.createOrderWithProvider(
+              courierApiConfig,
+              fOrder,
+            );
+
+          if (courierResponse?.success === true) {
+            const orderCourierData = {
+              providerName: 'MetroWings Courier',
+              consignmentId: courierResponse?.data?.consignment_id,
+              trackingId: courierResponse?.data?.consignment_id,
+              createdAt: this.utilsService.getDateString(new Date()),
+            };
+            await this.orderModel.findByIdAndUpdate(id, {
+              $set: {
+                courierData: orderCourierData,
+              },
+            });
+          }
+        }
+      }
     }
   }
 
@@ -2043,6 +2067,30 @@ async updateOrderById(
                 providerName: 'Paperfly Courier',
                 trackingId: courierResponse?.success?.tracking_number,
                 consignmentId: courierResponse?.success?.tracking_number,
+                createdAt: this.utilsService.getDateString(new Date()),
+              };
+              await this.orderModel.findByIdAndUpdate(id, {
+                $set: {
+                  courierData: orderCourierData,
+                },
+              });
+            }
+          }
+        }
+        if (courierMethod?.providerName === 'MetroWings Courier') {
+          if (fOrder?.courierData && fOrder?.courierData?.consignmentId) {
+          } else {
+            const courierResponse =
+              await this.courierService.createOrderWithProvider(
+                courierApiConfig,
+                fOrder,
+              );
+
+            if (courierResponse?.success === true) {
+              const orderCourierData = {
+                providerName: 'MetroWings Courier',
+                consignmentId: courierResponse?.data?.consignment_id,
+                trackingId: courierResponse?.data?.consignment_id,
                 createdAt: this.utilsService.getDateString(new Date()),
               };
               await this.orderModel.findByIdAndUpdate(id, {
@@ -3067,6 +3115,29 @@ async updateOrderById(
             await this.orderModel.findByIdAndUpdate(order.id, {
               $set: {
                 orderStatus,
+              },
+            });
+          }
+          break;
+
+        case 'MetroWings Courier':
+          if (courierResponse?.success === true) {
+            const status = (
+              courierResponse?.data?.order_status || ''
+            ).toLowerCase();
+            if (status.includes('deliver')) {
+              orderStatus = 'delivered';
+            } else if (status.includes('cancel')) {
+              orderStatus = 'cancelled';
+            } else if (status.includes('return')) {
+              orderStatus = 'refunded';
+            } else {
+              orderStatus = courierResponse?.data?.order_status;
+            }
+
+            await this.orderModel.findByIdAndUpdate(order.id, {
+              $set: {
+                orderStatus: orderStatus,
               },
             });
           }

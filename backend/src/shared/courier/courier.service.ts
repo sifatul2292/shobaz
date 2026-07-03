@@ -184,6 +184,32 @@ export class CourierService {
             statusCode: error.response?.status || 500,
           };
         }
+
+      case 'MetroWings Courier':
+        try {
+          const rData = await this.createMetroWingsOrder(
+            payload,
+            username,
+            password,
+            storeId,
+            specialInstruction,
+          );
+
+          return rData;
+        } catch (error) {
+          console.error(
+            'MetroWings Courier API Error:',
+            error.response?.data || error.message,
+          );
+          return {
+            success: false,
+            message: `Failed to create order with MetroWings Courier: ${
+              error.response?.data?.message || error.message
+            }`,
+            statusCode: error.response?.status || 500,
+          };
+        }
+
       case 'Paperfly Courier':
         // console.log('Paperfly Courier');
         console.log(payload);
@@ -304,6 +330,151 @@ export class CourierService {
         details: errDetails,
       };
     }
+  }
+
+  private readonly metrowingsBaseUrl =
+    'https://merchant.metrowings.org/api/merchants';
+
+  async getMetroWingsToken(email: string, password: string): Promise<string> {
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `${this.metrowingsBaseUrl}/v1/login`,
+        { email, password },
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        },
+      ),
+    );
+    return response.data?.data?.token;
+  }
+
+  async getMetroWingsCities(): Promise<any[]> {
+    const res = await firstValueFrom(
+      this.httpService.get(`${this.metrowingsBaseUrl}/v1/city-list`, {
+        headers: { Accept: 'application/json' },
+      }),
+    );
+    return res.data?.data || [];
+  }
+
+  async getMetroWingsZones(cityId: number): Promise<any[]> {
+    const res = await firstValueFrom(
+      this.httpService.get(
+        `${this.metrowingsBaseUrl}/v1/cities/${cityId}/zones`,
+        { headers: { Accept: 'application/json' } },
+      ),
+    );
+    return res.data?.data || [];
+  }
+
+  async getMetroWingsAreas(zoneId: number): Promise<any[]> {
+    const res = await firstValueFrom(
+      this.httpService.get(
+        `${this.metrowingsBaseUrl}/v1/zones/${zoneId}/areas`,
+        { headers: { Accept: 'application/json' } },
+      ),
+    );
+    return res.data?.data || [];
+  }
+
+  async resolveMetroWingsLocation(
+    order: any,
+  ): Promise<{ city_id: number; zone_id: number; area_id?: number }> {
+    const fallbackId = 1;
+    const shippingAddress = (order?.shippingAddress || '').toLowerCase();
+    const divisionName = (order?.division?.name || '').toLowerCase();
+    const zoneName = (order?.zone?.name || '').toLowerCase();
+    const areaName = (order?.area?.name || '').toLowerCase();
+
+    const cities = await this.getMetroWingsCities();
+    const matchedCity =
+      cities.find(
+        (c) => divisionName && c.city_name.toLowerCase().includes(divisionName),
+      ) ||
+      cities.find((c) => shippingAddress.includes(c.city_name.toLowerCase()));
+    const city_id = matchedCity?.city_id || cities?.[0]?.city_id || fallbackId;
+
+    const zones = await this.getMetroWingsZones(city_id);
+    const matchedZone =
+      zones.find(
+        (z) => zoneName && z.zone_name.toLowerCase().includes(zoneName),
+      ) ||
+      zones.find((z) => shippingAddress.includes(z.zone_name.toLowerCase()));
+    const zone_id = matchedZone?.zone_id || zones?.[0]?.zone_id || fallbackId;
+
+    const areas = await this.getMetroWingsAreas(zone_id);
+    const matchedArea =
+      areas.find(
+        (a) => areaName && a.area_name.toLowerCase().includes(areaName),
+      ) ||
+      areas.find((a) => shippingAddress.includes(a.area_name.toLowerCase()));
+    const area_id = matchedArea?.area_id;
+
+    return { city_id, zone_id, area_id };
+  }
+
+  async createMetroWingsOrder(
+    order: any,
+    email: string,
+    password: string,
+    storeId: any,
+    specialInstruction: any,
+  ) {
+    const token = await this.getMetroWingsToken(email, password);
+    const { city_id, zone_id, area_id } =
+      await this.resolveMetroWingsLocation(order);
+
+    const getFullAddress = () => {
+      const parts = [
+        order?.shippingAddress,
+        order?.area?.name,
+        order?.zone?.name,
+        order?.division?.name,
+      ].filter(Boolean);
+      return parts.join(', ');
+    };
+
+    const cashOnDeliveryAmount = () => {
+      if (order?.paymentStatus === 'paid') {
+        return 0;
+      }
+      return order?.grandTotal ?? 0;
+    };
+
+    const payload = {
+      product_type: 2, // Parcel
+      store_id: storeId,
+      merchant_order_id: order?.orderId,
+      recipient_name: order?.name,
+      recipient_phone: order?.phoneNo,
+      recipient_address: getFullAddress(),
+      city_id,
+      zone_id,
+      area_id,
+      weight: this.computePathaoItemWeight(order?.orderedItems || []),
+      quantity:
+        order?.orderedItems?.reduce((sum, item) => sum + item.quantity, 0) ||
+        1,
+      amount_collect: cashOnDeliveryAmount(),
+      delivery_type: order?.deliveryType === 'express' ? 12 : 48,
+      special_instruction: specialInstruction || '',
+      item_desc:
+        order?.orderedItems?.map((item) => item.name).join(', ') || '',
+    };
+
+    const res = await firstValueFrom(
+      this.httpService.post(`${this.metrowingsBaseUrl}/v1/orders`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }),
+    );
+    return res.data;
   }
 
   computePathaoItemWeight(
@@ -650,6 +821,33 @@ export class CourierService {
           return {
             error: true,
             message: 'Pathao API call failed',
+            delivery_status: 'unknown',
+            details: error?.response?.data || error.message,
+          };
+        }
+
+      case 'MetroWings Courier':
+        try {
+          const token = await this.getMetroWingsToken(username, password);
+          const response = this.httpService.get(
+            `${this.metrowingsBaseUrl}/v1/orders/${consignmentId}/info`,
+            {
+              headers: {
+                Accept: 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          const res = await firstValueFrom(response);
+          return res.data;
+        } catch (error) {
+          console.error(
+            `[MetroWings Error] CID: ${consignmentId}`,
+            error?.response?.data || error.message,
+          );
+          return {
+            error: true,
+            message: 'MetroWings API call failed',
             delivery_status: 'unknown',
             details: error?.response?.data || error.message,
           };
