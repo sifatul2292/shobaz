@@ -357,7 +357,7 @@ export class CourierService {
         headers: { Accept: 'application/json' },
       }),
     );
-    return res.data?.data || [];
+    return res.data?.data?.data || [];
   }
 
   async getMetroWingsZones(cityId: number): Promise<any[]> {
@@ -367,7 +367,7 @@ export class CourierService {
         { headers: { Accept: 'application/json' } },
       ),
     );
-    return res.data?.data || [];
+    return res.data?.data?.data || [];
   }
 
   async getMetroWingsAreas(zoneId: number): Promise<any[]> {
@@ -377,7 +377,7 @@ export class CourierService {
         { headers: { Accept: 'application/json' } },
       ),
     );
-    return res.data?.data || [];
+    return res.data?.data?.data || [];
   }
 
   async resolveMetroWingsLocation(
