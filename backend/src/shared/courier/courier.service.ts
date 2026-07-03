@@ -457,8 +457,17 @@ export class CourierService {
         order?.area?.name,
         order?.zone?.name,
         order?.division?.name,
+        order?.city,
       ].filter(Boolean);
-      return parts.join(', ');
+      let address = parts.join(', ');
+      // MetroWings requires recipient_address to be at least 10 characters;
+      // some orders have very short shippingAddress text (e.g. "third floor")
+      if (address.length < 10) {
+        address = address
+          ? `${address}, Bangladesh`
+          : 'Address not provided, Bangladesh';
+      }
+      return address;
     };
 
     const cashOnDeliveryAmount = () => {
