@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Pin the Turbopack workspace root to this app. Without it Next 16 walks up
+  // and infers the repo (or home) directory as root, breaking node_modules
+  // resolution for CSS imports like `@import "tailwindcss"`.
+  turbopack: { root: __dirname },
   async rewrites() {
     return [
       {
