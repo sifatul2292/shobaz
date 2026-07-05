@@ -1,0 +1,14 @@
+{
+  "name": "shobaz-product-importer",
+  "version": "1.0.0",
+  "description": "Import products to Shobaz from an Excel file",
+  "scripts": {
+    "template": "node create-template.js",
+    "lookups": "node list-lookups.js",
+    "import": "node import.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "xlsx": "^0.18.5"
+  }
+}

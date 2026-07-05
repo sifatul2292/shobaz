@@ -42,8 +42,19 @@ logs/
 # Misc
 *.tgz
 .cache/
+*.bak
+
+# Build artifacts
+*.tsbuildinfo
+
+# Generated invoices
+backend/upload/invoice/
 
 # Config
 backend/.env
 frontend/.env
-frontend/.env.localdb-seed/
+db-seed/
+
+# Importer secrets
+tools/product-importer/config.js
+tools/product-importer/*.xlsx

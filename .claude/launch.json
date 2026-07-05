@@ -7,7 +7,7 @@
       "runtimeArgs": ["run", "dev", "--", "-p", "3006"],
       "port": 3006,
       "autoPort": false,
-      "cwd": "/Users/sifatulalamshohan/Documents/Shobaz/shobaz-local/frontend"
+      "cwd": "frontend"
     },
     {
       "name": "Backend",
