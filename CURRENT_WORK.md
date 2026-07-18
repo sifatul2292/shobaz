@@ -3,7 +3,7 @@
 Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 
 ## Branch
-`feature/notebook-free-gift-offer` (profit dashboard + data-loading fixes are pushed through `c08f36b`; stock management is currently uncommitted).
+`feature/notebook-free-gift-offer` (stock management is pushed through `fa2eff2`; incomplete-order persistence fix is currently uncommitted).
 
 ## Recently completed (merged history on this branch)
 - Higher-education consultancy landing page (`bad5b85`).
@@ -17,7 +17,13 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 - `tools/product-importer/` CLI committed and tracked; `frontend/package-lock.json` tracked.
 
 ## In progress
-Amolbooks-style stock management is implemented and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+
+## Incomplete-order persistence fix (2026-07-18)
+- Fixed Fraud Checker and Admin Note saves using the normal-order update endpoint while viewing incomplete orders. The page now routes those writes to `/api/order/update-incomplete-order-by-id/:id`, so they update the `incompleteorders` collection that reloads populate from.
+- Added shared response validation so the page no longer shows a false success when an update returns a non-2xx response, invalid JSON, or `success !== true`.
+- The backend incomplete update now returns the saved document and reports a missing record instead of returning success unconditionally.
+- End-to-end local smoke test created a disposable incomplete record, saved both fields via HTTP, reloaded it via HTTP, confirmed both persisted, and deleted the test record.
 
 ## Stock management (2026-07-18)
 - Added the Stock Management view to both served `custom-orders.html` copies with product search, low-stock filtering, summary counts, responsive product cards, stock +/- controls, debounced autosave, low-stock thresholds, restock entry, movement history, pagination, and demand metrics.
@@ -46,6 +52,10 @@ Amolbooks-style stock management is implemented and verified locally but remains
 - No unit coverage on `notebookOffer.ts` eligibility logic yet.
 
 ## Commands run this session + results
+- `cd backend && npm run build` after the incomplete-order persistence fix — passed.
+- Both custom-orders inline JavaScript copies parsed with `new Function`; `git diff --check` — passed.
+- Disposable-record save/reload smoke test for `adminNote` and `fraudChecker` — both persisted; test data removed afterward.
+- `cd backend && npm run lint` — still fails before linting because the configured glob is fully ignored; `npm test -- --runInBand` — no test files found.
 - `cd backend && npm run build` after the stock implementation — passed.
 - Authenticated stock API smoke test (`stock-list`, low/out summaries, movement history) — HTTP 200; 69 products and sales-metric fields returned.
 - Direct Mongo shape check — 69 products, 35 already stock-tracked; order product IDs are stored as ObjectIds and resolve to products. Latest local order is 2026-04-19.

@@ -1602,6 +1602,26 @@
     return h;
   }
 
+  function updateOrderRecord(mongoId, payload) {
+    var path = isIncompleteView
+      ? '/api/order/update-incomplete-order-by-id/'
+      : '/api/order/update/';
+    return fetch(API + path + mongoId, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    }).then(function (response) {
+      return response.json()
+        .catch(function () { return null; })
+        .then(function (body) {
+          if (!response.ok || !body || body.success !== true) {
+            throw new Error((body && body.message) || 'Update was not saved');
+          }
+          return body;
+        });
+    });
+  }
+
   /* ── Toast ── */
   var toastTimer;
   function showToast(msg, type) {
@@ -2083,14 +2103,12 @@
         btn2.classList.remove('loading');
         btn2.disabled = false;
         var msg = 'Orders: ' + info.total + ' | Success: ' + info.ratio.toFixed(2) + '%';
-        showToast(msg, info.ratio >= 80 ? 'success' : 'error');
-
-        // Persist result to the order so it survives page refresh
-        fetch(API + '/api/order/update/' + mongoId, {
-          method: 'PUT',
-          headers: authHeaders(),
-          body: JSON.stringify({ fraudChecker: d }),
-        }).catch(function () { /* silent — display already updated */ });
+        return updateOrderRecord(mongoId, { fraudChecker: d })
+          .then(function () {
+            var order = allOrdersById[String(mongoId)];
+            if (order) order.fraudChecker = d;
+            showToast(msg, info.ratio >= 80 ? 'success' : 'error');
+          });
       })
       .catch(function (err) {
         showToast('FraudSpy error: ' + err.message, 'error');
@@ -2124,15 +2142,13 @@
         '<span class="modal-fraud-chip mfc-ret">✗ Returned: <strong>' + (overall.returned||0) + '</strong></span>' +
         '<span class="mfc-ratio ' + rCls + '">' + ratio.toFixed(2) + '% success</span>';
       btn.textContent = 'Recheck';
-      showToast('Orders: ' + (overall.total||0) + ' | Success: ' + ratio.toFixed(2) + '%', ratio >= 80 ? 'success' : 'error');
-      // Persist
-      if (mongoId) fetch(API + '/api/order/update/' + mongoId, {
-        method: 'PUT', headers: authHeaders(),
-        body: JSON.stringify({ fraudChecker: d }),
-      }).catch(function(){});
-      // Sync row in table
-      var order = allOrdersById[String(mongoId)];
-      if (order) { order.fraudChecker = d; }
+      if (!mongoId) throw new Error('Order ID is missing');
+      return updateOrderRecord(mongoId, { fraudChecker: d })
+        .then(function () {
+          var order = allOrdersById[String(mongoId)];
+          if (order) order.fraudChecker = d;
+          showToast('Orders: ' + (overall.total||0) + ' | Success: ' + ratio.toFixed(2) + '%', ratio >= 80 ? 'success' : 'error');
+        });
     })
     .catch(function(err){ btn.textContent = 'Check'; btn.disabled = false; showToast('Error: ' + err.message, 'error'); });
   };
@@ -2578,13 +2594,8 @@
     saveBtn.onclick = function () {
       var val = textarea.value.trim();
       saveBtn.disabled = true; saveBtn.textContent = '…';
-      fetch(API + '/api/order/update/' + mongoId, {
-        method: 'PUT', headers: authHeaders(),
-        body: JSON.stringify({ adminNote: val }),
-      })
-        .then(function (r) { return r.json(); })
+      updateOrderRecord(mongoId, { adminNote: val })
         .then(function (resp) {
-          if (resp && resp.success === false) { showToast(resp.message || 'Failed to save note', 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
           if (order) order.adminNote = val;
           cell.innerHTML = val
             ? '<span class="admin-note-text" onclick="editAdminNote(\'' + mongoId + '\',this)">' + esc(val) + '</span>'

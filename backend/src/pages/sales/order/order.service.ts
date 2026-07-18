@@ -944,8 +944,22 @@ export class OrderService {
     dto: any,
   ): Promise<ResponsePayload> {
     try {
-      await this.incompleteOrderModel.findByIdAndUpdate(id, { $set: dto });
-      return { success: true, message: 'Updated' } as ResponsePayload;
+      const data = await this.incompleteOrderModel.findByIdAndUpdate(
+        id,
+        { $set: dto },
+        { new: true, runValidators: true },
+      );
+      if (!data) {
+        return {
+          success: false,
+          message: 'Incomplete order not found',
+        } as ResponsePayload;
+      }
+      return {
+        success: true,
+        message: 'Updated',
+        data,
+      } as ResponsePayload;
     } catch (err) {
       return { success: false, message: err.message } as ResponsePayload;
     }
