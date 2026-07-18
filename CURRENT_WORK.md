@@ -3,7 +3,7 @@
 Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 
 ## Branch
-`feature/notebook-free-gift-offer` (profit-dashboard base port is pushed at `0196c23`; data-loading fixes are currently uncommitted).
+`feature/notebook-free-gift-offer` (profit dashboard + data-loading fixes are pushed through `c08f36b`; stock management is currently uncommitted).
 
 ## Recently completed (merged history on this branch)
 - Higher-education consultancy landing page (`bad5b85`).
@@ -17,7 +17,14 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 - `tools/product-importer/` CLI committed and tracked; `frontend/package-lock.json` tracked.
 
 ## In progress
-Profit dashboard data-loading fixes are implemented and verified locally but remain uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+Amolbooks-style stock management is implemented and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+
+## Stock management (2026-07-18)
+- Added the Stock Management view to both served `custom-orders.html` copies with product search, low-stock filtering, summary counts, responsive product cards, stock +/- controls, debounced autosave, low-stock thresholds, restock entry, movement history, pagination, and demand metrics.
+- Added admin-only product stock APIs for listing, manual adjustment, restock purchases, and movement history. Product cards are ranked by `totalSold` and show sold today, sold in the last 30 days, and a blended next-30-days forecast.
+- Added independent nullable `stock` tracking to products (`null` means not tracked), plus stock movement and purchase collections. Restocking a previously untracked product initializes its stock safely.
+- New orders decrement tracked stock and write an order movement. Cancel/refund/return restores stock once using `stockDecremented` / `stockRestocked` idempotency flags.
+- Authenticated local API smoke test returned all 69 products, populated all three sales-metric fields, and successfully loaded low/out summary and movement-history routes. The local database has no orders newer than 2026-04-19, so current-day/30-day metrics correctly return zero locally.
 
 ## Profit dashboard data fix (2026-07-18)
 - Replaced the blocked `prompt()` authentication fallback with an in-page admin login and automatic expired-session recovery; API failures now show an actionable error instead of silently looking like an empty sales range.
@@ -39,6 +46,12 @@ Profit dashboard data-loading fixes are implemented and verified locally but rem
 - No unit coverage on `notebookOffer.ts` eligibility logic yet.
 
 ## Commands run this session + results
+- `cd backend && npm run build` after the stock implementation — passed.
+- Authenticated stock API smoke test (`stock-list`, low/out summaries, movement history) — HTTP 200; 69 products and sales-metric fields returned.
+- Direct Mongo shape check — 69 products, 35 already stock-tracked; order product IDs are stored as ObjectIds and resolve to products. Latest local order is 2026-04-19.
+- Both custom-orders inline JavaScript copies parsed with `new Function`; `git diff --check` — passed.
+- Compiled backend startup on port 4000 — passed; Nest registered the new stock routes and connected to Mongo.
+- `cd backend && npm run lint` — still fails before linting because the configured glob is fully ignored (existing repository configuration issue).
 - `cd backend && npm run build` after the data fixes — passed.
 - Authenticated local API smoke test for `profit-analytics`, `top-products`, and `products-sold` — all returned HTTP 200 with populated data.
 - Direct Mongo aggregation comparison — confirmed `preserveNullAndEmptyArrays` restores 1,769 non-cancelled local orders versus 12 in the old pipeline.

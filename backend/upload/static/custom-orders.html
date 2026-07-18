@@ -7,6 +7,8 @@
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    /* Hallmark · macrostructure: Workbench · tone: operational · anchor hue: violet · studied-DNA: image */
+    /* Hallmark · pre-emit critique: P4 H5 E5 S4 R5 V4 */
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -26,8 +28,19 @@
       --gray-700:  #334155;
       --gray-900:  #0f172a;
       --sidebar-w: 220px;
+      --p: #7c3aed;
+      --p-dark: #5b21b6;
+      --p-light: #ede9fe;
+      --g50: #f8fafc;
+      --g100: #f1f5f9;
+      --g200: #e2e8f0;
+      --g300: #cbd5e1;
+      --g400: #94a3b8;
+      --g500: #64748b;
+      --g700: #334155;
+      --g900: #0f172a;
     }
-    html, body { height: 100%; font-family: 'Nunito Sans', 'Segoe UI', sans-serif; background: #f0f2f5; color: #1e293b; }
+    html, body { height: 100%; overflow-x: clip; font-family: 'Nunito Sans', 'Segoe UI', sans-serif; background: #f0f2f5; color: #1e293b; }
 
     /* ── Layout ── */
     .layout { display: flex; min-height: 100vh; }
@@ -883,6 +896,59 @@
   /* ── btn-reset distinct ── */
   .btn-reset { background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.06); }
   .btn-reset:hover { border-color:#ef4444;color:#ef4444; }
+
+  /* ── Stock Management ── */
+  body.stock-mode { background:#f0f2f8; }
+  body.stock-mode .topbar { background:linear-gradient(135deg,#6d28d9,#4338ca);box-shadow:0 4px 20px rgba(109,40,217,.32); }
+  body.stock-mode .content > :not(#stockView) { display:none!important; }
+  body.stock-mode .search-box { display:none; }
+  body.stock-mode #navOrders { background:none;color:#94a3b8;border-left-color:transparent; }
+  body.stock-mode #navStock { background:rgba(124,58,237,.18);color:#c4b5fd;border-left-color:#7c3aed; }
+  #stockView { display:none; }
+  body.stock-mode #stockView { display:block; }
+  .stock-head { display:flex;align-items:center;gap:12px;margin-bottom:16px; }
+  .stock-head h2 { font-size:20px;font-weight:900;color:var(--g900);letter-spacing:-.02em; }
+  .stock-head h2 i { color:var(--p);margin-right:8px; }
+  .stock-summary { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px; }
+  .stock-summary-card { min-height:94px;border-radius:16px;padding:20px 22px;color:#fff;display:flex;align-items:center;gap:16px;overflow:hidden;position:relative;box-shadow:0 8px 20px rgba(15,23,42,.08); }
+  .stock-summary-card::after { content:'';position:absolute;width:92px;height:92px;border-radius:50%;right:-20px;bottom:-42px;background:rgba(255,255,255,.12); }
+  .stock-summary-card.all { background:linear-gradient(135deg,#059669,#047857); }
+  .stock-summary-card.low { background:linear-gradient(135deg,#d97706,#c2410c); }
+  .stock-summary-card.out { background:linear-gradient(135deg,#dc2626,#b91c1c); }
+  .stock-summary-icon { width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:20px;flex-shrink:0; }
+  .stock-summary-card label { display:block;text-transform:uppercase;font-size:10px;letter-spacing:.08em;font-weight:800;opacity:.8; }
+  .stock-summary-card strong { display:block;font-size:28px;line-height:1.05;margin-top:3px;font-weight:900; }
+  .stock-tools { display:flex;gap:9px;align-items:center;margin-bottom:14px; }
+  .stock-search { display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--g200);border-radius:10px;padding:9px 13px;flex:1;box-shadow:0 1px 4px rgba(15,23,42,.05); }
+  .stock-search i { color:var(--g400);font-size:12px; }
+  .stock-search input { border:0;outline:0;background:none;font:500 13px inherit;width:100%;color:var(--g900); }
+  .stock-low-toggle,.stock-action { border:1px solid var(--g200);background:#fff;color:var(--g700);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap; }
+  .stock-low-toggle.active { background:#fef2f2;border-color:#fecaca;color:#b91c1c; }
+  .stock-grid-wrap { background:#f8fafc;border:1px solid var(--g200);border-radius:16px;overflow:hidden; }
+  .stock-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:14px; }
+  .stock-card { background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s; }
+  .stock-card:hover { border-color:var(--g300);box-shadow:0 8px 24px rgba(15,23,42,.08);transform:translateY(-1px); }
+  .stock-card.is-saving { border-color:var(--p); }.stock-card.is-error { border-color:#dc2626; }
+  .stock-card-head { display:flex;align-items:flex-start;gap:12px;min-width:0; }
+  .stock-card-img { width:58px;height:70px;border-radius:9px;object-fit:cover;background:var(--g100);flex-shrink:0; }
+  .stock-card-img-placeholder { display:grid;place-items:center;color:var(--g300);font-size:20px; }
+  .stock-prod { min-width:0;flex:1; }.stock-prod-name { font-size:13px;font-weight:900;color:var(--g900);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+  .stock-prod-meta { display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px; }.stock-prod-sku { font-size:10.5px;color:var(--g500); }.stock-prod-price { font-size:11.5px;color:var(--g700);font-weight:800; }.stock-prod-sold { font-size:10.5px;color:var(--p-dark);font-weight:800; }
+  .stock-status { min-height:23px;display:flex;justify-content:flex-end;flex-shrink:0; }
+  .stock-pill { display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;font-size:10.5px;font-weight:800;white-space:nowrap; }.stock-pill.untracked{background:var(--g100);color:var(--g500)}.stock-pill.ok{background:#d1fae5;color:#065f46}.stock-pill.low{background:#fef3c7;color:#92400e}.stock-pill.out{background:#fee2e2;color:#991b1b}
+  .stock-demand-metrics { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--g200);border-radius:10px;overflow:hidden;background:var(--g50); }
+  .stock-demand-metric { min-width:0;padding:8px;border-right:1px solid var(--g200); }.stock-demand-metric:last-child{border-right:0;background:var(--p-light)}.stock-demand-label,.stock-field-label{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:10px;font-weight:800;color:var(--g500)}.stock-demand-value{display:block;margin-top:4px;color:var(--g900);font-size:13px;font-weight:900}.stock-demand-metric:last-child .stock-demand-value{color:var(--p-dark)}.stock-demand-unit{color:var(--g500);font-size:10px;font-weight:700}
+  .stock-card-body { display:grid;grid-template-columns:minmax(0,1.35fr) minmax(92px,.65fr);gap:12px;align-items:end; }.stock-field{min-width:0}.stock-field-label{margin-bottom:6px}
+  .stock-stepper { display:grid;grid-template-columns:34px minmax(0,1fr) 34px; }.stock-step-btn { height:38px;border:1px solid var(--g200);background:var(--g50);color:var(--g700);font-size:17px;font-weight:800;cursor:pointer; }.stock-step-btn:first-child{border-radius:9px 0 0 9px}.stock-step-btn:last-child{border-radius:0 9px 9px 0}.stock-step-btn:hover{background:var(--p-light);border-color:var(--p);color:var(--p-dark)}
+  .stock-input { height:38px;border:1px solid var(--g200);border-radius:9px;padding:0 10px;font:800 13px inherit;color:var(--g900);outline:0;background:#fff; }.stock-input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,58,237,.1)}.stock-stepper .stock-input{width:100%;border-radius:0;border-left:0;border-right:0;text-align:center}.stock-threshold-input{width:100%}
+  .stock-card-footer { border-top:1px solid var(--g100);padding-top:12px;display:flex;align-items:center;gap:7px; }.stock-action{padding:7px 10px}.stock-action:hover{background:var(--g50);border-color:var(--g300)}.stock-action.primary{color:var(--p-dark);border-color:#ddd6fe;background:#f5f3ff}.stock-save-state{margin-left:auto;display:inline-flex;align-items:center;gap:5px;color:var(--g400);font-size:10px;font-weight:700;white-space:nowrap}.stock-save-state.saving{color:var(--p)}.stock-save-state.saved{color:#059669}.stock-save-state.error{color:#dc2626}
+  .stock-grid-message { grid-column:1/-1;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:var(--g500);font-size:13px; }
+  .stock-pagination { padding:12px 14px;border-top:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;background:#fff; }
+  .stock-step-btn:focus-visible,.stock-action:focus-visible,.stock-low-toggle:focus-visible { outline:3px solid rgba(124,58,237,.3);outline-offset:2px; }
+  @media(max-width:1280px){.stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:768px){.stock-summary{grid-template-columns:1fr}.stock-grid{grid-template-columns:1fr;padding:10px}.stock-tools{flex-wrap:wrap}.stock-search{flex-basis:100%}.stock-low-toggle,.stock-tools>.btn-reset{flex:1}.stock-card{padding:14px}.stock-summary-card{min-height:82px}.stock-card-body{grid-template-columns:minmax(0,1.3fr) minmax(88px,.7fr)}}
+  @media(max-width:390px){.stock-card-body{grid-template-columns:1fr}.stock-card-footer{flex-wrap:wrap}.stock-save-state{width:100%;margin-left:0}.stock-demand-unit{display:block;margin-top:2px}}
+  @media(prefers-reduced-motion:reduce){.stock-card{transition:none}}
   </style>
 </head>
 <body>
@@ -924,6 +990,12 @@
         </a>
         <a href="import-woo-orders.html" class="nav-item">
           <i class="fas fa-file-import"></i> Import WooCommerce
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Inventory</div>
+        <a href="custom-orders.html?view=stock" class="nav-item" id="navStock">
+          <i class="fas fa-boxes-stacked"></i> Stock Management
         </a>
       </div>
       <div class="nav-section">
@@ -974,6 +1046,48 @@
 
     <!-- Content -->
     <div class="content">
+
+      <section id="stockView" aria-labelledby="stockHeading">
+        <div class="stock-head">
+          <h2 id="stockHeading"><i class="fas fa-boxes-stacked"></i>Stock Management</h2>
+        </div>
+        <div class="stock-summary">
+          <div class="stock-summary-card all">
+            <div class="stock-summary-icon"><i class="fas fa-cubes"></i></div>
+            <div><label>All Products</label><strong id="stockTrackedCount">—</strong></div>
+          </div>
+          <div class="stock-summary-card low">
+            <div class="stock-summary-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div><label>Low Stock</label><strong id="stockLowCount">—</strong></div>
+          </div>
+          <div class="stock-summary-card out">
+            <div class="stock-summary-icon"><i class="fas fa-ban"></i></div>
+            <div><label>Out of Stock</label><strong id="stockOutCount">—</strong></div>
+          </div>
+        </div>
+        <div class="stock-tools">
+          <div class="stock-search">
+            <i class="fas fa-search"></i>
+            <input type="search" id="stockSearch" placeholder="Search product / SKU…" autocomplete="off">
+          </div>
+          <button type="button" class="stock-low-toggle" id="stockLowToggle" onclick="toggleStockLowOnly()">
+            <i class="fas fa-triangle-exclamation"></i> Low stock only
+          </button>
+          <button type="button" class="btn-reset" onclick="loadStockList()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="stock-grid-wrap">
+          <div class="stock-grid" id="stockBody" aria-live="polite">
+            <div class="stock-grid-message"><div class="spinner"></div><div>Loading products…</div></div>
+          </div>
+          <div class="stock-pagination">
+            <div class="pagination-info" id="stockPageInfo">—</div>
+            <div class="pagination-controls">
+              <button class="page-btn" id="stockPrev" onclick="stockGoPage(-1)">‹ Prev</button>
+              <button class="page-btn" id="stockNext" onclick="stockGoPage(1)">Next ›</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Date Filters -->
       <div class="date-filters">
@@ -1316,6 +1430,44 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="restockModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-order-id" id="restockProductName">Restock</div>
+      <button class="modal-close" onclick="document.getElementById('restockModal').classList.remove('open')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Quantity received</label><input type="number" min="1" id="restockQty" class="stock-input" style="width:100%" placeholder="e.g. 50"></div>
+        <div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Unit cost (৳)</label><input type="number" min="0" id="restockUnitCost" class="stock-input" style="width:100%" placeholder="e.g. 120"></div>
+        <div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Supplier (optional)</label><input type="text" id="restockSupplier" class="stock-input" style="width:100%" placeholder="Supplier name"></div>
+        <div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Note (optional)</label><input type="text" id="restockNote" class="stock-input" style="width:100%" placeholder="Optional note"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-close" onclick="document.getElementById('restockModal').classList.remove('open')">Cancel</button>
+      <button class="btn-stock-save stock-action primary" id="restockSubmitBtn" onclick="submitRestock()">Save Restock</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="historyModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-order-id" id="historyProductName">Stock History</div>
+      <button class="modal-close" onclick="document.getElementById('historyModal').classList.remove('open')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x:auto">
+        <table class="product-table" style="width:100%">
+          <thead><tr><th>Date</th><th>Reason</th><th>Qty</th><th>Stock After</th><th>Admin</th></tr></thead>
+          <tbody id="historyBody"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -1329,6 +1481,7 @@
   var currentModalOrderId = null; // tracks which order the modal is showing
   var params = new URLSearchParams(window.location.search);
   var isIncompleteView = params.get('view') === 'incomplete';
+  var isStockView = params.get('view') === 'stock';
 
   /* ── State ── */
   var state = {
@@ -1349,6 +1502,16 @@
 
   /* ── Configure Incomplete vs normal Order view ── */
   function configureView() {
+    if (isStockView) {
+      document.body.classList.add('stock-mode');
+      var stockNav = document.getElementById('navStock');
+      if (stockNav) stockNav.classList.add('active');
+      var stockTitle = document.getElementById('pageTitle');
+      if (stockTitle) stockTitle.textContent = 'Stock Management';
+      var stockTitleIcon = document.querySelector('.topbar-title i');
+      if (stockTitleIcon) stockTitleIcon.className = 'fas fa-cart-shopping';
+      return;
+    }
     var ordersNav = document.getElementById('navOrders');
     var incompleteNav = document.getElementById('navIncompleteOrders');
     if (ordersNav) ordersNav.classList.toggle('active', !isIncompleteView);
@@ -1418,7 +1581,12 @@
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data && data.token) { saveToken(data.token); hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
+      if (data && data.token) {
+        saveToken(data.token);
+        hideLoginOverlay();
+        if (isStockView) loadStockList();
+        else { loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
+      }
       else { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; }
     })
     .catch(function() { errEl.textContent = 'Connection error. Try again.'; errEl.style.display = 'block'; })
@@ -2629,9 +2797,120 @@
       .catch(function () { loadOrders(); }); // fallback: load orders even if this fails
   }
 
+  /* ── Stock Management ── */
+  var stockState = { page:1, limit:50, q:'', lowOnly:false, totalCount:0 };
+  var stockSaveTimers = {};
+
+  function stockStatusPill(stock, threshold) {
+    if (stock === null || stock === undefined) return '<span class="stock-pill untracked">Not tracked</span>';
+    var lowAt = threshold === null || threshold === undefined ? 0 : threshold;
+    if (stock <= 0) return '<span class="stock-pill out"><i class="fas fa-ban"></i> Out of stock</span>';
+    if (stock <= lowAt) return '<span class="stock-pill low"><i class="fas fa-triangle-exclamation"></i> Low ('+stock+')</span>';
+    return '<span class="stock-pill ok"><i class="fas fa-check"></i> '+stock+' in stock</span>';
+  }
+
+  function stockFetch(url, options) {
+    options = options || {};
+    options.headers = options.headers || authHeaders();
+    return fetch(url, options).then(function (response) {
+      if (response.status === 401) {
+        clearToken(); showLoginOverlay('Session expired. Please log in again.');
+        throw new Error('auth');
+      }
+      return response.json();
+    });
+  }
+
+  window.loadStockList = function () {
+    if (!getToken()) { showLoginOverlay('Please log in to manage stock.'); return; }
+    var body = document.getElementById('stockBody');
+    body.innerHTML = '<div class="stock-grid-message"><div class="spinner"></div><div>Loading products…</div></div>';
+    var url = API+'/api/product/stock-list?page='+stockState.page+'&limit='+stockState.limit+'&q='+encodeURIComponent(stockState.q)+(stockState.lowOnly?'&lowOnly=true':'');
+    stockFetch(url)
+      .then(function (response) {
+        stockState.totalCount = response && response.count || 0;
+        renderStockRows(response && response.data || []);
+        updateStockPager(); loadStockSummary();
+      })
+      .catch(function (error) {
+        if (error.message !== 'auth') body.innerHTML = '<div class="stock-grid-message"><i class="fas fa-circle-exclamation"></i><div>Failed to load. '+esc(error.message)+'</div></div>';
+      });
+  };
+
+  function renderStockRows(rows) {
+    var body = document.getElementById('stockBody');
+    if (!rows.length) { body.innerHTML = '<div class="stock-grid-message"><i class="fas fa-box-open"></i><div>No products found.</div></div>'; return; }
+    body.innerHTML = rows.map(function (product) {
+      var image = product.images && product.images[0] || '';
+      var stock = product.stock === null || product.stock === undefined ? '' : product.stock;
+      var threshold = product.lowStockThreshold === null || product.lowStockThreshold === undefined ? '' : product.lowStockThreshold;
+      return '<article class="stock-card" data-id="'+product._id+'" data-name="'+esc(product.name||'')+'" data-save-version="0" data-was-tracked="'+(stock!==''?'true':'false')+'">'
+        +'<div class="stock-card-head">'+(image?'<img class="stock-card-img" src="'+esc(image)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<div class="stock-card-img stock-card-img-placeholder"><i class="fas fa-book"></i></div>')
+        +'<div class="stock-prod"><div class="stock-prod-name" title="'+esc(product.name||'—')+'">'+esc(product.name||'—')+'</div><div class="stock-prod-meta">'
+        +(product.sku?'<span class="stock-prod-sku">SKU: '+esc(product.sku)+'</span>':'')+'<span class="stock-prod-price">৳'+esc(String(product.salePrice||0))+'</span>'
+        +(Number(product.totalSold)>0?'<span class="stock-prod-sold"><i class="fas fa-arrow-trend-up"></i> '+esc(String(product.totalSold))+' sold</span>':'')+'</div></div>'
+        +'<div class="stock-status">'+stockStatusPill(product.stock,product.lowStockThreshold)+'</div></div>'
+        +'<div class="stock-demand-metrics"><div class="stock-demand-metric"><span class="stock-demand-label">Today</span><span class="stock-demand-value">'+(Number(product.soldToday)||0)+' <span class="stock-demand-unit">sold</span></span></div>'
+        +'<div class="stock-demand-metric"><span class="stock-demand-label">Last 30 days</span><span class="stock-demand-value">'+(Number(product.soldLast30Days)||0)+' <span class="stock-demand-unit">sold</span></span></div>'
+        +'<div class="stock-demand-metric" title="Forecast: 70% latest 30 days + 30% preceding 30 days"><span class="stock-demand-label">Next 30 days</span><span class="stock-demand-value">~'+(Number(product.predictedNeedNext30Days)||0)+' <span class="stock-demand-unit">needed</span></span></div></div>'
+        +'<div class="stock-card-body"><div class="stock-field"><label class="stock-field-label">Current stock</label><div class="stock-stepper"><button type="button" class="stock-step-btn" onclick="adjustStock(this,-1)" aria-label="Decrease stock">−</button><input type="number" min="0" class="stock-input stock-qty-input" value="'+stock+'" placeholder="—" aria-label="Current stock" oninput="onStockFieldInput(this)"><button type="button" class="stock-step-btn" onclick="adjustStock(this,1)" aria-label="Increase stock">+</button></div></div>'
+        +'<div class="stock-field"><label class="stock-field-label">Low alert ≤</label><input type="number" min="0" class="stock-input stock-threshold-input" value="'+threshold+'" placeholder="5" aria-label="Low stock threshold" oninput="onStockFieldInput(this)"></div></div>'
+        +'<div class="stock-card-footer"><button type="button" class="stock-action primary" onclick="openRestockModal(this)"><i class="fas fa-truck-loading"></i> Restock</button><button type="button" class="stock-action" onclick="openHistoryModal(this)"><i class="fas fa-clock-rotate-left"></i> History</button><span class="stock-save-state"><i class="fas fa-circle-check"></i> Up to date</span></div></article>';
+    }).join('');
+  }
+
+  function stockCardFrom(element) { return element && element.closest('.stock-card'); }
+  function updateStockCardStatus(card) {
+    var stockInput = card.querySelector('.stock-qty-input');
+    var thresholdInput = card.querySelector('.stock-threshold-input');
+    var stock = stockInput.value.trim()==='' ? null : Math.max(0,Number(stockInput.value)||0);
+    var threshold = thresholdInput.value.trim()==='' ? null : Math.max(0,Number(thresholdInput.value)||0);
+    card.querySelector('.stock-status').innerHTML = stockStatusPill(stock,threshold);
+  }
+  function setStockSaveState(card,state,label) {
+    card.classList.toggle('is-saving',state==='saving'); card.classList.toggle('is-error',state==='error');
+    var icons={dirty:'fa-pen',saving:'fa-circle-notch fa-spin',saved:'fa-circle-check',error:'fa-circle-exclamation'};
+    var element=card.querySelector('.stock-save-state'); element.className='stock-save-state '+state; element.innerHTML='<i class="fas '+icons[state]+'"></i> '+esc(label);
+  }
+  function queueStockSave(card) {
+    var id=card.getAttribute('data-id'); var version=Number(card.getAttribute('data-save-version')||0)+1;
+    card.setAttribute('data-save-version',version); setStockSaveState(card,'dirty','Unsaved change'); clearTimeout(stockSaveTimers[id]);
+    stockSaveTimers[id]=setTimeout(function(){saveStockCard(card,version);},700);
+  }
+  window.adjustStock=function(button,delta){var card=stockCardFrom(button);var input=card.querySelector('.stock-qty-input');input.value=Math.max(0,Math.floor((Number(input.value)||0)+delta));updateStockCardStatus(card);queueStockSave(card);};
+  window.onStockFieldInput=function(input){var card=stockCardFrom(input);updateStockCardStatus(card);queueStockSave(card);};
+
+  function saveStockCard(card,version) {
+    var id=card.getAttribute('data-id'); var stock=card.querySelector('.stock-qty-input').value.trim(); var threshold=card.querySelector('.stock-threshold-input').value.trim(); var payload={};
+    if(stock!=='')payload.stock=Math.max(0,Math.floor(Number(stock)||0)); if(threshold!=='')payload.lowStockThreshold=Math.max(0,Math.floor(Number(threshold)||0));
+    if(stock===''&&card.getAttribute('data-was-tracked')==='true'){setStockSaveState(card,'error','Enter stock quantity');return;}
+    if(payload.stock===undefined&&payload.lowStockThreshold===undefined){setStockSaveState(card,'saved','Up to date');return;}
+    setStockSaveState(card,'saving','Saving…');
+    stockFetch(API+'/api/product/stock/'+id,{method:'PUT',headers:authHeaders(),body:JSON.stringify(payload)})
+      .then(function(response){if(!response.success)throw new Error(response.message||'Update failed');if(payload.stock!==undefined)card.setAttribute('data-was-tracked','true');if(Number(card.getAttribute('data-save-version'))===version){setStockSaveState(card,'saved','Saved');setTimeout(function(){if(document.body.contains(card)&&Number(card.getAttribute('data-save-version'))===version)setStockSaveState(card,'saved','Up to date');},1800);}else{queueStockSave(card);}updateStockCardStatus(card);loadStockSummary();})
+      .catch(function(error){if(error.message!=='auth'){setStockSaveState(card,'error','Save failed');showToast(error.message,'error');}});
+  }
+
+  var restockTargetId=null;
+  window.openRestockModal=function(button){var card=stockCardFrom(button);restockTargetId=card.getAttribute('data-id');document.getElementById('restockProductName').textContent='Restock — '+card.getAttribute('data-name');['restockQty','restockUnitCost','restockSupplier','restockNote'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('restockModal').classList.add('open');};
+  window.submitRestock=function(){var qty=Number(document.getElementById('restockQty').value);var cost=Number(document.getElementById('restockUnitCost').value);if(!restockTargetId||qty<=0){showToast('Enter a valid quantity','info');return;}var payload={productId:restockTargetId,qty:qty,unitCost:isNaN(cost)?0:cost,supplierName:document.getElementById('restockSupplier').value.trim()||undefined,note:document.getElementById('restockNote').value.trim()||undefined};var button=document.getElementById('restockSubmitBtn');button.disabled=true;button.textContent='Saving…';stockFetch(API+'/api/product/stock/purchase',{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)}).then(function(response){if(!response.success)throw new Error(response.message||'Restock failed');showToast('Restock recorded','success');document.getElementById('restockModal').classList.remove('open');loadStockList();}).catch(function(error){if(error.message!=='auth')showToast(error.message,'error');}).finally(function(){button.disabled=false;button.textContent='Save Restock';});};
+
+  function movementReasonLabel(reason){return{order:'Order sale',cancel_restock:'Cancel restock',return_restock:'Return restock',manual_adjustment:'Manual edit',purchase:'Purchase'}[reason]||reason;}
+  window.openHistoryModal=function(button){var card=stockCardFrom(button);var id=card.getAttribute('data-id');document.getElementById('historyProductName').textContent='Stock History — '+card.getAttribute('data-name');document.getElementById('historyModal').classList.add('open');var body=document.getElementById('historyBody');body.innerHTML='<tr><td colspan="5"><div class="spinner"></div></td></tr>';stockFetch(API+'/api/product/stock/movements?productId='+id).then(function(response){var rows=response.data||[];if(!rows.length){body.innerHTML='<tr><td colspan="5">No movements recorded yet.</td></tr>';return;}body.innerHTML=rows.map(function(movement){var qty=(movement.qtyChange>0?'+':'')+movement.qtyChange;return'<tr><td>'+esc(movement.createdAt?new Date(movement.createdAt).toLocaleString():'—')+'</td><td>'+esc(movementReasonLabel(movement.reason))+'</td><td>'+esc(String(qty))+'</td><td>'+esc(String(movement.stockAfter==null?'—':movement.stockAfter))+'</td><td>'+esc(movement.adminName||'—')+'</td></tr>';}).join('');}).catch(function(error){if(error.message!=='auth')body.innerHTML='<tr><td colspan="5">Failed to load: '+esc(error.message)+'</td></tr>';});};
+
+  function updateStockPager(){var pages=Math.max(1,Math.ceil(stockState.totalCount/stockState.limit));document.getElementById('stockPageInfo').textContent='Page '+stockState.page+' of '+pages+' · '+stockState.totalCount+' products';document.getElementById('stockPrev').disabled=stockState.page<=1;document.getElementById('stockNext').disabled=stockState.page>=pages;}
+  window.stockGoPage=function(direction){var pages=Math.max(1,Math.ceil(stockState.totalCount/stockState.limit));var next=stockState.page+direction;if(next<1||next>pages)return;stockState.page=next;loadStockList();};
+  window.toggleStockLowOnly=function(){stockState.lowOnly=!stockState.lowOnly;stockState.page=1;document.getElementById('stockLowToggle').classList.toggle('active',stockState.lowOnly);loadStockList();};
+  function loadStockSummary(){[['stockTrackedCount',''],['stockLowCount','&lowOnly=true'],['stockOutCount','&outOnly=true']].forEach(function(item){stockFetch(API+'/api/product/stock-list?page=1&limit=1&includeSalesMetrics=false'+item[1]).then(function(response){document.getElementById(item[0]).textContent=response.count||0;}).catch(function(){});});}
+  (function(){var input=document.getElementById('stockSearch');if(!input)return;var timer;input.addEventListener('input',function(){var value=this.value;clearTimeout(timer);timer=setTimeout(function(){stockState.q=value;stockState.page=1;loadStockList();},400);});})();
+
   /* ── Init ── */
   configureView();
-  if (getToken()) { hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
+  if (isStockView) {
+    if (getToken()) { hideLoginOverlay(); loadStockList(); }
+    else { showLoginOverlay(); }
+  }
+  else if (getToken()) { hideLoginOverlay(); loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
   else { showLoginOverlay(); }
 })();
 </script>

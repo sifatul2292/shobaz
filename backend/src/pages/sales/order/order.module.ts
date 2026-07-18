@@ -14,6 +14,7 @@ import { ShopInformationSchema } from '../../../schema/shop-information.schema';
 import { SettingSchema } from '../../customization/setting/schema/setting.schema';
 import { AdminSchema } from '../../../schema/admin.schema';
 import { IncompleteOrderSchema } from '../../../schema/incomplete-order.schema';
+import { StockMovementSchema } from '../../../schema/stock-movement.schema';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { IncompleteOrderSchema } from '../../../schema/incomplete-order.schema';
       { name: 'ShopInformation', schema: ShopInformationSchema },
       { name: 'Setting', schema: SettingSchema },
       { name: 'Admin', schema: AdminSchema },
+      { name: 'StockMovement', schema: StockMovementSchema },
     ]),
   ],
   controllers: [OrderController],

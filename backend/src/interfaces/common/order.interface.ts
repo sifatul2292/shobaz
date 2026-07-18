@@ -39,6 +39,8 @@ export interface Order {
   user?: string;
   productDiscount?: number;
   note?: string;
+  stockDecremented?: boolean;
+  stockRestocked?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

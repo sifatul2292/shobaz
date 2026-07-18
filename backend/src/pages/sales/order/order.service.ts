@@ -41,6 +41,7 @@ import { CourierService } from '../../../shared/courier/courier.service';
 import * as schedule from 'node-schedule';
 import { Admin } from '../../../interfaces/admin/admin.interface';
 import axios from 'axios';
+import { StockMovement } from '../../../interfaces/common/stock-movement.interface';
 const ObjectId = Types.ObjectId;
 
 @Injectable()
@@ -64,6 +65,8 @@ export class OrderService {
     private readonly shopInformationModel: Model<ShopInformation>,
     @InjectModel('OrderOffer')
     private readonly orderOfferModel: Model<OrderOffer>,
+    @InjectModel('StockMovement')
+    private readonly stockMovementModel: Model<StockMovement>,
     private configService: ConfigService,
     private utilsService: UtilsService,
     private bulkSmsService: BulkSmsService,
@@ -318,6 +321,17 @@ export class OrderService {
     addOrderDto: AddOrderDto,
   ): Promise<void> {
     try {
+      const stockDecremented = await this.decreaseProductStock(
+        saveData._id,
+        saveData?.orderedItems,
+      );
+      if (stockDecremented) {
+        await this.orderModel.updateOne(
+          { _id: saveData._id },
+          { $set: { stockDecremented: true } },
+        );
+      }
+
       // 1) FraudSpy Check + Order Update
       if (addOrderDto.phoneNo) {
         try {
@@ -402,6 +416,110 @@ export class OrderService {
         error,
       );
       // Don't throw - background tasks should not fail the order
+    }
+  }
+
+  private async decreaseProductStock(
+    orderId: string,
+    items: any[],
+  ): Promise<boolean> {
+    try {
+      if (!Array.isArray(items) || !items.length) return false;
+      const parsed = items
+        .map((item) => {
+          const id = item?._id || item?.product || item?.productId;
+          const qty = Math.max(1, Math.floor(Number(item?.quantity)) || 1);
+          return id ? { id, qty } : null;
+        })
+        .filter(Boolean) as { id: string; qty: number }[];
+      if (!parsed.length) return false;
+
+      await this.productModel.bulkWrite(
+        parsed.map(({ id, qty }) => ({
+          updateOne: {
+            filter: { _id: id, stock: { $ne: null } },
+            update: { $inc: { stock: -qty } },
+          },
+        })) as any,
+      );
+
+      const products = await this.productModel
+        .find({ _id: { $in: parsed.map(({ id }) => id) }, stock: { $ne: null } })
+        .select('sku stock')
+        .lean();
+      const byId = new Map(products.map((product: any) => [String(product._id), product]));
+      const movements = parsed
+        .filter(({ id }) => byId.has(String(id)))
+        .map(({ id, qty }) => ({
+          product: id,
+          sku: byId.get(String(id))?.sku,
+          qtyChange: -qty,
+          stockAfter: byId.get(String(id))?.stock,
+          reason: 'order',
+          referenceType: 'order',
+          referenceId: orderId,
+        }));
+
+      if (movements.length) {
+        try {
+          await this.stockMovementModel.insertMany(movements);
+        } catch (err) {
+          this.logger.warn(
+            `Failed to log stock movements for order ${orderId}: ${err?.message || err}`,
+          );
+        }
+      }
+      return movements.length > 0;
+    } catch (err) {
+      this.logger.warn(`decreaseProductStock failed: ${err?.message || err}`);
+      return false;
+    }
+  }
+
+  private async restockProducts(
+    orderId: string,
+    items: any[],
+    reason: 'cancel_restock' | 'return_restock',
+  ): Promise<void> {
+    try {
+      if (!Array.isArray(items) || !items.length) return;
+      const parsed = items
+        .map((item) => {
+          const id = item?._id || item?.product || item?.productId;
+          const qty = Math.max(1, Math.floor(Number(item?.quantity)) || 1);
+          return id ? { id, qty } : null;
+        })
+        .filter(Boolean) as { id: string; qty: number }[];
+      if (!parsed.length) return;
+
+      await this.productModel.bulkWrite(
+        parsed.map(({ id, qty }) => ({
+          updateOne: {
+            filter: { _id: id, stock: { $ne: null } },
+            update: { $inc: { stock: qty } },
+          },
+        })) as any,
+      );
+
+      const products = await this.productModel
+        .find({ _id: { $in: parsed.map(({ id }) => id) }, stock: { $ne: null } })
+        .select('sku stock')
+        .lean();
+      const byId = new Map(products.map((product: any) => [String(product._id), product]));
+      const movements = parsed
+        .filter(({ id }) => byId.has(String(id)))
+        .map(({ id, qty }) => ({
+          product: id,
+          sku: byId.get(String(id))?.sku,
+          qtyChange: qty,
+          stockAfter: byId.get(String(id))?.stock,
+          reason,
+          referenceType: 'order',
+          referenceId: orderId,
+        }));
+      if (movements.length) await this.stockMovementModel.insertMany(movements);
+    } catch (err) {
+      this.logger.warn(`restockProducts failed for order ${orderId}: ${err?.message || err}`);
     }
   }
 
@@ -2219,7 +2337,15 @@ async updateOrderById(
         orderTimeline = null;
       }
 
-      const mData = {
+      const isRestockStatus = [
+        OrderStatus.CANCEL,
+        OrderStatus.REFUND,
+        OrderStatus.RETURN,
+      ].includes(orderStatus);
+      const shouldRestock =
+        isRestockStatus && data.stockDecremented === true && !data.stockRestocked;
+
+      const mData: any = {
         courierLink: updateOrderStatusDto.courierLink,
         orderStatus: orderStatus,
         orderTimeline: orderTimeline,
@@ -2228,9 +2354,20 @@ async updateOrderById(
         deliveryDate: deliveryDate,
         deliveryDateString: deliveryDateString,
       };
+      if (shouldRestock) mData.stockRestocked = true;
       await this.orderModel.findByIdAndUpdate(id, {
         $set: mData,
       });
+
+      if (shouldRestock) {
+        await this.restockProducts(
+          id,
+          data['orderedItems'],
+          orderStatus === OrderStatus.RETURN
+            ? 'return_restock'
+            : 'cancel_restock',
+        );
+      }
 
       if (orderStatus === OrderStatus.Courier) {
         try {

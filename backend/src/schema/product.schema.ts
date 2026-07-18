@@ -126,6 +126,17 @@ export const ProductSchema = new mongoose.Schema(
       required: false,
       default: 0,
     },
+    // Independent manual inventory counter. null means stock is not tracked.
+    stock: {
+      type: Number,
+      required: false,
+      default: null,
+    },
+    lowStockThreshold: {
+      type: Number,
+      required: false,
+      default: null,
+    },
     threeMonth: {
       type: Number,
       required: false,

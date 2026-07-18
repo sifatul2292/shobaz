@@ -33,6 +33,8 @@ export interface Product {
   showcaseImages?: string[];
   trackQuantity?: boolean;
   quantity?: number;
+  stock?: number | null;
+  lowStockThreshold?: number | null;
   cartLimit?: number;
   totalPages?: number | any;
   currentVersion?: string;

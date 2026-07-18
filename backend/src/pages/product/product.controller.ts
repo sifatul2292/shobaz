@@ -8,12 +8,14 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
   Version,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { AdminMetaRoles } from '../../decorator/admin-roles.decorator';
 import { AdminRoles } from '../../enum/admin-roles.enum';
 import { AdminRolesGuard } from '../../guards/admin-roles.guard';
@@ -32,6 +34,11 @@ import {
 } from '../../dto/product.dto';
 
 import { MongoIdValidationPipe } from '../../pipes/mongo-id-validation.pipe';
+import {
+  CreateStockPurchaseDto,
+  GetStockMovementsDto,
+  UpdateStockDto,
+} from '../../dto/stock.dto';
 
 @Controller('product')
 export class ProductController {
@@ -120,6 +127,50 @@ export class ProductController {
     @Query('q') searchString: string,
   ): Promise<ResponsePayload> {
     return this.productService.getAllProducts(filterProductDto, searchString);
+  }
+
+  @Get('/stock-list')
+  @UseGuards(AdminJwtAuthGuard)
+  async getStockList(
+    @Query() query: Record<string, any>,
+  ): Promise<ResponsePayload> {
+    return await this.productService.getStockList(query);
+  }
+
+  @Put('/stock/:id')
+  @UseGuards(AdminJwtAuthGuard)
+  async updateStock(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @Body() body: UpdateStockDto,
+    @Req() req: Request,
+  ): Promise<ResponsePayload> {
+    const user: any = req.user;
+    return await this.productService.updateStock(id, body, {
+      _id: user?._id,
+      name: user?.username,
+    });
+  }
+
+  @Post('/stock/purchase')
+  @UseGuards(AdminJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  async addStockPurchase(
+    @Body() body: CreateStockPurchaseDto,
+    @Req() req: Request,
+  ): Promise<ResponsePayload> {
+    const user: any = req.user;
+    return await this.productService.addStockPurchase(body, {
+      _id: user?._id,
+      name: user?.username,
+    });
+  }
+
+  @Get('/stock/movements')
+  @UseGuards(AdminJwtAuthGuard)
+  async getStockMovements(
+    @Query() query: GetStockMovementsDto,
+  ): Promise<ResponsePayload> {
+    return await this.productService.getStockMovements(query);
   }
 
   @Version(VERSION_NEUTRAL)

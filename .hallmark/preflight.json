@@ -1,0 +1,9 @@
+{
+  "date": "2026-07-18",
+  "scope": "backend/upload/static/custom-orders.html?view=stock",
+  "framework": "vanilla HTML/CSS/JavaScript served by NestJS",
+  "typography": "existing Nunito Sans/Segoe UI admin stack",
+  "palette": "existing Shobaz admin neutrals with the Amolbooks violet stock workspace",
+  "motion": "existing short state transitions with reduced-motion handling for stock cards",
+  "responsive": "existing sidebar shell; stock grid collapses from three to two to one columns"
+}

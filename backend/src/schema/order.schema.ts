@@ -240,6 +240,16 @@ export const OrderSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    stockDecremented: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    stockRestocked: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     versionKey: false,
