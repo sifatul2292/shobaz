@@ -65,6 +65,7 @@ import { FbCatalogModule } from './shared/fb-catalog/fb-catalog.module';
 import { CourierModule } from './shared/courier/courier.module';
 import { PreOrderModule } from './pages/pre-order/pre-order.module';
 import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
+import { MetaAdsModule } from './pages/meta-ads/meta-ads.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -138,6 +139,7 @@ import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
     CourierModule,
     PreOrderModule,
     FbFeedModule,
+    MetaAdsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

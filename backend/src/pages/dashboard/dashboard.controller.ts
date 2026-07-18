@@ -2,8 +2,11 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Logger,
+  Param,
+  Post,
   Query,
   UseGuards,
   UsePipes,
@@ -73,6 +76,72 @@ export class DashboardController {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Get('profit-analytics')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async getProfitAnalytics(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return await this.dashboardService.getProfitAnalytics(startDate, endDate);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Get('products-sold')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async getProductsSold(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return await this.dashboardService.getProductsSold(startDate, endDate);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Get('top-products')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async getTopProducts(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return await this.dashboardService.getTopProducts(startDate, endDate);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Get('manual-sales')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async getManualSales(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return await this.dashboardService.getManualSales(startDate, endDate);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Post('manual-sales')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async addManualSale(@Body() body: any) {
+    return await this.dashboardService.addManualSale(body);
+  }
+
+  @Version(VERSION_NEUTRAL)
+  @Delete('manual-sales/:id')
+  @AdminMetaRoles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
+  @UseGuards(AdminRolesGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async deleteManualSale(@Param('id') id: string) {
+    return await this.dashboardService.deleteManualSale(id);
   }
   // @Version(VERSION_NEUTRAL)
   // @Post('/user-dashboard')
