@@ -3,7 +3,7 @@
 Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 
 ## Branch
-`feature/notebook-free-gift-offer` (ahead of `origin/main`; profit-dashboard port is uncommitted).
+`feature/notebook-free-gift-offer` (profit-dashboard base port is pushed at `0196c23`; data-loading fixes are currently uncommitted).
 
 ## Recently completed (merged history on this branch)
 - Higher-education consultancy landing page (`bad5b85`).
@@ -17,7 +17,14 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 - `tools/product-importer/` CLI committed and tracked; `frontend/package-lock.json` tracked.
 
 ## In progress
-Profit dashboard port is implemented and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+Profit dashboard data-loading fixes are implemented and verified locally but remain uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+
+## Profit dashboard data fix (2026-07-18)
+- Replaced the blocked `prompt()` authentication fallback with an in-page admin login and automatic expired-session recovery; API failures now show an actionable error instead of silently looking like an empty sales range.
+- Fixed the profit aggregation dropping orders with empty `orderedItems` arrays by preserving those orders for revenue, delivery, and order counts while calculating product cost when item details exist.
+- Made all analytics ranges use explicit Asia/Dhaka day boundaries, and added product quantity/price fallbacks for older order records.
+- Fixed preset date buttons to pass their clicked element explicitly instead of relying on the non-standard global `event`; local date inputs no longer use UTC conversion.
+- Authenticated endpoint smoke test for April 2026 returned 54 orders across 13 days, ৳49,400 revenue, 20 top-product rows, and 7 product-detail days. The old aggregation returned only 12 orders across the full local database because it discarded empty item arrays.
 
 ## Completed this session (2026-07-18)
 - Ported the Amolbooks profit dashboard to Shobaz, preserving its day-wise profit analytics, date ranges, revenue calendar, expandable daily products, top-products ranking, manual Meta ad spend, Meta OAuth/spend sync, and WhatsApp/phone sale entry.
@@ -32,6 +39,13 @@ Profit dashboard port is implemented and verified locally but remains uncommitte
 - No unit coverage on `notebookOffer.ts` eligibility logic yet.
 
 ## Commands run this session + results
+- `cd backend && npm run build` after the data fixes — passed.
+- Authenticated local API smoke test for `profit-analytics`, `top-products`, and `products-sold` — all returned HTTP 200 with populated data.
+- Direct Mongo aggregation comparison — confirmed `preserveNullAndEmptyArrays` restores 1,769 non-cancelled local orders versus 12 in the old pipeline.
+- Local dashboard browser check — in-page login rendered correctly with no new console errors; the previous unsupported `prompt()` crash is removed.
+- Dashboard inline JavaScript parse check and `git diff --check` after the fixes — passed.
+- `cd backend && npm run lint` after the fixes — still fails before linting because the configured glob is fully ignored.
+- `cd backend && npm test -- --runInBand` after the fixes — still reports no test files.
 - `cd backend && npm run build` — passed.
 - `cd backend && npm run lint` — failed before linting because the configured glob is fully ignored (existing repository configuration issue).
 - `cd backend && npm test -- --runInBand` — failed because the repository contains no `*.spec.ts` tests.

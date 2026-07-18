@@ -37,6 +37,21 @@ export class DashboardService {
     private utilsService: UtilsService,
   ) {}
 
+  private getDhakaDateRange(startDate: string, endDate: string) {
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(startDate || '') || !datePattern.test(endDate || '')) {
+      throw new BadRequestException('startDate and endDate must use YYYY-MM-DD format');
+    }
+
+    const start = new Date(`${startDate}T00:00:00.000+06:00`);
+    const end = new Date(`${endDate}T23:59:59.999+06:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+      throw new BadRequestException('Invalid date range');
+    }
+
+    return { start, end };
+  }
+
   async getAdminDashboard(
     filterOrderDto: FilterAndPaginationOrderDto,
     searchQuery?: string,
@@ -706,9 +721,7 @@ export class DashboardService {
 
   async getTopProducts(startDate: string, endDate: string): Promise<ResponsePayload> {
     try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      const { start, end } = this.getDhakaDateRange(startDate, endDate);
 
       const rows = await this.orderModel.aggregate([
         {
@@ -722,8 +735,15 @@ export class DashboardService {
           $group: {
             _id: '$orderedItems._id',
             name: { $first: '$orderedItems.name' },
-            quantity: { $sum: '$orderedItems.quantity' },
-            revenue: { $sum: { $multiply: ['$orderedItems.salePrice', '$orderedItems.quantity'] } },
+            quantity: { $sum: { $ifNull: ['$orderedItems.quantity', 1] } },
+            revenue: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ['$orderedItems.salePrice', { $ifNull: ['$orderedItems.unitPrice', 0] }] },
+                  { $ifNull: ['$orderedItems.quantity', 1] },
+                ],
+              },
+            },
           },
         },
         { $sort: { quantity: -1 } },
@@ -733,6 +753,7 @@ export class DashboardService {
 
       return { success: true, data: rows };
     } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       this.logger.error(err);
       throw new InternalServerErrorException();
     }
@@ -740,9 +761,7 @@ export class DashboardService {
 
   async getProductsSold(startDate: string, endDate: string): Promise<ResponsePayload> {
     try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      const { start, end } = this.getDhakaDateRange(startDate, endDate);
 
       const rows = await this.orderModel.aggregate([
         {
@@ -762,8 +781,15 @@ export class DashboardService {
           $group: {
             _id: { date: '$date', productId: '$orderedItems._id' },
             name: { $first: '$orderedItems.name' },
-            quantity: { $sum: '$orderedItems.quantity' },
-            revenue: { $sum: { $multiply: ['$orderedItems.salePrice', '$orderedItems.quantity'] } },
+            quantity: { $sum: { $ifNull: ['$orderedItems.quantity', 1] } },
+            revenue: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ['$orderedItems.salePrice', { $ifNull: ['$orderedItems.unitPrice', 0] }] },
+                  { $ifNull: ['$orderedItems.quantity', 1] },
+                ],
+              },
+            },
           },
         },
         {
@@ -784,6 +810,7 @@ export class DashboardService {
 
       return { success: true, data: rows };
     } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       this.logger.error(err);
       throw new InternalServerErrorException();
     }
@@ -791,9 +818,7 @@ export class DashboardService {
 
   async getProfitAnalytics(startDate: string, endDate: string): Promise<ResponsePayload> {
     try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      const { start, end } = this.getDhakaDateRange(startDate, endDate);
 
       const daily = await this.orderModel.aggregate([
         {
@@ -802,7 +827,7 @@ export class DashboardService {
             orderStatus: { $nin: [6] },
           },
         },
-        { $unwind: '$orderedItems' },
+        { $unwind: { path: '$orderedItems', preserveNullAndEmptyArrays: true } },
         {
           $lookup: {
             from: 'products',
@@ -827,7 +852,7 @@ export class DashboardService {
               orderId: '$_id',
               date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+06:00' } },
             },
-            revenue: { $first: '$grandTotal' },
+            revenue: { $first: { $ifNull: ['$grandTotal', 0] } },
             deliveryCharge: { $first: { $ifNull: ['$deliveryCharge', 0] } },
             totalCost: { $sum: '$_itemCost' },
           },
@@ -892,6 +917,7 @@ export class DashboardService {
 
       return { success: true, data: { daily, totals } };
     } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       this.logger.error(err);
       throw new InternalServerErrorException();
     }

@@ -109,6 +109,21 @@
     .products-loading { font-size: 12px; color: var(--g400); padding: 6px 0; }
     .products-empty { font-size: 12px; color: var(--g400); font-style: italic; }
 
+    /* Admin login */
+    .auth-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.72); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+    .auth-overlay.hidden { display: none; }
+    .auth-card { width: 100%; max-width: 360px; background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 24px 70px rgba(15,23,42,.3); }
+    .auth-logo { width: 44px; height: 44px; border-radius: 11px; margin-bottom: 14px; background: linear-gradient(135deg,var(--p),#4f46e5); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .auth-title { font-size: 19px; font-weight: 800; color: var(--g900); }
+    .auth-sub { margin: 5px 0 18px; color: var(--g500); font-size: 12px; line-height: 1.5; }
+    .auth-field { margin-bottom: 12px; }
+    .auth-field label { display: block; margin-bottom: 5px; color: var(--g700); font-size: 11px; font-weight: 700; }
+    .auth-field input { width: 100%; border: 1px solid var(--g200); border-radius: 8px; padding: 9px 11px; color: var(--g900); font-family: inherit; font-size: 13px; outline: none; }
+    .auth-field input:focus { border-color: var(--p); box-shadow: 0 0 0 3px var(--p-light); }
+    .auth-submit { width: 100%; border: 0; border-radius: 8px; padding: 10px 14px; background: var(--p); color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .auth-submit:disabled { opacity: .65; cursor: wait; }
+    .auth-error { display: none; margin-top: 10px; border-radius: 7px; padding: 8px 10px; background: var(--red-l); color: var(--red); font-size: 11px; line-height: 1.4; }
+
     /* Empty state */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--g400); }
     .empty-state i { font-size: 32px; margin-bottom: 10px; display: block; }
@@ -180,6 +195,23 @@
   </style>
 </head>
 <body>
+<div class="auth-overlay hidden" id="authOverlay">
+  <form class="auth-card" onsubmit="doDashboardLogin(event)">
+    <div class="auth-logo">📚</div>
+    <div class="auth-title">Admin Login</div>
+    <div class="auth-sub">Sign in with your Shobaz admin username to load sales and profit data.</div>
+    <div class="auth-field">
+      <label for="authUsername">Username</label>
+      <input type="text" id="authUsername" autocomplete="username" required>
+    </div>
+    <div class="auth-field">
+      <label for="authPassword">Password</label>
+      <input type="password" id="authPassword" autocomplete="current-password" required>
+    </div>
+    <button class="auth-submit" id="authSubmit" type="submit">Sign In</button>
+    <div class="auth-error" id="authError"></div>
+  </form>
+</div>
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -220,11 +252,11 @@
       <!-- Date range -->
       <div class="date-bar">
         <div class="date-tabs">
-          <button class="dtab active" onclick="setRange('today')">Today</button>
-          <button class="dtab" onclick="setRange('yesterday')">Yesterday</button>
-          <button class="dtab" onclick="setRange('7d')">Last 7 Days</button>
-          <button class="dtab" onclick="setRange('month')">This Month</button>
-          <button class="dtab" onclick="setRange('lastmonth')">Last Month</button>
+          <button class="dtab active" onclick="setRange('today',this)">Today</button>
+          <button class="dtab" onclick="setRange('yesterday',this)">Yesterday</button>
+          <button class="dtab" onclick="setRange('7d',this)">Last 7 Days</button>
+          <button class="dtab" onclick="setRange('month',this)">This Month</button>
+          <button class="dtab" onclick="setRange('lastmonth',this)">Last Month</button>
         </div>
         <div class="custom-wrap">
           <input type="date" id="customFrom">
@@ -384,7 +416,14 @@
 
   /* ── Auth ── */
   function getToken() { return localStorage.getItem('profit_admin_token'); }
-  function saveToken(t) { localStorage.setItem('profit_admin_token', t); }
+  function saveToken(t) {
+    localStorage.setItem('profit_admin_token', t);
+    localStorage.setItem('co_admin_token', t);
+  }
+  function clearToken() {
+    localStorage.removeItem('profit_admin_token');
+    localStorage.removeItem('co_admin_token');
+  }
   function headers() {
     var h = { 'Content-Type': 'application/json' };
     var t = getToken();
@@ -392,53 +431,113 @@
     return h;
   }
 
+  function showLogin(message) {
+    var overlay = document.getElementById('authOverlay');
+    var error = document.getElementById('authError');
+    overlay.classList.remove('hidden');
+    if (message) {
+      error.textContent = message;
+      error.style.display = 'block';
+    } else {
+      error.textContent = '';
+      error.style.display = 'none';
+    }
+  }
+
+  function hideLogin() {
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('authError').style.display = 'none';
+  }
+
+  function apiJson(url, options) {
+    options = options || {};
+    if (!options.headers) options.headers = headers();
+    return fetch(url, options).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (response.status === 401 || response.status === 403) {
+          clearToken();
+          showLogin('Your admin session expired. Please sign in again.');
+          throw new Error('Unauthorized');
+        }
+        if (!response.ok) {
+          throw new Error(data.message || ('Request failed (' + response.status + ')'));
+        }
+        return data;
+      });
+    });
+  }
+
   /* ── Login via custom-orders token (shared storage key) ── */
   function init() {
     var t = localStorage.getItem('co_admin_token') || localStorage.getItem('profit_admin_token');
-    if (t) { saveToken(t); loadAll(); }
-    else { autoLogin(); }
+    if (t) {
+      saveToken(t);
+      hideLogin();
+      loadAll();
+    } else {
+      showLogin();
+    }
   }
 
-  function autoLogin() {
-    var u = prompt('Admin username:');
-    var p = prompt('Password:');
+  window.doDashboardLogin = function (event) {
+    event.preventDefault();
+    var u = document.getElementById('authUsername').value.trim();
+    var p = document.getElementById('authPassword').value;
+    var button = document.getElementById('authSubmit');
+    var error = document.getElementById('authError');
     if (!u || !p) return;
+    button.disabled = true;
+    button.textContent = 'Signing In…';
+    error.style.display = 'none';
     fetch(API + '/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p }),
     }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.token) { saveToken(d.token); loadAll(); }
-      else { alert('Login failed'); }
+      if (d && d.token) {
+        saveToken(d.token);
+        document.getElementById('authPassword').value = '';
+        hideLogin();
+        loadAll();
+      } else {
+        showLogin((d && d.message) || 'Invalid username or password.');
+      }
+    }).catch(function () {
+      showLogin('Could not connect to the Shobaz API. Please try again.');
+    }).finally(function () {
+      button.disabled = false;
+      button.textContent = 'Sign In';
     });
-  }
+  };
 
   /* ── Date ranges ── */
-  function toYMD(d) { return d.toISOString().slice(0, 10); }
+  function toYMD(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
 
-  window.setRange = function (key) {
+  window.setRange = function (key, button) {
     document.querySelectorAll('.dtab').forEach(function (b) { b.classList.remove('active'); });
     var today = new Date();
     if (key === 'today') {
       rangeStart = rangeEnd = toYMD(today);
-      event.target.classList.add('active');
+      button.classList.add('active');
     } else if (key === 'yesterday') {
       var y = new Date(today); y.setDate(y.getDate() - 1);
       rangeStart = rangeEnd = toYMD(y);
-      event.target.classList.add('active');
+      button.classList.add('active');
     } else if (key === '7d') {
       var s = new Date(today); s.setDate(s.getDate() - 6);
       rangeStart = toYMD(s); rangeEnd = toYMD(today);
-      event.target.classList.add('active');
+      button.classList.add('active');
     } else if (key === 'month') {
       var m = new Date(today.getFullYear(), today.getMonth(), 1);
       rangeStart = toYMD(m); rangeEnd = toYMD(today);
-      event.target.classList.add('active');
+      button.classList.add('active');
     } else if (key === 'lastmonth') {
       var lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       var lme = new Date(today.getFullYear(), today.getMonth(), 0);
       rangeStart = toYMD(lm); rangeEnd = toYMD(lme);
-      event.target.classList.add('active');
+      button.classList.add('active');
     }
     loadAll();
   };
@@ -460,9 +559,9 @@
     var q = '?startDate=' + s + '&endDate=' + e;
     var h = headers();
     Promise.all([
-      fetch(API + '/api/dashboard/profit-analytics' + q, { headers: h }).then(function (r) { return r.json(); }).catch(function () { return null; }),
-      fetch(API + '/api/meta-ads/spend' + q, { headers: h }).then(function (r) { return r.json(); }).catch(function () { return null; }),
-      fetch(API + '/api/dashboard/top-products' + q, { headers: h }).then(function (r) { return r.json(); }).catch(function () { return null; }),
+      apiJson(API + '/api/dashboard/profit-analytics' + q, { headers: h }).catch(function () { return null; }),
+      apiJson(API + '/api/meta-ads/spend' + q, { headers: h }).catch(function () { return null; }),
+      apiJson(API + '/api/dashboard/top-products' + q, { headers: h }).catch(function () { return null; }),
     ]).then(function (res) {
       renderDashboard(res[0], res[1]);
       renderTopProducts(res[2], s, e);
@@ -473,6 +572,14 @@
   }
 
   function renderDashboard(profit, spend) {
+    if (!profit || !profit.success || !profit.data) {
+      document.getElementById('dayRows').innerHTML =
+        '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load sales data. Please sign in again or refresh the page.</p></div>';
+      setText('s-revenue', '—');
+      setText('s-orders', '— orders');
+      return;
+    }
+
     spendByDate = {};
     revenueByDate = {};
     orderCountByDate = {};
@@ -586,8 +693,7 @@
 
   function loadProducts(idx, date) {
     if (productsByDate[date]) { renderProducts(idx, productsByDate[date]); return; }
-    fetch(API + '/api/dashboard/products-sold?startDate=' + date + '&endDate=' + date, { headers: headers() })
-      .then(function (r) { return r.json(); })
+    apiJson(API + '/api/dashboard/products-sold?startDate=' + date + '&endDate=' + date, { headers: headers() })
       .then(function (res) {
         var products = [];
         if (res && res.success && res.data && res.data.length) {
@@ -627,8 +733,7 @@
 
   /* ── Meta ── */
   function checkMetaStatus() {
-    fetch(API + '/api/meta-ads/status', { headers: headers() })
-      .then(function (r) { return r.json(); })
+    apiJson(API + '/api/meta-ads/status', { headers: headers() })
       .then(function (d) {
         metaConnected = d && d.connected;
         var btn = document.getElementById('metaBtn');
@@ -665,12 +770,11 @@
     var icon = document.getElementById('syncIcon');
     if (icon) icon.className = 'fas fa-sync-alt fa-spin';
     // Always sync last 30 days — Meta has ~24h delay so passing today returns nothing
-    fetch(API + '/api/meta-ads/sync', {
+    apiJson(API + '/api/meta-ads/sync', {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify({}),
     })
-      .then(function (r) { return r.json(); })
       .then(function (d) {
         if (icon) icon.className = 'fas fa-sync-alt';
         if (d && d.error) {
@@ -695,11 +799,10 @@
   window.handleMetaClick = function () {
     if (metaConnected) {
       if (!confirm('Disconnect Meta Ads?')) return;
-      fetch(API + '/api/meta-ads/disconnect', { method: 'POST', headers: headers() })
+      apiJson(API + '/api/meta-ads/disconnect', { method: 'POST', headers: headers() })
         .then(function () { metaConnected = false; checkMetaStatus(); });
     } else {
-      fetch(API + '/api/meta-ads/auth-url', { headers: headers() })
-        .then(function (r) { return r.json(); })
+      apiJson(API + '/api/meta-ads/auth-url', { headers: headers() })
         .then(function (d) {
           if (d && d.url) window.location.href = d.url;
           else alert('META_APP_ID not configured in server .env');
@@ -710,11 +813,10 @@
   window.saveAccountId = function () {
     var val = document.getElementById('adAccountIdInput').value.trim();
     if (!val) { alert('Enter ad account ID'); return; }
-    fetch(API + '/api/meta-ads/set-account', {
+    apiJson(API + '/api/meta-ads/set-account', {
       method: 'POST', headers: headers(),
       body: JSON.stringify({ adAccountId: val }),
-    }).then(function (r) { return r.json(); })
-      .then(function (d) {
+    }).then(function (d) {
         var note = document.getElementById('accountIdNote');
         if (d.success) {
           if (note) note.textContent = 'Saved: ' + d.adAccountId;
@@ -730,12 +832,11 @@
     var date = document.getElementById('spendDate').value;
     var amount = parseFloat(document.getElementById('spendAmount').value);
     if (!date || isNaN(amount)) { alert('Enter date and amount'); return; }
-    fetch(API + '/api/meta-ads/manual-spend', {
+    apiJson(API + '/api/meta-ads/manual-spend', {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify({ date: date, spend: amount }),
-    }).then(function (r) { return r.json(); })
-      .then(function () {
+    }).then(function () {
         document.getElementById('spendAmount').value = '';
         loadAll();
       });
@@ -755,9 +856,9 @@
       source: document.getElementById('msSource').value,
       note: document.getElementById('msNote').value || '',
     };
-    fetch(API + '/api/dashboard/manual-sales', {
+    apiJson(API + '/api/dashboard/manual-sales', {
       method: 'POST', headers: headers(), body: JSON.stringify(body),
-    }).then(function (r) { return r.json(); }).then(function () {
+    }).then(function () {
       document.getElementById('msRevenue').value = '';
       document.getElementById('msCost').value = '';
       document.getElementById('msDelivery').value = '';
@@ -769,15 +870,14 @@
 
   window.deleteManualSale = function (id) {
     if (!confirm('Delete this manual sale entry?')) return;
-    fetch(API + '/api/dashboard/manual-sales/' + id, {
+    apiJson(API + '/api/dashboard/manual-sales/' + id, {
       method: 'DELETE', headers: headers(),
     }).then(function () { loadManualSalesList(); loadAll(); });
   };
 
   function loadManualSalesList() {
     var q = '?startDate=' + (rangeStart || toYMD(new Date())) + '&endDate=' + (rangeEnd || toYMD(new Date()));
-    fetch(API + '/api/dashboard/manual-sales' + q, { headers: headers() })
-      .then(function (r) { return r.json(); })
+    apiJson(API + '/api/dashboard/manual-sales' + q, { headers: headers() })
       .then(function (res) {
         var list = document.getElementById('manualSalesList');
         if (!res || !res.success || !res.data || !res.data.length) { list.innerHTML = ''; return; }
@@ -804,8 +904,7 @@
     var label = firstDay.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
     setText('calMonthLabel', label);
 
-    fetch(API + '/api/dashboard/profit-analytics?startDate=' + s + '&endDate=' + e, { headers: headers() })
-      .then(function (r) { return r.json(); })
+    apiJson(API + '/api/dashboard/profit-analytics?startDate=' + s + '&endDate=' + e, { headers: headers() })
       .then(function (res) {
         var calData = {};
         if (res && res.success && res.data && res.data.daily) {
