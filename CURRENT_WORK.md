@@ -24,6 +24,7 @@ Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified loca
 - Rebuilt the hero as a responsive editorial split featuring Edভেঞ্চার, Road to Corporate, and Productive Muslim with direct product links, live catalog price/image overrides, and reliable production-image fallbacks.
 - Added Noto Serif Bengali for the hero display type while retaining the existing Bengali body typeface and site header/footer.
 - Added scoped hero tokens and CSS with explicit keyboard, active, reduced-motion, and 320/375/414/768 px responsive behavior.
+- Refined the desktop proportions after visual review: the hero headline now caps at 50px, the product rail caps at 544px, and the desktop hero height is reduced to keep the composition balanced.
 - Checks: frontend production build passed; browser checks confirmed all three covers load, Noto Serif Bengali is applied, the removed bundle section is absent, CTA labels stay on one line, and no horizontal overflow occurs from 320 through 1920 px. `npx tsc --noEmit` remains blocked by the pre-existing unsupported `eslint` property in `next.config.ts`; `npm run lint` remains blocked because Next.js 16 no longer supports the configured `next lint` command.
 
 ## Product image upload URL fix (2026-07-20)

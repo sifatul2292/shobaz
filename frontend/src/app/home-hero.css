@@ -1,6 +1,5 @@
 /* Hallmark · genre: editorial · macrostructure: Split Studio · theme: Linen · enrichment: E8 real product photography · nav: preserved · footer: preserved · pre-emit critique: P5 H5 E5 S5 R5 V5 · contrast: pass (46–50) · slop: pass (51–60) · mobile: pass (36, 59, 61–69)
  * H2 Split Diptych knobs: ratio=5/7 · right-side=product-proof · divider=negative-space
- * critique: P5 H5 E4 S5 R5 V5
  */
 
 html,
@@ -125,7 +124,9 @@ body {
 }
 
 .home-hero__selection {
+  width: min(100%, var(--size-hero-selection));
   min-width: 0;
+  justify-self: center;
   padding: var(--space-hero-md) 0 0;
   animation: home-hero-selection-in var(--dur-hero-long) var(--ease-hero-out) 80ms both;
 }
@@ -222,12 +223,13 @@ body {
 
 @media (min-width: 60rem) {
   .home-hero__inner {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: var(--space-hero-3xl);
-    min-height: 36rem;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: var(--space-hero-2xl);
+    min-height: 31rem;
   }
 
   .home-hero__selection {
+    justify-self: end;
     padding-block-start: 0;
   }
 

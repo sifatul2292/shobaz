@@ -23,7 +23,8 @@
   --text-hero-sm: 0.875rem;
   --text-hero-base: 1rem;
   --text-hero-md: 1.125rem;
-  --text-hero-display: clamp(2.65rem, 5.5vw, 5.2rem);
+  --text-hero-display: clamp(2.5rem, 5.2vw, 3.125rem);
+  --size-hero-selection: 34rem;
 
   --ease-hero-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-hero-in: cubic-bezier(0.7, 0, 0.84, 0);
