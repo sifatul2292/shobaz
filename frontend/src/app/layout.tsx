@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import { Hind_Siliguri, Poppins, Newsreader } from "next/font/google";
+import { Hind_Siliguri, Noto_Serif_Bengali, Poppins, Newsreader } from "next/font/google";
 import { Suspense } from "react";
 import GTMRouteTracker from "@/components/common/GTMRouteTracker";
 import FloatingCart from "@/components/common/FloatingCart";
@@ -26,6 +26,13 @@ const newsreader = Newsreader({
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
   variable: "--font-newsreader",
+  display: "swap",
+});
+
+const notoSerifBengali = Noto_Serif_Bengali({
+  subsets: ["bengali"],
+  weight: ["400", "700"],
+  variable: "--font-bengali-display",
   display: "swap",
 });
 
@@ -65,7 +72,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${hindSiliguri.variable} ${poppins.variable} ${newsreader.variable}`}>
+      <body className={`${hindSiliguri.variable} ${notoSerifBengali.variable} ${poppins.variable} ${newsreader.variable}`}>
         <noscript
           dangerouslySetInnerHTML={{
             __html:

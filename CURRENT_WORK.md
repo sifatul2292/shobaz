@@ -1,6 +1,6 @@
 # CURRENT_WORK.md
 
-Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
+Living status file. Update after meaningful progress. Snapshot date: 2026-07-20.
 
 ## Branch
 `feature/notebook-free-gift-offer` (stock management is pushed through `fa2eff2`; incomplete-order persistence fix is currently uncommitted).
@@ -18,6 +18,13 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 
 ## In progress
 Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+
+## Homepage hero refinement (2026-07-20)
+- Removed the Exclusive Bundles sales-card section from the homepage only; the bundle product routes and header links remain available.
+- Rebuilt the hero as a responsive editorial split featuring Edভেঞ্চার, Road to Corporate, and Productive Muslim with direct product links, live catalog price/image overrides, and reliable production-image fallbacks.
+- Added Noto Serif Bengali for the hero display type while retaining the existing Bengali body typeface and site header/footer.
+- Added scoped hero tokens and CSS with explicit keyboard, active, reduced-motion, and 320/375/414/768 px responsive behavior.
+- Checks: frontend production build passed; browser checks confirmed all three covers load, Noto Serif Bengali is applied, the removed bundle section is absent, CTA labels stay on one line, and no horizontal overflow occurs from 320 through 1920 px. `npx tsc --noEmit` remains blocked by the pre-existing unsupported `eslint` property in `next.config.ts`; `npm run lint` remains blocked because Next.js 16 no longer supports the configured `next lint` command.
 
 ## Product image upload URL fix (2026-07-20)
 - Fixed production uploads generating malformed `httpss://api.shobaz.com/...` URLs after Express proxy trust made `req.protocol` return `https`; upload URLs now respect forwarded protocol/host headers without appending a second `s`.

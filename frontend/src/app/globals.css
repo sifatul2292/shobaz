@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../../tokens.css";
+@import "./home-hero.css";
 
 :root {
   --font-bengali: var(--font-bengali), system-ui, sans-serif;
@@ -448,15 +450,8 @@ input[type="number"] {
   .bd-specs { grid-template-columns: 1fr }
 }
 
-@keyframes floatY {
-  from { transform: translateY(0) rotate(var(--rot, 0deg)); }
-  to   { transform: translateY(-14px) rotate(var(--rot, 0deg)); }
-}
-
 /* ── New homepage responsive ── */
 @media (max-width: 880px) {
-  .nh-hero { grid-template-columns: 1fr !important; padding: 40px 20px !important; }
-  .nh-hero-books { display: none !important; }
   .nh-trust { grid-template-columns: repeat(2, 1fr) !important; }
   .nh-cat-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .nh-book-grid { grid-template-columns: repeat(2, 1fr) !important; }
@@ -577,13 +572,6 @@ input[type="number"] {
   }
 }
 
-/* Hero stats: smaller on mobile */
-@media (max-width: 640px) {
-  .nh-hero-stats { gap: 16px !important; margin-top: 20px !important; }
-  .nh-stat-num { font-size: 16px !important; }
-  .nh-hero-stats > div > div:last-child { font-size: 11px !important; }
-}
-
 /* Book card add-to-cart button: compact on mobile */
 @media (max-width: 640px) {
   .nh-add-btn { padding: 7px 10px !important; font-size: 12px !important; border-radius: 8px !important; }
@@ -644,31 +632,12 @@ input[type="number"] {
 }
 .reveal-s.is-visible { opacity: 1; transform: none; }
 
-/* CTA shimmer effect */
-@keyframes shimmer-btn {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
-.nh-cta-shine {
-  background: linear-gradient(90deg, #16a34a 0%, #22c55e 40%, #16a34a 100%) !important;
-  background-size: 200% 100% !important;
-  animation: shimmer-btn 2.8s linear infinite;
-}
-
 /* Promo pulse glow */
 @keyframes promo-glow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.35); }
   55%       { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
 }
 .nh-promo { animation: promo-glow 3s ease-in-out infinite; }
-
-/* Discount badge bounce */
-@keyframes badge-bounce {
-  0%, 100% { transform: scale(1); }
-  40%       { transform: scale(1.12); }
-  70%       { transform: scale(0.96); }
-}
-.nh-disc-badge { animation: badge-bounce 2.2s ease-in-out infinite; }
 
 /* Book card lift on hover (stronger) */
 .nh-book-card:hover {

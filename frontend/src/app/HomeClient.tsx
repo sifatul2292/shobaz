@@ -72,10 +72,28 @@ const STATIC_REVIEWS = [
   },
 ];
 
-const HERO_FALLBACKS = [
-  { bg: '#1e3a8a', label: 'শবাজ', rot: -8, left: '8%', top: '6%', z: 2, delay: 0, big: false },
-  { bg: '#064e3b', label: 'বই', rot: 4, left: '38%', top: '22%', z: 3, delay: 0.4, big: true },
-  { bg: '#7e22ce', label: 'পড়ুন', rot: 9, left: '64%', top: '10%', z: 2, delay: 0.8, big: false },
+const HERO_SELECTION = [
+  {
+    slug: 'edventure',
+    href: '/edventure',
+    shortName: 'Edভেঞ্চার',
+    cover: 'https://api.shobaz.com/api/upload/images/edventure-book-1fcc.webp',
+    price: 299,
+  },
+  {
+    slug: 'road-to-corporate-39',
+    href: '/products/road-to-corporate-39',
+    shortName: 'রোড to কর্পোরেট',
+    cover: 'https://api.shobaz.com/api/upload/images/road-to-corporate-cover-compressed-d4be.webp',
+    price: 298,
+  },
+  {
+    slug: 'productive muslim',
+    href: '/products/Productive%20Muslim',
+    shortName: 'প্রোডাক্টিভ মুসলিম',
+    cover: 'https://api.shobaz.com/api/upload/images/productive-muslim-amolbooks-2f28.jpg',
+    price: 300,
+  },
 ];
 
 function Stars({ rating }: { rating: number }) {
@@ -254,7 +272,6 @@ export default function HomePage() {
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [bundleTimeLeft, setBundleTimeLeft] = useState({ h: 0, m: 0, s: 0 });
   const tagScrollRef = useRef<HTMLDivElement>(null);
 
   const handleAddToCart = useCallback((product: Product) => {
@@ -345,18 +362,6 @@ export default function HomePage() {
     return () => io.disconnect();
   }, [loading]);
 
-  useEffect(() => {
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 0);
-    const tick = () => {
-      const d = Math.max(0, endOfDay.getTime() - Date.now());
-      setBundleTimeLeft({ h: Math.floor(d / 3600000), m: Math.floor((d % 3600000) / 60000), s: Math.floor((d % 60000) / 1000) });
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#ffffff' }}>
@@ -370,14 +375,10 @@ export default function HomePage() {
   }
 
   const activeSections = homepageSections.filter(s => s.products && s.products.length > 0);
-  const heroBooks = featuredProducts.slice(0, 3);
-  const hasDiscount = featuredProducts.some(p => (p.discountAmount || 0) > 0);
-
-  const HERO_POSITIONS = [
-    { rot: -8, left: '8%', top: '6%', z: 2, delay: 0, big: false },
-    { rot: 4, left: '38%', top: '22%', z: 3, delay: 0.4, big: true },
-    { rot: 9, left: '64%', top: '10%', z: 2, delay: 0.8, big: false },
-  ];
+  const heroSelection = HERO_SELECTION.map(item => ({
+    ...item,
+    product: allProducts.find(product => product.slug?.trim().toLowerCase() === item.slug),
+  }));
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', color: '#0f172a' }}>
@@ -386,140 +387,45 @@ export default function HomePage() {
       <main className="flex-1">
 
         {/* ── Hero ── */}
-        <section style={{ background: '#fdf6ec' }}>
-          <div
-            className="nh-hero"
-            style={{
-              maxWidth: 1280, margin: '0 auto', padding: '64px 24px',
-              display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 48, alignItems: 'center',
-            }}
-          >
-            {/* Left */}
-            <div>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'white', border: `1px solid ${PRIMARY}33`, color: PRIMARY,
-                borderRadius: 999, padding: '6px 14px', fontSize: 13, fontWeight: 600,
-                marginBottom: 20, fontFamily: 'var(--bn)',
-              }}>
-                ✦ বাংলাদেশের #১ অনলাইন বইয়ের দোকান
-              </span>
-              <h1 style={{
-                fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 1.15, fontWeight: 800,
-                margin: '0 0 18px', color: '#0f172a', letterSpacing: '-0.01em',
-                fontFamily: 'var(--bn)',
-              }}>
-                আপনার পছন্দের বই,<br />
-                <span style={{ color: PRIMARY }}>এখন ঘরে বসেই</span>
+        <section className="home-hero" aria-labelledby="home-hero-title">
+          <div className="home-hero__inner">
+            <div className="home-hero__copy">
+              <p className="home-hero__eyebrow">পড়াশোনা · ক্যারিয়ার · আত্মউন্নয়ন</p>
+              <h1 id="home-hero-title" className="home-hero__title">
+                তিনটি বই। সামনে এগোনোর তিনটি পথ।
               </h1>
-              <p style={{
-                fontSize: 17, color: '#475569', lineHeight: 1.6,
-                margin: '0 0 32px', maxWidth: 520, fontFamily: 'var(--bn)',
-              }}>
-                বাংলাদেশের বিশ্বস্ত অনলাইন বইয়ের দোকান — হাজার হাজার বইয়ের কালেকশন থেকে সারাদেশে দ্রুত ডেলিভারি।
+              <p className="home-hero__lede">
+                বিদেশে উচ্চশিক্ষা, কর্পোরেট ক্যারিয়ার আর শৃঙ্খলিত জীবন—এই মুহূর্তে শবাজের বাছাইয়ে তিনটি বই।
               </p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Link href="/products" className="nh-cta-shine" style={{
-                  color: 'white', borderRadius: 10,
-                  padding: '14px 28px', fontSize: 15, fontWeight: 700,
-                  fontFamily: 'var(--bn)', boxShadow: '0 6px 20px -8px rgba(22,163,74,0.6)',
-                  textDecoration: 'none', display: 'inline-block',
-                }}>বই কিনুন →</Link>
-                <Link href="/offers" style={{
-                  background: 'white', color: '#0f172a', border: '1.5px solid #cbd5e1',
-                  borderRadius: 10, padding: '13px 26px', fontSize: 15, fontWeight: 600,
-                  fontFamily: 'var(--bn)', textDecoration: 'none', display: 'inline-block',
-                }}>অফার দেখুন</Link>
+              <div className="home-hero__actions">
+                <a href="#hero-selection" className="home-hero__action home-hero__action--primary">বইগুলো দেখুন</a>
+                <Link href="/products" className="home-hero__action home-hero__action--secondary">সব বই</Link>
               </div>
-              <div className="nh-hero-stats" style={{ display: 'flex', gap: 32, marginTop: 40, flexWrap: 'wrap' }}>
-                {[
-                  { n: '৫০,০০০+', l: 'বই' },
-                  { n: '১০,০০০+', l: 'সন্তুষ্ট পাঠক' },
-                  { n: '৬৪ জেলায়', l: 'ডেলিভারি' },
-                ].map(s => (
-                  <div key={s.l}>
-                    <div className="nh-stat-num" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--bn)' }}>{s.n}</div>
-                    <div style={{ fontSize: 13, color: '#64748b', fontFamily: 'var(--sans)' }}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
+              <p className="home-hero__delivery">সারাদেশে ক্যাশ অন ডেলিভারি · দ্রুত পাঠানো হয়</p>
             </div>
 
-            {/* Right — floating book covers */}
-            <div className="nh-hero-books" style={{ position: 'relative', height: 420 }}>
-              <div style={{
-                position: 'absolute', inset: '10% 8% 10% 8%', borderRadius: '50%',
-                background: `radial-gradient(closest-side, ${PRIMARY}1f, transparent 70%)`,
-              }} />
+            <div id="hero-selection" className="home-hero__selection" aria-label="নির্বাচিত তিনটি বই">
+              <div className="home-hero__selection-head">
+                <span>আজকের নির্বাচন</span>
+                <span>০৩টি বই</span>
+              </div>
+              <div className="home-hero__products">
+                {heroSelection.map(({ product, href, shortName, cover: fallbackCover, price: fallbackPrice }) => {
+                  const cover = imgUrl(product?.images?.[0]) || fallbackCover;
+                  const currentPrice = product
+                    ? (product.salePrice || 0) - (product.discountAmount || 0)
+                    : fallbackPrice;
 
-              {heroBooks.length > 0
-                ? heroBooks.map((book, i) => {
-                    const pos = HERO_POSITIONS[i];
-                    const w = pos.big ? 200 : 155;
-                    const h = pos.big ? 280 : 215;
-                    const cover = imgUrl(book.images?.[0]);
-                    return (
-                      <div key={book._id} style={{
-                        position: 'absolute', left: pos.left, top: pos.top,
-                        transform: `rotate(${pos.rot}deg)`, zIndex: pos.z,
-                        animation: `floatY 6s ease-in-out ${pos.delay}s infinite alternate`,
-                        filter: 'drop-shadow(0 24px 30px rgba(15,23,42,0.22))',
-                        borderRadius: 6,
-                      }}>
-                        {cover
-                          ? <img src={cover} alt={book.name} style={{ width: w, height: h, objectFit: 'cover', borderRadius: 4, display: 'block' }} />
-                          : (
-                            <div style={{
-                              width: w, height: h, borderRadius: 4,
-                              background: ['#1e3a8a', '#064e3b', '#7e22ce'][i],
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12,
-                            }}>
-                              <span style={{ color: '#fef3c7', fontFamily: 'var(--bn)', fontWeight: 700, fontSize: 13, textAlign: 'center' }}>
-                                {book.name}
-                              </span>
-                            </div>
-                          )}
-                      </div>
-                    );
-                  })
-                : HERO_FALLBACKS.map((item, i) => (
-                    <div key={i} style={{
-                      position: 'absolute', left: item.left, top: item.top,
-                      transform: `rotate(${item.rot}deg)`, zIndex: item.z,
-                      animation: `floatY 6s ease-in-out ${item.delay}s infinite alternate`,
-                      filter: 'drop-shadow(0 24px 30px rgba(15,23,42,0.22))',
-                    }}>
-                      <div style={{
-                        width: item.big ? 200 : 155, height: item.big ? 280 : 215,
-                        borderRadius: 4, background: item.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <span style={{ color: '#fef3c7', fontFamily: 'var(--bn)', fontWeight: 700, fontSize: 16 }}>{item.label}</span>
-                      </div>
-                    </div>
-                  ))
-              }
-
-              {hasDiscount && (
-                <div className="nh-disc-badge" style={{
-                  position: 'absolute', top: '4%', right: '2%', background: AMBER, color: 'white',
-                  borderRadius: 999, padding: '10px 14px', fontWeight: 800, fontSize: 12,
-                  boxShadow: '0 8px 20px -8px rgba(245,158,11,0.6)', transform: 'rotate(6deg)',
-                  fontFamily: 'var(--bn)', zIndex: 10,
-                }}>৪০% পর্যন্ত ছাড়</div>
-              )}
-
-              <div style={{
-                position: 'absolute', bottom: '6%', left: '2%', background: 'white',
-                borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'center',
-                gap: 10, boxShadow: '0 14px 30px -12px rgba(15,23,42,0.18)',
-                border: '1px solid #f1f5f9', zIndex: 10,
-              }}>
-                <span style={{ fontSize: 22 }}>🚚</span>
-                <div>
-                  <div style={{ fontSize: 11, color: '#64748b', fontFamily: 'var(--sans)' }}>ডেলিভারি</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--bn)' }}>২৪-৪৮ ঘণ্টায়</div>
-                </div>
+                  return (
+                    <Link key={href} href={href} className="home-hero__product">
+                      <span className="home-hero__cover">
+                        <img src={cover} alt={`${shortName} বইয়ের প্রচ্ছদ`} width="320" height="448" />
+                      </span>
+                      <span className="home-hero__product-name">{shortName}</span>
+                      <span className="home-hero__price">৳{currentPrice.toLocaleString('en-IN')}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -646,115 +552,6 @@ export default function HomePage() {
             </Swiper>
           </section>
         )}
-
-        {/* ── Bundle Cards ── */}
-        {(() => {
-          const pad = (n: number) => String(n).padStart(2, '0');
-          const bySlug = Object.fromEntries(allProducts.map(p => [p.slug, p]));
-          const notebookProducts = allProducts.filter(p => {
-            const t = (p as any).tags;
-            return Array.isArray(t) && t.some((tag: any) => tag.slug === 'notebook');
-          }).slice(0, 5);
-          const FINANCE_SLUGS = ['i-will-teach-you-to-be-rich', 'the-intelligent-investor', 'rich-dad-poor-dad', 'the-psychology-of-money', 'think-and-grow-rich'];
-          const COMM_SLUGS = ['influence-the-psychology-of-persuasion', 'the-48-laws-of-power', 'how-to-win-friends-influence-people', 'never-split-the-difference', 'crucial-conversations'];
-          const BUNDLES = [
-            { name: 'Finance Bundle', label: 'অর্থনৈতিক স্বাধীনতার পথে ৫টি সেরা বই', href: '/finance-bundle', slugs: FINANCE_SLUGS, total: 1786, original: 2985, pct: 40, accent: '#1E3A2A', products: [] as any[] },
-            { name: 'Communication Bundle', label: 'মানুষের মন জয় করার ৫টি সেরা বই', href: '/communication-bundle', slugs: COMM_SLUGS, total: 1682, original: 2769, pct: 39, accent: '#1B3D6B', products: [] as any[], note: '৫টি একসাথে · ৳১০৮৭ সাশ্রয়' },
-            { name: 'Notebook Bundle', label: '২টি নোটবুক কিনলে ১টি ফ্রি · ৫০০৳+ অর্ডারে নোটবুক উপহার', href: '/notebook-bundle', slugs: [] as string[], total: 160, original: 400, pct: 60, accent: '#0D5C2A', products: notebookProducts, note: '২টি কিনলে ১টি নোটবুক ফ্রি · প্রতি নোটবুক ৳১৬০' },
-          ];
-          return (
-            <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 8px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
-                <div>
-                  <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>Exclusive Bundles</h2>
-                  <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>সর্বোচ্চ ছাড়ে ৫টি বই/নোটবুক একসাথে — সীমিত সময়ের অফার</p>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
-                {BUNDLES.map((bundle) => {
-                  const bookList = bundle.products.length > 0
-                    ? bundle.products
-                    : bundle.slugs.map(s => bySlug[s]).filter(Boolean);
-                  return (
-                    <Link key={bundle.href} href={bundle.href} style={{ textDecoration: 'none' }}>
-                      <div style={{
-                        background: '#fff', borderRadius: 20, overflow: 'hidden',
-                        border: '1px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-                        transition: 'transform .2s ease, box-shadow .2s ease', cursor: 'pointer',
-                      }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 40px rgba(0,0,0,0.12)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.06)'; }}
-                      >
-                        {/* Header band */}
-                        <div style={{ background: bundle.accent, padding: '18px 22px 14px', position: 'relative', overflow: 'hidden' }}>
-                          <div style={{ position: 'absolute', top: -30, right: -20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-                          <div style={{ position: 'absolute', bottom: -40, left: '30%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-                          <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px', marginBottom: 8 }}>
-                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E8C075', display: 'inline-block' }} />
-                              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#E8C075', fontFamily: 'var(--sans)' }}>৫টি বইয়ের বান্ডেল</span>
-                            </div>
-                            <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', fontFamily: 'var(--bn)', lineHeight: 1.2 }}>{bundle.name}</div>
-                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontFamily: 'var(--bn)' }}>{bundle.label}</div>
-                          </div>
-                        </div>
-
-                        {/* Covers row */}
-                        <div style={{ padding: '16px 22px 8px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
-                            {(bookList.length > 0 ? bookList : Array.from({ length: 5 })).map((p: any, i: number) => {
-                              const src = p ? imgUrl(p.images?.[0]) : null;
-                              const colors = ['#1B3D6B', '#8B0000', '#F5C518', '#0D5C2A', '#1B2A4A'];
-                              return (
-                                <div key={i} style={{
-                                  width: 44, height: 64, borderRadius: '2px 4px 4px 2px', flexShrink: 0,
-                                  boxShadow: '0 4px 10px rgba(0,0,0,0.18)',
-                                  transform: `rotate(${[-3,-1,0,1,3][i]}deg) translateY(${[4,2,0,2,4][i]}px)`,
-                                  overflow: 'hidden', background: colors[i % colors.length],
-                                  border: '1px solid rgba(0,0,0,0.08)',
-                                }}>
-                                  {src ? <img src={src} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Price + timer + CTA */}
-                        <div style={{ padding: '16px 22px 20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                            <span style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--sans)' }}>৳{bundle.total.toLocaleString('en-IN')}</span>
-                            <span style={{ fontSize: 14, color: '#94a3b8', textDecoration: 'line-through', fontFamily: 'var(--sans)' }}>৳{bundle.original.toLocaleString('en-IN')}</span>
-                            <span style={{ background: '#fee2e2', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4, fontFamily: 'var(--sans)' }}>{bundle.pct}% OFF</span>
-                          </div>
-                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'var(--bn)' }}>{bundle.note}</div>
-                          {/* Countdown */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, marginBottom: 14 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e97316" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                            <span style={{ fontSize: 12, color: '#e97316', fontWeight: 600, fontFamily: 'var(--sans)' }}>অফার শেষ হবে:</span>
-                            {[pad(bundleTimeLeft.h), pad(bundleTimeLeft.m), pad(bundleTimeLeft.s)].map((v, i) => (
-                              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                                <span style={{ background: '#0f172a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12, fontWeight: 700, fontFamily: 'var(--sans)' }}>{v}</span>
-                                {i < 2 && <span style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>:</span>}
-                              </span>
-                            ))}
-                          </div>
-                          <div style={{
-                            background: bundle.accent, color: '#fff', borderRadius: 10,
-                            padding: '11px 18px', fontSize: 14, fontWeight: 700,
-                            textAlign: 'center', fontFamily: 'var(--bn)',
-                          }}>
-                            বান্ডেল দেখুন →
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })()}
 
         {/* ── Book Sections ── */}
         {activeSections.length > 0 ? (

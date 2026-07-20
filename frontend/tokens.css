@@ -1,0 +1,45 @@
+:root {
+  --color-hero-paper: oklch(97% 0.018 82);
+  --color-hero-paper-2: oklch(93% 0.025 84);
+  --color-hero-paper-raised: oklch(99% 0.01 82);
+  --color-hero-ink: oklch(20% 0.025 150);
+  --color-hero-muted: oklch(45% 0.025 145);
+  --color-hero-rule: oklch(79% 0.035 110);
+  --color-hero-accent: oklch(59% 0.17 145);
+  --color-hero-accent-deep: oklch(42% 0.13 145);
+  --color-hero-focus: oklch(68% 0.18 145);
+  --color-hero-fallback: oklch(34% 0.08 145);
+
+  --space-hero-2xs: 0.25rem;
+  --space-hero-xs: 0.5rem;
+  --space-hero-sm: 0.75rem;
+  --space-hero-md: 1rem;
+  --space-hero-lg: 1.5rem;
+  --space-hero-xl: 2.5rem;
+  --space-hero-2xl: 4rem;
+  --space-hero-3xl: 6rem;
+
+  --text-hero-xs: 0.75rem;
+  --text-hero-sm: 0.875rem;
+  --text-hero-base: 1rem;
+  --text-hero-md: 1.125rem;
+  --text-hero-display: clamp(2.65rem, 5.5vw, 5.2rem);
+
+  --ease-hero-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-hero-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-hero-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-hero-micro: 120ms;
+  --dur-hero-short: 220ms;
+  --dur-hero-long: 420ms;
+
+  --rule-hero-hairline: 1px;
+  --radius-hero-sm: 0.25rem;
+  --radius-hero-md: 0.75rem;
+  --shadow-hero-cover: 0 1.25rem 2.25rem -1.25rem oklch(20% 0.025 150 / 0.45);
+}
+
+body {
+  --font-hero-display: var(--font-bengali-display), serif;
+  --font-hero-body: var(--font-bengali), sans-serif;
+  --font-hero-ui: var(--font-english), sans-serif;
+}
