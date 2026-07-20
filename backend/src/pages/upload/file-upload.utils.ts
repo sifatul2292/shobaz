@@ -37,6 +37,20 @@ export const editFileName = (req, file, callback) => {
   callback(null, `${name}-${randomName}${fileExtName}`);
 };
 
+export const getApiBaseUrl = (req: any, isProduction: boolean): string => {
+  const forwardedProtocol = req.get('x-forwarded-proto')
+    ?.split(',')[0]
+    ?.trim()
+    ?.toLowerCase();
+  const requestProtocol = forwardedProtocol || req.protocol;
+  const protocol =
+    isProduction && requestProtocol === 'http' ? 'https' : requestProtocol;
+  const forwardedHost = req.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const host = forwardedHost || req.get('host');
+
+  return `${protocol}://${host}/api`;
+};
+
 export const getUploadPath = (req: any, file: any, callback: any) => {
   // Destination Folder Dynamic..
   // const { folderPath } = req.body;

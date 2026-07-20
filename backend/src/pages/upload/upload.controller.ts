@@ -18,6 +18,7 @@ import { diskStorage } from 'multer';
 import {
   allFileFilter,
   editFileName,
+  getApiBaseUrl,
   getUploadFilePath,
   getUploadPath,
   imageFileFilter,
@@ -69,8 +70,7 @@ export class UploadController {
     @Req() req,
   ) {
     const isProduction = this.configService.get<boolean>('productionBuild');
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     const path = file.path;
     const url = `${baseurl}/${path}`;
     return {
@@ -121,11 +121,7 @@ export class UploadController {
         .webp({ effort: 4, quality: quality })
         .toFile(path.join(dir, newFilename));
 
-      const baseurl =
-        req.protocol +
-        `${isProduction ? 's' : ''}://` +
-        req.get('host') +
-        '/api';
+      const baseurl = getApiBaseUrl(req, isProduction);
       const url = `${baseurl}/${newPath}`;
 
       // Delete Images
@@ -137,11 +133,7 @@ export class UploadController {
         url,
       };
     } else {
-      const baseurl =
-        req.protocol +
-        `${isProduction ? 's' : ''}://` +
-        req.get('host') +
-        '/api';
+      const baseurl = getApiBaseUrl(req, isProduction);
       const path = file.path;
       const url = `${baseurl}/${path}`;
       return {
@@ -167,8 +159,7 @@ export class UploadController {
     @Req() req,
   ): Promise<ImageUploadResponse[]> {
     const isProduction = this.configService.get<boolean>('productionBuild');
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     const response: ImageUploadResponse[] = [];
     files.forEach((file) => {
       const fileResponse = {
@@ -199,8 +190,7 @@ export class UploadController {
     @Body() body,
   ): Promise<ImageUploadResponse[]> {
     const isProduction = this.configService.get<boolean>('productionBuild');
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
 
     if (
       body &&
@@ -260,8 +250,7 @@ export class UploadController {
     @Req() req,
   ): Promise<ResponsePayload> {
     const isProduction = this.configService.get<boolean>('productionBuild');
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     const path = `.${url.replace(baseurl, '')}`;
     // console.log('path', path);
     return this.uploadService.deleteSingleFile(path);
@@ -273,8 +262,7 @@ export class UploadController {
     @Req() req,
   ): Promise<ResponsePayload> {
     const isProduction = this.configService.get<boolean>('productionBuild');
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     return this.uploadService.deleteMultipleFile(baseurl, url);
   }
 
@@ -307,8 +295,7 @@ export class UploadController {
     //     req.get('host') +
     //     '/' +
     //     prefix ?? '';
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     const response: FileUploadResponse[] = [];
     files.forEach((file) => {
       const fileResponse = {
@@ -340,8 +327,7 @@ export class UploadController {
     //     req.get('host') +
     //     '/' +
     //     prefix ?? '';
-    const baseurl =
-      req.protocol + `${isProduction ? 's' : ''}://` + req.get('host') + '/api';
+    const baseurl = getApiBaseUrl(req, isProduction);
     return this.uploadService.deleteMultipleFilePdf(baseurl, url);
   }
 

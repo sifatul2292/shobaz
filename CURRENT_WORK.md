@@ -19,6 +19,14 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-18.
 ## In progress
 Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
 
+## Product image upload URL fix (2026-07-20)
+- Fixed production uploads generating malformed `httpss://api.shobaz.com/...` URLs after Express proxy trust made `req.protocol` return `https`; upload URLs now respect forwarded protocol/host headers without appending a second `s`.
+- Applied the corrected base URL builder to single/multiple image uploads, WebP conversion responses, file uploads, and matching delete paths.
+- Added compatibility normalization for existing malformed gallery and product image URLs, including admin product reads, storefront product lists/details, and subsequent product updates. The four affected Productive Muslim files were verified live as intact HTTP 200 JPEG/WebP files when addressed with the corrected scheme.
+- Added regression tests in `backend/src/pages/upload/file-upload.utils.spec.ts` and `backend/src/shared/utils/media-url.utils.spec.ts`.
+- Checks: `cd backend && npm test -- --runInBand` passed (2 suites, 7 tests); `npm run build` passed; `git diff --check` passed. `npm run lint` still fails before linting because the configured glob is fully ignored (existing repository configuration issue).
+- Production still needs the updated backend deployed/restarted before new uploads and the compatibility repair take effect.
+
 ## Incomplete-order persistence fix (2026-07-18)
 - Fixed Fraud Checker and Admin Note saves using the normal-order update endpoint while viewing incomplete orders. The page now routes those writes to `/api/order/update-incomplete-order-by-id/:id`, so they update the `incompleteorders` collection that reloads populate from.
 - Added shared response validation so the page no longer shows a false success when an update returns a non-2xx response, invalid JSON, or `success !== true`.

@@ -19,6 +19,7 @@ import {
   OptionGalleryDto,
   UpdateGalleryDto,
 } from '../../dto/gallery.dto';
+import { normalizeMediaUrl } from '../../shared/utils/media-url.utils';
 
 const ObjectId = Types.ObjectId;
 
@@ -42,7 +43,11 @@ export class GalleryService {
     const defaultData = {
       slug: this.utilsService.transformToSlug(name),
     };
-    const mData = { ...addGalleryDto, ...defaultData };
+    const mData = {
+      ...addGalleryDto,
+      url: normalizeMediaUrl(addGalleryDto.url),
+      ...defaultData,
+    };
     const newData = new this.galleryModel(mData);
     try {
       const saveData = await newData.save();
@@ -74,6 +79,7 @@ export class GalleryService {
     const mData = addGallerysDto.map((m) => {
       return {
         ...m,
+        url: normalizeMediaUrl(m.url),
         ...{
           slug: this.utilsService.transformToSlug(m.name),
         },
@@ -194,16 +200,27 @@ export class GalleryService {
       const dataAggregates = await this.galleryModel.aggregate(aggregateStages);
 
       if (pagination) {
+        const result = dataAggregates[0];
+        if (result?.data) {
+          result.data = result.data.map((gallery) => ({
+            ...gallery,
+            url: normalizeMediaUrl(gallery.url),
+          }));
+        }
         return {
-          ...{ ...dataAggregates[0] },
+          ...{ ...result },
           ...{ success: true, message: 'Success' },
         } as ResponsePayload;
       } else {
+        const data = dataAggregates.map((gallery) => ({
+          ...gallery,
+          url: normalizeMediaUrl(gallery.url),
+        }));
         return {
-          data: dataAggregates,
+          data,
           success: true,
           message: 'Success',
-          count: dataAggregates.length,
+          count: data.length,
         } as ResponsePayload;
       }
     } catch (err) {
@@ -218,7 +235,10 @@ export class GalleryService {
 
   async getGalleryById(id: string, select: string): Promise<ResponsePayload> {
     try {
-      const data = await this.galleryModel.findById(id).select(select);
+      const gallery = await this.galleryModel.findById(id).select(select).lean();
+      const data = gallery
+        ? { ...gallery, url: normalizeMediaUrl(gallery.url) }
+        : gallery;
       return {
         success: true,
         message: 'Success',

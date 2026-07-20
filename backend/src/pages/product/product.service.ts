@@ -36,6 +36,10 @@ import { CreateStockPurchaseDto, GetStockMovementsDto } from '../../dto/stock.dt
 import { Order } from '../../interfaces/common/order.interface';
 import { OrderStatus } from '../../enum/order.enum';
 import * as moment from 'moment-timezone';
+import {
+  normalizeMediaUrls,
+  normalizeProductMedia,
+} from '../../shared/utils/media-url.utils';
 const ObjectId = Types.ObjectId;
 
 interface BoughtTogetherConfig {
@@ -389,7 +393,7 @@ export class ProductService {
 
       const skip = (Number(page) - 1) * Number(limit);
 
-      const data = await this.productModel
+      const products = await this.productModel
         .find(mFilter)
         .select(
           'name nameEn seoKeyword seoTitle seoDescription author category subCategory brand publisher discountType slug discountAmount tags quantity regularPrice salePrice ratingTotal images ratingCount tagline taglineEn totalPages totalSold',
@@ -397,6 +401,7 @@ export class ProductService {
         .skip(Number(skip))
         .limit(Number(limit))
         .sort(sortQuery);
+      const data = products.map(normalizeProductMedia);
 
       const totalCount = await this.productModel.countDocuments(mFilter);
 
@@ -425,13 +430,14 @@ export class ProductService {
         ],
       };
 
-      const data = await this.productModel
+      const products = await this.productModel
         .find(mFilter)
         .select(
           'name nameEn slug images price salePrice discountAmount discountType author category',
         )
         .limit(Number(limit))
         .sort({ createdAt: -1 });
+      const data = products.map(normalizeProductMedia);
 
       const totalCount = await this.productModel.countDocuments(mFilter);
 
@@ -809,6 +815,9 @@ export class ProductService {
       }
 
       if (pagination) {
+        dataAggregates[0].data = dataAggregates[0].data.map(
+          normalizeProductMedia,
+        );
         if (
           pagination.currentPage < 1 &&
           filter == null &&
@@ -834,11 +843,12 @@ export class ProductService {
           },
         } as ResponsePayload;
       } else {
+        const data = dataAggregates.map(normalizeProductMedia);
         return {
-          data: dataAggregates,
+          data,
           success: true,
           message: 'Success',
-          count: dataAggregates.length,
+          count: data.length,
           filterGroup: allFilterGroups,
         } as ResponsePayload;
       }
@@ -855,10 +865,11 @@ export class ProductService {
 
   async getProductById(id: string, select: string): Promise<ResponsePayload> {
     try {
-      const data = await this.productModel
+      const product = await this.productModel
         .findById(id)
         .select(select)
         .populate('tags');
+      const data = normalizeProductMedia(product);
 
       return {
         success: true,
@@ -937,8 +948,10 @@ export class ProductService {
 
       // Attach bought together products to response
       const responseData = {
-        ...data.toObject(),
-        boughtTogetherProducts: boughtTogetherProducts,
+        ...normalizeProductMedia(data),
+        boughtTogetherProducts: boughtTogetherProducts.map(
+          normalizeProductMedia,
+        ),
       };
 
       return {
@@ -957,7 +970,8 @@ export class ProductService {
   ): Promise<ResponsePayload> {
     try {
       const mIds = getProductByIdsDto.ids.map((m) => new ObjectId(m));
-      const data = await this.productModel.find({ _id: { $in: mIds } });
+      const products = await this.productModel.find({ _id: { $in: mIds } });
+      const data = products.map(normalizeProductMedia);
       // .select(select ? select : '');
       return {
         success: true,
@@ -988,7 +1002,19 @@ export class ProductService {
       throw new NotFoundException('No Data found!');
     }
     try {
-      const finalData = { ...updateProductDto };
+      const finalData = {
+        ...updateProductDto,
+        ...(updateProductDto.images
+          ? { images: normalizeMediaUrls(updateProductDto.images) }
+          : {}),
+        ...(updateProductDto.showcaseImages
+          ? {
+              showcaseImages: normalizeMediaUrls(
+                updateProductDto.showcaseImages,
+              ),
+            }
+          : {}),
+      };
       // Check Slug
       if (nameEn)
         if (nameEn && data.nameEn !== nameEn) {
