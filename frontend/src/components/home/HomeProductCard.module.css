@@ -29,19 +29,23 @@
 .media {
   position: relative;
   display: grid;
+  box-sizing: border-box;
   aspect-ratio: 1 / 1.08;
   min-width: 0;
+  min-height: 0;
   place-items: center;
   overflow: clip;
-  padding: var(--space-product-lg);
+  padding: var(--space-product-sm);
   color: var(--color-product-ink);
   background: var(--color-product-stage);
   border-radius: var(--radius-product-card) var(--radius-product-card) 0 0;
 }
 
 .cover {
-  width: 78%;
-  height: 86%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
   filter: drop-shadow(var(--shadow-product-cover));
   transition: transform var(--dur-product-short) var(--ease-product-out);
@@ -317,7 +321,7 @@
 
 @media (min-width: 40rem) {
   .media {
-    padding: var(--space-product-lg) var(--space-product-xl);
+    padding: var(--space-product-md);
   }
 
   .cartButton {
