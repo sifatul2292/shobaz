@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import HomeProductCard from '@/components/home/HomeProductCard';
 import api, { imgUrl } from '@/lib/api';
 import { getCached, setCached } from '@/lib/cache';
 import { Product, Category, Author, Publisher, Blog, Tag } from '@/types';
@@ -105,144 +106,6 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-async function addToWishlist(productId: string) {
-  try {
-    const res = await api.post('/wishList/add-to-wish-list', { product: productId, selectedQty: 1 });
-    if (res.data?.success) {
-      toast.success('ইচ্ছা তালিকায় যোগ হয়েছে');
-    } else {
-      toast.error(res.data?.message || 'লগইন করুন');
-    }
-  } catch {
-    toast.error('লগইন করুন');
-  }
-}
-
-function NewBookCard({ product, onAdd }: { product: Product; onAdd: (p: Product) => void }) {
-  const authorName = Array.isArray(product.author)
-    ? (product.author[0] as any)?.name
-    : (product.author as any)?.name || product.author;
-  const salePrice = product.salePrice || 0;
-  const discount = product.discountAmount || 0;
-  const currentPrice = salePrice - discount;
-  const discountPct = salePrice > 0 ? Math.round((discount / salePrice) * 100) : 0;
-  const coverImg = imgUrl(product.images?.[0]);
-
-  return (
-    <div
-      className="nh-book-card"
-      style={{
-        background: '#ffffff',
-        borderRadius: 14,
-        padding: 18,
-        border: '1px solid #f1f5f9',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        transition: 'box-shadow .2s ease, border-color .2s ease',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 18px 36px -22px rgba(15,23,42,0.18)';
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#f1f5f9';
-      }}
-    >
-      {discountPct > 0 && (
-        <div style={{
-          position: 'absolute', top: 14, left: 14, width: 44, height: 44,
-          borderRadius: '50%', background: '#dc2626', color: 'white',
-          fontWeight: 800, fontSize: 12, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 2,
-          boxShadow: '0 6px 14px -6px rgba(220,38,38,0.55)',
-          fontFamily: 'var(--sans)',
-        }}>
-          -{discountPct}%
-        </div>
-      )}
-
-      <button
-        onClick={e => { e.preventDefault(); e.stopPropagation(); addToWishlist(product._id); }}
-        style={{
-          position: 'absolute', top: 14, right: 14, width: 36, height: 36,
-          borderRadius: '50%', background: 'white', border: '1px solid #f1f5f9',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
-          cursor: 'pointer', padding: 0,
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-      </button>
-
-      <Link href={`/products/${product.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
-        <div style={{
-          background: '#f8fafc', borderRadius: 10, padding: '20px 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
-        }}>
-          {coverImg ? (
-            <img
-              src={coverImg}
-              alt={product.name}
-              style={{
-                height: 196, width: 140, objectFit: 'cover', borderRadius: 4,
-                boxShadow: '0 14px 20px rgba(15,23,42,0.18)',
-              }}
-            />
-          ) : (
-            <div style={{
-              height: 196, width: 140, borderRadius: 4,
-              background: 'linear-gradient(160deg, #1e3a8a, #1e40af)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 14px 20px rgba(15,23,42,0.18)', padding: 10,
-            }}>
-              <span style={{ color: '#fef3c7', fontFamily: 'var(--bn)', fontWeight: 700, fontSize: 13, textAlign: 'center' }}>
-                {product.name}
-              </span>
-            </div>
-          )}
-        </div>
-        <h3 style={{
-          fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.35,
-          fontFamily: 'var(--bn)', display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 40,
-        }}>{product.name}</h3>
-        <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 8px', fontFamily: 'var(--sans)' }}>
-          {authorName as string}
-        </p>
-      </Link>
-
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, marginTop: 'auto' }}>
-        <span style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--sans)' }}>
-          ৳{currentPrice}
-        </span>
-        {discount > 0 && (
-          <span style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'line-through', fontFamily: 'var(--sans)' }}>
-            ৳{salePrice}
-          </span>
-        )}
-      </div>
-
-      <button
-        onClick={() => onAdd(product)}
-        className="nh-add-btn"
-        style={{
-          background: PRIMARY, color: 'white', border: 'none', borderRadius: 10,
-          padding: '11px 16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--bn)',
-          fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          transition: 'background .15s ease',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#15803d'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = PRIMARY; }}
-      >
-        কার্টে যোগ করুন
-      </button>
-    </div>
-  );
-}
-
 function SectionHeader({ title, linkHref, linkLabel }: { title: string; linkHref: string; linkLabel?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
@@ -276,7 +139,6 @@ export default function HomePage() {
 
   const handleAddToCart = useCallback((product: Product) => {
     addItem(product, 1);
-    toast.success('কার্টে যোগ হয়েছে');
   }, [addItem]);
 
   useEffect(() => {
@@ -570,7 +432,7 @@ export default function HomePage() {
               >
                 {section.products.map((product) => (
                   <SwiperSlide key={product._id}>
-                    <NewBookCard product={product} onAdd={handleAddToCart} />
+                    <HomeProductCard product={product} onAdd={handleAddToCart} />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -593,7 +455,7 @@ export default function HomePage() {
                 >
                   {featuredProducts.map((product) => (
                     <SwiperSlide key={product._id}>
-                      <NewBookCard product={product} onAdd={handleAddToCart} />
+                      <HomeProductCard product={product} onAdd={handleAddToCart} />
                     </SwiperSlide>
                   ))}
                 </Swiper>
@@ -614,7 +476,7 @@ export default function HomePage() {
                 >
                   {newProducts.map((product) => (
                     <SwiperSlide key={product._id}>
-                      <NewBookCard product={product} onAdd={handleAddToCart} />
+                      <HomeProductCard product={product} onAdd={handleAddToCart} />
                     </SwiperSlide>
                   ))}
                 </Swiper>

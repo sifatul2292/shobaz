@@ -572,11 +572,6 @@ input[type="number"] {
   }
 }
 
-/* Book card add-to-cart button: compact on mobile */
-@media (max-width: 640px) {
-  .nh-add-btn { padding: 7px 10px !important; font-size: 12px !important; border-radius: 8px !important; }
-}
-
 /* Tags horizontal scroll — hide scrollbar */
 .cat-pills::-webkit-scrollbar { display: none; }
 
@@ -638,9 +633,3 @@ input[type="number"] {
   55%       { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
 }
 .nh-promo { animation: promo-glow 3s ease-in-out infinite; }
-
-/* Book card lift on hover (stronger) */
-.nh-book-card:hover {
-  transform: translateY(-5px);
-  transition: transform .22s ease, box-shadow .22s ease;
-}

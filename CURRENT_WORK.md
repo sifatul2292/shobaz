@@ -27,6 +27,11 @@ Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified loca
 - Refined the desktop proportions after visual review: the hero headline now caps at 50px, the product rail caps at 544px, and the desktop hero height is reduced to keep the composition balanced.
 - Checks: frontend production build passed; browser checks confirmed all three covers load, Noto Serif Bengali is applied, the removed bundle section is absent, CTA labels stay on one line, and no horizontal overflow occurs from 320 through 1920 px. `npx tsc --noEmit` remains blocked by the pre-existing unsupported `eslint` property in `next.config.ts`; `npm run lint` remains blocked because Next.js 16 no longer supports the configured `next lint` command.
 
+## Homepage product-card refinement (2026-07-20)
+- Replaced the bulky inline homepage book cards with a reusable modern-minimal card: quieter discount tab, edge-to-edge cover stage, compact price rail, 44px cart control, and accessible wishlist behavior.
+- Added explicit default, hover, focus, active, disabled, loading, error, and success treatments plus a standalone state preview component; preserved the existing product data, links, wishlist request, and cart store while replacing the redundant cart-success toast with inline confirmation.
+- Checks: frontend production build passed; browser checks confirmed all eight local product covers load, the add-to-cart success state appears, controls remain 44×44px, and no horizontal overflow occurs at 320/375/414/768px. `npx tsc --noEmit` remains blocked only by the pre-existing unsupported `eslint` property in `next.config.ts`; `npm run lint` remains blocked because Next.js 16 no longer supports the configured `next lint` command.
+
 ## Product image upload URL fix (2026-07-20)
 - Fixed production uploads generating malformed `httpss://api.shobaz.com/...` URLs after Express proxy trust made `req.protocol` return `https`; upload URLs now respect forwarded protocol/host headers without appending a second `s`.
 - Applied the corrected base URL builder to single/multiple image uploads, WebP conversion responses, file uploads, and matching delete paths.
