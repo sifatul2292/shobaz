@@ -23,16 +23,6 @@ function getAuthorName(author: Product['author']): string {
   return author;
 }
 
-function CartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="9" cy="20" r="1" />
-      <circle cx="19" cy="20" r="1" />
-      <path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.5h7.8a2 2 0 0 0 2-1.6L21 7H6" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>;
 }
@@ -104,11 +94,11 @@ export default function HomeProductCard({ product, onAdd, previewState = 'defaul
   const cartLabel = isOutOfStock
     ? 'স্টক শেষ'
     : visibleCartState === 'loading'
-      ? 'কার্টে যোগ হচ্ছে'
+      ? 'যোগ হচ্ছে…'
       : visibleCartState === 'success'
-        ? 'কার্টে যোগ হয়েছে'
+        ? 'যোগ হয়েছে'
         : visibleCartState === 'error'
-          ? 'আবার চেষ্টা করুন'
+          ? 'আবার চেষ্টা'
           : 'কার্টে যোগ করুন';
 
   const cartIcon = visibleCartState === 'loading'
@@ -117,7 +107,7 @@ export default function HomeProductCard({ product, onAdd, previewState = 'defaul
       ? <CheckIcon />
       : visibleCartState === 'error'
         ? <ErrorIcon />
-        : <CartIcon />;
+        : null;
 
   return (
     <article className={styles.card} data-preview-state={previewState}>
@@ -167,6 +157,7 @@ export default function HomeProductCard({ product, onAdd, previewState = 'defaul
             onClick={handleAdd}
           >
             {cartIcon}
+            <span className={styles.cartLabel}>{cartLabel}</span>
           </button>
           <span className={styles.status} role="status" aria-live="polite">{cartLabel}</span>
         </div>

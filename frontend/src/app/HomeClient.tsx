@@ -421,6 +421,7 @@ export default function HomePage() {
             <section key={section._id} style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
               <SectionHeader title={section.name} linkHref={`/products?tag=${section.slug}`} linkLabel="সব বই দেখুন →" />
               <Swiper
+                className="home-product-swiper"
                 modules={[Navigation]}
                 navigation
                 slidesPerView={2}
@@ -431,7 +432,7 @@ export default function HomePage() {
                 }}
               >
                 {section.products.map((product) => (
-                  <SwiperSlide key={product._id}>
+                  <SwiperSlide key={product._id} className="home-product-slide">
                     <HomeProductCard product={product} onAdd={handleAddToCart} />
                   </SwiperSlide>
                 ))}
@@ -444,6 +445,7 @@ export default function HomePage() {
               <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
                 <SectionHeader title="🔥 হট ডিল" linkHref="/products?sort=discountAmount" linkLabel="সব দেখুন →" />
                 <Swiper
+                  className="home-product-swiper"
                   modules={[Navigation]}
                   navigation
                   slidesPerView={2}
@@ -454,7 +456,7 @@ export default function HomePage() {
                   }}
                 >
                   {featuredProducts.map((product) => (
-                    <SwiperSlide key={product._id}>
+                    <SwiperSlide key={product._id} className="home-product-slide">
                       <HomeProductCard product={product} onAdd={handleAddToCart} />
                     </SwiperSlide>
                   ))}
@@ -465,6 +467,7 @@ export default function HomePage() {
               <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
                 <SectionHeader title="✨ নতুন আগমন" linkHref="/products?sort=createdAt" linkLabel="সব দেখুন →" />
                 <Swiper
+                  className="home-product-swiper"
                   modules={[Navigation]}
                   navigation
                   slidesPerView={2}
@@ -475,7 +478,7 @@ export default function HomePage() {
                   }}
                 >
                   {newProducts.map((product) => (
-                    <SwiperSlide key={product._id}>
+                    <SwiperSlide key={product._id} className="home-product-slide">
                       <HomeProductCard product={product} onAdd={handleAddToCart} />
                     </SwiperSlide>
                   ))}

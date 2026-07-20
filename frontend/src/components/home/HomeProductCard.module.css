@@ -9,8 +9,7 @@
   min-width: 0;
   height: 100%;
   flex-direction: column;
-  gap: var(--space-product-md);
-  padding: var(--space-product-sm);
+  gap: 0;
   color: var(--color-product-ink);
   background: var(--color-product-paper);
   border: var(--rule-product) solid var(--color-product-rule);
@@ -24,25 +23,25 @@
 .mediaLink {
   display: block;
   min-width: 0;
-  border-radius: var(--radius-product-stage);
+  border-radius: var(--radius-product-card) var(--radius-product-card) 0 0;
 }
 
 .media {
   position: relative;
   display: grid;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1.08;
   min-width: 0;
   place-items: center;
   overflow: clip;
-  padding: var(--space-product-lg) var(--space-product-md);
+  padding: var(--space-product-lg);
   color: var(--color-product-ink);
   background: var(--color-product-stage);
-  border-radius: var(--radius-product-stage);
+  border-radius: var(--radius-product-card) var(--radius-product-card) 0 0;
 }
 
 .cover {
-  width: 100%;
-  height: 100%;
+  width: 78%;
+  height: 86%;
   object-fit: contain;
   filter: drop-shadow(var(--shadow-product-cover));
   transition: transform var(--dur-product-short) var(--ease-product-out);
@@ -97,15 +96,14 @@
   background: var(--color-product-paper);
   border: var(--rule-product) solid var(--color-product-rule);
   border-radius: var(--radius-product-round);
-  box-shadow: var(--shadow-product-control);
+  box-shadow: none;
   cursor: pointer;
   transition:
     transform var(--dur-product-micro) var(--ease-product-out),
     opacity var(--dur-product-micro) var(--ease-product-out);
 }
 
-.wishlist svg,
-.cartButton svg {
+.wishlist svg {
   width: var(--size-product-icon);
   height: var(--size-product-icon);
 }
@@ -129,7 +127,7 @@
   flex: 1;
   flex-direction: column;
   gap: var(--space-product-xs);
-  padding-inline: var(--space-product-2xs);
+  padding: var(--space-product-md);
 }
 
 .titleLink {
@@ -170,11 +168,11 @@
 .purchaseRow {
   display: flex;
   min-width: 0;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-product-xs);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-product-sm);
   margin-block-start: auto;
-  padding-block-start: var(--space-product-xs);
+  padding-block-start: var(--space-product-sm);
   border-block-start: var(--rule-product) solid var(--color-product-rule);
 }
 
@@ -205,20 +203,38 @@
 
 .cartButton {
   position: relative;
-  display: grid;
-  width: var(--size-product-control);
+  display: flex;
+  width: 100%;
   height: var(--size-product-control);
-  flex: 0 0 auto;
-  place-items: center;
-  padding: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-product-xs);
+  padding-inline: var(--space-product-xs);
   color: var(--color-product-accent-ink);
   background: var(--color-product-accent);
   border: var(--rule-product) solid var(--color-product-accent);
   border-radius: var(--radius-product-control);
   cursor: pointer;
+  font-family: var(--font-product-display);
+  font-size: var(--text-product-xs);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
   transition:
     transform var(--dur-product-micro) var(--ease-product-out),
     opacity var(--dur-product-micro) var(--ease-product-out);
+}
+
+.cartButton svg {
+  width: var(--size-product-icon);
+  height: var(--size-product-icon);
+  flex: 0 0 auto;
+}
+
+.cartLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cartButton[data-state="success"] {
@@ -300,12 +316,12 @@
 }
 
 @media (min-width: 40rem) {
-  .card {
-    padding: var(--space-product-md);
+  .media {
+    padding: var(--space-product-lg) var(--space-product-xl);
   }
 
-  .media {
-    padding: var(--space-product-xl) var(--space-product-lg);
+  .cartButton {
+    font-size: var(--text-product-sm);
   }
 }
 
@@ -335,6 +351,19 @@
 
 @keyframes product-card-spin {
   to { transform: rotate(360deg); }
+}
+
+:global(.home-product-slide) {
+  display: flex;
+  height: auto;
+}
+
+:global(.home-product-swiper) > :global(.swiper-wrapper) {
+  align-items: stretch;
+}
+
+:global(.home-product-slide) > .card {
+  flex: 1;
 }
 
 .preview {
