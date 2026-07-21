@@ -51,8 +51,8 @@
     var regular = number(item.regularPrice || item.price || item.salePrice);
     var discount = number(item.discountAmount);
     var type = String(item.discountType || '').toUpperCase();
-    if (type === 'PERCENTAGE' && discount) return Math.floor(regular - (discount / 100) * regular);
-    if (type === 'CASH' && discount) return Math.floor(regular - discount);
+    if ((type === 'PERCENTAGE' || type === '1') && discount) return Math.floor(regular - (discount / 100) * regular);
+    if ((type === 'CASH' || type === '2') && discount) return Math.floor(regular - discount);
     return number(item.unitPrice || item.salePrice || regular);
   }
   function quantity(item) { return Math.max(1, parseInt(item.editQty || item.quantity || item.selectedQty || 1, 10) || 1); }
@@ -154,7 +154,7 @@
     var orderedItems = items.map(function (item) {
       var price = number(item.editPrice); var qty = quantity(item); var output = Object.assign({}, item);
       delete output.editPrice; delete output.editQty; delete output.selectedQty;
-      output.quantity = qty; output.regularPrice = price; output.unitPrice = price; output.salePrice = price; output.discountAmount = 0; output.discountType = 'CASH';
+      output.quantity = qty; output.regularPrice = price; output.unitPrice = price; output.salePrice = price; output.discountAmount = 0; output.discountType = 2;
       return output;
     });
     var payload = {

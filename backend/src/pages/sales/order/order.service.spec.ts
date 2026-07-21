@@ -103,3 +103,26 @@ describe('OrderService.updateIncompleteOrderById', () => {
     });
   });
 });
+
+describe('OrderService incomplete-order item compatibility', () => {
+  it('normalizes legacy string discount types before creating an order', async () => {
+    const service = Object.create(OrderService.prototype) as OrderService;
+
+    const result = await (service as any).newOrderMake({
+      orderedItems: [
+        {
+          _id: 'product-id',
+          regularPrice: 439,
+          salePrice: 439,
+          quantity: 1,
+          discountAmount: 0,
+          discountType: 'CASH',
+        },
+      ],
+    });
+
+    expect(result.products[0].discountType).toBe(2);
+    expect(result.cartSubTotal).toBe(439);
+    expect(result.cartDiscountAmount).toBe(0);
+  });
+});

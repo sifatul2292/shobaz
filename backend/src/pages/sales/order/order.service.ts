@@ -2596,18 +2596,30 @@ async updateOrderById(
   private async newOrderMake(orderData: any) {
     // If orderedItems are already provided (from frontend), use them directly
     if (orderData.orderedItems && Array.isArray(orderData.orderedItems)) {
-      const cartSubTotal = orderData.orderedItems.reduce(
+      // Compatibility for incomplete orders saved by editor v1, which wrote
+      // the string enum names even though the order schema stores numbers.
+      const products = orderData.orderedItems.map((item: any) => {
+        const discountType = String(item?.discountType || '').toUpperCase();
+        if (discountType === 'PERCENTAGE') {
+          return { ...item, discountType: DiscountTypeEnum.PERCENTAGE };
+        }
+        if (discountType === 'CASH') {
+          return { ...item, discountType: DiscountTypeEnum.CASH };
+        }
+        return item;
+      });
+      const cartSubTotal = products.reduce(
         (acc: number, item: any) => acc + (item.regularPrice || 0) * (item.quantity || 1),
         0
       );
-      
-      const cartDiscountAmount = orderData.orderedItems.reduce(
+
+      const cartDiscountAmount = products.reduce(
         (acc: number, item: any) => acc + ((item.regularPrice || 0) - (item.salePrice || 0)) * (item.quantity || 1),
         0
       );
 
       return {
-        products: orderData.orderedItems,
+        products,
         cartSubTotal,
         cartDiscountAmount,
       };
