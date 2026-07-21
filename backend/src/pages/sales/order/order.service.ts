@@ -89,6 +89,14 @@ export class OrderService {
         'Admin authentication failed: Admin data is missing',
       );
     }
+    if (Array.isArray(addOrderDto['orderedItems'])) {
+      addOrderDto = {
+        ...addOrderDto,
+        orderedItems: this.normalizeOrderedItemDiscountTypes(
+          addOrderDto['orderedItems'],
+        ),
+      } as AddOrderDto;
+    }
     let user;
     let mData;
     const adminData = await this.adminModel.findById(admin._id);
@@ -2593,21 +2601,27 @@ async updateOrderById(
   }
 
   // New Order Make
+  private normalizeOrderedItemDiscountTypes(orderedItems: any[]): any[] {
+    return orderedItems.map((item: any) => {
+      const discountType = String(item?.discountType || '').toUpperCase();
+      if (discountType === 'PERCENTAGE') {
+        return { ...item, discountType: DiscountTypeEnum.PERCENTAGE };
+      }
+      if (discountType === 'CASH') {
+        return { ...item, discountType: DiscountTypeEnum.CASH };
+      }
+      return item;
+    });
+  }
+
   private async newOrderMake(orderData: any) {
     // If orderedItems are already provided (from frontend), use them directly
     if (orderData.orderedItems && Array.isArray(orderData.orderedItems)) {
       // Compatibility for incomplete orders saved by editor v1, which wrote
       // the string enum names even though the order schema stores numbers.
-      const products = orderData.orderedItems.map((item: any) => {
-        const discountType = String(item?.discountType || '').toUpperCase();
-        if (discountType === 'PERCENTAGE') {
-          return { ...item, discountType: DiscountTypeEnum.PERCENTAGE };
-        }
-        if (discountType === 'CASH') {
-          return { ...item, discountType: DiscountTypeEnum.CASH };
-        }
-        return item;
-      });
+      const products = this.normalizeOrderedItemDiscountTypes(
+        orderData.orderedItems,
+      );
       const cartSubTotal = products.reduce(
         (acc: number, item: any) => acc + (item.regularPrice || 0) * (item.quantity || 1),
         0

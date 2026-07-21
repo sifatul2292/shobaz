@@ -105,24 +105,72 @@ describe('OrderService.updateIncompleteOrderById', () => {
 });
 
 describe('OrderService incomplete-order item compatibility', () => {
-  it('normalizes legacy string discount types before creating an order', async () => {
+  it('normalizes legacy string discount types for the admin add path', () => {
     const service = Object.create(OrderService.prototype) as OrderService;
 
-    const result = await (service as any).newOrderMake({
-      orderedItems: [
-        {
-          _id: 'product-id',
-          regularPrice: 439,
-          salePrice: 439,
-          quantity: 1,
-          discountAmount: 0,
-          discountType: 'CASH',
-        },
-      ],
-    });
+    const result = (service as any).normalizeOrderedItemDiscountTypes([
+      { _id: 'cash-product', discountType: 'CASH' },
+      { _id: 'percentage-product', discountType: 'PERCENTAGE' },
+      { _id: 'numeric-product', discountType: 2 },
+    ]);
 
-    expect(result.products[0].discountType).toBe(2);
-    expect(result.cartSubTotal).toBe(439);
-    expect(result.cartDiscountAmount).toBe(0);
+    expect(result[0].discountType).toBe(2);
+    expect(result[1].discountType).toBe(1);
+    expect(result[2].discountType).toBe(2);
+  });
+
+  it('normalizes items before addOrderAdmin constructs the order document', async () => {
+    const service = Object.create(OrderService.prototype) as OrderService;
+    const save = jest.fn().mockResolvedValue({
+      _id: 'created-order-id',
+      orderId: '000001',
+      orderedItems: [],
+    });
+    const orderModel = jest.fn().mockImplementation(() => ({ save }));
+    (service as any).logger = { error: jest.fn(), warn: jest.fn() };
+    (service as any).adminModel = {
+      findById: jest.fn().mockResolvedValue({ _id: 'admin-id' }),
+    };
+    (service as any).uniqueIdModel = {
+      findOneAndUpdate: jest.fn().mockResolvedValue({ orderId: 1 }),
+    };
+    (service as any).utilsService = {
+      padLeadingZeros: jest.fn().mockReturnValue('000001'),
+      getDateMonth: jest.fn().mockReturnValue(7),
+      getDateYear: jest.fn().mockReturnValue(2026),
+    };
+    (service as any).userModel = {
+      findOne: jest.fn().mockResolvedValue(null),
+    };
+    (service as any).orderModel = orderModel;
+    (service as any).productModel = {
+      findById: jest.fn().mockResolvedValue({ quantity: 0 }),
+      findByIdAndUpdate: jest.fn().mockResolvedValue({}),
+    };
+    (service as any).notifySgtmPanelOrder = jest.fn();
+    (service as any).cleanupIncompleteOrdersForPlacedOrder = jest
+      .fn()
+      .mockResolvedValue(undefined);
+    (service as any).processOrderBackgroundTasks = jest
+      .fn()
+      .mockResolvedValue(undefined);
+
+    await service.addOrderAdmin(
+      { _id: 'admin-id' },
+      {
+        name: 'Customer',
+        phoneNo: '01700000000',
+        shippingAddress: 'Dhaka',
+        orderedItems: [
+          {
+            _id: 'product-id',
+            quantity: 1,
+            discountType: 'CASH',
+          },
+        ],
+      } as any,
+    );
+
+    expect(orderModel.mock.calls[0][0].orderedItems[0].discountType).toBe(2);
   });
 });
