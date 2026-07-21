@@ -92,7 +92,32 @@
     return result;
   }
 
-  var Parser = { bnToEn: bnToEn, normalizePhone: normalizePhone, findPhone: findPhone, parseOrder: parseOrder };
+  function readOrderResponse(response) {
+    return response.text().then(function (text) {
+      var payload = {};
+      try { payload = text ? JSON.parse(text) : {}; }
+      catch (error) { payload = { message: text || 'Unexpected server response' }; }
+      return { ok: response.ok, status: response.status, payload: payload };
+    });
+  }
+
+  function submitOrder(apiBase, payload, token, fetchImpl) {
+    return fetchImpl(apiBase + '/api/order/add-assisted', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', administrator: token },
+      body: JSON.stringify(payload)
+    }).then(readOrderResponse).then(function (result) {
+      if (result.status !== 404) return result;
+
+      return fetchImpl(apiBase + '/api/order/add-order-by-anonymous', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(readOrderResponse);
+    });
+  }
+
+  var Parser = { bnToEn: bnToEn, normalizePhone: normalizePhone, findPhone: findPhone, parseOrder: parseOrder, submitOrder: submitOrder };
   root.ShobazAiAssistParser = Parser;
   if (typeof module === 'object' && module.exports) module.exports = Parser;
   if (!root.document) return;
@@ -314,16 +339,13 @@
     setStatus('sa-create-status', '');
     var carts = selectedProducts.map(function (product) { return product._id; });
     var cartData = selectedProducts.map(function (product) { return { product: product._id, selectedQty: product.qty, cartType: 0 }; });
-    fetch(API + '/api/order/add-assisted', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', administrator: token },
-      body: JSON.stringify({
-        phoneNo: normalizePhone(byId('sa-phone').value), name: byId('sa-name').value.trim(), shippingAddress: byId('sa-address').value.trim(),
-        city: byId('sa-city').value.trim(), paymentType: PAYMENT_MAP[byId('sa-payment').value] || 'cash_on_delivery',
-        deliveryCharge: Math.max(0, Number(byId('sa-delivery').value) || 0), carts: carts, cartData: cartData, note: byId('sa-note').value.trim()
-      })
-    }).then(function (response) {
-      return response.json().catch(function () { return {}; }).then(function (payload) { return { ok: response.ok, status: response.status, payload: payload }; });
-    }).then(function (result) {
+    var orderPayload = {
+      phoneNo: normalizePhone(byId('sa-phone').value), name: byId('sa-name').value.trim(), shippingAddress: byId('sa-address').value.trim(),
+      city: byId('sa-city').value.trim(), paymentType: PAYMENT_MAP[byId('sa-payment').value] || 'cash_on_delivery',
+      deliveryCharge: Math.max(0, Number(byId('sa-delivery').value) || 0), carts: carts, cartData: cartData,
+      note: byId('sa-note').value.trim(), orderFrom: 'Admin AI Assist'
+    };
+    submitOrder(API, orderPayload, token, root.fetch.bind(root)).then(function (result) {
       if (!result.ok || result.payload.success === false) throw new Error(result.payload.message || 'Order creation failed (HTTP ' + result.status + ')');
       var orderId = result.payload.data && result.payload.data.orderId;
       button.dataset.state = 'success'; button.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Created';
