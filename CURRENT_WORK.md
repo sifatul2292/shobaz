@@ -19,6 +19,15 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-20.
 ## In progress
 Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
 
+## AI-assisted admin order creation (2026-07-21)
+- Ported the Amolbooks AI Assist flow into both served copies of the Shobaz custom-orders dashboard. Admin staff can paste common Bangla, English, or Banglish message formats, review/edit the extracted phone, name, address, city, payment type, quoted price note, search/select products, set quantities and delivery charge, then create the order.
+- Kept message parsing local for speed and customer-data privacy. Product search is debounced, cancelable, and bounded with a small in-memory result cache; all parsed fields remain editable and no order is created before explicit review.
+- Added the admin-authenticated `POST /api/order/add-assisted` endpoint. It reuses the normal server-side product lookup, pricing, stock decrement, fraud/background processing, and analytics notification path instead of posting through the public anonymous endpoint used by the original Amolbooks widget.
+- Added responsive modal behavior, keyboard focus trapping/Escape close, visible focus/error/loading/success states, and a mobile icon trigger with an explicit accessible name. The AI Assist trigger is intentionally absent from Stock Management view.
+- Files changed: `admin/dist/angular-ui/custom-orders.html`, `admin/dist/angular-ui/ai-assist-widget.js`, `backend/upload/static/custom-orders.html`, `backend/upload/static/ai-assist-widget.js`, `backend/src/pages/sales/order/order.controller.ts`, and `backend/src/pages/sales/order/order.service.ts`.
+- Verification: parser assertions passed for Bangla-digit/unlabelled and English-labelled orders; duplicate widget files are byte-identical; `node --check` and `git diff --check` passed; backend build passed; backend tests passed (2 suites, 7 tests). Browser QA passed at 320/375/414/768 px with no horizontal overflow, correct step actions, scrollable modal body, accurate extraction of the supplied reference order, and working Escape close. Backend lint remains blocked by the existing configuration where the entire configured glob is ignored.
+- Deployment TODO: deploy/restart the backend and publish both updated static admin asset locations together so the authenticated endpoint and cache-busted widget arrive in the same release.
+
 ## Homepage hero refinement (2026-07-20)
 - Removed the Exclusive Bundles sales-card section from the homepage only; the bundle product routes and header links remain available.
 - Rebuilt the hero as a responsive editorial split featuring Edভেঞ্চার, Road to Corporate, and Productive Muslim with direct product links, live catalog price/image overrides, and reliable production-image fallbacks.

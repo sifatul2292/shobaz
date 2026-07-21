@@ -2915,6 +2915,14 @@
   function loadStockSummary(){[['stockTrackedCount',''],['stockLowCount','&lowOnly=true'],['stockOutCount','&outOnly=true']].forEach(function(item){stockFetch(API+'/api/product/stock-list?page=1&limit=1&includeSalesMetrics=false'+item[1]).then(function(response){document.getElementById(item[0]).textContent=response.count||0;}).catch(function(){});});}
   (function(){var input=document.getElementById('stockSearch');if(!input)return;var timer;input.addEventListener('input',function(){var value=this.value;clearTimeout(timer);timer=setTimeout(function(){stockState.q=value;stockState.page=1;loadStockList();},400);});})();
 
+  window.addEventListener('shobaz:order-created', function () {
+    if (!isStockView) {
+      loadOrders();
+      loadTodayStats();
+      loadStatusCounts();
+    }
+  });
+
   /* ── Init ── */
   configureView();
   if (isStockView) {
@@ -2925,5 +2933,6 @@
   else { showLoginOverlay(); }
 })();
 </script>
+<script src="ai-assist-widget.js?v=1"></script>
 </body>
 </html>

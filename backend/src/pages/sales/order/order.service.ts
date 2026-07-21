@@ -2747,7 +2747,7 @@ async updateOrderById(
       area: orderData?.area,
       zone: orderData?.zone,
       city: orderData?.city,
-      orderFrom: 'Website',
+      orderFrom: orderData?.orderFrom || 'Website',
       paymentType: orderData?.paymentType,
       country: orderData?.country,
       paymentStatus: 'unpaid',

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -69,6 +70,37 @@ export class OrderController {
     @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
     return await this.orderService.addOrderAdmin(admin, addOrderDto);
+  }
+
+  @Post('/add-assisted')
+  @UsePipes(ValidationPipe)
+  @AdminMetaRoles(
+    AdminRoles.SUPER_ADMIN,
+    AdminRoles.ADMIN,
+    AdminRoles.EDITOR,
+    AdminRoles.Collector,
+    AdminRoles.SALESMAN,
+  )
+  @UseGuards(AdminRolesGuard)
+  @AdminMetaPermissions(AdminPermissions.CREATE)
+  @UseGuards(AdminPermissionGuard)
+  @UseGuards(AdminJwtAuthGuard)
+  async addAssistedOrder(
+    @Body() addOrderDto: AddOrderDto,
+  ): Promise<ResponsePayload> {
+    if (
+      !Array.isArray(addOrderDto.carts) ||
+      !addOrderDto.carts.length ||
+      !Array.isArray(addOrderDto.cartData) ||
+      addOrderDto.cartData.length !== addOrderDto.carts.length
+    ) {
+      throw new BadRequestException('Select at least one valid product');
+    }
+
+    return await this.orderService.addOrder({
+      ...addOrderDto,
+      orderFrom: 'Admin AI Assist',
+    } as AddOrderDto);
   }
 
   @Put('/updateDate')
