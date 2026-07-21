@@ -1,9 +1,9 @@
 # CURRENT_WORK.md
 
-Living status file. Update after meaningful progress. Snapshot date: 2026-07-20.
+Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 
 ## Branch
-`feature/notebook-free-gift-offer` (stock management is pushed through `fa2eff2`; incomplete-order persistence fix is currently uncommitted).
+`feature/notebook-free-gift-offer` (AI Assist fixes are pushed through `24bd46e`; the courier completion fix below is currently uncommitted).
 
 ## Recently completed (merged history on this branch)
 - Higher-education consultancy landing page (`bad5b85`).
@@ -17,7 +17,14 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-20.
 - `tools/product-importer/` CLI committed and tracked; `frontend/package-lock.json` tracked.
 
 ## In progress
-Incomplete-order Fraud Checker/Admin Note persistence is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+Automatic order completion after verified courier submission is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
+
+## Courier completion status fix (2026-07-21)
+- Changed the Send To Courier flow to call the courier endpoint first and refresh orders/stats only after that request succeeds. It no longer preemptively marks an order Confirmed or treats a failed/background courier request as successful.
+- After the courier provider and persisted consignment/tracking reference are verified, the backend now sets order status `5`, displayed as `Completed` in the custom-orders dashboard. This is a direct status update so COD orders stay unpaid and the generic delivered workflow cannot decrement inventory a second time.
+- Courier failures or responses without a persisted reference leave the order status unchanged and return an actionable error.
+- Files changed: `admin/dist/angular-ui/custom-orders.html`, `backend/upload/static/custom-orders.html`, `backend/src/pages/sales/order/order.service.ts`, and `backend/src/pages/sales/order/order.service.spec.ts`.
+- Verification: both admin-page inline scripts parsed successfully; focused courier tests passed (3 tests); full backend tests passed (3 suites, 10 tests); backend build passed; `git diff --check` passed. Targeted ESLint and `npm run lint` remain blocked because the existing repository configuration ignores the files/full configured glob.
 
 ## AI-assisted admin order creation (2026-07-21)
 - Ported the Amolbooks AI Assist flow into both served copies of the Shobaz custom-orders dashboard. Admin staff can paste common Bangla, English, or Banglish message formats, review/edit the extracted phone, name, address, city, payment type, quoted price note, search/select products, set quantities and delivery charge, then create the order.

@@ -2488,19 +2488,34 @@ async updateOrderById(
       });
 
       const order = await this.orderModel.findById(id);
-      if (order?.courierData?.consignmentId) {
-        return {
-          success: true,
-          message: `Order sent to ${courierMethod.providerName} successfully! Consignment ID: ${order.courierData.consignmentId}`,
-        } as ResponsePayload;
-      } else {
-        return {
-          success: true,
-          message: `Order sent to ${courierMethod.providerName} - please check tracking info`,
-        } as ResponsePayload;
+      const courierReference =
+        order?.courierData?.consignmentId || order?.courierData?.trackingId;
+      if (!order?.courierData?.providerName || !courierReference) {
+        throw new BadRequestException(
+          `Could not verify the ${courierMethod.providerName} consignment`,
+        );
       }
+
+      // The admin dashboard calls status 5 "Completed". Set it directly after
+      // courier success so COD orders stay unpaid and inventory is not adjusted
+      // a second time by the generic DELIVERED status workflow.
+      await this.orderModel.findByIdAndUpdate(id, {
+        $set: { orderStatus: OrderStatus.DELIVERED },
+      });
+
+      return {
+        success: true,
+        message: `Order sent to ${courierMethod.providerName} successfully and marked Completed! Consignment ID: ${courierReference}`,
+        data: {
+          orderStatus: OrderStatus.DELIVERED,
+          courierData: order.courierData,
+        },
+      } as ResponsePayload;
     } catch (err) {
       console.error('Error sending to courier:', err);
+      if (err instanceof NotFoundException || err instanceof BadRequestException) {
+        throw err;
+      }
       throw new InternalServerErrorException(
         err.message || 'Failed to send order to courier',
       );

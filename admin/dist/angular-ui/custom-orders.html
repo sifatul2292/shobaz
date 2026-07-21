@@ -2494,36 +2494,27 @@
 
   /* ── Send to Courier ── */
   window.sendToCourier = function (id) {
-    if (!confirm('Send this order to courier?')) return;
-    // Step 1: Always update status to Confirmed (8) immediately
-    fetch(API + '/api/order/update/' + id, {
-      method: 'PUT',
+    fetch(API + '/api/order/send-to-courier/' + id, {
+      method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ orderStatus: 8 }),
     })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (resp) {
+          if (!r.ok || !resp || resp.success !== true) {
+            throw new Error((resp && resp.message) || ('Courier request failed: ' + r.status));
+          }
+          return resp;
+        });
+      })
       .then(function (resp) {
-        if (resp && resp.success) {
-          showToast('Order marked as Confirmed!', 'success');
-          loadOrders();
-          // Step 2: Also try courier API in background (optional, won't block status change)
-          fetch(API + '/api/order/send-to-courier/' + id, {
-            method: 'POST',
-            headers: authHeaders(),
-          })
-            .then(function (r) { return r.json(); })
-            .then(function (cr) {
-              if (cr && cr.success && cr.message) {
-                showToast(cr.message, 'success');
-              }
-            })
-            .catch(function () { /* courier API optional */ });
-        } else {
-          showToast(resp && resp.message ? resp.message : 'Could not update status.', 'error');
-        }
+        showToast(resp.message || 'Order sent to courier and marked Completed!', 'success');
+        loadOrders();
+        loadTodayStats();
+        loadStatusCounts();
       })
       .catch(function (err) {
         showToast('Error: ' + err.message, 'error');
+        loadOrders();
       });
   };
 
