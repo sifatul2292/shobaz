@@ -19,6 +19,13 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 ## In progress
 Automatic order completion after verified courier submission is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
 
+## Incomplete-order editing (2026-07-21)
+- Added an Edit action to unconverted incomplete orders. The new responsive editor can change customer name, phone, email, address, city/area, payment type, customer note, delivery charge, products, quantities, and per-product unit prices before Add Order or Send to Courier is used.
+- Product replacement/addition uses the existing catalog search endpoint. Totals recalculate immediately, and saving normalizes each edited unit price so the later conversion flow preserves the price instead of reapplying the catalog discount.
+- Restricted incomplete-order updates to an explicit editable-field allowlist so request bodies cannot overwrite conversion status, the linked real order ID, or other audit fields.
+- Files changed: both `custom-orders.html` copies, new matching `incomplete-order-editor.js` copies, `backend/src/pages/sales/order/order.service.ts`, and `backend/src/pages/sales/order/order.service.spec.ts`.
+- Verification: both new scripts and both inline dashboard scripts parsed; duplicate editor files are byte-identical; backend tests passed (3 suites/11 tests); backend build passed; `git diff --check` passed. Browser QA confirmed the editor asset and DOM load without console errors, desktop has no page overflow, and the 375×812 layout switches to a bottom sheet with one-column form fields, two-column footer actions, and no horizontal overflow.
+
 ## Courier completion status fix (2026-07-21)
 - Changed the Send To Courier flow to call the courier endpoint first and refresh orders/stats only after that request succeeds. It no longer preemptively marks an order Confirmed or treats a failed/background courier request as successful.
 - After the courier provider and persisted consignment/tracking reference are verified, the backend now sets order status `5`, displayed as `Completed` in the custom-orders dashboard. This is a direct status update so COD orders stay unpaid and the generic delivered workflow cannot decrement inventory a second time.

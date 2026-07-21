@@ -67,3 +67,39 @@ describe('OrderService.sendOrderToCourier', () => {
     expect(orderModel.findByIdAndUpdate).not.toHaveBeenCalled();
   });
 });
+
+describe('OrderService.updateIncompleteOrderById', () => {
+  it('updates editable order details without allowing conversion fields', async () => {
+    const service = Object.create(OrderService.prototype) as OrderService;
+    const savedOrder = { _id: 'incomplete-id', name: 'Updated customer' };
+    const findByIdAndUpdate = jest.fn().mockResolvedValue(savedOrder);
+    (service as any).incompleteOrderModel = { findByIdAndUpdate };
+
+    const response = await service.updateIncompleteOrderById('incomplete-id', {
+      name: 'Updated customer',
+      grandTotal: 499,
+      orderedItems: [{ _id: 'product-id', quantity: 1, unitPrice: 439 }],
+      status: 'converted',
+      orderId: 'forged-order-id',
+    });
+
+    expect(findByIdAndUpdate).toHaveBeenCalledWith(
+      'incomplete-id',
+      {
+        $set: {
+          name: 'Updated customer',
+          grandTotal: 499,
+          orderedItems: [
+            { _id: 'product-id', quantity: 1, unitPrice: 439 },
+          ],
+        },
+      },
+      { new: true, runValidators: true },
+    );
+    expect(response).toEqual({
+      success: true,
+      message: 'Updated',
+      data: savedOrder,
+    });
+  });
+});

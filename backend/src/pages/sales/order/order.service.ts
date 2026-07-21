@@ -944,9 +944,36 @@ export class OrderService {
     dto: any,
   ): Promise<ResponsePayload> {
     try {
+      // This endpoint is also used by the admin table for fraud checks and
+      // notes. Never pass the request body straight to MongoDB: an incomplete
+      // order must not be able to overwrite conversion/audit fields.
+      const editableFields = [
+        'name',
+        'phoneNo',
+        'email',
+        'city',
+        'shippingAddress',
+        'paymentType',
+        'paymentStatus',
+        'deliveryCharge',
+        'subTotal',
+        'discount',
+        'grandTotal',
+        'orderedItems',
+        'note',
+        'adminNote',
+        'fraudChecker',
+      ];
+      const updateData = editableFields.reduce((result, field) => {
+        if (Object.prototype.hasOwnProperty.call(dto || {}, field)) {
+          result[field] = dto[field];
+        }
+        return result;
+      }, {} as Record<string, any>);
+
       const data = await this.incompleteOrderModel.findByIdAndUpdate(
         id,
-        { $set: dto },
+        { $set: updateData },
         { new: true, runValidators: true },
       );
       if (!data) {
