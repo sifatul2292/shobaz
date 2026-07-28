@@ -19,6 +19,12 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 ## In progress
 Automatic order completion after verified courier submission is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
 
+## AI Assist expired-session recovery (2026-07-29)
+- Fixed AI Assist showing only `Unauthorized` when the dashboard retained an expired `co_admin_token`. Guarded order creation correctly rejected the stale token even though unguarded order-list requests still made the dashboard appear signed in.
+- A generic 401/403 now closes AI Assist, opens the dashboard login with an expired-session explanation, preserves the completed draft and selected products, and reopens the draft after successful login so the admin can explicitly click Create Order again. Permission-specific errors remain visible instead of causing a login loop.
+- Bumped the AI Assist asset to `v=3` in both served dashboard copies. Added a JSDOM regression test covering product selection, guarded 401 response, no anonymous fallback, preserved draft state, and post-login resume.
+- Verification: both widget files are byte-identical and parse successfully; both dashboard inline scripts parse; backend tests pass (4 suites/14 tests); backend build and `git diff --check` pass.
+
 ## Incomplete-order editing (2026-07-21)
 - Added an Edit action to unconverted incomplete orders. The new responsive editor can change customer name, phone, email, address, city/area, payment type, customer note, delivery charge, products, quantities, and per-product unit prices before Add Order or Send to Courier is used.
 - Product replacement/addition uses the existing catalog search endpoint. Totals recalculate immediately, and saving normalizes each edited unit price so the later conversion flow preserves the price instead of reapplying the catalog discount.

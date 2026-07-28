@@ -1586,6 +1586,7 @@
         hideLoginOverlay();
         if (isStockView) loadStockList();
         else { loadRepeatCustomers(); loadTodayStats(); loadStatusCounts(); }
+        window.dispatchEvent(new CustomEvent('shobaz:admin-auth-restored'));
       }
       else { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; }
     })
@@ -1594,6 +1595,11 @@
   };
 
   window.doLogout = function () { clearToken(); showLoginOverlay(); };
+
+  window.addEventListener('shobaz:admin-auth-required', function (event) {
+    clearToken();
+    showLoginOverlay((event.detail && event.detail.message) || 'Session expired. Please log in again.');
+  });
 
   function authHeaders() {
     var h = { 'Content-Type': 'application/json' };
@@ -2926,7 +2932,7 @@
   else { showLoginOverlay(); }
 })();
 </script>
-<script src="ai-assist-widget.js?v=2"></script>
+<script src="ai-assist-widget.js?v=3"></script>
 <script src="incomplete-order-editor.js?v=2"></script>
 </body>
 </html>

@@ -130,6 +130,7 @@
   var searchController = null;
   var searchCache = new Map();
   var lastFocus = null;
+  var resumeAfterLogin = false;
 
   var CSS = [
     '/* Hallmark · component: order-assist modal · genre: modern-minimal · theme: Shobaz admin',
@@ -226,6 +227,25 @@
     byId(ids.overlay).setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function resumeModalAfterLogin() {
+    if (!resumeAfterLogin) return;
+    resumeAfterLogin = false;
+    byId(ids.overlay).classList.add('open');
+    byId(ids.overlay).setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    showStep(2);
+    setStatus('sa-create-status', 'Signed in successfully. Click Create order again.', 'success');
+    root.setTimeout(function () { byId('sa-create').focus(); }, 40);
+  }
+
+  function requestAdminLogin() {
+    resumeAfterLogin = true;
+    closeModal();
+    root.dispatchEvent(new CustomEvent('shobaz:admin-auth-required', {
+      detail: { message: 'Your admin session expired. Sign in again to create this order.' }
+    }));
   }
 
   function doExtract() {
@@ -333,7 +353,7 @@
   function createOrder() {
     if (!validate()) return;
     var token = getToken();
-    if (!token) { setStatus('sa-create-status', 'Your admin session has expired. Sign in again.', 'error'); return; }
+    if (!token) { requestAdminLogin(); return; }
     var button = byId('sa-create');
     button.disabled = true; button.dataset.state = 'loading'; button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Creating…';
     setStatus('sa-create-status', '');
@@ -346,6 +366,13 @@
       note: byId('sa-note').value.trim(), orderFrom: 'Admin AI Assist'
     };
     submitOrder(API, orderPayload, token, root.fetch.bind(root)).then(function (result) {
+      var responseMessage = String((result.payload && result.payload.message) || '');
+      var isExpiredSession = (result.status === 401 || result.status === 403) &&
+        (!responseMessage || /^(unauthorized|forbidden)$/i.test(responseMessage) || /token|jwt|expired/i.test(responseMessage));
+      if (isExpiredSession) {
+        requestAdminLogin();
+        return;
+      }
       if (!result.ok || result.payload.success === false) throw new Error(result.payload.message || 'Order creation failed (HTTP ' + result.status + ')');
       var orderId = result.payload.data && result.payload.data.orderId;
       button.dataset.state = 'success'; button.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Created';
@@ -385,6 +412,7 @@
     byId('sa-product-search').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); searchProducts(); } });
     byId(ids.overlay).addEventListener('click', function (event) { if (event.target === this) closeModal(); });
     document.addEventListener('keydown', trapKeys);
+    root.addEventListener('shobaz:admin-auth-restored', resumeModalAfterLogin);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
