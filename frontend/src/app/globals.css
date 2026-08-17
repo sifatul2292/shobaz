@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "../../tokens.css";
-@import "./home-hero.css";
 
 :root {
   --font-bengali: var(--font-bengali), system-ui, sans-serif;

@@ -19,6 +19,12 @@ Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 ## In progress
 Automatic order completion after verified courier submission is fixed and verified locally but remains uncommitted. The branch also holds the earlier free-gift + tagging + courier + consultancy work and is not yet merged to `origin/main`.
 
+## Homepage hero and category removal (2026-08-17)
+- Removed the selected-books hero and the `বিভাগসমূহ` category carousel from the storefront homepage. The delivery/payment trust strip is now the first homepage content below the header, followed by the existing book collections.
+- Removed the now-unused category request/state, hero/category display data, hero stylesheet import, hero-specific design tokens, and `home-hero.css`.
+- Files changed: `frontend/src/app/HomeClient.tsx`, `frontend/src/app/globals.css`, `frontend/tokens.css`; deleted `frontend/src/app/home-hero.css`.
+- Verification: `rg` confirmed no homepage hero/category references remain; `git diff --check` passed. `cd frontend && npx tsc --noEmit` remains blocked by the existing unsupported `eslint` property in `next.config.ts`. `cd frontend && npm run build` is blocked because the local runtime is Node `16.20.2`, while Next.js 16 requires Node `>=20.9.0`.
+
 ## AI Assist expired-session recovery (2026-07-29)
 - Fixed AI Assist showing only `Unauthorized` when the dashboard retained an expired `co_admin_token`. Guarded order creation correctly rejected the stale token even though unguarded order-list requests still made the dashboard appear signed in.
 - A generic 401/403 now closes AI Assist, opens the dashboard login with an expired-session explanation, preserves the completed draft and selected products, and reopens the draft after successful login so the admin can explicitly click Create Order again. Permission-specific errors remain visible instead of causing a login loop.

@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 import HomeProductCard from '@/components/home/HomeProductCard';
 import api, { imgUrl } from '@/lib/api';
 import { getCached, setCached } from '@/lib/cache';
-import { Product, Category, Author, Publisher, Blog, Tag } from '@/types';
+import { Product, Author, Publisher, Blog, Tag } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -34,18 +34,6 @@ const IcPayment = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const IcReturn = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
 const IcReaders = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>;
 
-const CAT_PALETTES = [
-  { bg: '#fef3c7', accent: '#92400e' },
-  { bg: '#dcfce7', accent: '#166534' },
-  { bg: '#dbeafe', accent: '#1e40af' },
-  { bg: '#e0e7ff', accent: '#3730a3' },
-  { bg: '#fee2e2', accent: '#991b1b' },
-  { bg: '#fce7f3', accent: '#9d174d' },
-  { bg: '#cffafe', accent: '#155e75' },
-  { bg: '#f3e8ff', accent: '#6b21a8' },
-];
-
-
 const STATIC_REVIEWS = [
   {
     name: 'রিফাত আহমেদ',
@@ -70,30 +58,6 @@ const STATIC_REVIEWS = [
     quote: 'কালেকশন বিশাল, ক্যাটাগরি অনুযায়ী খুঁজে পেতে সহজ। শিশুদের বইয়ের সেকশনটা বিশেষ ভালো লেগেছে।',
     initials: 'তা',
     bg: '#fce7f3',
-  },
-];
-
-const HERO_SELECTION = [
-  {
-    slug: 'edventure',
-    href: '/edventure',
-    shortName: 'Edভেঞ্চার',
-    cover: 'https://api.shobaz.com/api/upload/images/edventure-book-1fcc.webp',
-    price: 299,
-  },
-  {
-    slug: 'road-to-corporate-39',
-    href: '/products/road-to-corporate-39',
-    shortName: 'রোড to কর্পোরেট',
-    cover: 'https://api.shobaz.com/api/upload/images/road-to-corporate-cover-compressed-d4be.webp',
-    price: 298,
-  },
-  {
-    slug: 'productive muslim',
-    href: '/products/Productive%20Muslim',
-    shortName: 'প্রোডাক্টিভ মুসলিম',
-    cover: 'https://api.shobaz.com/api/upload/images/productive-muslim-amolbooks-2f28.jpg',
-    price: 300,
   },
 ];
 
@@ -126,12 +90,10 @@ export default function HomePage() {
   const addItem = useCartStore(state => state.addItem);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -144,13 +106,11 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const cachedCategories = getCached<Category[]>('categories');
         const cachedAuthors = getCached<Author[]>('authors');
         const cachedPublishers = getCached<Publisher[]>('publishers');
 
-        const [productsRes, categoriesRes, tagsRes, authorsRes, publishersRes, blogsRes, sectionsRes] = await Promise.allSettled([
+        const [productsRes, tagsRes, authorsRes, publishersRes, blogsRes, sectionsRes] = await Promise.allSettled([
           api.get('/product/get-all-data'),
-          cachedCategories ? Promise.resolve({ data: { data: cachedCategories } }) : api.post('/category/get-all'),
           api.get('/tag/get-all-basic'),
           cachedAuthors ? Promise.resolve({ data: { data: cachedAuthors } }) : api.get('/author/get-all-basic'),
           cachedPublishers ? Promise.resolve({ data: { data: cachedPublishers } }) : api.get('/publisher/get-all-basic'),
@@ -164,15 +124,6 @@ export default function HomePage() {
           if (Array.isArray(productsData)) {
             setFeaturedProducts(productsData.filter((p: Product) => (p.discountAmount || 0) > 0).slice(0, 10));
             setNewProducts(productsData.slice(0, 10));
-            setAllProducts(productsData);
-          }
-        }
-        if (categoriesRes.status === 'fulfilled' && categoriesRes.value.data?.data) {
-          let catsData = categoriesRes.value.data.data;
-          if (categoriesRes.value.data.data.items) catsData = categoriesRes.value.data.data.items;
-          if (Array.isArray(catsData)) {
-            if (!cachedCategories) setCached('categories', catsData);
-            setCategories(catsData);
           }
         }
         if (tagsRes.status === 'fulfilled' && tagsRes.value.data?.data) {
@@ -237,61 +188,12 @@ export default function HomePage() {
   }
 
   const activeSections = homepageSections.filter(s => s.products && s.products.length > 0);
-  const heroSelection = HERO_SELECTION.map(item => ({
-    ...item,
-    product: allProducts.find(product => product.slug?.trim().toLowerCase() === item.slug),
-  }));
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', color: '#0f172a' }}>
       <Header />
 
       <main className="flex-1">
-
-        {/* ── Hero ── */}
-        <section className="home-hero" aria-labelledby="home-hero-title">
-          <div className="home-hero__inner">
-            <div className="home-hero__copy">
-              <p className="home-hero__eyebrow">পড়াশোনা · ক্যারিয়ার · আত্মউন্নয়ন</p>
-              <h1 id="home-hero-title" className="home-hero__title">
-                তিনটি বই। সামনে এগোনোর তিনটি পথ।
-              </h1>
-              <p className="home-hero__lede">
-                বিদেশে উচ্চশিক্ষা, কর্পোরেট ক্যারিয়ার আর শৃঙ্খলিত জীবন—এই মুহূর্তে শবাজের বাছাইয়ে তিনটি বই।
-              </p>
-              <div className="home-hero__actions">
-                <a href="#hero-selection" className="home-hero__action home-hero__action--primary">বইগুলো দেখুন</a>
-                <Link href="/products" className="home-hero__action home-hero__action--secondary">সব বই</Link>
-              </div>
-              <p className="home-hero__delivery">সারাদেশে ক্যাশ অন ডেলিভারি · দ্রুত পাঠানো হয়</p>
-            </div>
-
-            <div id="hero-selection" className="home-hero__selection" aria-label="নির্বাচিত তিনটি বই">
-              <div className="home-hero__selection-head">
-                <span>আজকের নির্বাচন</span>
-                <span>০৩টি বই</span>
-              </div>
-              <div className="home-hero__products">
-                {heroSelection.map(({ product, href, shortName, cover: fallbackCover, price: fallbackPrice }) => {
-                  const cover = imgUrl(product?.images?.[0]) || fallbackCover;
-                  const currentPrice = product
-                    ? (product.salePrice || 0) - (product.discountAmount || 0)
-                    : fallbackPrice;
-
-                  return (
-                    <Link key={href} href={href} className="home-hero__product">
-                      <span className="home-hero__cover">
-                        <img src={cover} alt={`${shortName} বইয়ের প্রচ্ছদ`} width="320" height="448" />
-                      </span>
-                      <span className="home-hero__product-name">{shortName}</span>
-                      <span className="home-hero__price">৳{currentPrice.toLocaleString('en-IN')}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ── Trust Strip ── */}
         <section style={{ background: '#f0fdf4', borderTop: '1px solid #dcfce7', borderBottom: '1px solid #dcfce7' }}>
@@ -315,105 +217,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* ── Category Grid ── */}
-        {categories.length > 0 && (
-          <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
-              <div>
-                <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>
-                  বিভাগসমূহ
-                </h2>
-                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>
-                  যে কোনো বিভাগে ক্লিক করে বইয়ের পুরো কালেকশন দেখুন
-                </p>
-              </div>
-              <Link href="/products" style={{ color: PRIMARY, fontWeight: 700, fontSize: 14, textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: 'var(--bn)' }}>
-                সব বিভাগ দেখুন →
-              </Link>
-            </div>
-            <Swiper
-              modules={[]}
-              slidesPerView={1.2}
-              spaceBetween={14}
-              breakpoints={{
-                480: { slidesPerView: 2.1, spaceBetween: 16 },
-                768: { slidesPerView: 3.1, spaceBetween: 16 },
-                1024: { slidesPerView: 4, spaceBetween: 18 },
-              }}
-            >
-              {categories.slice(0, 8).map((cat, i) => {
-                const pal = CAT_PALETTES[i % CAT_PALETTES.length];
-                const count = (cat as any).productCount;
-                const catProducts = allProducts.filter(p => {
-                  const catField = (p as any).category;
-                  if (Array.isArray(catField)) {
-                    return catField.some((c: any) => (typeof c === 'object' ? c?._id : c) === cat._id);
-                  }
-                  const catId = typeof catField === 'object' ? catField?._id : catField;
-                  return catId === cat._id;
-                }).slice(0, 4);
-                return (
-                  <SwiperSlide key={cat._id}>
-                    <Link
-                      href={`/products?category=${cat.slug}`}
-                      style={{
-                        background: pal.bg, borderRadius: 18, padding: '22px 18px 20px',
-                        display: 'flex', flexDirection: 'column', textDecoration: 'none',
-                        color: pal.accent, border: '1px solid rgba(0,0,0,0.04)',
-                        transition: 'transform .15s ease, box-shadow .15s ease',
-                        height: '100%',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-3px)';
-                        (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 24px 36px -22px rgba(15,23,42,0.18)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
-                        (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
-                      }}
-                    >
-                      <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.25, fontFamily: 'var(--bn)' }}>
-                        {cat.name}
-                      </div>
-                      {count > 0 && (
-                        <div style={{ fontSize: 13, color: pal.accent, fontWeight: 600, marginTop: 4, fontFamily: 'var(--sans)' }}>
-                          {count}+ বই
-                        </div>
-                      )}
-                      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5, flex: 1 }}>
-                        {catProducts.length > 0
-                          ? catProducts.map((cp, ci) => {
-                              const cpImg = imgUrl(cp.images?.[0]);
-                              return (
-                                <div key={ci} style={{ borderRadius: 5, overflow: 'hidden', aspectRatio: '3/4', boxShadow: '0 4px 8px rgba(15,23,42,0.18)' }}>
-                                  {cpImg
-                                    ? <img src={cpImg} alt={cp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : <div style={{ width: '100%', height: '100%', background: pal.accent, opacity: 0.35 }} />
-                                  }
-                                </div>
-                              );
-                            })
-                          : Array.from({ length: 4 }).map((_, ci) => (
-                              <div key={ci} style={{ borderRadius: 5, aspectRatio: '3/4', background: pal.accent, opacity: 0.2 }} />
-                            ))
-                        }
-                      </div>
-                      <div style={{
-                        marginTop: 14, fontSize: 13, color: pal.accent, fontWeight: 700,
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        fontFamily: 'var(--bn)',
-                      }}>
-                        <span>সব বই দেখুন</span>
-                        <span>→</span>
-                      </div>
-                    </Link>
-                  </SwiperSlide>
-                );
-              })}
-            </Swiper>
-          </section>
-        )}
 
         {/* ── Book Sections ── */}
         {activeSections.length > 0 ? (
