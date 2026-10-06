@@ -2,6 +2,12 @@
 
 Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 
+## FraudSpy key rotation (2026-10-06)
+- Updated `backend/src/config/configuration.ts` with the supplied replacement backend key as the fallback; `FRAUDSPY_API_KEY` remains the preferred environment override. Updated the ignored local backend `.env` as well.
+- Production: update any existing `FRAUDSPY_API_KEY` override to the replacement key (or remove the stale override to use the fallback), rebuild the backend, and restart `shobaz-backend`.
+- Verification: backend tests passed (4 suites, 14 tests), backend build passed, and `git diff --check` passed. Backend lint remains blocked because its configured glob is entirely ignored. No live customer lookup was performed.
+- The fallback is a server credential in tracked configuration; do not copy it into frontend code or logs.
+
 ## Branch
 `feature/notebook-free-gift-offer` (AI Assist fixes are pushed through `24bd46e`; the courier completion fix below is currently uncommitted).
 

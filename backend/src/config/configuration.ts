@@ -54,7 +54,7 @@ export default () => ({
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your_client_secret',
   googleRefreshToken: process.env.GOOGLE_REFRESH_TOKEN || 'your_refresh_token',
   accountGmail: process.env.ACCOUNT_GMAIL || 'your-email@gmail.com',
-  fraudspyApiKey: process.env.FRAUDSPY_API_KEY || '',
+  fraudspyApiKey: process.env.FRAUDSPY_API_KEY || 'fs_live_d44a_060a4045-f68f-4bbe-8196-fee46a8d5cff_e51d113021b21024',
   sgtmPanelOrderWebhookUrl: process.env.SGTM_PANEL_ORDER_WEBHOOK_URL || '',
   sgtmPanelOrderWebhookSecret:
     process.env.SGTM_PANEL_ORDER_WEBHOOK_SECRET || '',
