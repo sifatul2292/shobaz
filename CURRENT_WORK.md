@@ -2,6 +2,12 @@
 
 Living status file. Update after meaningful progress. Snapshot date: 2026-07-21.
 
+## FraudSpy VPS environment rotation helper (2026-10-06)
+- Direct provider diagnostic with empty JSON: supplied key returned HTTP 422 `Missing phone`; deliberately invalid key returned HTTP 401 `Invalid or expired API key`. No customer phone or lookup data was sent. The replacement key is accepted; stale VPS environment is the leading cause, not yet inspected directly.
+- Added `backend/scripts/rotate-fraudspy-key.js`: after building, reads the compiled replacement fallback without inherited key overrides, replaces all FraudSpy `.env` entries, preserves other settings, and restarts `shobaz-backend` with the replacement in PM2 environment via `--update-env`. Does not log credentials.
+- Checks: `node --check`, `git diff --check`, and isolated helper verification passed (stale process env, duplicate entries, preserved settings, repeat runs, and correct PM2 arguments/environment). No app source changed; backend build/tests passed for the preceding key update.
+- VPS follow-up required: pull, build backend, run `node scripts/rotate-fraudspy-key.js`, then retry Fraud Checker. No direct VPS access available in this chat.
+
 ## FraudSpy key rotation (2026-10-06)
 - Updated `backend/src/config/configuration.ts` with the supplied replacement backend key as the fallback; `FRAUDSPY_API_KEY` remains the preferred environment override. Updated the ignored local backend `.env` as well.
 - Production: update any existing `FRAUDSPY_API_KEY` override to the replacement key (or remove the stale override to use the fallback), rebuild the backend, and restart `shobaz-backend`.
