@@ -51,7 +51,7 @@ export class ProfileController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addProfile(
     @Body()
     addProfileDto: AddProfileDto,
@@ -116,7 +116,7 @@ export class ProfileController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateProfileById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -152,7 +152,7 @@ export class ProfileController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteProfileById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

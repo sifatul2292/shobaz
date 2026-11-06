@@ -51,7 +51,7 @@ export class AuthorController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addAuthor(
     @Body()
     addAuthorDto: AddAuthorDto,
@@ -126,7 +126,7 @@ export class AuthorController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateAuthorById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateAuthorDto: UpdateAuthorDto,
@@ -162,7 +162,7 @@ export class AuthorController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteAuthorById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

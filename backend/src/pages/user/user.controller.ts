@@ -220,6 +220,7 @@ export class UserController {
   @Version(VERSION_NEUTRAL)
   @Put('/reset-user-password')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async resetUserPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<ResponsePayload> {

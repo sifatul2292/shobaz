@@ -51,7 +51,7 @@ export class PublisherController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addPublisher(
     @Body()
     addPublisherDto: AddPublisherDto,
@@ -119,7 +119,7 @@ export class PublisherController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updatePublisherById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updatePublisherDto: UpdatePublisherDto,
@@ -156,7 +156,7 @@ export class PublisherController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deletePublisherById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

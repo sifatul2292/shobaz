@@ -51,7 +51,7 @@ export class CarouselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addCarousel(
     @Body()
     addCarouselDto: AddCarouselDto,
@@ -122,7 +122,7 @@ export class CarouselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateCarouselById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateCarouselDto: UpdateCarouselDto,
@@ -158,7 +158,7 @@ export class CarouselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteCarouselById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

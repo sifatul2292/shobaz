@@ -67,6 +67,7 @@ export class ActivitiesCommentController {
   @Post('/add-by-admin')
   // @UsePipes(ValidationPipe)
   // @UseGuards(UserJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addActivitiesCommentByAdmin(
     @Body()
       addActivitiesCommentDto: AddActivitiesCommentDto,

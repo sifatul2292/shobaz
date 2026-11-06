@@ -51,7 +51,7 @@ export class PraptisthanaController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addPraptisthana(
     @Body()
     addPraptisthanaDto: AddPraptisthanaDto,
@@ -122,7 +122,7 @@ export class PraptisthanaController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updatePraptisthanaById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updatePraptisthanaDto: UpdatePraptisthanaDto,
@@ -161,7 +161,7 @@ export class PraptisthanaController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deletePraptisthanaById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

@@ -51,7 +51,7 @@ export class YoutubeVideoController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addYoutubeVideo(
     @Body()
     addYoutubeVideoDto: AddYoutubeVideoDto,
@@ -122,7 +122,7 @@ export class YoutubeVideoController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateYoutubeVideoById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateYoutubeVideoDto: UpdateYoutubeVideoDto,
@@ -161,7 +161,7 @@ export class YoutubeVideoController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteYoutubeVideoById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

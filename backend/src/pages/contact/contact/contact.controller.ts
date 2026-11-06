@@ -79,6 +79,7 @@ export class ContactController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllContacts(
     @Body() filterContactDto: FilterAndPaginationContactDto,
     @Query('q') searchString: string,
@@ -112,7 +113,7 @@ export class ContactController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateContactById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateContactDto: UpdateContactDto,
@@ -148,7 +149,7 @@ export class ContactController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteContactById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

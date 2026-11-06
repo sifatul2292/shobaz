@@ -65,7 +65,7 @@ export class GalleryController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async insertManyGallery(
     @Body()
     body: {
@@ -93,6 +93,7 @@ export class GalleryController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllGalleriesByAdmin(
     @Body() filterGalleryDto: FilterAndPaginationGalleryDto,
     @Query('q') searchString: string,

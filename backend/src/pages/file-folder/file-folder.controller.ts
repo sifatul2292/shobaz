@@ -99,6 +99,7 @@ export class FileFolderController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllFileFoldersByAdmin(
     @Body() filterFileFolderDto: FilterAndPaginationFileFolderDto,
     @Query('q') searchString: string,

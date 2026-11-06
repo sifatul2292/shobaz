@@ -327,12 +327,14 @@ export class ProductController {
 
   @Version(VERSION_NEUTRAL)
   @Post('/set-product-not-null')
+  @UseGuards(AdminJwtAuthGuard)
   async setProductQtyNotNull(): Promise<ResponsePayload> {
     return await this.productService.setProductQtyNotNull();
   }
 
   @Version(VERSION_NEUTRAL)
   @Post('/set-product-image-https')
+  @UseGuards(AdminJwtAuthGuard)
   async setProductImageHttpToHttps(): Promise<ResponsePayload> {
     return await this.productService.setProductImageHttpToHttps();
   }

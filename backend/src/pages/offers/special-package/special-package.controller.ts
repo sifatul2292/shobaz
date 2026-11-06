@@ -45,6 +45,7 @@ export class SpecialPackageController {
    */
   @Post('/add')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async addSpecialPackage(
     @Body()
     addSpecialPackageDto: AddSpecialPackageDto,
@@ -181,6 +182,7 @@ export class SpecialPackageController {
   @Version(VERSION_NEUTRAL)
   @Delete('/delete/:id')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteSpecialPackageById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

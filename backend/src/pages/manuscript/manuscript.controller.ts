@@ -79,6 +79,7 @@ export class ManuscriptController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllManuscripts(
     @Body() filterManuscriptDto: FilterAndPaginationManuscriptDto,
     @Query('q') searchString: string,
@@ -112,7 +113,7 @@ export class ManuscriptController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateManuscriptById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateManuscriptDto: UpdateManuscriptDto,
@@ -148,7 +149,7 @@ export class ManuscriptController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteManuscriptById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

@@ -67,6 +67,7 @@ export class BlogCommentController {
   @Post('/add-by-admin')
   // @UsePipes(ValidationPipe)
   // @UseGuards(UserJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addBlogCommentByAdmin(
     @Body()
       addBlogCommentDto: AddBlogCommentDto,

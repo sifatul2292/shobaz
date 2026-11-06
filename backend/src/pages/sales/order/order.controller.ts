@@ -109,7 +109,7 @@ export class OrderController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateDate(): Promise<ResponsePayload> {
     return await this.orderService.updateDate();
   }
@@ -179,6 +179,7 @@ export class OrderController {
 
   @Post('/generate-invoices')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async generateInvoices(
     @Body() dto: GenerateInvoicesDto,
   ): Promise<ResponsePayload> {
@@ -192,6 +193,7 @@ export class OrderController {
 
   @Version(VERSION_NEUTRAL)
   @Post('/get-all-incomplete-orders')
+  @UseGuards(AdminJwtAuthGuard)
   async getAllIncompleteOrders(
     @Body() filterOrderDto: FilterAndPaginationOrderDto,
     @Query('q') searchString: string,
@@ -209,6 +211,7 @@ export class OrderController {
 
   @Version(VERSION_NEUTRAL)
   @Put('/update-incomplete-order-by-id/:id')
+  @UseGuards(AdminJwtAuthGuard)
   async updateIncompleteOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() dto: any,
@@ -217,6 +220,7 @@ export class OrderController {
   }
 
   @Post('/delete-multiple-incomplete-orders')
+  @UseGuards(AdminJwtAuthGuard)
   async deleteMultipleIncompleteOrderById(
     @Body() body: { ids: string[] },
   ): Promise<ResponsePayload> {
@@ -230,6 +234,7 @@ export class OrderController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllOrders(
     @Body() filterOrderDto: FilterAndPaginationOrderDto,
     @Query('q') searchString: string,
@@ -281,7 +286,7 @@ export class OrderController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateOrderDto: UpdateOrderDto,
@@ -296,7 +301,7 @@ export class OrderController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateMultipleOrderById(
     @Body() updateOrderDto: UpdateOrderDto,
   ): Promise<ResponsePayload> {
@@ -309,6 +314,7 @@ export class OrderController {
   @Version(VERSION_NEUTRAL)
   @Put('/update-order-session-key/:id')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async updateOrderSessionKey(
     @Param('id') id: string,
     @Body() updateOrderDto: any,
@@ -323,7 +329,7 @@ export class OrderController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async changeOrderStatus(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
@@ -333,6 +339,7 @@ export class OrderController {
 
   @Version(VERSION_NEUTRAL)
   @Post('/send-to-courier/:id')
+  @UseGuards(AdminJwtAuthGuard)
   async sendToCourier(
     @Param('id', MongoIdValidationPipe) id: string,
   ): Promise<ResponsePayload> {
@@ -371,7 +378,7 @@ export class OrderController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,
@@ -402,6 +409,7 @@ export class OrderController {
    */
   @Version(VERSION_NEUTRAL)
   @Post('/check-fraud-spy')
+  @UseGuards(AdminJwtAuthGuard)
   async checkFraudSpy(
     @Body() body: { phone: string },
   ): Promise<ResponsePayload> {
@@ -410,6 +418,7 @@ export class OrderController {
 
   @Version(VERSION_NEUTRAL)
   @Post('/repeat-customers')
+  @UseGuards(AdminJwtAuthGuard)
   async getRepeatCustomers(): Promise<ResponsePayload> {
     return await this.orderService.getRepeatCustomers();
   }

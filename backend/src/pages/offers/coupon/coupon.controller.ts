@@ -83,6 +83,7 @@ export class CouponController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllCoupons(
     @Body() filterCouponDto: FilterAndPaginationCouponDto,
     @Query('q') searchString: string,

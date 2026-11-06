@@ -11,7 +11,9 @@ import {
   UploadedFiles,
   UseInterceptors,
   Version,
+  UseGuards,
 } from '@nestjs/common';
+import { AdminJwtAuthGuard } from '../../guards/admin-jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -53,6 +55,7 @@ export class UploadController {
    * DELETE MULTIPLE IMAGE
    */
   @Post('single-image')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -83,6 +86,7 @@ export class UploadController {
   // NEW
   @Version('2')
   @Post('single-image')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -145,6 +149,7 @@ export class UploadController {
   }
 
   @Post('multiple-image')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('imageMulti', 50, {
       storage: diskStorage({
@@ -175,6 +180,7 @@ export class UploadController {
   // NEW
   @Version('2')
   @Post('multiple-image')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('imageMulti', 50, {
       storage: diskStorage({
@@ -245,6 +251,7 @@ export class UploadController {
   }
 
   @Post('delete-single-image')
+  @UseGuards(AdminJwtAuthGuard)
   deleteSingleFile(
     @Body('url') url: string,
     @Req() req,
@@ -257,6 +264,7 @@ export class UploadController {
   }
 
   @Post('delete-multiple-image')
+  @UseGuards(AdminJwtAuthGuard)
   deleteMultipleFile(
     @Body('url') url: string[],
     @Req() req,
@@ -274,6 +282,7 @@ export class UploadController {
    */
 
   @Post('multiple-file')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('fileMulti', 50, {
       storage: diskStorage({
@@ -315,6 +324,7 @@ export class UploadController {
   }
 
   @Post('delete-multiple-file')
+  @UseGuards(AdminJwtAuthGuard)
   deleteMultipleFilePdf(
     @Body('url') url: string[],
     @Req() req: any,
@@ -336,6 +346,7 @@ export class UploadController {
    */
 
   @Post('csv-upload')
+  @UseGuards(AdminJwtAuthGuard)
   async updateCsv(@Body() products: any[]) {
     try {
       await this.uploadService.updateCsv(products);

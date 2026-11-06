@@ -67,6 +67,7 @@ export class ReviewController {
   @Post('/add-by-admin')
   // @UsePipes(ValidationPipe)
   // @UseGuards(UserJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addReviewByAdmin(
     @Body()
       addReviewDto: AddReviewDto,

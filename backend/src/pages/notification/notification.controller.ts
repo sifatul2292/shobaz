@@ -115,7 +115,7 @@ export class NotificationController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateNotificationById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateNotificationDto: UpdateNotificationDto,

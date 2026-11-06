@@ -1,4 +1,7 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, Query, UsePipes, ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { AdminJwtAuthGuard } from '../../guards/admin-jwt-auth.guard';
 import { PreOrderService } from './pre-order.service';
 import { ResponsePayload } from '../../interfaces/core/response-payload.interface';
 import { AddPreOrderDto, FilterAndPaginationPreOrderDto, UpdatePreOrderStatusDto } from '../../dto/pre-order.dto';
@@ -18,6 +21,7 @@ export class PreOrderController {
 
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllPreOrders(
     @Body() filterPreOrderDto: FilterAndPaginationPreOrderDto,
     @Query('q') searchString: string,
@@ -44,6 +48,7 @@ export class PreOrderController {
 
   @Put('/update-status/:id')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async updatePreOrderStatus(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updatePreOrderStatusDto: UpdatePreOrderStatusDto,
@@ -52,6 +57,7 @@ export class PreOrderController {
   }
 
   @Delete('/:id')
+  @UseGuards(AdminJwtAuthGuard)
   async deletePreOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
   ): Promise<ResponsePayload> {

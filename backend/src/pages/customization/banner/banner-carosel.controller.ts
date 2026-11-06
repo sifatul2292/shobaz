@@ -51,7 +51,7 @@ export class BannerCaroselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.CREATE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async addBannerCarosel(
     @Body()
     addBannerCaroselDto: AddBannerCaroselDto,
@@ -116,7 +116,7 @@ export class BannerCaroselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateBannerCaroselById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateBannerCaroselDto: UpdateBannerCaroselDto,
@@ -152,7 +152,7 @@ export class BannerCaroselController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteBannerCaroselById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,

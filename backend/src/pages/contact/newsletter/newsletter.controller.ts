@@ -85,6 +85,7 @@ export class NewsletterController {
   @Version(VERSION_NEUTRAL)
   @Post('/get-all')
   @UsePipes(ValidationPipe)
+  @UseGuards(AdminJwtAuthGuard)
   async getAllNewsletters(
     @Body() filterNewsletterDto: FilterAndPaginationNewsletterDto,
     @Query('q') searchString: string,
@@ -121,7 +122,7 @@ export class NewsletterController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.EDIT)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async updateNewsletterById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateNewsletterDto: UpdateNewsletterDto,
@@ -160,7 +161,7 @@ export class NewsletterController {
   // @UseGuards(AdminRolesGuard)
   // @AdminMetaPermissions(AdminPermissions.DELETE)
   // @UseGuards(AdminPermissionGuard)
-  // @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard)
   async deleteNewsletterById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Query('checkUsage') checkUsage: boolean,
