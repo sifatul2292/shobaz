@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HomeProductCard from '@/components/home/HomeProductCard';
+import ProductRail from '@/components/home/ProductRail';
+import { useScrollReveal } from '@/components/home/useScrollReveal';
 import api, { imgUrl } from '@/lib/api';
 import { getCached, setCached } from '@/lib/cache';
 import { Product, Author, Publisher, Blog, Tag } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import toast from 'react-hot-toast';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
 interface HomepageSection {
   _id: string;
@@ -26,13 +23,25 @@ interface HomepageSection {
   products: Product[];
 }
 
-const PRIMARY = '#16a34a';
-const AMBER = '#f59e0b';
+export interface HomeInitialData {
+  sections: HomepageSection[];
+  authors: Author[];
+  publishers: Publisher[];
+  blogs: Blog[];
+}
 
-const IcDelivery = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 1 3 3v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>;
-const IcPayment = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>;
-const IcReturn = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
-const IcReaders = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>;
+const IcDelivery = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 1 3 3v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>;
+const IcPayment = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>;
+const IcReturn = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+const IcReaders = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>;
+const IcArrow = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+
+const USPS = [
+  { icon: <IcDelivery />, label: 'সারাদেশে ডেলিভারি' },
+  { icon: <IcPayment />, label: 'bKash / Nagad / কার্ড' },
+  { icon: <IcReturn />, label: 'সহজ রিটার্ন' },
+  { icon: <IcReaders />, label: '১০,০০০+ সন্তুষ্ট পাঠক' },
+];
 
 const STATIC_REVIEWS = [
   {
@@ -40,70 +49,118 @@ const STATIC_REVIEWS = [
     city: 'ঢাকা',
     rating: 5,
     quote: 'অর্ডার দেওয়ার পরদিনই বই হাতে পেয়েছি। প্যাকেজিং চমৎকার, দামও সাশ্রয়ী। শবাজ এখন আমার যাওয়ার প্রথম জায়গা।',
-    initials: 'রি',
-    bg: '#dcfce7',
   },
   {
     name: 'নাবিলা ইসলাম',
     city: 'চট্টগ্রাম',
     rating: 5,
     quote: 'দুর্লভ পুরোনো বই পেয়েছি যা অন্য কোথাও খুঁজে পাইনি। bKash-এ পেমেন্ট দিয়েছি, কোনো ঝামেলা ছাড়াই।',
-    initials: 'না',
-    bg: '#fef3c7',
   },
   {
     name: 'তানভীর হাসান',
     city: 'সিলেট',
     rating: 4,
     quote: 'কালেকশন বিশাল, ক্যাটাগরি অনুযায়ী খুঁজে পেতে সহজ। শিশুদের বইয়ের সেকশনটা বিশেষ ভালো লেগেছে।',
-    initials: 'তা',
-    bg: '#fce7f3',
   },
 ];
 
 function Stars({ rating }: { rating: number }) {
   const full = Math.floor(rating);
   return (
-    <span style={{ color: AMBER, fontSize: 14, letterSpacing: 1 }}>
-      {'★'.repeat(full)}{'☆'.repeat(5 - full)}
+    <span className="home-stars" aria-label={`${rating} / 5`}>
+      {'★'.repeat(full)}<span>{'★'.repeat(5 - full)}</span>
     </span>
   );
 }
 
-function SectionHeader({ title, linkHref, linkLabel }: { title: string; linkHref: string; linkLabel?: string }) {
+function SectionHead({ title, href, linkLabel = 'সব দেখুন' }: { title: string; href?: string; linkLabel?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
-      <h2 style={{
-        fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a',
-        margin: 0, fontFamily: 'var(--bn)',
-      }}>{title}</h2>
-      {linkLabel && (
-        <Link href={linkHref} style={{ color: PRIMARY, fontWeight: 700, fontSize: 14, textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: 'var(--bn)' }}>
-          {linkLabel}
+    <div className="home-head rv">
+      <h2>{title}</h2>
+      {href && (
+        <Link href={href} className="home-viewall">
+          {linkLabel} <IcArrow />
         </Link>
       )}
     </div>
   );
 }
 
-export default function HomePage() {
+function ProductSection({
+  title, href, products, onAdd, first = false,
+}: { title: string; href: string; products: Product[]; onAdd: (p: Product) => void; first?: boolean }) {
+  return (
+    <section className={`home-section${first ? ' reveal-load' : ''}`} data-reveal={first ? undefined : ''}>
+      <div className="home-wrap">
+        <SectionHead title={title} href={href} />
+        <ProductRail label={title}>
+          {products.map((product, i) => (
+            <HomeProductCard key={product._id} product={product} onAdd={onAdd} eager={first && i < 6} />
+          ))}
+        </ProductRail>
+      </div>
+    </section>
+  );
+}
+
+function PromoBanner() {
+  return (
+    <section className="home-section home-section--tight" data-reveal="">
+      <div className="home-wrap">
+        <Link href="/offers" className="home-promo rv">
+          <span>
+            <span className="home-promo-eyebrow">এই সপ্তাহের বিশেষ অফার</span>
+            <span className="home-promo-title">সর্বোচ্চ ৪০% ছাড় — শত শত বইয়ে</span>
+            <span className="home-promo-sub">নির্বাচিত বইয়ে প্রযোজ্য।</span>
+          </span>
+          <span className="home-promo-cta">অফার দেখুন <IcArrow /></span>
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="home-wrap" style={{ paddingTop: 24 }} aria-busy="true" aria-label="লোড হচ্ছে">
+      {[0, 1].map((row) => (
+        <div key={row} style={{ marginBottom: 36 }}>
+          <div className="skeleton" style={{ height: 20, width: 180, borderRadius: 6, marginBottom: 16 }} />
+          <div className="home-skeleton-row">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i}>
+                <div className="skeleton" style={{ aspectRatio: '4 / 5', borderRadius: 10 }} />
+                <div className="skeleton" style={{ height: 12, width: '85%', borderRadius: 4, marginTop: 10 }} />
+                <div className="skeleton" style={{ height: 10, width: '50%', borderRadius: 4, marginTop: 6 }} />
+                <div className="skeleton" style={{ height: 34, borderRadius: 999, marginTop: 10 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function HomePage({ initialData }: { initialData?: HomeInitialData }) {
   const addItem = useCartStore(state => state.addItem);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [authors, setAuthors] = useState<Author[]>(initialData?.authors ?? []);
+  const [publishers, setPublishers] = useState<Publisher[]>(initialData?.publishers ?? []);
+  const [blogs, setBlogs] = useState<Blog[]>(initialData?.blogs ?? []);
+  const [homepageSections, setHomepageSections] = useState<HomepageSection[]>(initialData?.sections ?? []);
+  const [loading, setLoading] = useState(!initialData);
   const [newsletterEmail, setNewsletterEmail] = useState('');
-  const tagScrollRef = useRef<HTMLDivElement>(null);
 
   const handleAddToCart = useCallback((product: Product) => {
     addItem(product, 1);
   }, [addItem]);
 
   useEffect(() => {
+    // Server already rendered the collections — no need to refetch them.
+    if (initialData) return;
     const fetchData = async () => {
       try {
         const cachedAuthors = getCached<Author[]>('authors');
@@ -156,31 +213,14 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (loading) return;
-    const sections = Array.from(document.querySelectorAll('main > section')).slice(1);
-    sections.forEach(s => s.classList.add('reveal-s'));
-    const io = new IntersectionObserver(
-      entries => {
-        entries.forEach(e => {
-          if (e.isIntersecting) {
-            e.target.classList.add('is-visible');
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.06 }
-    );
-    sections.forEach(s => io.observe(s));
-    return () => io.disconnect();
-  }, [loading]);
+  useScrollReveal(!loading, [loading, homepageSections.length]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: '#ffffff' }}>
+      <div className="home min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div style={{ fontFamily: 'var(--bn)', color: '#64748b', fontSize: 18 }}>লোড হচ্ছে...</div>
+        <main className="flex-1">
+          <HomeSkeleton />
         </main>
         <Footer />
       </div>
@@ -188,382 +228,177 @@ export default function HomePage() {
   }
 
   const activeSections = homepageSections.filter(s => s.products && s.products.length > 0);
+  const fallbackSections = [
+    { key: 'hot', title: 'হট ডিল', href: '/products?sort=discountAmount', products: featuredProducts },
+    { key: 'new', title: 'নতুন আগমন', href: '/products?sort=createdAt', products: newProducts },
+  ].filter(s => s.products.length > 0);
+  const rails = activeSections.length > 0
+    ? activeSections.map(s => ({ key: s._id, title: s.name, href: `/products?tag=${s.slug}`, products: s.products }))
+    : fallbackSections;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', color: '#0f172a' }}>
+    <div className="home min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-1">
+        <h1 className="sr-only">Shobaz — অনলাইনে জনপ্রিয় বই, নোটবুক ও বুক বান্ডেল কিনুন</h1>
 
-        {/* ── Trust Strip ── */}
-        <section style={{ background: '#f0fdf4', borderTop: '1px solid #dcfce7', borderBottom: '1px solid #dcfce7' }}>
-          <div
-            className="nh-trust"
-            style={{
-              maxWidth: 1280, margin: '0 auto', padding: '18px 24px',
-              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20,
-            }}
-          >
-            {[
-              { icon: <IcDelivery />, label: 'সারাদেশে ডেলিভারি' },
-              { icon: <IcPayment />, label: 'bKash / Nagad / কার্ড' },
-              { icon: <IcReturn />, label: 'সহজ রিটার্ন' },
-              { icon: <IcReaders />, label: '১০,০০০+ সন্তুষ্ট পাঠক' },
-            ].map((it, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center' }}>{it.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#166534', fontFamily: 'var(--bn)' }}>{it.label}</span>
-              </div>
+        {/* ── Service highlights: static row on desktop, gentle marquee on phones ── */}
+        <section className="home-usp" aria-label="আমাদের সেবা">
+          <div className="home-usp-track">
+            {[0, 1].map(copy => (
+              <ul key={copy} className="home-usp-list" aria-hidden={copy === 1 || undefined}>
+                {USPS.map(it => (
+                  <li key={it.label}>{it.icon}<span>{it.label}</span></li>
+                ))}
+              </ul>
             ))}
           </div>
         </section>
 
-        {/* ── Book Sections ── */}
-        {activeSections.length > 0 ? (
-          activeSections.map((section) => (
-            <section key={section._id} style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
-              <SectionHeader title={section.name} linkHref={`/products?tag=${section.slug}`} linkLabel="সব বই দেখুন →" />
-              <Swiper
-                className="home-product-swiper"
-                modules={[Navigation]}
-                navigation
-                slidesPerView={2}
-                spaceBetween={14}
-                breakpoints={{
-                  640: { slidesPerView: 3, spaceBetween: 18 },
-                  1024: { slidesPerView: 5, spaceBetween: 22 },
-                }}
-              >
-                {section.products.map((product) => (
-                  <SwiperSlide key={product._id} className="home-product-slide">
-                    <HomeProductCard product={product} onAdd={handleAddToCart} />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </section>
-          ))
-        ) : (
-          <>
-            {featuredProducts.length > 0 && (
-              <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
-                <SectionHeader title="🔥 হট ডিল" linkHref="/products?sort=discountAmount" linkLabel="সব দেখুন →" />
-                <Swiper
-                  className="home-product-swiper"
-                  modules={[Navigation]}
-                  navigation
-                  slidesPerView={2}
-                  spaceBetween={14}
-                  breakpoints={{
-                    640: { slidesPerView: 3, spaceBetween: 18 },
-                    1024: { slidesPerView: 5, spaceBetween: 22 },
-                  }}
-                >
-                  {featuredProducts.map((product) => (
-                    <SwiperSlide key={product._id} className="home-product-slide">
-                      <HomeProductCard product={product} onAdd={handleAddToCart} />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </section>
-            )}
-            {newProducts.length > 0 && (
-              <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 24px' }}>
-                <SectionHeader title="✨ নতুন আগমন" linkHref="/products?sort=createdAt" linkLabel="সব দেখুন →" />
-                <Swiper
-                  className="home-product-swiper"
-                  modules={[Navigation]}
-                  navigation
-                  slidesPerView={2}
-                  spaceBetween={14}
-                  breakpoints={{
-                    640: { slidesPerView: 3, spaceBetween: 18 },
-                    1024: { slidesPerView: 5, spaceBetween: 22 },
-                  }}
-                >
-                  {newProducts.map((product) => (
-                    <SwiperSlide key={product._id} className="home-product-slide">
-                      <HomeProductCard product={product} onAdd={handleAddToCart} />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </section>
-            )}
-          </>
-        )}
-
-        {/* ── Promo Banner ── */}
-        <section style={{ maxWidth: 1280, margin: '24px auto', padding: '0 24px' }}>
-          <div
-            className="nh-promo"
-            style={{
-              background: `linear-gradient(95deg, ${AMBER} 0%, #fbbf24 100%)`,
-              borderRadius: 20, padding: '32px 40px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              gap: 24, flexWrap: 'wrap', position: 'relative', overflow: 'hidden', color: '#422006',
-            }}
-          >
-            <div style={{ position: 'absolute', top: -30, right: -10, width: 220, height: 220, background: 'rgba(255,255,255,0.18)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: -60, left: '40%', width: 180, height: 180, background: 'rgba(255,255,255,0.12)', borderRadius: '50%' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6, fontFamily: 'var(--sans)' }}>
-                🔥 এই সপ্তাহের বিশেষ অফার
-              </div>
-              <h3 style={{ margin: 0, fontSize: 'clamp(20px, 2.5vw, 30px)', fontWeight: 800, lineHeight: 1.2, fontFamily: 'var(--bn)' }}>
-                সর্বোচ্চ <span style={{ color: '#7c2d12' }}>৪০% ছাড়!</span> — শত শত বইয়ে
-              </h3>
-              <p style={{ margin: '8px 0 0', fontSize: 14, color: '#78350f', fontFamily: 'var(--bn)' }}>
-                নির্বাচিত বইয়ে প্রযোজ্য।
-              </p>
-            </div>
-            <Link href="/offers" style={{
-              background: '#1c1917', color: 'white', borderRadius: 10,
-              padding: '14px 28px', fontWeight: 700, fontFamily: 'var(--bn)',
-              fontSize: 15, position: 'relative', zIndex: 1,
-              whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block',
-            }}>
-              অফার দেখুন →
-            </Link>
-          </div>
-        </section>
+        {/* ── Collections ── */}
+        {rails.map((rail, idx) => (
+          <Fragment key={rail.key}>
+            <ProductSection
+              title={rail.title}
+              href={rail.href}
+              products={rail.products}
+              onAdd={handleAddToCart}
+              first={idx === 0}
+            />
+            {idx === Math.min(1, rails.length - 1) && <PromoBanner />}
+          </Fragment>
+        ))}
+        {rails.length === 0 && <PromoBanner />}
 
         {/* ── Reviews ── */}
-        <section style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 24px 32px' }}>
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'var(--bn)' }}>
-              পাঠকদের অভিজ্ঞতা
-            </h2>
-            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 14, fontFamily: 'var(--bn)' }}>
-              আমাদের কাস্টমারদের সাথে যা শেয়ার করেছেন
-            </p>
-          </div>
-          <div className="nh-reviews" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 22 }}>
-            {STATIC_REVIEWS.map((r, i) => (
-              <div key={i} style={{
-                background: 'white', border: '1px solid #f1f5f9', borderRadius: 16,
-                padding: 26, display: 'flex', flexDirection: 'column', gap: 16,
-              }}>
-                <div style={{ fontSize: 36, lineHeight: 0.6, color: PRIMARY, fontFamily: 'serif' }}>"</div>
-                <p style={{ margin: 0, fontSize: 15, color: '#0f172a', lineHeight: 1.65, fontFamily: 'var(--bn)' }}>{r.quote}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: '50%', background: r.bg,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 800, fontSize: 16, fontFamily: 'var(--bn)', color: '#0f172a',
-                  }}>{r.initials}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: '#0f172a', fontFamily: 'var(--bn)' }}>{r.name}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', fontFamily: 'var(--sans)' }}>{r.city}</div>
-                  </div>
+        <section className="home-section" data-reveal="">
+          <div className="home-wrap">
+            <SectionHead title="পাঠকদের অভিজ্ঞতা" />
+            <ProductRail label="পাঠকদের অভিজ্ঞতা" variant="wide">
+              {STATIC_REVIEWS.map(r => (
+                <figure key={r.name} className="home-review">
                   <Stars rating={r.rating} />
-                </div>
-              </div>
-            ))}
+                  <blockquote>{r.quote}</blockquote>
+                  <figcaption><b>{r.name}</b> · {r.city}</figcaption>
+                </figure>
+              ))}
+            </ProductRail>
           </div>
         </section>
 
         {/* ── Authors ── */}
         {authors.length > 0 && (
-          <section className="page-section">
-            <div className="sec-head">
-              <h2><span className="bn">জনপ্রিয় লেখক</span></h2>
-              <Link href="/authors" className="see-all">সব দেখুন →</Link>
-            </div>
-            <Swiper
-              slidesPerView={3}
-              spaceBetween={16}
-              breakpoints={{
-                480: { slidesPerView: 4 },
-                640: { slidesPerView: 5 },
-                768: { slidesPerView: 7 },
-                1024: { slidesPerView: 9 },
-              }}
-              modules={[Navigation]}
-            >
-              {authors.map((author) => (
-                <SwiperSlide key={author._id}>
-                  <Link href={`/products?author=${author.slug}`} className="block text-center group py-2">
-                    <div
-                      style={{
-                        width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
-                        margin: '0 auto 8px', border: '1px solid var(--line-soft)',
-                        transition: 'border-color .2s ease',
-                      }}
-                      className="group-hover:border-[var(--accent)]"
-                    >
+          <section className="home-section" data-reveal="">
+            <div className="home-wrap">
+              <SectionHead title="জনপ্রিয় লেখক" href="/authors" />
+              <ProductRail label="জনপ্রিয় লেখক" variant="compact">
+                {authors.map((author) => (
+                  <Link key={author._id} href={`/products?author=${author.slug}`} className="home-author">
+                    <span className="home-author-avatar">
                       {author.image ? (
-                        <img src={imgUrl(author.image)!} alt={author.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={imgUrl(author.image)!} alt="" loading="lazy" />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--bn)', fontWeight: 600, color: 'var(--ink-2)' }}>
-                          {author.name?.charAt(0)}
-                        </div>
+                        <span>{author.name?.charAt(0)}</span>
                       )}
-                    </div>
-                    <p style={{ fontFamily: 'var(--bn)', fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {author.name}
-                    </p>
+                    </span>
+                    <span className="home-author-name">{author.name}</span>
                   </Link>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                ))}
+              </ProductRail>
+            </div>
           </section>
         )}
 
         {/* ── Publishers ── */}
         {publishers.length > 0 && (
-          <section style={{ borderTop: '1px solid var(--line-soft)', borderBottom: '1px solid var(--line-soft)', background: 'var(--card)' }}>
-            <div className="page-section">
-              <div className="sec-head">
-                <h2><span className="bn">জনপ্রিয় প্রকাশনা</span></h2>
-                <Link href="/publishers" className="see-all">সব দেখুন →</Link>
-              </div>
-              <Swiper
-                slidesPerView={3}
-                spaceBetween={12}
-                breakpoints={{
-                  480: { slidesPerView: 4 },
-                  640: { slidesPerView: 5 },
-                  768: { slidesPerView: 6 },
-                  1024: { slidesPerView: 8 },
-                }}
-                modules={[Navigation]}
-              >
+          <section className="home-section" data-reveal="">
+            <div className="home-wrap">
+              <SectionHead title="জনপ্রিয় প্রকাশনা" href="/publishers" />
+              <ProductRail label="জনপ্রিয় প্রকাশনা" variant="compact">
                 {publishers.map((pub) => (
-                  <SwiperSlide key={pub._id}>
-                    <Link
-                      href={`/products?publisher=${pub.slug}`}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                        padding: '12px 8px', border: '1px solid var(--line-soft)', borderRadius: 'var(--radius)',
-                        background: 'var(--bg)', transition: 'border-color .15s ease',
-                      }}
-                    >
-                      {pub.image ? (
-                        <img src={imgUrl(pub.image)!} alt={pub.name} style={{ height: 36, maxWidth: '100%', objectFit: 'contain' }} />
-                      ) : (
-                        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius)', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--bn)', fontWeight: 600, color: 'var(--ink-2)' }}>
-                          {pub.name?.charAt(0)}
-                        </div>
-                      )}
-                      <p style={{ fontFamily: 'var(--bn)', fontSize: 11, color: 'var(--ink-2)', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {pub.name}
-                      </p>
-                    </Link>
-                  </SwiperSlide>
+                  <Link key={pub._id} href={`/products?publisher=${pub.slug}`} className="home-publisher">
+                    {pub.image ? (
+                      <img src={imgUrl(pub.image)!} alt="" loading="lazy" />
+                    ) : (
+                      <span className="home-publisher-initial">{pub.name?.charAt(0)}</span>
+                    )}
+                    <span className="home-publisher-name">{pub.name}</span>
+                  </Link>
                 ))}
-              </Swiper>
+              </ProductRail>
             </div>
           </section>
         )}
 
         {/* ── Tags ── */}
         {tags.length > 0 && (
-          <section className="page-section">
-            <div className="sec-head" style={{ alignItems: 'center' }}>
-              <h2>জনপ্রিয় ট্যাগ</h2>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['l', 'r'] as const).map((dir) => (
-                  <button
-                    key={dir}
-                    onClick={() => tagScrollRef.current?.scrollBy({ left: dir === 'l' ? -200 : 200, behavior: 'smooth' })}
-                    style={{
-                      width: 32, height: 32, borderRadius: '50%', background: 'white',
-                      border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', color: '#374151', flexShrink: 0,
-                    }}
-                    aria-label={dir === 'l' ? 'Previous' : 'Next'}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      {dir === 'l' ? <path d="m15 18-6-6 6-6"/> : <path d="m9 18 6-6-6-6"/>}
-                    </svg>
-                  </button>
+          <section className="home-section" data-reveal="">
+            <div className="home-wrap">
+              <SectionHead title="জনপ্রিয় ট্যাগ" />
+              <div className="home-tags rv">
+                {tags.map((tag) => (
+                  <Link key={tag._id} href={`/products?tag=${tag.slug}`} className="home-tag">
+                    {tag.name}
+                  </Link>
                 ))}
               </div>
-            </div>
-            <div ref={tagScrollRef} className="cat-pills" style={{ flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
-              {tags.map((tag) => (
-                <Link key={tag._id} href={`/products?tag=${tag.slug}`} className="cat-pill" style={{ flexShrink: 0 }}>
-                  {tag.name}
-                </Link>
-              ))}
             </div>
           </section>
         )}
 
         {/* ── Blog ── */}
         {blogs.length > 0 && (
-          <section className="page-section">
-            <div className="sec-head">
-              <h2>ব্লগ</h2>
-              <Link href="/blog" className="see-all">সব দেখুন →</Link>
-            </div>
-            <div className="blog-grid">
-              {blogs.slice(0, 3).map((blog) => (
-                <Link key={blog._id} href={`/blog/${blog.slug}`} className="blog-card">
-                  <div className="blog-card-img">
-                    {blog.image ? (
-                      <img src={imgUrl(blog.image)!} alt={blog.title} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <HiOutlineBookOpen style={{ width: 40, height: 40, color: 'var(--muted)' }} />
-                      </div>
-                    )}
-                  </div>
-                  <span className="blog-card-meta">ব্লগ</span>
-                  <h3 className="blog-card-title">{blog.title}</h3>
-                </Link>
-              ))}
+          <section className="home-section" data-reveal="">
+            <div className="home-wrap">
+              <SectionHead title="ব্লগ" href="/blog" />
+              <div className="home-blog stagger">
+                {blogs.slice(0, 3).map((blog, i) => (
+                  <Link key={blog._id} href={`/blog/${blog.slug}`} className="home-blog-card rv" style={{ ['--i' as string]: i }}>
+                    <span className="home-blog-img">
+                      {blog.image ? (
+                        <img src={imgUrl(blog.image)!} alt={blog.title} loading="lazy" />
+                      ) : (
+                        <HiOutlineBookOpen style={{ width: 32, height: 32, color: '#a3a3a3' }} />
+                      )}
+                    </span>
+                    <span className="home-blog-title">{blog.title}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         )}
 
         {/* ── Newsletter ── */}
-        <section style={{ maxWidth: 1280, margin: '24px auto 56px', padding: '0 24px' }}>
-          <div
-            className="nh-newsletter"
-            style={{
-              background: '#0f172a', color: 'white', borderRadius: 20, padding: '40px 44px',
-              display: 'flex', justifyContent: 'space-between', gap: 28, flexWrap: 'wrap', alignItems: 'center',
-            }}
-          >
-            <div>
-              <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 24px)', fontWeight: 800, fontFamily: 'var(--bn)' }}>
-                নতুন বইয়ের খবর সবার আগে পান
-              </h3>
-              <p style={{ margin: '6px 0 0', color: '#cbd5e1', fontSize: 14, fontFamily: 'var(--bn)' }}>
-                প্রতি সপ্তাহে নতুন আগমন ও বিশেষ অফার সরাসরি আপনার ইনবক্সে।
-              </p>
-            </div>
-            <form
-              onSubmit={e => {
-                e.preventDefault();
-                if (newsletterEmail) {
-                  toast.success('সাবস্ক্রাইব হয়েছে!');
-                  setNewsletterEmail('');
-                }
-              }}
-              style={{ display: 'flex', gap: 8, flex: '0 1 480px', minWidth: 280 }}
-            >
-              <input
-                type="email"
-                placeholder="আপনার ইমেইল লিখুন"
-                value={newsletterEmail}
-                onChange={e => setNewsletterEmail(e.target.value)}
-                style={{
-                  flex: 1, height: 50, border: 'none', borderRadius: 10, padding: '0 16px',
-                  fontSize: 14, fontFamily: 'var(--bn)', background: 'white', color: '#0f172a',
-                  outline: 'none',
+        <section className="home-section home-section--last" data-reveal="">
+          <div className="home-wrap">
+            <div className="home-news rv">
+              <div>
+                <h2>নতুন বইয়ের খবর সবার আগে পান</h2>
+                <p>প্রতি সপ্তাহে নতুন আগমন ও বিশেষ অফার সরাসরি আপনার ইনবক্সে।</p>
+              </div>
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  if (newsletterEmail) {
+                    toast.success('সাবস্ক্রাইব হয়েছে!');
+                    setNewsletterEmail('');
+                  }
                 }}
-              />
-              <button type="submit" style={{
-                background: PRIMARY, color: 'white', border: 'none', borderRadius: 10,
-                padding: '0 24px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--bn)',
-                fontSize: 15, whiteSpace: 'nowrap',
-              }}>সাবস্ক্রাইব</button>
-            </form>
+              >
+                <input
+                  type="email"
+                  placeholder="আপনার ইমেইল লিখুন"
+                  aria-label="ইমেইল"
+                  value={newsletterEmail}
+                  onChange={e => setNewsletterEmail(e.target.value)}
+                />
+                <button type="submit">সাবস্ক্রাইব</button>
+              </form>
+            </div>
           </div>
         </section>
-
       </main>
 
       <Footer />

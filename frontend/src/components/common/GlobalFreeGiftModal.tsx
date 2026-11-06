@@ -114,7 +114,7 @@ export default function GlobalFreeGiftModal() {
       <style jsx>{`
         .gfm-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(7,26,7,0.72); backdrop-filter: blur(8px); animation: gfmBackdrop .2s ease; }
         @keyframes gfmBackdrop { from { opacity: 0; } to { opacity: 1; } }
-        .gfm-card { width: min(760px, 100%); max-height: 92vh; overflow: auto; background: #F6FBF6; color: #071A07; border-radius: 24px; border: 1px solid #C8E6C9; box-shadow: 0 34px 90px rgba(7,26,7,0.38); padding: 24px; font-family: "Hind Siliguri", sans-serif; animation: gfmPop .42s cubic-bezier(.2,.75,.18,1); }
+        .gfm-card { width: min(760px, 100%); max-height: 92vh; overflow: auto; background: #F6FBF6; color: #071A07; border-radius: 24px; border: 1px solid #C8E6C9; box-shadow: 0 34px 90px rgba(7,26,7,0.38); padding: 24px; font-family: var(--font-bengali), sans-serif; animation: gfmPop .42s cubic-bezier(.2,.75,.18,1); }
         @keyframes gfmPop { 0% { opacity: 0; transform: translateY(22px) scale(.94); } 60% { transform: translateY(-3px) scale(1.01); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         .gfm-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
         .gfm-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border-radius: 999px; background: #D4AF37; color: #071A07; font-weight: 900; font-size: 13px; margin-bottom: 10px; }

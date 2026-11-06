@@ -342,7 +342,7 @@ export default function FinanceBundleClient() {
         /* Section head */
         .fb-section-head { text-align:center; max-width: 720px; margin: 0 auto 52px; }
         .fb-section-title {
-          font-family: "Hind Siliguri", sans-serif;
+          font-family: var(--font-bengali), sans-serif;
           font-weight: 600;
           font-size: clamp(26px, 3.6vw, 40px);
           line-height: 1.18;
@@ -364,7 +364,7 @@ export default function FinanceBundleClient() {
           position: relative; z-index: 1;
         }
         .fb-lede-bn {
-          font-family: "Hind Siliguri", sans-serif;
+          font-family: var(--font-bengali), sans-serif;
           font-weight: 700;
           font-size: clamp(30px, 4.6vw, 52px);
           line-height: 1.16;
@@ -389,7 +389,7 @@ export default function FinanceBundleClient() {
           padding: 15px 24px; border-radius: 12px; font-weight: 600; font-size: 15px;
           border: 1px solid transparent; cursor: pointer;
           transition: transform .12s ease, background .15s ease;
-          font-family: "Hind Siliguri", sans-serif; text-decoration: none;
+          font-family: var(--font-bengali), sans-serif; text-decoration: none;
         }
         .fb-btn:hover { transform: translateY(-1px); }
         .fb-btn-primary { background: #1E3A2A; color: #F8F4EB; box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 10px 22px -10px rgba(30,58,42,0.55); }
@@ -500,7 +500,7 @@ export default function FinanceBundleClient() {
           padding:3px 8px; border-radius:4px; letter-spacing:0.04em;
         }
         .fb-bcard .fb-body { padding: 14px 16px 16px; display:flex;flex-direction:column;gap:6px;flex:1; }
-        .fb-bcard h4 { font-family:"Hind Siliguri",sans-serif; font-size:15px; font-weight:600; margin:0; line-height:1.25; color:#161510; }
+        .fb-bcard h4 { font-family:var(--font-bengali),sans-serif; font-size:15px; font-weight:600; margin:0; line-height:1.25; color:#161510; }
         .fb-bcard h4 .en { display:block; font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:12px; color:#6E685D; margin-top:2px; }
         .fb-bcard .fb-aline { font-size:12px; color:#6E685D; }
         .fb-bcard .fb-stars-row { display:flex;gap:6px;align-items:center;font-size:11px;color:#6E685D; }
@@ -523,7 +523,7 @@ export default function FinanceBundleClient() {
         }
         .fb-builder-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:26px; }
         .fb-builder-head .fb-section-eyebrow { color:#E8C075; }
-        .fb-builder-head h3 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:27px; line-height:1.2; margin:0 0 6px; }
+        .fb-builder-head h3 { font-family:var(--font-bengali),sans-serif; font-weight:600; font-size:27px; line-height:1.2; margin:0 0 6px; }
         .fb-builder-head p { margin:0; color:rgba(248,244,235,0.7); font-size:14px; max-width:460px; }
         .fb-builder-price {
           background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
@@ -554,7 +554,7 @@ export default function FinanceBundleClient() {
         .fb-pmini::before { content:""; position:absolute; left:0;top:0;bottom:0;width:2px; background:rgba(0,0,0,0.2); }
         .fb-pmini .pt { font-family:"Fraunces",serif; font-weight:700; font-size:11px; line-height:1.05; }
         .fb-pmini .pa { font-family:"Inter",sans-serif; font-size:7px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
-        .fb-pick .fb-ptitle { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:12px; line-height:1.25; margin-bottom:2px; color:#F8F4EB; }
+        .fb-pick .fb-ptitle { font-family:var(--font-bengali),sans-serif; font-weight:600; font-size:12px; line-height:1.25; margin-bottom:2px; color:#F8F4EB; }
         .fb-pick .fb-pprice { font-family:"Inter",sans-serif; font-weight:600; font-size:13px; opacity:0.85; color:#F8F4EB; }
         .fb-builder-totals {
           margin-top:24px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;
@@ -573,7 +573,7 @@ export default function FinanceBundleClient() {
           font-weight:700; font-size:16px;
           display:inline-flex;align-items:center;justify-content:center;gap:10px;
           transition:transform .12s ease, background .15s ease; cursor:pointer; border:none;
-          font-family:"Hind Siliguri",sans-serif;
+          font-family:var(--font-bengali),sans-serif;
         }
         .fb-builder-cta:hover { background:#F0CF8C; transform:translateY(-1px); }
         .fb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(248,244,235,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
@@ -612,7 +612,7 @@ export default function FinanceBundleClient() {
         .fb-faq-list { max-width:760px; margin:0 auto; display:flex;flex-direction:column;gap:8px; }
         .fb-faq-item { background:#FBF8F2; border:1px solid #E0D8C7; border-radius:14px; overflow:hidden; }
         .fb-faq-item.on { border-color:#2A5340; }
-        .fb-faq-q { width:100%;text-align:left;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px; font-weight:600;font-size:15px;color:#161510; font-family:"Hind Siliguri",sans-serif; cursor:pointer; background:none; border:none; }
+        .fb-faq-q { width:100%;text-align:left;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px; font-weight:600;font-size:15px;color:#161510; font-family:var(--font-bengali),sans-serif; cursor:pointer; background:none; border:none; }
         .fb-pm { width:26px;height:26px;border-radius:50%; border:1px solid #C9BFA8; display:grid;place-items:center; transition:transform .2s ease,background .15s ease; flex-shrink:0; }
         .fb-faq-item.on .fb-pm { background:#1E3A2A; border-color:#1E3A2A; transform:rotate(45deg); }
         .fb-faq-a { max-height:0; overflow:hidden; transition:max-height .25s ease; border-left:4px solid transparent; }
@@ -634,7 +634,7 @@ export default function FinanceBundleClient() {
           transform:translateX(-50%);
         }
         .fb-final-cta .fb-section-eyebrow { color:rgba(232,192,117,0.8); }
-        .fb-final-cta h2 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F8F4EB; line-height:1.18; }
+        .fb-final-cta h2 { font-family:var(--font-bengali),sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F8F4EB; line-height:1.18; }
         .fb-final-cta p { color:rgba(242,237,223,0.7); max-width:540px; margin:0 auto 26px; }
         .fb-final-cd { display:flex;gap:16px;justify-content:center;margin-bottom:30px; flex-wrap:wrap; }
         .fb-cd-box { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 22px;min-width:80px;text-align:center; }

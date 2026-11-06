@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
-import HomeClient from './HomeClient';
+import HomeClient, { HomeInitialData } from './HomeClient';
+import { API_BASE, SITE_URL, absoluteImage, jsonLdString } from '@/lib/seo';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shobaz.com';
+// Re-render the homepage at most every few minutes; sections change rarely.
+const HOME_REVALIDATE = 300;
 
 async function getHomeSeo() {
   try {
@@ -28,6 +29,36 @@ async function getShopInfo() {
   }
 }
 
+async function getList(endpoint: string): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/${endpoint}`, { next: { revalidate: HOME_REVALIDATE } });
+    const json = await res.json();
+    const raw = json?.data;
+    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+  } catch {
+    return [];
+  }
+}
+
+// Server-render the homepage collections so crawlers and first paint see real
+// products instead of a "loading" placeholder. The client falls back to its
+// own fetch when this returns nothing (e.g. API briefly unreachable).
+async function getHomeData(): Promise<HomeInitialData | undefined> {
+  const [sections, authors, publishers, blogs] = await Promise.all([
+    getList('tag/get-homepage-sections'),
+    getList('author/get-all-basic'),
+    getList('publisher/get-all-basic'),
+    getList('blog/get-all-basic'),
+  ]);
+  if (!sections.some((s) => Array.isArray(s?.products) && s.products.length > 0)) return undefined;
+  return {
+    sections,
+    authors: authors.slice(0, 12),
+    publishers: publishers.slice(0, 12),
+    blogs: blogs.slice(0, 3),
+  };
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const [seo, shop] = await Promise.all([getHomeSeo(), getShopInfo()]);
 
@@ -47,13 +78,13 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     keywords,
-    alternates: { canonical: SITE_URL },
+    alternates: { canonical: `${SITE_URL}/` },
     openGraph: {
       title,
       description,
-      url: SITE_URL,
+      url: `${SITE_URL}/`,
       siteName: 'Shobaz',
-      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630, alt: 'Shobaz' }] : [],
+      images: imageUrl ? [{ url: imageUrl, alt: 'Shobaz' }] : [],
       type: 'website',
       locale: 'bn_BD',
     },
@@ -66,6 +97,53 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function HomePage() {
-  return <HomeClient />;
+export default async function HomePage() {
+  const [initialData, shop] = await Promise.all([getHomeData(), getShopInfo()]);
+  const logo = absoluteImage(shop?.siteLogo || shop?.navLogo);
+  const firstValue = (list: any) => (Array.isArray(list) ? list.find((x) => x?.value)?.value : undefined);
+  const phone = firstValue(shop?.phones);
+  const email = firstValue(shop?.emails);
+  const address = firstValue(shop?.addresses);
+  const sameAs = Array.isArray(shop?.socialLinks)
+    ? shop.socialLinks.map((s: any) => s?.value).filter((v: unknown) => typeof v === 'string' && v.startsWith('http'))
+    : [];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'OnlineStore',
+        '@id': `${SITE_URL}/#organization`,
+        name: shop?.siteName || 'Shobaz',
+        url: `${SITE_URL}/`,
+        ...(logo ? { logo } : {}),
+        ...(phone ? { telephone: phone } : {}),
+        ...(email ? { email } : {}),
+        ...(address ? { address: { '@type': 'PostalAddress', streetAddress: address, addressCountry: 'BD' } } : {}),
+        ...(sameAs.length ? { sameAs } : {}),
+        areaServed: 'BD',
+        currenciesAccepted: 'BDT',
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        name: shop?.siteName || 'Shobaz',
+        url: `${SITE_URL}/`,
+        inLanguage: 'bn',
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/products?q={search_term_string}` },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }} />
+      <HomeClient initialData={initialData} />
+    </>
+  );
 }

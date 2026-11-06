@@ -71,8 +71,11 @@ export interface Author {
   _id: string;
   name: string;
   slug?: string;
-  image?: string;
+  image?: string | null;
   bio?: string;
+  /** Bangla bio, edited in admin → Author. */
+  description?: string | null;
+  descriptionEn?: string | null;
 }
 
 export interface Publisher {

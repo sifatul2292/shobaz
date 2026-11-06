@@ -7,13 +7,15 @@ import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
 import { phViewItem, phAddToCart } from '@/lib/posthog';
-import { Product, ShippingCharge, Review } from '@/types';
+import { Product, ShippingCharge, Review, Author } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import { FaTimes, FaStar } from 'react-icons/fa';
+import HomeProductCard from '@/components/home/HomeProductCard';
+import ProductRail from '@/components/home/ProductRail';
 
 const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 
@@ -24,6 +26,10 @@ interface BundleItem {
 
 interface Props {
   params: Promise<{ slug: string }>;
+  /** Product fetched on the server — renders the page immediately (SEO + no spinner). */
+  initialProduct?: Product;
+  /** Full author record(s) (photo + bio) fetched on the server. */
+  initialAuthors?: Author[];
 }
 
 const CV_CLASSES = ['cv-1','cv-2','cv-3','cv-4','cv-5','cv-6','cv-7','cv-8','cv-9','cv-10','cv-11','cv-12'];
@@ -178,12 +184,21 @@ function CTAButton({ onClick, style, hoverShadow, hoverBg, children }: {
   );
 }
 
-export default function ProductDetailClient({ params }: Props) {
-  const [product, setProduct] = useState<Product | null>(null);
+export default function ProductDetailClient({ params, initialProduct, initialAuthors }: Props) {
+  const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [bundleProducts, setBundleProducts] = useState<BundleItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialProduct);
+  const [showStickyBuy, setShowStickyBuy] = useState(false);
+  const [authorDetails, setAuthorDetails] = useState<Author[]>(initialAuthors ?? []);
+  const [authorBooks, setAuthorBooks] = useState<Product[]>([]);
+  const [showFullBio, setShowFullBio] = useState(false);
+  const [pageUrl, setPageUrl] = useState('');
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  // Read the URL after mount so server and client markup match (SSR hydration).
+  useEffect(() => { setPageUrl(window.location.href); }, []);
   const [quantity, setQuantity] = useState(1);
   const [slug, setSlug] = useState('');
   const [activeImage, setActiveImage] = useState(0);
@@ -232,8 +247,64 @@ export default function ProductDetailClient({ params }: Props) {
     };
   }, [showcaseLightboxIndex]);
 
+  // Fallback: load the author record client-side if the server didn't send it.
+  const firstAuthorId = (() => {
+    const a: any = product?.author;
+    const first = Array.isArray(a) ? a[0] : a;
+    return first && typeof first === 'object' ? first._id : '';
+  })();
+  useEffect(() => {
+    if (!firstAuthorId || authorDetails.some(a => a._id === firstAuthorId)) return;
+    api.get(`/author/${firstAuthorId}`)
+      .then(res => { if (res.data?.data) setAuthorDetails([res.data.data]); })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstAuthorId]);
+
+  // PDF reader: lock page scroll and close on Escape.
+  useEffect(() => {
+    if (!showPreviewModal) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowPreviewModal(false); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+  }, [showPreviewModal]);
+
+  // Mobile sticky buy bar: appears once the main buttons scroll out of view.
+  const hasProduct = Boolean(product);
+  // Plain scroll check (passive + coalesced) — stays correct after reloads that
+  // restore the scroll position, where an observer's first callback can lag.
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    let pending = false;
+    const check = () => {
+      pending = false;
+      setShowStickyBuy(el.getBoundingClientRect().bottom < 0);
+    };
+    const onScroll = () => {
+      if (pending) return;
+      pending = true;
+      setTimeout(check, 60);
+    };
+    check();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [hasProduct, loading]);
+
+  useEffect(() => {
+    document.body.classList.toggle('has-sticky-buy', showStickyBuy);
+    return () => document.body.classList.remove('has-sticky-buy');
+  }, [showStickyBuy]);
+
   const fetchProduct = async () => {
-    setLoading(true);
+    // Keep server-rendered content on screen while fresh data loads.
+    if (!product) setLoading(true);
     try {
       const [res, relatedRes, shipRes] = await Promise.all([
         api.get(`/product/get-by-slug/${slug}`),
@@ -257,6 +328,14 @@ export default function ProductDetailClient({ params }: Props) {
 
           const filtered = allProducts.filter((p: Product) => p._id !== productData._id);
           setRelatedProducts(filtered.slice(0, 10));
+
+          // Other books by the same author(s), for the author section.
+          const authorList: any[] = Array.isArray(productData.author) ? productData.author : productData.author ? [productData.author] : [];
+          const authorKeys = new Set(authorList.flatMap((a: any) => (typeof a === 'object' ? [a?._id, a?.slug] : [a])).filter(Boolean));
+          setAuthorBooks(filtered.filter((p: any) => {
+            const pa: any[] = Array.isArray(p.author) ? p.author : p.author ? [p.author] : [];
+            return pa.some((a: any) => authorKeys.has(typeof a === 'object' ? a?._id : a) || (typeof a === 'object' && authorKeys.has(a?.slug)));
+          }).slice(0, 8));
 
           const sortedByRating = [...filtered].sort((a: Product, b: Product) => (b.totalSold || 0) - (a.totalSold || 0));
           setBestSellers(sortedByRating.slice(0, 10));
@@ -317,12 +396,12 @@ export default function ProductDetailClient({ params }: Props) {
     setSubmittingReview(false);
   };
 
+  // Visual confirmation comes from the global add-to-cart notification.
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
       gtmAddToCart(product, quantity);
       phAddToCart(product, quantity);
-      toast.success('কার্টে যোগ হয়েছে');
     }
   };
 
@@ -431,21 +510,20 @@ export default function ProductDetailClient({ params }: Props) {
 
   if (loading) {
     return (
-      <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="pdp min-h-screen flex flex-col">
         <Header />
-        <main style={{ flex: 1, maxWidth: 1280, margin: '0 auto', padding: '24px 24px 80px', width: '100%' }}>
-          <div style={{ height: 14, width: 240, background: '#e5e7eb', borderRadius: 4, marginBottom: 24 }} />
-          <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '28% minmax(0,44%) 28%', gap: 32 }}>
-              <div style={{ aspectRatio: '2/3', background: '#f1f5f9', borderRadius: 12 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {[80, 320, 200, 60, '100%', '100%', '100%'].map((w, i) => (
-                  <div key={i} style={{ height: i === 1 ? 52 : i > 3 ? 52 : 18, width: typeof w === 'number' ? w : w, background: '#f1f5f9', borderRadius: 6 }} />
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ height: 160, background: '#f1f5f9', borderRadius: 12 }} />
-                <div style={{ height: 240, background: '#f1f5f9', borderRadius: 12 }} />
+        <main className="flex-1" aria-busy="true" aria-label="লোড হচ্ছে">
+          <div className="pdp-wrap">
+            <div className="skeleton" style={{ height: 12, width: 200, borderRadius: 4, margin: '16px 0 18px' }} />
+            <div className="pdp-main">
+              <div className="skeleton pdp-stage" />
+              <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
+                <div className="skeleton" style={{ height: 12, width: 90, borderRadius: 4 }} />
+                <div className="skeleton" style={{ height: 30, width: '80%', borderRadius: 6 }} />
+                <div className="skeleton" style={{ height: 14, width: '45%', borderRadius: 4 }} />
+                <div className="skeleton" style={{ height: 28, width: 140, borderRadius: 6, marginTop: 8 }} />
+                <div className="skeleton" style={{ height: 48, borderRadius: 999, marginTop: 12 }} />
+                <div className="skeleton" style={{ height: 48, borderRadius: 999 }} />
               </div>
             </div>
           </div>
@@ -457,13 +535,13 @@ export default function ProductDetailClient({ params }: Props) {
 
   if (!product) {
     return (
-      <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="pdp min-h-screen flex flex-col">
         <Header />
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center', padding: 40 }}>
-            <HiOutlineBookOpen style={{ width: 48, height: 48, color: '#9ca3af', margin: '0 auto 16px' }} />
-            <h2 style={{ fontFamily: 'var(--bn)', fontSize: 22, marginBottom: 12 }}>পণ্য পাওয়া যায়নি</h2>
-            <Link href="/products" style={{ color: PRIMARY, fontWeight: 600 }}>সকল বই দেখুন →</Link>
+            <HiOutlineBookOpen style={{ width: 44, height: 44, color: '#a3a3a3', margin: '0 auto 14px' }} />
+            <h2 style={{ fontFamily: 'var(--bn)', fontSize: 20, marginBottom: 12 }}>পণ্য পাওয়া যায়নি</h2>
+            <Link href="/products" className="pdp-link">সকল বই দেখুন →</Link>
           </div>
         </main>
         <Footer />
@@ -496,7 +574,6 @@ export default function ProductDetailClient({ params }: Props) {
     return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
   }, 0);
 
-  const sideRelated = bestSellers.slice(0, 5);
   const productSpecRows = [
     ['শিরোনাম', product.name],
     authorName ? ['লেখক', authorName] : null,
@@ -504,415 +581,291 @@ export default function ProductDetailClient({ params }: Props) {
     product.edition ? ['সংস্করণ', product.edition] : null,
     product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
     product.country ? ['দেশ', product.country] : null,
-    product.language ? ['ভাষা', product.language] : null,
+    product.language ? ['ভাষা', Array.isArray(product.language) ? product.language.join(', ') : product.language] : null,
     product.weight ? ['ওজন', `${product.weight}g`] : null,
   ].filter((row): row is [string, string] => Boolean(row));
 
+  const descriptionHtml = product.description ? decodeHTML(product.description) : '';
+  const authorHref = authorSlug ? `/products?author=${encodeURIComponent(authorSlug)}` : `/products?q=${encodeURIComponent(authorName)}`;
+  const recommendations = bestSellers.length > 0 ? bestSellers : relatedProducts;
+
   return (
-    <div style={{ background: PARCHMENT, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
+    <div className="pdp min-h-screen flex flex-col">
       <Header />
 
       <main style={{ flex: 1 }}>
-        {/* Breadcrumb */}
-        <nav style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 24px 6px' }}>
-          <div style={{ fontSize: 13, color: '#9ca3af' }}>
-            {[
-              { label: 'হোম', href: '/' },
-              { label: 'বই', href: '/products' },
-              ...(categoryName ? [{ label: categoryName, href: `/products?category=${categorySlug}` }] : []),
-              { label: product.name, href: '#' },
-            ].map((item, i, arr) => {
-              const last = i === arr.length - 1;
-              return (
-                <span key={i}>
-                  <Link href={item.href} style={{ color: last ? PRIMARY : '#9ca3af', textDecoration: 'none', fontWeight: last ? 700 : 500 }}>
-                    {item.label}
-                  </Link>
-                  {!last && <span style={{ margin: '0 8px', color: '#cbd5e1' }}>›</span>}
-                </span>
-              );
-            })}
-          </div>
-        </nav>
+        <div className="pdp-wrap">
+          {/* Breadcrumb */}
+          <nav className="pdp-crumbs" aria-label="Breadcrumb">
+            <Link href="/">হোম</Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/products">বই</Link>
+            {categoryName && (
+              <>
+                <span aria-hidden="true">/</span>
+                <Link href={`/products?category=${categorySlug}`}>{categoryName}</Link>
+              </>
+            )}
+            <span aria-hidden="true">/</span>
+            <span className="pdp-crumbs-current" aria-current="page">{product.name}</span>
+          </nav>
 
-        {/* ── Main 3-col card ── */}
-        <section style={{ maxWidth: 1280, margin: '8px auto 0', padding: '0 24px' }}>
-          <div className="pd-main-card">
-            {/* LEFT: Cover */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 22, alignItems: 'stretch' }}>
-              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '24px 8px 28px' }}>
-                <div style={{ position: 'relative', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.20))', maxWidth: 260 }}>
-                  {images[activeImage] ? (
-                    <img
-                      src={imgUrl(images[activeImage])!}
-                      alt={product.name}
-                      style={{ width: 250, height: 350, objectFit: 'cover', borderRadius: 8, display: 'block' }}
-                    />
-                  ) : (
-                    <div className={`cv ${cvClass(product._id)}`} style={{ width: 250, height: 350, borderRadius: 8 }}>
-                      <div className="a">{authorName || 'AUTHOR'}</div>
-                      <div className="t">{product.name}</div>
-                      <div className="frame" />
-                      <div className="num">S</div>
-                    </div>
-                  )}
-                  {discountPercent > 0 && (
-                    <div style={{
-                      position: 'absolute', top: 12, left: 12,
-                      background: '#dc2626', color: 'white', fontWeight: 800, fontSize: 12,
-                      padding: '4px 10px', borderRadius: 8
-                    }}>−{discountPercent}% ছাড়</div>
-                  )}
-                  {product.badge && (
-                    <div style={{
-                      position: 'absolute', top: 12, right: 12,
-                      background: 'white', color: '#e85d2f', fontWeight: 700, fontSize: 11,
-                      padding: '5px 10px', borderRadius: 999,
-                      border: '2px solid #e85d2f', textAlign: 'center', lineHeight: 1.3,
-                      maxWidth: 80, boxShadow: '0 2px 8px rgba(232,93,47,0.15)'
-                    }}>{product.badge}</div>
-                  )}
-                </div>
+          {/* ── Gallery + buy box ── */}
+          <section className="pdp-main">
+            <div className="pdp-gallery">
+              <div className={`pdp-stage${previewUrl ? ' has-peek' : ''}`}>
+                {images[activeImage] ? (
+                  <img
+                    key={activeImage}
+                    className="pdp-cover-img"
+                    src={imgUrl(images[activeImage])!}
+                    alt={product.name}
+                    fetchPriority={activeImage === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                  />
+                ) : (
+                  <div className={`cv ${cvClass(product._id)}`} style={{ width: '62%', aspectRatio: '2 / 3', borderRadius: 6 }}>
+                    <div className="a">{authorName || 'AUTHOR'}</div>
+                    <div className="t">{product.name}</div>
+                    <div className="frame" />
+                    <div className="num">S</div>
+                  </div>
+                )}
+                {discountPercent > 0 && <span className="pdp-badge">−{discountPercent}%</span>}
+                {product.badge && <span className="pdp-badge pdp-badge--alt">{product.badge}</span>}
+                {previewUrl && (
+                  <button type="button" className="pdp-peek" onClick={() => setShowPreviewModal(true)} aria-haspopup="dialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z" /><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z" /></svg>
+                    একটু পড়ে দেখুন
+                  </button>
+                )}
               </div>
 
               {images.length > 1 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {images.slice(0, 4).map((img, idx) => (
+                <div className="pdp-thumbs">
+                  {images.slice(0, 6).map((img, idx) => (
                     <button
                       key={idx}
+                      type="button"
+                      className={`pdp-thumb${idx === activeImage ? ' is-active' : ''}`}
                       onClick={() => setActiveImage(idx)}
-                      style={{
-                        aspectRatio: '2/3', borderRadius: 6, overflow: 'hidden', cursor: 'pointer',
-                        border: idx === activeImage ? `2px solid ${PRIMARY}` : '1px solid #e5e7eb',
-                        background: 'transparent', padding: 0
-                      }}
+                      aria-label={`ছবি ${idx + 1}`}
+                      aria-pressed={idx === activeImage}
                     >
-                      <img src={imgUrl(img)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={imgUrl(img)!} alt="" loading="lazy" />
                     </button>
                   ))}
                 </div>
               )}
 
-              {previewUrl && (
-                <button
-                  onClick={() => setShowPreviewModal(true)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'center',
-                    color: PRIMARY, fontSize: 13, fontWeight: 600, background: 'transparent', border: 'none',
-                    textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: 'inherit'
-                  }}
-                >
-                  <IcEye /> একটু পড়ে দেখুন
-                </button>
-              )}
-
-              {/* Trust badges */}
-              <div style={{
-                background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12,
-                padding: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8
-              }}>
-                {[
-                  { Icon: IcRefresh, label: 'ফ্রি রিটার্ন' },
-                  { Icon: IcShield, label: 'নিরাপদ পেমেন্ট' },
-                  { Icon: IcBookCheck, label: 'অরিজিনাল বই' },
-                ].map(({ Icon, label }, i) => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
-                    <Icon />
-                    <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, lineHeight: 1.3 }}>{label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
-            {/* CENTER: Product info */}
-            <div style={{ padding: '4px 4px' }}>
-              {/* Category pill */}
+            <div className="pdp-info">
               {categoryName && (
-                <Link href={`/products?category=${categorySlug}`} style={{ textDecoration: 'none' }}>
-                  <span style={{
-                    display: 'inline-block', background: '#dcfce7', color: PRIMARY,
-                    padding: '4px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600
-                  }}>{categoryName}</span>
-                </Link>
+                <Link href={`/products?category=${categorySlug}`} className="pdp-eyebrow">{categoryName}</Link>
               )}
 
-              <h1 style={{
-                fontSize: 30, fontWeight: 800, color: '#0f172a', margin: '12px 0 6px',
-                lineHeight: 1.3, letterSpacing: '-0.01em', fontFamily: 'var(--serif)'
-              }}>{product.name}</h1>
+              <h1 className="pdp-title">{product.name}</h1>
 
               {(product.taglineEn || product.tagline) && (
-                <p style={{
-                  fontStyle: 'italic', color: '#64748b', fontSize: 15, margin: '0 0 12px',
-                  lineHeight: 1.55, fontFamily: 'var(--serif)',
-                }}>
-                  {product.taglineEn || product.tagline}
-                </p>
+                <p className="pdp-tagline">{product.taglineEn || product.tagline}</p>
               )}
+
+              <p className="pdp-byline">
+                {authorName && (
+                  <>লেখক: {authorSlug ? <Link href={authorHref}>{authorName}</Link> : <span>{authorName}</span>}</>
+                )}
+                {authorName && publisherName && <span className="pdp-dot" aria-hidden="true">·</span>}
+                {publisherName && <span>{publisherName}</span>}
+              </p>
 
               {rating > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  <span style={{ color: '#f59e0b', fontSize: 16, letterSpacing: 1 }}>{starStr(rating)}</span>
-                  <strong style={{ fontSize: 14 }}>{rating.toFixed(1)}</strong>
-                  <span style={{ color: '#9ca3af', fontSize: 13.5 }}>({product.ratingCount || 0} টি রিভিউ)</span>
-                </div>
+                <a href="#reviews" className="pdp-rating">
+                  <span className="pdp-stars">{starStr(rating)}</span>
+                  <b>{rating.toFixed(1)}</b>
+                  <span>({product.ratingCount || 0} টি রিভিউ)</span>
+                </a>
               )}
 
-              {/* Meta grid */}
-              <div style={{ display: 'grid', rowGap: 8 }}>
-                {authorName && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
-                    <span style={tinyLabel}>লেখক</span>
-                    <span>
-                      <Link href={authorSlug ? `/products?author=${encodeURIComponent(authorName)}` : '#'} style={{ color: PRIMARY, textDecoration: 'underline', textUnderlineOffset: 2, fontWeight: 600, fontSize: 14 }}>
-                        {authorName}
-                      </Link>
-                    </span>
-                  </div>
-                )}
-                {publisherName && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
-                    <span style={tinyLabel}>প্রকাশনা</span>
-                    <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 500 }}>{publisherName}</span>
-                  </div>
-                )}
-                {product.weight && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, alignItems: 'center' }}>
-                    <span style={tinyLabel}>ওজন</span>
-                    <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 500 }}>{product.weight}g</span>
-                  </div>
-                )}
-              </div>
-
-              <hr style={dividerStyle} />
-
-              {/* Pricing */}
-              <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 14, rowGap: 6 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1, fontFamily: "'Inter', 'Hind Siliguri', sans-serif" }}>
-                  ৳{currentPrice}
-                </span>
+              <div className="pdp-price">
+                <span className="pdp-price-now">৳{currentPrice}</span>
                 {discountPercent > 0 && (
                   <>
-                    <span style={{ fontSize: 18, color: '#9ca3af', textDecoration: 'line-through' }}>৳{originalPrice}</span>
-                    <span style={{
-                      background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
-                      borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 700
-                    }}>−{discountPercent}% ছাড়</span>
+                    <s className="pdp-price-was">৳{originalPrice}</s>
+                    <span className="pdp-price-off">−{discountPercent}% ছাড়</span>
                   </>
                 )}
               </div>
-              {savings > 0 && (
-                <p style={{ margin: '8px 0 4px', color: PRIMARY, fontSize: 13, fontStyle: 'italic', fontWeight: 600 }}>
-                  ✓ আপনি বাঁচাচ্ছেন ৳{savings}
-                </p>
-              )}
+              {savings > 0 && <p className="pdp-save">আপনি বাঁচাচ্ছেন ৳{savings}</p>}
               {product.dollarPrice && product.dollarPrice > 0 && (
-                <p style={{ margin: '4px 0 16px', fontSize: 13, color: '#64748b', fontFamily: 'var(--sans)' }}>
+                <p className="pdp-note">
                   আন্তর্জাতিক মূল্য ${product.dollarPrice} (~৳{Math.round(product.dollarPrice * 110).toLocaleString('bn-BD')}) — আজই পাচ্ছেন মাত্র ৳{currentPrice}!
                 </p>
               )}
 
-              {/* Stock */}
-              <div>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: inStock ? '#f0fdf4' : '#fef2f2',
-                  color: inStock ? PRIMARY : '#dc2626',
-                  border: `1px solid ${inStock ? '#86efac' : '#fecaca'}`,
-                  padding: '5px 14px', borderRadius: 999, fontSize: 13, fontWeight: 700
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 999, background: inStock ? PRIMARY : '#dc2626', display: 'inline-block' }}/>
-                  {inStock ? 'স্টক আছে' : 'স্টক শেষ'}
-                </span>
-              </div>
-
-              <hr style={dividerStyle} />
-
-              {/* Description */}
-              {(product.description || product.shortDescription) && (
-                <>
-                  <div style={{
-                    color: '#374151', lineHeight: 1.85, fontSize: 15, fontFamily: 'var(--sans)',
-                    maxHeight: showFullDescription ? undefined : '8.5em',
-                    overflow: 'hidden',
-                  }}
-                    dangerouslySetInnerHTML={{ __html: decodeHTML(product.description || product.shortDescription || '') }}
-                  />
-                  <button onClick={() => setShowFullDescription(e => !e)} style={{
-                    background: 'transparent', border: 'none', color: PRIMARY, padding: '10px 0 0',
-                    fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14,
-                    display: 'inline-flex', alignItems: 'center', gap: 6
-                  }}>
-                    {showFullDescription ? 'কম দেখুন' : 'আরও দেখুন'} <IcChevDown />
-                  </button>
-                  <hr style={dividerStyle} />
-                </>
-              )}
+              <p className={`pdp-stock${inStock ? '' : ' is-out'}`}>
+                <span aria-hidden="true" />
+                {inStock ? 'স্টক আছে' : 'স্টক শেষ'}
+                {product.totalPages ? <em> · {product.totalPages} পৃষ্ঠা{product.edition ? ` · ${product.edition}` : ''}</em> : null}
+              </p>
 
               {/* Quantity */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
-                <span style={tinyLabel}>পরিমাণ</span>
-                <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-                  <button
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    style={{ width: 40, height: 40, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <IcMinus />
-                  </button>
-                  <div style={{ width: 56, height: 40, borderRadius: 10, border: '1.5px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#0f172a', background: 'white' }}>
-                    {quantity}
-                  </div>
-                  <button
-                    onClick={() => setQuantity(q => q + 1)}
-                    style={{ width: 40, height: 40, borderRadius: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <IcPlus />
-                  </button>
+              <div className="pdp-qty-row">
+                <span className="pdp-label">পরিমাণ</span>
+                <div className="pdp-qty">
+                  <button type="button" onClick={() => setQuantity(q => Math.max(1, q - 1))} aria-label="কমান">−</button>
+                  <span aria-live="polite">{quantity}</span>
+                  <button type="button" onClick={() => setQuantity(q => q + 1)} aria-label="বাড়ান">+</button>
                 </div>
-                {product.totalPages && (
-                  <span style={{ color: '#9ca3af', fontSize: 13 }}>{product.totalPages} পৃষ্ঠা{product.edition ? ` · ${product.edition}` : ''}</span>
-                )}
               </div>
 
-              {/* Free notebook offer banner */}
-              <a
-                href="/notebook-bundle"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  background: 'linear-gradient(135deg, #FBF8EC, #F4EFD8)',
-                  border: '1px solid #E5D9A8', borderRadius: 14, padding: '12px 14px',
-                  textDecoration: 'none', marginBottom: 4,
-                }}
-              >
-                <span style={{ fontSize: 26, lineHeight: 1 }}>🎁</span>
-                <span style={{ fontFamily: "'Hind Siliguri', sans-serif", fontSize: 13.5, color: '#5a4a12', lineHeight: 1.5, fontWeight: 600 }}>
-                  <b style={{ color: '#071A07' }}>৳৫০০+ অর্ডার</b> বা <b style={{ color: '#071A07' }}>২টি নোটবুক</b> কিনলে একটি প্রিমিয়াম নোটবুক <b style={{ color: '#1B6B1B' }}>ফ্রি</b> — কার্টে গিয়ে বেছে নিন →
-                </span>
-              </a>
-
               {/* CTA buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <CTAButton
-                    onClick={handleAddToCart}
-                    style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white', boxShadow: '0 4px 16px rgba(234,88,12,0.35)', fontSize: 14 }}
-                    hoverShadow="0 10px 24px rgba(234,88,12,0.45)"
-                  >
-                    <IcCart size={17} /><span>কার্টে যোগ করুন</span>
-                  </CTAButton>
-                  <CTAButton
-                    onClick={handleBuyNow}
-                    style={{ background: 'linear-gradient(135deg, #15803d, #16a34a)', color: 'white', boxShadow: '0 4px 16px rgba(21,128,61,0.30)', fontSize: 14, animation: 'buy-now-glow 2.2s ease-in-out infinite' }}
-                    hoverShadow="0 10px 24px rgba(21,128,61,0.4)"
-                  >
-                    <IcBolt /><span>এখনই অর্ডার করুন</span>
-                  </CTAButton>
-                </div>
+              <div ref={ctaRef} className="pdp-ctas">
+                <button type="button" className="pdp-btn pdp-btn--outline" onClick={handleAddToCart}>
+                  কার্টে যোগ করুন
+                </button>
+                <button type="button" className="pdp-btn pdp-btn--solid" onClick={handleBuyNow}>
+                  এখনই অর্ডার করুন
+                </button>
                 <a
-                  href={`https://wa.me/8801893058682?text=${encodeURIComponent(`আমি এই বইটি অর্ডার করতে চাই: ${product?.name}\nলিংক: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                  href={`https://wa.me/8801893058682?text=${encodeURIComponent(`আমি এই বইটি অর্ডার করতে চাই: ${product?.name}\nলিংক: ${pageUrl}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                    background: '#ffffff', color: '#128C7E', border: '2px solid #25D366',
-                    borderRadius: 14, height: 52, fontSize: 15, fontWeight: 700,
-                    textDecoration: 'none', fontFamily: 'inherit',
-                    transition: 'background .2s ease'
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#ffffff')}
+                  className="pdp-btn pdp-btn--wa"
                 >
                   <IcWhatsApp /><span>WhatsApp-এ অর্ডার করুন</span>
                 </a>
               </div>
-            </div>
 
-            {/* RIGHT: Delivery + Related */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {/* Delivery card */}
-              <div style={sideCardStyle}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
-                  <IcTruck />
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>ডেলিভারির তথ্য</h3>
-                </div>
-                {[
-                  { label: 'ঢাকার ভেতরে', value: `৳${shippingCharge?.deliveryInDhaka || 60}`, muted: false },
-                  { label: 'ঢাকার বাইরে', value: `৳${shippingCharge?.deliveryOutsideDhaka || 120}`, muted: false },
-                  { label: 'আন্তর্জাতিক', value: 'N/A', muted: true },
-                ].map(({ label, value, muted }) => (
-                  <div key={label} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '12px 0', borderBottom: '1px solid #f1f5f9', fontSize: 14
-                  }}>
-                    <span style={{ color: muted ? '#9ca3af' : '#374151' }}>{label}</span>
-                    <span style={{ color: muted ? '#9ca3af' : '#0f172a', fontWeight: 700 }}>{value}</span>
+              {/* Free notebook offer */}
+              <a href="/notebook-bundle" className="pdp-offer">
+                <span aria-hidden="true">🎁</span>
+                <span>
+                  <b>৳৫০০+ অর্ডার</b> বা <b>২টি নোটবুক</b> কিনলে একটি প্রিমিয়াম নোটবুক <b className="pdp-offer-free">ফ্রি</b> — কার্টে গিয়ে বেছে নিন →
+                </span>
+              </a>
+
+              {/* Trust */}
+              <ul className="pdp-trust">
+                <li><IcRefresh /><span>ফ্রি রিটার্ন</span></li>
+                <li><IcShield /><span>নিরাপদ পেমেন্ট</span></li>
+                <li><IcBookCheck /><span>অরিজিনাল বই</span></li>
+              </ul>
+
+              {/* Collapsible details (Shopify "collapsible tabs") */}
+              <div className="pdp-accordions">
+                <details className="pdp-acc" open>
+                  <summary>বিবরণ</summary>
+                  <div className="pdp-acc-body">
+                    {descriptionHtml ? (
+                      <>
+                        <div
+                          className={`pdp-desc${showFullDescription ? ' is-open' : ''}`}
+                          dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                        />
+                        <button type="button" className="pdp-more" onClick={() => setShowFullDescription(e => !e)}>
+                          {showFullDescription ? 'কম দেখুন' : 'আরও দেখুন'}
+                          <span style={{ display: 'inline-flex', transition: 'transform .3s cubic-bezier(.22,1,.36,1)', transform: showFullDescription ? 'rotate(180deg)' : 'none' }}><IcChevDown color="currentColor" /></span>
+                        </button>
+                      </>
+                    ) : product.shortDescription ? (
+                      <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
+                    ) : (
+                      <p className="pdp-muted">বিবরণ পাওয়া যায়নি।</p>
+                    )}
                   </div>
-                ))}
-                <div style={{
-                  marginTop: 12, marginInline: -20, marginBottom: -20,
-                  background: '#f8fafc', padding: '10px 20px', borderRadius: '0 0 20px 20px',
-                  display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', fontSize: 12
-                }}>
-                  <IcClock /> ১–৪ কার্যদিবসে ডেলিভারি
-                </div>
+                </details>
+
+                <details className="pdp-acc">
+                  <summary>স্পেসিফিকেশন</summary>
+                  <div className="pdp-acc-body">
+                    <dl className="pdp-specs">
+                      {productSpecRows.map(([k, v]) => (
+                        <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+                      ))}
+                    </dl>
+                  </div>
+                </details>
+
+                <details className="pdp-acc">
+                  <summary>ডেলিভারি ও রিটার্ন</summary>
+                  <div className="pdp-acc-body">
+                    <dl className="pdp-specs">
+                      <div><dt>ঢাকার ভেতরে</dt><dd>৳{shippingCharge?.deliveryInDhaka || 60}</dd></div>
+                      <div><dt>ঢাকার বাইরে</dt><dd>৳{shippingCharge?.deliveryOutsideDhaka || 120}</dd></div>
+                      <div><dt>আন্তর্জাতিক</dt><dd className="pdp-muted">N/A</dd></div>
+                    </dl>
+                    <p className="pdp-muted" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}><IcClock /> ১–৪ কার্যদিবসে ডেলিভারি</p>
+                  </div>
+                </details>
+
               </div>
+            </div>
+          </section>
+        </div>
 
-              {/* Bestseller books */}
-              {sideRelated.length > 0 && (
-                <div style={sideCardStyle}>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>বেস্টসেলার বই</h3>
-                  <div>
-                    {sideRelated.map((b, i) => {
-                      const bPrice = getCurrentPrice(b);
-                      return (
-                        <div key={b._id} style={{
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '10px 0',
-                          borderBottom: i < sideRelated.length - 1 ? '1px solid #f1f5f9' : 'none'
-                        }}>
-                          <Link href={`/products/${b.slug}`} style={{ width: 52, height: 68, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', display: 'block' }}>
-                            {b.images?.[0] ? (
-                              <img src={imgUrl(b.images[0])!} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                              <div className={`cv ${cvClass(b._id)}`} style={{ width: '100%', height: '100%' }}>
-                                <div className="t" style={{ fontSize: 9 }}>{b.name}</div>
-                              </div>
-                            )}
-                          </Link>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <Link href={`/products/${b.slug}`} style={{ textDecoration: 'none' }}>
-                              <div style={{
-                                fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35,
-                                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
-                              }}>{b.name}</div>
-                            </Link>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY, marginTop: 2 }}>৳{bPrice}</div>
-                          </div>
-                          <button onClick={() => { addItem(b, 1); toast.success('কার্টে যোগ হয়েছে'); }} style={{
-                            background: ORANGE, color: 'white', border: 'none', borderRadius: 999,
-                            padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                            fontFamily: 'inherit', letterSpacing: 0.4, flexShrink: 0
-                          }}>+ ADD</button>
-                        </div>
-                      );
-                    })}
+        {/* ── About the author (outside the accordions) ── */}
+        {authorName && (() => {
+          const info: any = authorDetails.find(a => a._id === firstAuthorId) || authorDetails[0] || null;
+          const photo = info?.image ? imgUrl(info.image) : null;
+          const bio: string = (info?.description || info?.descriptionEn || '').trim();
+          const bioIsHtml = /<[a-z][\s\S]*>/i.test(bio);
+          const longBio = bio.replace(/<[^>]*>/g, '').length > 320;
+          return (
+            <section className="pdp-section pdp-section--author" aria-labelledby="pdp-author-title">
+              <div className="pdp-wrap">
+                <div className="pdp-author-card">
+                  <div className="pdp-author-photo">
+                    {photo ? <img src={photo} alt={authorName} loading="lazy" /> : <span aria-hidden="true">{authorName.trim()[0]}</span>}
+                  </div>
+                  <div className="pdp-author-body">
+                    <span className="pdp-eyebrow">লেখক সম্পর্কে</span>
+                    <h2 id="pdp-author-title">{authorName}</h2>
+                    {bio ? (
+                      <>
+                        {bioIsHtml ? (
+                          <div className={`pdp-author-bio${longBio && !showFullBio ? ' is-clamped' : ''}`} dangerouslySetInnerHTML={{ __html: decodeHTML(bio) }} />
+                        ) : (
+                          <p className={`pdp-author-bio${longBio && !showFullBio ? ' is-clamped' : ''}`}>{bio}</p>
+                        )}
+                        {longBio && (
+                          <button type="button" className="pdp-more" onClick={() => setShowFullBio(v => !v)}>
+                            {showFullBio ? 'কম দেখুন' : 'আরও পড়ুন'}
+                            <span style={{ display: 'inline-flex', transition: 'transform .3s cubic-bezier(.22,1,.36,1)', transform: showFullBio ? 'rotate(180deg)' : 'none' }}><IcChevDown color="currentColor" /></span>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <p className="pdp-author-bio pdp-muted">{authorName}-এর লেখা অন্যান্য বই শবাজে পাওয়া যাচ্ছে।</p>
+                    )}
+                    <Link href={authorHref} className="pdp-btn-sm pdp-author-cta">লেখকের সব বই দেখুন →</Link>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </section>
+
+                {authorBooks.length > 0 && (
+                  <div className="pdp-author-books">
+                    <div className="pdp-head">
+                      <h3>{authorName}-এর আরও বই</h3>
+                    </div>
+                    <ProductRail label={`${authorName}-এর আরও বই`}>
+                      {authorBooks.map(b => (
+                        <HomeProductCard key={b._id} product={b} onAdd={(p) => addItem(p, 1)} />
+                      ))}
+                    </ProductRail>
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ── Product showcase slider ── */}
         {showcaseImages.length > 0 && (
-          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
-            <div className="pd-showcase">
-              <div className="pd-showcase-head">
-                <div>
-                  <h3>আরও ভালো করে দেখুন</h3>
-                  <p>ছবিতে ট্যাপ করলে বড় করে দেখা যাবে</p>
-                </div>
-                <span>{showcaseImages.length} ছবি</span>
+          <section className="pdp-section">
+            <div className="pdp-wrap">
+              <div className="pdp-head">
+                <h2>আরও ভালো করে দেখুন</h2>
+                <span className="pdp-muted">{showcaseImages.length} ছবি</span>
               </div>
               <div className="pd-showcase-viewport">
                 <div className={showcaseImages.length > 2 ? 'pd-showcase-track is-moving' : 'pd-showcase-track'}>
@@ -926,7 +879,7 @@ export default function ProductDetailClient({ params }: Props) {
                         onClick={() => setShowcaseLightboxIndex(realIndex)}
                         aria-label={`${product.name} image ${realIndex + 1}`}
                       >
-                        <img src={showcaseImgUrl(image)} alt={`${product.name} showcase ${realIndex + 1}`} />
+                        <img src={showcaseImgUrl(image)} alt={`${product.name} showcase ${realIndex + 1}`} loading="lazy" />
                       </button>
                     );
                   })}
@@ -936,329 +889,98 @@ export default function ProductDetailClient({ params }: Props) {
           </section>
         )}
 
-        {/* ── Bundle section ── */}
+        {/* ── Bought together ── */}
         {bundleProducts.length > 0 && (
-          <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #fefce8, #fff7ed)',
-              border: '1.5px solid #fed7aa', borderRadius: 20, padding: 24,
-              boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--bn)' }}>{product.boughtTogetherTitle || 'একসাথে কিনুন'}</h3>
-                {bundleSavings > 0 && (
-                  <span style={{ background: '#dcfce7', color: PRIMARY, padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800 }}>
-                    ৳{bundleSavings.toFixed(0)} সাশ্রয়
-                  </span>
-                )}
-              </div>
-
-              <div className="pd-bundle-items">
-                {/* Current book */}
-                <div style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative' }}>
-                  <span style={{ position: 'absolute', top: 8, right: 8, background: PRIMARY, color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>✓</span>
-                  <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
-                    {product.images?.[0] ? (
-                      <img src={imgUrl(product.images[0])!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div className={`cv ${cvClass(product._id)}`} style={{ width: '100%', height: '100%' }}>
-                        <div className="t" style={{ fontSize: 10 }}>{product.name}</div>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{authorName}</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 6 }}>৳{currentPrice}</div>
-                  </div>
+          <section className="pdp-section">
+            <div className="pdp-wrap">
+              <div className="pdp-bundle">
+                <div className="pdp-head">
+                  <h2>{product.boughtTogetherTitle || 'একসাথে কিনুন'}</h2>
+                  {bundleSavings > 0 && <span className="pdp-chip">৳{bundleSavings.toFixed(0)} সাশ্রয়</span>}
                 </div>
 
-                {bundleProducts.map((item) => {
-                  const isSelected = selectedBundle.includes(item.product._id);
-                  const itemPrice = getCurrentPrice(item.product);
-                  const discountedItemPrice = Math.round(itemPrice * 0.9);
-                  const itemAuthorName = getAuthorName(item.product.author);
-                  return (
-                    <div key={item.product._id} style={{ display: 'contents' }}>
-                      <div className="pd-bundle-connector" style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>+</div>
-                      <div
+                <div className="pdp-bundle-list">
+                  <div className="pdp-bundle-item is-current">
+                    <span className="pdp-check is-on" aria-hidden="true">✓</span>
+                    <span className="pdp-bundle-thumb">
+                      {product.images?.[0] ? <img src={imgUrl(product.images[0])!} alt="" /> : null}
+                    </span>
+                    <span className="pdp-bundle-text">
+                      <b>{product.name}</b>
+                      <small>এই বইটি</small>
+                    </span>
+                    <span className="pdp-bundle-price">৳{currentPrice}</span>
+                  </div>
+
+                  {bundleProducts.map((item) => {
+                    const isSelected = selectedBundle.includes(item.product._id);
+                    const itemPrice = getCurrentPrice(item.product);
+                    const discountedItemPrice = Math.round(itemPrice * 0.9);
+                    const itemAuthorName = getAuthorName(item.product.author);
+                    return (
+                      <button
+                        key={item.product._id}
+                        type="button"
+                        className={`pdp-bundle-item${isSelected ? '' : ' is-off'}`}
                         onClick={() => handleToggleBundle(item.product._id)}
-                        style={{ flex: '1 1 0', minWidth: 140, background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #fde68a', display: 'flex', gap: 14, alignItems: 'center', position: 'relative', cursor: 'pointer', opacity: isSelected ? 1 : 0.55, transition: 'opacity .2s' }}
+                        aria-pressed={isSelected}
                       >
-                        <span style={{ position: 'absolute', top: 8, right: 8, background: isSelected ? PRIMARY : '#e5e7eb', color: 'white', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{isSelected ? '✓' : ''}</span>
-                        <div style={{ width: 60, height: 86, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 6px 14px rgba(15,23,42,0.18)' }}>
-                          {item.product.images?.[0] ? (
-                            <img src={imgUrl(item.product.images[0])!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <div className={`cv ${cvClass(item.product._id)}`} style={{ width: '100%', height: '100%' }}>
-                              <div className="t" style={{ fontSize: 10 }}>{item.product.name}</div>
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.product.name}</div>
-                          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{itemAuthorName}</div>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 6 }}>৳{discountedItemPrice} <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through', fontWeight: 400 }}>৳{itemPrice}</span></div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                        <span className={`pdp-check${isSelected ? ' is-on' : ''}`} aria-hidden="true">{isSelected ? '✓' : ''}</span>
+                        <span className="pdp-bundle-thumb">
+                          {item.product.images?.[0] ? <img src={imgUrl(item.product.images[0])!} alt="" loading="lazy" /> : null}
+                        </span>
+                        <span className="pdp-bundle-text">
+                          <b>{item.product.name}</b>
+                          {itemAuthorName && <small>{itemAuthorName}</small>}
+                        </span>
+                        <span className="pdp-bundle-price">
+                          ৳{discountedItemPrice}
+                          <s>৳{itemPrice}</s>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                <div className="pd-bundle-connector" style={{ flexShrink: 0, width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#d97706', fontWeight: 900 }}>=</div>
-                <div className="pd-bundle-total" style={{ flexShrink: 0, minWidth: 130, background: 'white', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '16px' }}>
-                  <div style={{ ...tinyLabel, color: '#9ca3af' }}>মোট</div>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706', lineHeight: 1.1, marginTop: 4 }}>৳{bundleTotal.toFixed(0)}</div>
-                  {bundleSavings > 0 && <div style={{ fontSize: 12.5, color: PRIMARY, marginTop: 4, fontWeight: 700 }}>সাশ্রয় ৳{bundleSavings.toFixed(0)}</div>}
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{selectedBundle.length + 1}টি বই</div>
+                <div className="pdp-bundle-foot">
+                  <div>
+                    <span className="pdp-muted">মোট ({selectedBundle.length + 1}টি বই)</span>
+                    <b className="pdp-bundle-total">৳{bundleTotal.toFixed(0)}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className="pdp-btn pdp-btn--solid"
+                    onClick={handleAddBundleToCart}
+                    disabled={selectedBundle.length === 0}
+                  >
+                    সব একসাথে কার্টে যোগ করুন
+                  </button>
                 </div>
               </div>
+            </div>
+          </section>
+        )}
 
-              <button
-                onClick={handleAddBundleToCart}
-                disabled={selectedBundle.length === 0}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(234,88,12,0.45)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(234,88,12,0.35)'; }}
-                style={{
-                  width: '100%', marginTop: 20,
-                  background: 'linear-gradient(135deg, #ea580c, #f97316)', color: 'white',
-                  border: 'none', borderRadius: 14, height: 52, fontSize: 16, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  boxShadow: '0 4px 16px rgba(234,88,12,0.35)',
-                  transition: 'transform .15s ease, box-shadow .2s ease',
-                  opacity: selectedBundle.length === 0 ? 0.6 : 1
-                }}
-              >
-                <IcCart /> সব একসাথে কার্টে যোগ করুন
+        {/* ── Video review ── */}
+        {youtubeId && (
+          <section className="pdp-section">
+            <div className="pdp-wrap">
+              <div className="pdp-head"><h2>বুক রিভিউ</h2></div>
+              <button type="button" className="pdp-video" onClick={() => setShowVideoModal(true)} aria-label={`${product.name} বুক রিভিউ ভিডিও চালান`}>
+                <img src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`} alt="" loading="lazy" />
+                <span className="pdp-video-play" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M8 5v14l11-7z" /></svg>
+                </span>
+                <span className="pdp-video-caption">{product.name} — বুক রিভিউ{authorName ? ` · ${authorName}` : ''}</span>
               </button>
             </div>
           </section>
         )}
 
-        {/* ── Tabs + Video (side-by-side when video exists) ── */}
-        <section style={{ maxWidth: 1280, margin: '32px auto 0', padding: '0 24px' }}>
-          <div className={youtubeId ? 'pd-video-tabs-grid' : ''}>
-            {/* Video left (only when youtubeId exists) */}
-            {youtubeId && (
-              <div>
-                <div
-                  className="video-player"
-                  onClick={() => setShowVideoModal(true)}
-                  style={{ position: 'relative', cursor: 'pointer' }}
-                >
-                  <img
-                    src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
-                    alt={`${product.name} বুক রিভিউ`}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 60%, transparent 100%)' }} />
-                  <div className="video-thumb-meta">
-                    <span>বুক রিভিউ</span>
-                    <span className="live">▶ PLAY</span>
-                  </div>
-                  <button className="play-btn" type="button">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
-                  <div className="video-thumb-bottom">
-                    <div className="vt">{product.name} — বুক রিভিউ</div>
-                    <div className="vd">YouTube · {authorName}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tabs card right (or full-width when no video) */}
-            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', padding: '12px 12px 0', gap: 4, overflowX: 'auto' }}>
-                {[
-                  { id: 'description', label: 'বিবরণ' },
-                  { id: 'specifications', label: 'স্পেসিফিকেশন' },
-                  { id: 'author', label: 'লেখক' },
-                  { id: 'reviews', label: `রিভিউ${product.ratingCount ? ` (${product.ratingCount})` : ''}` },
-                ].map(t => {
-                  const active = activeTab === t.id;
-                  return (
-                    <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-                      padding: '12px 18px', background: active ? '#f0fdf4' : 'transparent',
-                      border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                      fontSize: 15, whiteSpace: 'nowrap', color: active ? PRIMARY : '#9ca3af',
-                      borderRadius: '10px 10px 0 0',
-                      borderBottom: active ? `3px solid ${PRIMARY}` : '3px solid transparent',
-                      marginBottom: -1, transition: 'all .2s ease'
-                    }}>{t.label}</button>
-                  );
-                })}
-              </div>
-
-              <div style={{ padding: 28 }}>
-                {activeTab === 'description' && (
-                  product.description ? (
-                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: decodeHTML(product.description) }} />
-                  ) : product.shortDescription ? (
-                    <div style={{ color: '#374151', fontSize: 15, lineHeight: 1.9 }}>
-                      <p>{product.shortDescription.replace(/<[^>]*>/g, '')}</p>
-                    </div>
-                  ) : (
-                    <p style={{ color: '#9ca3af', fontFamily: 'var(--bn)' }}>বিবরণ পাওয়া যায়নি।</p>
-                  )
-                )}
-
-                {activeTab === 'specifications' && (
-                  <table style={{ width: '100%', maxWidth: 720, borderCollapse: 'collapse', fontSize: 15 }}>
-                    <tbody>
-                      {productSpecRows.map(([k, v], i) => (
-                        <tr key={k} style={{ background: i % 2 ? '#f9fafb' : 'transparent' }}>
-                          <td style={{ padding: '14px 18px', color: '#6b7280', width: 200, fontWeight: 600 }}>{k}</td>
-                          <td style={{ padding: '14px 18px', color: '#0f172a', fontWeight: 600 }}>{v}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-
-                {activeTab === 'author' && authorName && (
-                  <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start' }}>
-                    <div style={{
-                      width: 96, height: 96, borderRadius: '50%', background: '#dcfce7', color: '#15803d',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 36, fontWeight: 800, flexShrink: 0
-                    }}>{authorName[0]}</div>
-                    <div>
-                      <h4 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{authorName}</h4>
-                      <p style={{ margin: '0 0 16px', color: '#374151', fontSize: 15, lineHeight: 1.85 }}>
-                        লেখকের অন্যান্য বই সমূহ দেখতে নিচের লিঙ্কে যান।
-                      </p>
-                      <Link href={`/products?author=${encodeURIComponent(authorName)}`} style={{ color: PRIMARY, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
-                        লেখকের সব বই দেখুন →
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                    {rating > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: 18, background: '#f9fafb', borderRadius: 14, flexWrap: 'wrap' }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 36, fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>{rating.toFixed(1)}</div>
-                          <div style={{ color: '#f59e0b', fontSize: 16, marginTop: 4 }}>{'★'.repeat(Math.round(rating))}</div>
-                          <div style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 4 }}>{product.ratingCount || 0} টি রিভিউ</div>
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
-                          {[5, 4, 3, 2, 1].map(s => {
-                            const count = product.ratingDetails?.find((r: any) => r.stars === s)?.count || 0;
-                            const total = product.ratingCount || 1;
-                            const percent = (count / total) * 100;
-                            return (
-                              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                                <span style={{ width: 32, color: '#9ca3af' }}>{s}★</span>
-                                <div style={{ flex: 1, height: 8, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden' }}>
-                                  <div style={{ width: `${percent}%`, height: '100%', background: PRIMARY }} />
-                                </div>
-                                <span style={{ width: 36, color: '#9ca3af', textAlign: 'right' }}>{count}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {isAuthenticated() ? (
-                      !showReviewForm ? (
-                        <button onClick={() => setShowReviewForm(true)} style={{
-                          alignSelf: 'flex-start', background: 'white', border: `1px solid ${PRIMARY}`,
-                          color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700,
-                          cursor: 'pointer', fontFamily: 'inherit'
-                        }}>রিভিউ লিখুন</button>
-                      ) : (
-                        <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                          <h4 style={{ fontFamily: 'var(--bn)', fontWeight: 600, fontSize: 18, margin: 0 }}>আপনার রিভিউ লিখুন</h4>
-                          <div>
-                            <div style={{ ...tinyLabel, marginBottom: 8 }}>রেটিং</div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              {[1, 2, 3, 4, 5].map(star => (
-                                <button key={star} onClick={() => setNewReview({ ...newReview, rating: star })} style={{ background: 'none', border: 0, cursor: 'pointer', fontSize: 24 }}>
-                                  <FaStar style={{ color: star <= newReview.rating ? '#f59e0b' : '#e5e7eb' }} />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ ...tinyLabel, marginBottom: 8 }}>মন্তব্য</div>
-                            <textarea
-                              value={newReview.review}
-                              onChange={e => setNewReview({ ...newReview, review: e.target.value })}
-                              placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
-                              rows={4}
-                              style={{ width: '100%', padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', color: '#0f172a', fontFamily: 'var(--bn)', fontSize: 15, lineHeight: 1.6, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={handleSubmitReview} disabled={submittingReview} style={{ background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                              {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
-                            </button>
-                            <button onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }} style={{ background: 'white', border: '1px solid #e5e7eb', color: '#374151', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                              বাতিল
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      <div style={{ padding: 24, background: '#f9fafb', borderRadius: 16, textAlign: 'center' }}>
-                        <p style={{ color: '#374151', marginBottom: 16, fontFamily: 'var(--bn)' }}>রিভিউ লিখতে লগইন করুন</p>
-                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
-                          <Link href="/login" style={{ background: PRIMARY, color: 'white', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>লগইন</Link>
-                          <Link href="/register" style={{ background: 'white', border: `1px solid ${PRIMARY}`, color: PRIMARY, borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>নিবন্ধন</Link>
-                        </div>
-                      </div>
-                    )}
-
-                    {loadingReviews ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: '#f1f5f9', borderRadius: 12 }} />)}
-                      </div>
-                    ) : reviews.length > 0 ? (
-                      <div>
-                        {reviews.map((review, i) => (
-                          <div key={review._id} style={{ padding: '18px 0', borderBottom: i < reviews.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                              <div style={{ width: 36, height: 36, borderRadius: 999, background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                                {review.user?.name?.[0]?.toUpperCase() || 'A'}
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{review.user?.name || 'Anonymous'}</div>
-                              </div>
-                              <span style={{ color: '#f59e0b', fontSize: 14 }}>{'★'.repeat(review.rating)}</span>
-                            </div>
-                            <p style={{ margin: '0 0 0 48px', color: '#374151', fontSize: 14.5, lineHeight: 1.75 }}>{review.review}</p>
-                            {review.reply && (
-                              <div style={{ marginTop: 10, marginLeft: 48, padding: '10px 14px', borderLeft: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: '0 8px 8px 0' }}>
-                                <h4 style={{ margin: '0 0 4px', fontSize: 13, color: '#15803d', fontWeight: 700 }}>বিক্রেতার উত্তর:</h4>
-                                <p style={{ margin: 0, color: '#374151', fontSize: 13.5 }}>{review.reply}</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontFamily: 'var(--bn)' }}>
-                        এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {youtubeId && (
           <div className={`video-modal-bg${showVideoModal ? ' open' : ''}`} onClick={() => setShowVideoModal(false)}>
             <div className="video-modal" onClick={e => e.stopPropagation()}>
-              <button className="video-modal-x" type="button" onClick={() => setShowVideoModal(false)}>×</button>
+              <button className="video-modal-x" type="button" onClick={() => setShowVideoModal(false)} aria-label="বন্ধ করুন">×</button>
               {showVideoModal && (
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
@@ -1271,74 +993,126 @@ export default function ProductDetailClient({ params }: Props) {
           </div>
         )}
 
-        {/* ── Bestsellers carousel ── */}
-        {bestSellers.length > 0 && (
-          <section style={{ maxWidth: 1280, margin: '40px auto 56px', padding: '0 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                <IcFlame /> সর্বাধিক বিক্রিত বই
-              </h2>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {[IcChevL, IcChevR].map((Ic, dir) => (
-                  <button key={dir} onClick={() => bestsellerScrollRef.current?.scrollBy({ left: dir === 0 ? -320 : 320, behavior: 'smooth' })} style={{
-                    width: 40, height: 40, borderRadius: 999, background: 'white',
-                    border: '1.5px solid #e2e8f0', cursor: 'pointer', color: '#374151',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    <Ic />
-                  </button>
-                ))}
+        {/* ── Reviews ── */}
+        <section className="pdp-section" id="reviews">
+          <div className="pdp-wrap">
+            <div className="pdp-head">
+              <h2>রিভিউ{product.ratingCount ? ` (${product.ratingCount})` : ''}</h2>
+              {isAuthenticated() && !showReviewForm && (
+                <button type="button" className="pdp-btn-sm" onClick={() => setShowReviewForm(true)}>রিভিউ লিখুন</button>
+              )}
+            </div>
+
+            <div className="pdp-reviews">
+              {rating > 0 && (
+                <div className="pdp-review-summary">
+                  <div>
+                    <b>{rating.toFixed(1)}</b>
+                    <span className="pdp-stars">{'★'.repeat(Math.round(rating))}</span>
+                    <small>{product.ratingCount || 0} টি রিভিউ</small>
+                  </div>
+                  <div className="pdp-bars">
+                    {[5, 4, 3, 2, 1].map(s => {
+                      const details: any = product.ratingDetails;
+                      // API sends { oneStar, twoStar, … }; older data used [{ stars, count }].
+                      const count = (Array.isArray(details)
+                        ? details.find((r: any) => r.stars === s)?.count
+                        : details?.[`${['one', 'two', 'three', 'four', 'five'][s - 1]}Star`]) || 0;
+                      const total = product.ratingCount || 1;
+                      const percent = (count / total) * 100;
+                      return (
+                        <div key={s} className="pdp-bar">
+                          <span>{s}★</span>
+                          <span className="pdp-bar-track"><span style={{ width: `${percent}%` }} /></span>
+                          <span>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="pdp-review-list">
+                {isAuthenticated() ? (
+                  showReviewForm && (
+                    <div className="pdp-review-form">
+                      <h3>আপনার রিভিউ লিখুন</h3>
+                      <div className="pdp-review-stars" role="radiogroup" aria-label="রেটিং">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button key={star} type="button" onClick={() => setNewReview({ ...newReview, rating: star })} aria-label={`${star} স্টার`} aria-checked={newReview.rating === star} role="radio">
+                            <FaStar style={{ color: star <= newReview.rating ? '#111' : '#d4d4d4' }} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={newReview.review}
+                        onChange={e => setNewReview({ ...newReview, review: e.target.value })}
+                        placeholder="এই বইটি সম্পর্কে আপনার অভিজ্ঞতা শেয়ার করুন..."
+                        rows={4}
+                        aria-label="মন্তব্য"
+                      />
+                      <div className="pdp-review-actions">
+                        <button type="button" className="pdp-btn pdp-btn--solid" onClick={handleSubmitReview} disabled={submittingReview}>
+                          {submittingReview ? 'জমা দেওয়া হচ্ছে...' : 'জমা দিন'}
+                        </button>
+                        <button type="button" className="pdp-btn pdp-btn--outline" onClick={() => { setShowReviewForm(false); setNewReview({ rating: 5, review: '' }); }}>
+                          বাতিল
+                        </button>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="pdp-review-login">
+                    <span>রিভিউ লিখতে লগইন করুন</span>
+                    <span style={{ display: 'flex', gap: 8 }}>
+                      <Link href="/login" className="pdp-btn-sm is-solid">লগইন</Link>
+                      <Link href="/register" className="pdp-btn-sm">নিবন্ধন</Link>
+                    </span>
+                  </div>
+                )}
+
+                {loadingReviews ? (
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    {[0, 1].map(i => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />)}
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <article key={review._id} className="pdp-review">
+                      <header>
+                        <span className="pdp-review-avatar" aria-hidden="true">{review.user?.name?.[0]?.toUpperCase() || 'A'}</span>
+                        <b>{review.user?.name || 'Anonymous'}</b>
+                        <span className="pdp-stars">{'★'.repeat(review.rating)}</span>
+                      </header>
+                      <p>{review.review}</p>
+                      {review.reply && (
+                        <div className="pdp-review-reply">
+                          <b>বিক্রেতার উত্তর:</b>
+                          <p>{review.reply}</p>
+                        </div>
+                      )}
+                    </article>
+                  ))
+                ) : (
+                  <p className="pdp-muted" style={{ padding: '8px 0' }}>এখনো কোনো রিভিউ নেই। প্রথম রিভিউ লিখুন!</p>
+                )}
               </div>
             </div>
-            <div ref={bestsellerScrollRef} style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory', scrollbarWidth: 'thin' }}>
-              {bestSellers.map(b => {
-                const bPrice = getCurrentPrice(b);
-                const bOriginal = getOriginalPrice(b);
-                const bDisc = getDiscountPercent(b);
-                const bAuthor = getAuthorName(b.author);
-                return (
-                  <div
-                    key={b._id}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 30px rgba(0,0,0,0.12)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.07)'; }}
-                    style={{ flex: '0 0 220px', scrollSnapAlign: 'start', background: 'white', borderRadius: 16, padding: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', transition: 'transform .2s ease, box-shadow .2s ease' }}
-                  >
-                    <Link href={`/products/${b.slug}`} style={{ display: 'block', position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#f8fafc', marginBottom: 12, textDecoration: 'none' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0' }}>
-                        {b.images?.[0] ? (
-                          <img src={imgUrl(b.images[0])!} alt={b.name} style={{ width: 120, height: 170, objectFit: 'cover', borderRadius: 6, boxShadow: '0 12px 18px rgba(15,23,42,0.18)' }} />
-                        ) : (
-                          <div className={`cv ${cvClass(b._id)}`} style={{ width: 120, height: 170, borderRadius: 6 }}>
-                            <div className="a">{bAuthor?.split(' ')[0] || ''}</div>
-                            <div className="t">{b.name}</div>
-                            <div className="frame" />
-                          </div>
-                        )}
-                      </div>
-                      {bDisc > 0 && (
-                        <div style={{ position: 'absolute', top: 10, left: 10, background: '#dc2626', color: 'white', fontWeight: 800, fontSize: 11, padding: '3px 8px', borderRadius: 6 }}>−{bDisc}%</div>
-                      )}
-                    </Link>
-                    <Link href={`/products/${b.slug}`} style={{ textDecoration: 'none' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 38 }}>{b.name}</div>
-                    </Link>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{bAuthor}</div>
-                    {b.ratingAvr && (
-                      <div style={{ marginTop: 4, color: '#f59e0b', fontSize: 11 }}>{'★'.repeat(Math.round(b.ratingAvr))} <span style={{ color: '#9ca3af' }}>({b.ratingCount || 0})</span></div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: PRIMARY }}> ৳{bPrice}</span>
-                      {bDisc > 0 && <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>৳{bOriginal}</span>}
-                    </div>
-                    <button
-                      onClick={() => { addItem(b, 1); toast.success('কার্টে যোগ হয়েছে'); }}
-                      style={{ marginTop: 12, width: '100%', height: 40, background: PRIMARY, color: 'white', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    >
-                      <IcCart size={16} /> কার্টে যোগ করুন
-                    </button>
-                  </div>
-                );
-              })}
+          </div>
+        </section>
+
+        {/* ── Recommendations (same card + rail as the homepage) ── */}
+        {recommendations.length > 0 && (
+          <section className="pdp-section pdp-section--last">
+            <div className="pdp-wrap">
+              <div className="pdp-head">
+                <h2>সর্বাধিক বিক্রিত বই</h2>
+                <Link href="/products" className="home-viewall">সব দেখুন →</Link>
+              </div>
+              <ProductRail label="সর্বাধিক বিক্রিত বই">
+                {recommendations.map(b => (
+                  <HomeProductCard key={b._id} product={b} onAdd={(p) => addItem(p, 1)} />
+                ))}
+              </ProductRail>
             </div>
           </section>
         )}
@@ -1346,21 +1120,21 @@ export default function ProductDetailClient({ params }: Props) {
 
       {/* PDF Preview Modal */}
       {showPreviewModal && previewUrl && (
-        <div className="fixed inset-0 z-[100]">
-          <button
-            onClick={() => setShowPreviewModal(false)}
-            className="fixed top-4 right-4 z-[110] w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-105"
-          >
-            <FaTimes className="text-gray-700 text-sm" />
-          </button>
-          <div
-            className="w-full h-full overflow-y-auto bg-black/80 backdrop-blur-md flex items-start justify-center py-4"
-            onClick={() => setShowPreviewModal(false)}
-          >
-            <div
-              className="w-full max-w-3xl my-4 bg-white rounded-3xl shadow-2xl mx-2 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
+        <div className="pdp-reader" role="dialog" aria-modal="true" aria-label={`${product.name} — একটু পড়ে দেখুন`} onClick={() => setShowPreviewModal(false)}>
+          <div className="pdp-reader-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="pdp-reader-bar">
+              <div className="pdp-reader-title">
+                <span>একটু পড়ে দেখুন</span>
+                <b>{product.name}</b>
+              </div>
+              <button type="button" className="pdp-btn-sm is-solid" onClick={() => { setShowPreviewModal(false); handleAddToCart(); }}>
+                কার্টে যোগ করুন
+              </button>
+              <button type="button" className="pdp-reader-close" onClick={() => setShowPreviewModal(false)} aria-label="বন্ধ করুন">
+                <FaTimes />
+              </button>
+            </div>
+            <div className="pdp-reader-body">
               <PdfViewer file={previewUrl} />
             </div>
           </div>
@@ -1392,163 +1166,25 @@ export default function ProductDetailClient({ params }: Props) {
         </div>
       )}
 
-      <style jsx global>{`
-        .pd-showcase {
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
-          border-radius: 20px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-          overflow: hidden;
-          padding: 20px 0 22px;
-        }
-        .pd-showcase-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          padding: 0 22px 16px;
-        }
-        .pd-showcase-head h3 {
-          margin: 0;
-          font-size: 19px;
-          font-weight: 800;
-          color: #0f172a;
-          font-family: var(--bn);
-        }
-        .pd-showcase-head p {
-          margin: 3px 0 0;
-          color: #94a3b8;
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .pd-showcase-head span {
-          background: #f0fdf4;
-          color: #16a34a;
-          border-radius: 999px;
-          padding: 6px 13px;
-          font-weight: 800;
-          font-size: 12px;
-          white-space: nowrap;
-        }
-        .pd-showcase-viewport {
-          overflow: hidden;
-        }
-        .pd-showcase-track {
-          display: flex;
-          gap: 16px;
-          width: max-content;
-          padding: 0 22px;
-        }
-        .pd-showcase-track.is-moving {
-          animation: pd-showcase-slide 26s linear infinite;
-        }
-        .pd-showcase-track.is-moving:hover {
-          animation-play-state: paused;
-        }
-        .pd-showcase-item {
-          width: clamp(190px, 24vw, 320px);
-          aspect-ratio: 4 / 3;
-          border: 0;
-          border-radius: 14px;
-          overflow: hidden;
-          padding: 0;
-          background: #f8fafc;
-          box-shadow: 0 8px 18px rgba(15,23,42,0.10);
-          cursor: zoom-in;
-          flex: 0 0 auto;
-        }
-        .pd-showcase-item img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-          transition: transform .25s ease;
-        }
-        .pd-showcase-item:hover img {
-          transform: scale(1.04);
-        }
-        @keyframes pd-showcase-slide {
-          from { transform: translateX(0); }
-          to { transform: translateX(calc(-50% - 8px)); }
-        }
-        .pd-showcase-modal {
-          position: fixed;
-          inset: 0;
-          z-index: 120;
-          background: rgba(2, 6, 23, .88);
-          backdrop-filter: blur(10px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 22px;
-        }
-        .pd-showcase-frame {
-          position: relative;
-          max-width: min(94vw, 1040px);
-          max-height: 88vh;
-        }
-        .pd-showcase-frame img {
-          max-width: 100%;
-          max-height: 88vh;
-          border-radius: 14px;
-          display: block;
-          object-fit: contain;
-          box-shadow: 0 24px 60px rgba(0,0,0,.35);
-        }
-        .pd-showcase-count {
-          position: absolute;
-          left: 50%;
-          bottom: 14px;
-          transform: translateX(-50%);
-          background: rgba(15,23,42,.72);
-          color: #fff;
-          border-radius: 999px;
-          padding: 5px 12px;
-          font-size: 12px;
-          font-weight: 800;
-        }
-        .pd-showcase-close,
-        .pd-showcase-nav {
-          position: fixed;
-          border: 0;
-          background: rgba(255,255,255,.94);
-          color: #0f172a;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 10px 28px rgba(0,0,0,.25);
-        }
-        .pd-showcase-close {
-          top: 18px;
-          right: 18px;
-          width: 42px;
-          height: 42px;
-          border-radius: 999px;
-          font-size: 28px;
-          line-height: 1;
-        }
-        .pd-showcase-nav {
-          top: 50%;
-          transform: translateY(-50%);
-          width: 46px;
-          height: 46px;
-          border-radius: 999px;
-        }
-        .pd-showcase-nav.prev { left: 22px; }
-        .pd-showcase-nav.next { right: 22px; }
-        @media (max-width: 720px) {
-          .pd-showcase { border-radius: 16px; padding-top: 16px; }
-          .pd-showcase-head { padding: 0 16px 14px; }
-          .pd-showcase-head h3 { font-size: 17px; }
-          .pd-showcase-head p { display: none; }
-          .pd-showcase-track { gap: 12px; padding: 0 16px; }
-          .pd-showcase-item { width: 72vw; border-radius: 12px; }
-          .pd-showcase-nav { width: 40px; height: 40px; }
-          .pd-showcase-nav.prev { left: 12px; }
-          .pd-showcase-nav.next { right: 12px; }
-        }
-      `}</style>
+      {/* Mobile sticky buy bar — same handlers as the main buttons */}
+      <div className={`pd-sticky-buy${showStickyBuy ? ' is-visible' : ''}`} aria-hidden={!showStickyBuy}>
+        <div className="pd-sticky-info">
+          {images[0] && <img src={imgUrl(images[0])!} alt="" />}
+          <div style={{ minWidth: 0 }}>
+            <div className="pd-sticky-name">{product.name}</div>
+            <div className="pd-sticky-price">
+              ৳{currentPrice}
+              {discountPercent > 0 && <s>৳{originalPrice}</s>}
+            </div>
+          </div>
+        </div>
+        <button type="button" className="pd-sticky-btn cart" onClick={handleAddToCart} tabIndex={showStickyBuy ? 0 : -1} aria-label="কার্টে যোগ করুন">
+          <IcCart size={18} color="currentColor" />
+        </button>
+        <button type="button" className="pd-sticky-btn buy" onClick={handleBuyNow} tabIndex={showStickyBuy ? 0 : -1}>
+          এখনই অর্ডার
+        </button>
+      </div>
 
       <Footer />
     </div>

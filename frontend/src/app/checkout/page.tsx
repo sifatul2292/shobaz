@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -11,6 +11,7 @@ import { gtmBeginCheckout, gtmAddPaymentInfo } from '@/lib/gtm';
 import { phBeginCheckout } from '@/lib/posthog';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import CheckoutSteps from '@/components/common/CheckoutSteps';
 
 // ── Design tokens ─────────────────────────────────────────────────────
 const PRIMARY = '#16a34a';
@@ -105,116 +106,18 @@ const IcCart = ({ size = 48, color = '#cbd5e1' }: { size?: number; color?: strin
   </svg>
 );
 
-// ── Step Progress ─────────────────────────────────────────────────────
-function StepProgress({ step }: { step: number }) {
-  const STEPS = [{ n: 1, label: 'কার্ট' }, { n: 2, label: 'চেকআউট' }, { n: 3, label: 'সম্পন্ন' }];
-  return (
-    <div style={{ background: 'white', borderBottom: '1px solid #f1f5f9', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '20px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {STEPS.map((s, i) => {
-            const active = step === s.n;
-            const completed = s.n < step;
-            return (
-              <Fragment key={s.n}>
-                <Link
-                  href={s.n === 1 ? '/cart' : '#'}
-                  onClick={(e) => { if (s.n !== 1) e.preventDefault(); }}
-                  aria-label={s.n === 1 ? 'কার্টে ফিরে যান' : undefined}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: s.n === 1 ? 'pointer' : 'default' }}
-                >
-                  <div style={{ position: 'relative' }}>
-                    {active && (
-                      <div style={{
-                        position: 'absolute', inset: -7, borderRadius: 999,
-                        border: `2px solid ${PRIMARY}`,
-                        animation: 'stepPulse 2s ease-in-out infinite',
-                      }}/>
-                    )}
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 999,
-                      background: (completed || active) ? PRIMARY : 'white',
-                      border: (completed || active) ? 'none' : '2px solid #e2e8f0',
-                      color: (completed || active) ? 'white' : '#9ca3af',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: 17,
-                      boxShadow: (completed || active)
-                        ? `0 4px 14px ${PRIMARY}44, 0 1px 4px rgba(0,0,0,0.1)`
-                        : '0 2px 8px rgba(0,0,0,0.06)',
-                      transition: 'all .3s ease',
-                    }}>
-                      {completed ? <IcCheck color="white" size={20}/> : s.n}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: (completed || active) ? '#0f172a' : '#9ca3af', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
-                    {s.label}
-                  </span>
-                </Link>
-                {i < STEPS.length - 1 && (
-                  <div style={{ flex: 1, height: 3, background: '#f1f5f9', margin: '0 16px', marginBottom: 26, borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: step > s.n ? '100%' : '0%', background: `linear-gradient(90deg, ${PRIMARY}, #22c55e)`, transition: 'width .5s ease', borderRadius: 999 }}/>
-                  </div>
-                )}
-              </Fragment>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Accent Card ───────────────────────────────────────────────────────
-function AccentCard({ icon, title, subtitle, children }: {
-  icon: React.ReactNode; title: string; subtitle?: string; children: React.ReactNode;
-}) {
-  return (
-    <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
-      <div style={{ display: 'flex', alignItems: 'stretch' }}>
-        <div style={{ width: 4, background: PRIMARY, flexShrink: 0 }}/>
-        <div style={{ flex: 1, padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {icon}
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{title}</h3>
-          </div>
-          {subtitle && <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>{subtitle}</div>}
-        </div>
-      </div>
-      <div style={{ padding: 24 }}>{children}</div>
-    </div>
-  );
-}
-
 // ── Form field ────────────────────────────────────────────────────────
-const inputBase: React.CSSProperties = {
-  width: '100%', height: 48, border: '1.5px solid #e2e8f0', borderRadius: 12,
-  padding: '0 16px', fontSize: 15, color: '#0f172a', background: '#fafafa',
-  fontFamily: 'inherit', outline: 'none', transition: 'border-color .15s, box-shadow .15s, background .15s',
-  boxSizing: 'border-box',
-};
-const inputError: React.CSSProperties = { ...inputBase, borderColor: '#ef4444', background: '#fef2f2' };
-function focusIn(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.target.style.borderColor = PRIMARY;
-  e.target.style.boxShadow = `0 0 0 3px ${PRIMARY}1f`;
-  e.target.style.background = 'white';
-}
-function focusOut(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.target.style.borderColor = e.target.value ? '#e2e8f0' : '#e2e8f0';
-  e.target.style.boxShadow = 'none';
-  e.target.style.background = '#fafafa';
-}
-
-function FormField({ label, required, hint, error, children }: {
-  label: string; required?: boolean; hint?: string; error?: string; children: React.ReactNode;
+function FormField({ label, required, hint, error, htmlFor, children }: {
+  label: string; required?: boolean; hint?: string; error?: string; htmlFor?: string; children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-        {label}{required && <span style={{ color: '#ef4444', marginLeft: 4 }}>*</span>}
+    <div className="co-field">
+      <label htmlFor={htmlFor}>
+        {label}{required && <span className="co-req" aria-hidden="true">*</span>}
       </label>
       {children}
-      {hint && !error && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>{hint}</div>}
-      {error && <div style={{ fontSize: 12, color: '#ef4444', marginTop: 6 }}>{error}</div>}
+      {hint && !error && <div className="co-hint">{hint}</div>}
+      {error && <div className="co-error" role="alert">{error}</div>}
     </div>
   );
 }
@@ -224,33 +127,26 @@ function DeliveryLocSelector({ value, onChange, inside, outside }: {
   value: 'inside' | 'outside'; onChange: (v: 'inside' | 'outside') => void; inside: number; outside: number;
 }) {
   const opts = [
-    { id: 'inside' as const, title: 'ঢাকা সিটির ভিতরে', price: inside, icon: <IcPin size={24} color={PRIMARY}/> },
-    { id: 'outside' as const, title: 'ঢাকা সিটির বাইরে', price: outside, icon: <IcTruck size={24} color={PRIMARY}/> },
+    { id: 'inside' as const, title: 'ঢাকা সিটির ভিতরে', sub: '১–২ কার্যদিবস', price: inside, icon: <IcPin size={20} color="currentColor"/> },
+    { id: 'outside' as const, title: 'ঢাকা সিটির বাইরে', sub: '২–৪ কার্যদিবস', price: outside, icon: <IcTruck size={20} color="currentColor"/> },
   ];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+    <div className="co-options" role="radiogroup" aria-label="ডেলিভারি লোকেশন">
       {opts.map(o => {
         const selected = value === o.id;
         return (
           <button
-            key={o.id} type="button" onClick={() => onChange(o.id)}
-            style={{
-              position: 'relative', cursor: 'pointer', fontFamily: 'inherit',
-              border: selected ? `2px solid ${PRIMARY}` : '1.5px solid #e2e8f0',
-              background: selected ? '#f0fdf4' : 'white',
-              borderRadius: 14, padding: '16px 14px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-              transition: 'all .15s ease',
-            }}
+            key={o.id} type="button" role="radio" aria-checked={selected}
+            onClick={() => onChange(o.id)}
+            className={`co-option${selected ? ' is-selected' : ''}`}
           >
-            {selected && (
-              <div style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 999, background: PRIMARY, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IcCheck color="white" size={14}/>
-              </div>
-            )}
-            {o.icon}
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', textAlign: 'center' }}>{o.title}</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: selected ? PRIMARY : '#374151', fontFamily: "'Inter', sans-serif" }}>৳{o.price}</div>
+            <span className="co-radio" aria-hidden="true" />
+            <span className="co-option-icon">{o.icon}</span>
+            <span className="co-option-text">
+              <b>{o.title}</b>
+              <small>{o.sub}</small>
+            </span>
+            <span className="co-option-price">৳{o.price}</span>
           </button>
         );
       })}
@@ -262,29 +158,25 @@ function DeliveryLocSelector({ value, onChange, inside, outside }: {
 function PaymentCOD() {
   return (
     <>
-      <div style={{ border: `2px solid ${PRIMARY}`, background: '#f0fdf4', borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <IcCash size={24} color={PRIMARY}/>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>ক্যাশ অন ডেলিভারি</div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>পণ্য হাতে পেয়ে টাকা দিন</div>
-        </div>
-        <IcCircleCheck filled color={PRIMARY} size={24}/>
+      <div className="co-option is-selected co-option--static">
+        <span className="co-radio" aria-hidden="true" />
+        <span className="co-option-icon"><IcCash size={20} color="currentColor"/></span>
+        <span className="co-option-text">
+          <b>ক্যাশ অন ডেলিভারি</b>
+          <small>পণ্য হাতে পেয়ে টাকা দিন</small>
+        </span>
       </div>
-      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: PRIMARY, fontSize: 12, fontWeight: 600 }}>
-        <IcShield color={PRIMARY} size={14}/> আপনার অর্ডার সম্পূর্ণ নিরাপদ
-      </div>
+      <p className="co-secure"><IcShield color="currentColor" size={14}/> আপনার অর্ডার সম্পূর্ণ নিরাপদ</p>
     </>
   );
 }
 
 // ── Summary row ───────────────────────────────────────────────────────
-function SummaryRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+function SummaryRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ color: '#374151', fontSize: 14 }}>{label}</span>
-      <span style={{ color: valueColor || '#0f172a', fontWeight: 700, fontSize: 14 }}>{value}</span>
+    <div className="co-row">
+      <span>{label}</span>
+      <b className={valueClass}>{value}</b>
     </div>
   );
 }
@@ -292,18 +184,14 @@ function SummaryRow({ label, value, valueColor }: { label: string; value: string
 // ── Empty state ───────────────────────────────────────────────────────
 function EmptyCheckout() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT }}>
+    <div className="co-page min-h-screen flex flex-col">
       <Header />
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-            <IcCart size={56} color="#cbd5e1"/>
-          </div>
-          <h2 style={{ fontFamily: "'Hind Siliguri', sans-serif", fontSize: 24, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>আপনার কার্ট খালি</h2>
-          <p style={{ fontFamily: "'Hind Siliguri', sans-serif", color: '#9ca3af', marginBottom: 28, lineHeight: 1.6 }}>আপনি কোনো পণ্য যোগ করেননি</p>
-          <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: PRIMARY, color: 'white', borderRadius: 12, padding: '12px 24px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Hind Siliguri', sans-serif", fontSize: 15 }}>
-            বই কিনুন <IcArrowR size={16}/>
-          </Link>
+      <main className="co-empty">
+        <div>
+          <span className="co-empty-icon"><IcCart size={34} color="#111"/></span>
+          <h1>আপনার কার্ট খালি</h1>
+          <p>আপনি কোনো পণ্য যোগ করেননি</p>
+          <Link href="/products" className="co-btn co-btn--solid">বই কিনুন <IcArrowR size={16}/></Link>
         </div>
       </main>
       <Footer />
@@ -361,7 +249,7 @@ export default function CheckoutPage() {
     phBeginCheckout(cartProducts, total);
   }, [mounted, items, getTotalPrice, formData.name, formData.phone]);
 
-  if (!mounted) return <div style={{ minHeight: '100vh', background: PARCHMENT }}/>;
+  if (!mounted) return <div className="co-page" style={{ minHeight: '100vh' }}/>;
   if (items.length === 0) return <EmptyCheckout />;
 
   const insideFee = shippingCharge?.deliveryInDhaka ?? 60;
@@ -486,59 +374,126 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
+  const orderSummary = (
+    <>
+      <ul className="co-items">
+        {items.map((item) => {
+          const price = getCurrentPrice(item.product);
+          const img = item.product.images?.[0];
+          const isGift = item.isFreeGift;
+          return (
+            <li key={item._id || item.product._id} className="co-item">
+              <span className="co-item-thumb">
+                {img ? <img src={imgUrl(img)!} alt=""/> : null}
+                <span className="co-item-qty">{item.quantity}</span>
+              </span>
+              <span className="co-item-text">
+                <b>{item.product.name}</b>
+                {isGift
+                  ? <small className="co-gift">🎁 ফ্রি উপহার</small>
+                  : <small>{getAuthorName(item.product.author) || `পরিমাণ: ${item.quantity}`}</small>}
+              </span>
+              {isGift ? (
+                <span className="co-item-price"><b className="co-free">৳0</b><s>৳{price}</s></span>
+              ) : (
+                <span className="co-item-price"><b>৳{price * item.quantity}</b></span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="co-rows">
+        <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
+        {giftItem && <SummaryRow label="🎁 ফ্রি নোটবুক" value="৳0" valueClass="co-free"/>}
+        <SummaryRow
+          label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 ৩টি নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
+          value={notebookFreeShipping ? 'ফ্রি!' : `৳${deliveryFee}`}
+        />
+      </div>
+
+      <div className="co-total">
+        <span>মোট</span>
+        <b><small>BDT</small> ৳{grandTotal}</b>
+      </div>
+    </>
+  );
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: PARCHMENT, fontFamily: "'Hind Siliguri', 'Inter', system-ui, sans-serif", color: '#0f172a' }}>
+    <div className="co-page min-h-screen flex flex-col">
       <Header />
 
-      <StepProgress step={2}/>
+      <main className="flex-1">
+        <div className="co-wrap">
+          <CheckoutSteps step={2} />
 
-      <main style={{ flex: 1 }}>
-        <section style={{ maxWidth: 1280, margin: '0 auto', padding: '8px 24px 56px' }}>
-          <div className="checkout-layout">
+          {/* Phone: collapsible order summary (Shopify pattern) */}
+          <details className="co-mobile-summary">
+            <summary>
+              <span>অর্ডার সারাংশ দেখুন <small>({itemCount}টি পণ্য)</small></span>
+              <b>৳{grandTotal}</b>
+            </summary>
+            <div className="co-mobile-summary-body">{orderSummary}</div>
+          </details>
 
+          <div className="co-layout">
             {/* ── LEFT — form ── */}
-            <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <AccentCard icon={<IcPin size={22} color={PRIMARY}/>} title="ডেলিভারি ঠিকানা" subtitle="আপনার অর্ডার কোথায় পাঠাতে হবে">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <FormField label="আপনার নাম" required error={errors.name}>
+            <form ref={formRef} onSubmit={handleSubmit} className="co-form" noValidate>
+              <section className="co-section">
+                <h2>যোগাযোগ</h2>
+                <div className="co-grid">
+                  <FormField label="আপনার নাম" required error={errors.name} htmlFor="co-name">
                     <input
+                      id="co-name"
+                      autoComplete="name"
                       value={formData.name}
                       onChange={e => { setFormData(d => ({ ...d, name: e.target.value })); if (errors.name) setErrors(v => ({ ...v, name: '' })); }}
-                      onFocus={focusIn} onBlur={focusOut}
                       placeholder="আপনার সম্পূর্ণ নাম"
-                      style={errors.name ? inputError : inputBase}
+                      className={`co-input${errors.name ? ' is-error' : ''}`}
+                      aria-invalid={Boolean(errors.name) || undefined}
                     />
                   </FormField>
 
-                  <FormField label="মোবাইল নম্বর" required hint="১১ সংখ্যার বাংলাদেশি নম্বর (01 দিয়ে শুরু)" error={errors.phone}>
+                  <FormField label="মোবাইল নম্বর" required hint="১১ সংখ্যার বাংলাদেশি নম্বর (01 দিয়ে শুরু)" error={errors.phone} htmlFor="co-phone">
                     <input
-                      type="tel" inputMode="numeric"
+                      id="co-phone"
+                      type="tel" inputMode="numeric" autoComplete="tel-national"
                       value={formData.phone}
                       onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setFormData(d => ({ ...d, phone: v })); if (errors.phone) setErrors(vv => ({ ...vv, phone: '' })); }}
-                      onFocus={focusIn} onBlur={focusOut}
                       placeholder="01XXXXXXXXX"
-                      style={errors.phone ? inputError : inputBase}
+                      className={`co-input${errors.phone ? ' is-error' : ''}`}
+                      aria-invalid={Boolean(errors.phone) || undefined}
                     />
                   </FormField>
 
-                  <FormField label="ইমেইল (ঐচ্ছিক)" error={errors.email}>
+                  <FormField label="ইমেইল (ঐচ্ছিক)" error={errors.email} htmlFor="co-email">
                     <input
-                      type="email"
+                      id="co-email"
+                      type="email" autoComplete="email"
                       value={formData.email}
                       onChange={e => { setFormData(d => ({ ...d, email: e.target.value })); if (errors.email) setErrors(v => ({ ...v, email: '' })); }}
-                      onFocus={focusIn} onBlur={focusOut}
                       placeholder="example@email.com"
-                      style={errors.email ? inputError : inputBase}
+                      className={`co-input${errors.email ? ' is-error' : ''}`}
+                      aria-invalid={Boolean(errors.email) || undefined}
                     />
                   </FormField>
+                </div>
+              </section>
 
-                  <FormField label="সম্পূর্ণ ঠিকানা" required error={errors.address}>
+              <section className="co-section">
+                <h2>ডেলিভারি</h2>
+                <div className="co-grid">
+                  <FormField label="সম্পূর্ণ ঠিকানা" required error={errors.address} htmlFor="co-address">
                     <textarea
+                      id="co-address"
+                      autoComplete="street-address"
                       value={formData.address}
                       onChange={e => { setFormData(d => ({ ...d, address: e.target.value })); if (errors.address) setErrors(v => ({ ...v, address: '' })); }}
-                      onFocus={focusIn as any} onBlur={e => { (focusOut as any)(e); handleAddressBlur(); }}
+                      onBlur={handleAddressBlur}
                       placeholder="বাড়ি নং, রোড নং, এলাকার নাম, জেলা"
-                      style={{ ...((errors.address ? inputError : inputBase) as object), height: 100, padding: '14px 16px', resize: 'none', lineHeight: 1.6 } as React.CSSProperties}
+                      rows={3}
+                      className={`co-input co-textarea${errors.address ? ' is-error' : ''}`}
+                      aria-invalid={Boolean(errors.address) || undefined}
                     />
                   </FormField>
 
@@ -546,124 +501,46 @@ export default function CheckoutPage() {
                     <DeliveryLocSelector
                       value={deliveryLocation}
                       onChange={setDeliveryLocation}
-                      inside={notebookFreeShipping ? 0 : insideFee}
-                      outside={notebookFreeShipping ? 0 : outsideFee}
+                      // Show the same weight-based fee that is actually charged (base rate showed ৳60 while ৳80 was billed).
+                      inside={notebookFreeShipping ? 0 : calcWeightFee(shippingCharge?.insideDhakaRules, insideFee)}
+                      outside={notebookFreeShipping ? 0 : calcWeightFee(shippingCharge?.outsideDhakaRules, outsideFee)}
                     />
                   </FormField>
                 </div>
-              </AccentCard>
+              </section>
 
-              <AccentCard icon={<IcWallet size={22} color={PRIMARY}/>} title="পেমেন্ট পদ্ধতি" subtitle="নিরাপদ পেমেন্ট">
+              <section className="co-section">
+                <h2>পেমেন্ট</h2>
                 <PaymentCOD/>
-              </AccentCard>
+              </section>
+
+              <div className="co-submit">
+                <button type="submit" disabled={loading} className="co-btn co-btn--solid co-btn--block co-btn--lg">
+                  {loading ? (
+                    <>
+                      <span className="co-spinner" aria-hidden="true" />
+                      প্রসেসিং...
+                    </>
+                  ) : (
+                    <>অর্ডার নিশ্চিত করুন · ৳{grandTotal}</>
+                  )}
+                </button>
+                <a href="/cart" className="co-back">
+                  <IcArrowL color="currentColor" size={14}/> কার্ট সম্পাদনা করুন
+                </a>
+                <p className="co-fine"><IcLock color="currentColor" size={12}/> নিরাপদ পেমেন্ট গ্যারান্টি</p>
+              </div>
             </form>
 
-            {/* ── RIGHT — order summary sticky ── */}
-            <div style={{ position: 'sticky', top: 16 }}>
-              <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
-                {/* gradient header */}
-                <div style={{ background: `linear-gradient(135deg, ${PRIMARY}, #14532d)`, padding: '20px 24px', color: 'white' }}>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>অর্ডার সারাংশ</h3>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', marginTop: 2 }}>{itemCount}টি পণ্য</div>
-                </div>
-
-                {/* item list */}
-                <div style={{ padding: '4px 24px 0' }}>
-                  {items.map((item, i) => {
-                    const price = getCurrentPrice(item.product);
-                    const img = item.product.images?.[0];
-                    const isGift = item.isFreeGift;
-                    return (
-                      <div key={item._id || item.product._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < items.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
-                        <div style={{ width: 52, height: 68, flexShrink: 0, borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', background: '#f8fafc' }}>
-                          {img ? <img src={imgUrl(img)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/> : <div style={{ width: '100%', height: '100%' }}/>}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {item.product.name}
-                          </div>
-                          {isGift
-                            ? <div style={{ fontSize: 11, fontWeight: 800, color: PRIMARY, marginTop: 3, display: 'inline-block', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 999, padding: '1px 8px' }}>🎁 ফ্রি উপহার</div>
-                            : <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>পরিমাণ: {item.quantity}</div>}
-                        </div>
-                        {isGift ? (
-                          <div style={{ textAlign: 'right' }}>
-                            <span style={{ fontSize: 14, fontWeight: 800, color: PRIMARY }}>৳0</span>
-                            <span style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through', marginLeft: 6 }}>৳{price}</span>
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: 14, fontWeight: 700, color: PRIMARY }}>৳{price * item.quantity}</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* price rows */}
-                <div style={{ padding: '16px 24px 0' }}>
-                  <SummaryRow label="উপ-মোট" value={`৳${subtotal}`}/>
-                  {giftItem && <SummaryRow label="🎁 ফ্রি নোটবুক" value="৳0" valueColor={PRIMARY}/>}
-                  <SummaryRow
-                    label={notebookFreeShipping ? `ডেলিভারি চার্জ (${deliveryLabel}) 🎉 ৩টি নোটবুক অফার` : `ডেলিভারি চার্জ (${deliveryLabel})`}
-                    value={notebookFreeShipping ? 'ফ্রি!' : `৳${deliveryFee}`}
-                    valueColor={notebookFreeShipping ? '#16a34a' : PRIMARY}
-                  />
-                </div>
-
-                {/* grand total */}
-                <div style={{ margin: '12px 24px 16px', borderTop: '2px solid #f1f5f9', paddingTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>মোট</span>
-                  <span style={{ fontSize: 26, fontWeight: 900, color: PRIMARY, fontFamily: "'Inter', sans-serif" }}>৳{grandTotal}</span>
-                </div>
-
-                {/* edit cart */}
-                <div style={{ padding: '0 24px 10px' }}>
-                  <a href="/cart" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, border: '1.5px solid #e2e8f0', background: 'white', color: '#374151', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                    <IcArrowL color="#374151" size={16}/> কার্ট সম্পাদনা করুন
-                  </a>
-                </div>
-
-                {/* CTA */}
-                <div style={{ padding: '6px 24px 16px' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit()}
-                    disabled={loading}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                      width: '100%', height: 56,
-                      background: loading ? '#86efac' : `linear-gradient(135deg, ${PRIMARY}, #14532d)`,
-                      color: 'white', borderRadius: 14, fontSize: 17, fontWeight: 700,
-                      border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                      boxShadow: '0 4px 16px rgba(21,128,61,0.30)',
-                      transition: 'transform .15s ease, box-shadow .2s ease',
-                    }}
-                    onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 10px 24px rgba(21,128,61,0.4)'; } }}
-                    onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(21,128,61,0.30)'; }}
-                  >
-                    {loading ? (
-                      <>
-                        <svg style={{ animation: 'spin 1s linear infinite' }} width="20" height="20" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" fill="none" strokeOpacity="0.3"/>
-                          <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none"/>
-                        </svg>
-                        প্রসেসিং...
-                      </>
-                    ) : (
-                      <><IcCheck color="white" size={18}/> অর্ডার নিশ্চিত করুন</>
-                    )}
-                  </button>
-                </div>
-
-                {/* secure */}
-                <div style={{ padding: '0 24px 22px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#9ca3af', fontSize: 12 }}>
-                  <IcLock/> নিরাপদ পেমেন্ট গ্যারান্টি
-                </div>
+            {/* ── RIGHT — order summary ── */}
+            <aside className="co-aside" aria-label="অর্ডার সারাংশ">
+              <div className="co-aside-inner">
+                <h2>অর্ডার সারাংশ <small>{itemCount}টি পণ্য</small></h2>
+                {orderSummary}
               </div>
-            </div>
-
+            </aside>
           </div>
-        </section>
+        </div>
       </main>
 
       <Footer />

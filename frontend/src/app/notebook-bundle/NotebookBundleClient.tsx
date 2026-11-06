@@ -384,7 +384,7 @@ export default function NotebookBundleClient() {
 
         /* Section head */
         .nb-section-head { text-align:center; max-width: 720px; margin: 0 auto 52px; }
-        .nb-section-title { font-family: "Hind Siliguri", sans-serif; font-weight: 600; font-size: clamp(26px, 3.6vw, 40px); line-height: 1.18; letter-spacing: -0.01em; color: #071A07; margin: 0 0 12px; }
+        .nb-section-title { font-family: var(--font-bengali), sans-serif; font-weight: 600; font-size: clamp(26px, 3.6vw, 40px); line-height: 1.18; letter-spacing: -0.01em; color: #071A07; margin: 0 0 12px; }
         .nb-section-sub { color: #2E4A2E; font-size: 16px; max-width: 560px; margin: 0 auto; }
 
         /* Hero */
@@ -392,7 +392,7 @@ export default function NotebookBundleClient() {
         .nb-hero-art { position: absolute; right: -6%; top: -10%; width: 60%; height: 120%; pointer-events: none; z-index: 0; }
         .nb-container { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
         .nb-hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; position: relative; z-index: 1; }
-        .nb-lede-bn { font-family: "Hind Siliguri", sans-serif; font-weight: 700; font-size: clamp(30px, 4.6vw, 52px); line-height: 1.16; letter-spacing: -0.005em; margin: 20px 0 16px; color: #071A07; }
+        .nb-lede-bn { font-family: var(--font-bengali), sans-serif; font-weight: 700; font-size: clamp(30px, 4.6vw, 52px); line-height: 1.16; letter-spacing: -0.005em; margin: 20px 0 16px; color: #071A07; }
         .nb-lede-bn span { color: #1B6B1B; }
         .nb-lede-bn em { color: #D4AF37; font-style: normal; }
         .nb-sub { color: #2E4A2E; font-size: 17px; max-width: 480px; margin-bottom: 26px; line-height: 1.65; }
@@ -402,7 +402,7 @@ export default function NotebookBundleClient() {
         .nb-price-was { color: #4A6B4A; text-decoration: line-through; font-size: 18px; font-family: "Inter", sans-serif; }
         .nb-save-pill { background: #C62828; color: #fff; font-family: "Inter", sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.04em; padding: 5px 10px; border-radius: 4px; }
         .nb-cta-row { display:flex; gap:12px; flex-wrap:wrap; }
-        .nb-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding: 15px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, background .15s ease; font-family: "Hind Siliguri", sans-serif; text-decoration: none; }
+        .nb-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding: 15px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, background .15s ease; font-family: var(--font-bengali), sans-serif; text-decoration: none; }
         .nb-btn:hover { transform: translateY(-1px); }
         .nb-btn-primary { background: #1B6B1B; color: #fff; box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 10px 22px -10px rgba(27,107,27,0.55); }
         .nb-btn-primary:hover { background: #2E7D32; }
@@ -410,10 +410,10 @@ export default function NotebookBundleClient() {
         .nb-btn-ghost:hover { background: #E8F5E9; }
         .nb-trust-mini { margin-top: 24px; display:flex; align-items: center; gap: 20px; color: #4A6B4A; font-size: 13px; flex-wrap: wrap; }
         .nb-trust-mini b { color: #2E4A2E; font-weight: 600; }
-        .nb-free-pill { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 14px; border-radius:12px; background:#D4AF37; color:#071A07; font-family:"Hind Siliguri",sans-serif; font-weight:800; font-size:15px; box-shadow:0 12px 24px -18px rgba(7,26,7,0.5); }
+        .nb-free-pill { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 14px; border-radius:12px; background:#D4AF37; color:#071A07; font-family:var(--font-bengali),sans-serif; font-weight:800; font-size:15px; box-shadow:0 12px 24px -18px rgba(7,26,7,0.5); }
         .nb-offer-chips { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; max-width:540px; margin:18px 0 0; }
         .nb-offer-chip { border:1px solid #B7D9B7; background:#F6FBF6; border-radius:14px; padding:12px 14px; color:#071A07; box-shadow:0 16px 32px -28px rgba(7,26,7,0.42); }
-        .nb-offer-chip strong { display:block; font-family:"Hind Siliguri",sans-serif; font-size:17px; line-height:1.25; margin-bottom:4px; }
+        .nb-offer-chip strong { display:block; font-family:var(--font-bengali),sans-serif; font-size:17px; line-height:1.25; margin-bottom:4px; }
         .nb-offer-chip span { display:block; font-size:12px; color:#4A6B4A; line-height:1.45; }
 
         /* Notebook stack */
@@ -455,7 +455,7 @@ export default function NotebookBundleClient() {
         .nb-bcard .nb-bdg { position:absolute; top:10px; left:10px; background: #C62828; color:#fff; font-family:"Inter",sans-serif; font-weight:700; font-size:10px; padding:4px 8px; border-radius:4px; }
         .nb-bcard .nb-popular-badge { position:absolute; top:10px; right:10px; background: linear-gradient(135deg,#1B6B1B,#D4AF37); color:#fff; font-family:"Inter",sans-serif; font-weight:700; font-size:9px; padding:3px 8px; border-radius:4px; letter-spacing:0.04em; }
         .nb-bcard .nb-body { padding: 14px 16px 16px; display:flex;flex-direction:column;gap:6px;flex:1; }
-        .nb-bcard h4 { font-family:"Hind Siliguri",sans-serif; font-size:15px; font-weight:600; margin:0; line-height:1.25; color:#071A07; }
+        .nb-bcard h4 { font-family:var(--font-bengali),sans-serif; font-size:15px; font-weight:600; margin:0; line-height:1.25; color:#071A07; }
         .nb-bcard h4 .en { display:block; font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:12px; color:#4A6B4A; margin-top:2px; }
         .nb-bcard .nb-aline { font-size:12px; color:#4A6B4A; }
         .nb-bcard .nb-stars-row { display:flex;gap:6px;align-items:center;font-size:11px;color:#4A6B4A; }
@@ -466,7 +466,7 @@ export default function NotebookBundleClient() {
         .nb-bcard .nb-actions { display:flex; gap:6px; margin-top:8px; }
         .nb-btn-mini-ghost { border:0; background:transparent; color:#2E4A2E; padding:5px 0 0; font-size:12px; border-radius:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
         .nb-btn-mini-ghost:hover { background:#E8F5E9; }
-        .nb-btn-mini-primary { background:#1B6B1B; color:#fff; padding:11px 10px; font-size:13px; border-radius:10px; cursor:pointer; border:none; flex:1; font-family:"Hind Siliguri",sans-serif; font-weight:700; }
+        .nb-btn-mini-primary { background:#1B6B1B; color:#fff; padding:11px 10px; font-size:13px; border-radius:10px; cursor:pointer; border:none; flex:1; font-family:var(--font-bengali),sans-serif; font-weight:700; }
         .nb-btn-mini-primary:hover { background:#2E7D32; }
 
         /* Real photo proof */
@@ -476,7 +476,7 @@ export default function NotebookBundleClient() {
         .nb-real-copy .nb-section-title { text-align:left; margin-bottom:14px; }
         .nb-real-copy .nb-section-sub { margin:0; max-width:430px; }
         .nb-real-note { margin-top:24px; display:grid; gap:10px; max-width:430px; }
-        .nb-real-note div { display:flex; align-items:center; gap:10px; color:#2E4A2E; font-family:"Hind Siliguri",sans-serif; font-size:14px; line-height:1.35; }
+        .nb-real-note div { display:flex; align-items:center; gap:10px; color:#2E4A2E; font-family:var(--font-bengali),sans-serif; font-size:14px; line-height:1.35; }
         .nb-real-note span { width:24px; height:24px; border-radius:999px; display:grid; place-items:center; flex-shrink:0; background:#C8E6C9; color:#1B6B1B; font-family:"Inter",sans-serif; font-size:12px; font-weight:800; }
         .nb-photo-slider { overflow:hidden; border-radius:22px; padding:10px; background:#E8F5E9; border:1px solid #C8E6C9; box-shadow:0 28px 58px -36px rgba(7,26,7,0.5); }
         .nb-slide-track { display:flex; gap:14px; width:max-content; animation:nbAutoSlide 36s linear infinite; }
@@ -502,7 +502,7 @@ export default function NotebookBundleClient() {
         .nb-builder { background: linear-gradient(180deg, #071A07 0%, #1B3D1B 100%); color: #E8F5E9; border-radius: 28px; padding: 38px; box-shadow: 0 30px 60px -30px rgba(7,26,7,0.5); }
         .nb-builder-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:26px; }
         .nb-builder-head .nb-section-eyebrow { color:#D4AF37; }
-        .nb-builder-head h3 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:27px; line-height:1.2; margin:0 0 6px; }
+        .nb-builder-head h3 { font-family:var(--font-bengali),sans-serif; font-weight:600; font-size:27px; line-height:1.2; margin:0 0 6px; }
         .nb-builder-head p { margin:0; color:rgba(200,230,201,0.7); font-size:14px; max-width:460px; }
         .nb-builder-price { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px 18px; text-align:right; min-width:200px; }
         .nb-builder-price .lbl { font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(200,230,201,0.6);font-family:"Inter",sans-serif; }
@@ -521,7 +521,7 @@ export default function NotebookBundleClient() {
         .nb-pmini .pt { font-family:"Fraunces",serif; font-weight:700; font-size:11px; line-height:1.05; }
         .nb-pmini .pa { font-family:"Inter",sans-serif; font-size:7px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
         .nb-pick-copy { min-width:0; }
-        .nb-pick .nb-ptitle { font-family:"Hind Siliguri",sans-serif; font-weight:700; font-size:14px; line-height:1.25; margin-bottom:4px; color:#E8F5E9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .nb-pick .nb-ptitle { font-family:var(--font-bengali),sans-serif; font-weight:700; font-size:14px; line-height:1.25; margin-bottom:4px; color:#E8F5E9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
         .nb-pick .nb-pprice { font-family:"Inter",sans-serif; font-weight:600; font-size:13px; opacity:0.85; color:#E8F5E9; }
         .nb-builder-totals { margin-top:24px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.12); }
         .nb-totals-left { display:flex; gap:24px; flex-wrap:wrap; }
@@ -530,17 +530,17 @@ export default function NotebookBundleClient() {
         .nb-totals-left .v { font-family:"Inter",sans-serif; font-size:17px; font-weight:600; }
         .nb-totals-left .v.strike { text-decoration:line-through;color:rgba(200,230,201,0.5);font-weight:500; }
         .nb-totals-left .v.gold { color:#D4AF37; }
-        .nb-builder-cta { width:100%; margin-top:20px; background:#D4AF37; color:#071A07; padding:18px 26px; border-radius:14px; font-weight:700; font-size:16px; display:inline-flex;align-items:center;justify-content:center;gap:10px; transition:transform .12s ease, background .15s ease; cursor:pointer; border:none; font-family:"Hind Siliguri",sans-serif; }
+        .nb-builder-cta { width:100%; margin-top:20px; background:#D4AF37; color:#071A07; padding:18px 26px; border-radius:14px; font-weight:700; font-size:16px; display:inline-flex;align-items:center;justify-content:center;gap:10px; transition:transform .12s ease, background .15s ease; cursor:pointer; border:none; font-family:var(--font-bengali),sans-serif; }
         .nb-builder-cta:hover { background:#E8C84A; transform:translateY(-1px); }
         .nb-builder-fineprint { margin-top:14px;text-align:center;font-size:12.5px;color:rgba(200,230,201,0.6);display:flex;gap:18px;justify-content:center;flex-wrap:wrap; }
         .nb-builder-delivery { margin:0 0 28px; border:2px solid #D4AF37; background:linear-gradient(135deg,#D4AF37 0%,#F4DF79 58%,#FFF5B8 100%); color:#071A07; border-radius:18px; padding:20px 22px; display:flex; align-items:center; justify-content:space-between; gap:18px; box-shadow:0 24px 42px -28px rgba(212,175,55,0.95), 0 0 0 6px rgba(212,175,55,0.10); position:relative; overflow:hidden; }
         .nb-builder-delivery::before { content:"FREE DELIVERY"; position:absolute; right:18px; top:10px; font-family:"Inter",sans-serif; font-size:10px; font-weight:900; letter-spacing:0.18em; color:rgba(7,26,7,0.34); }
-        .nb-builder-delivery strong { display:flex; align-items:center; gap:10px; font-family:"Hind Siliguri",sans-serif; font-size:24px; font-weight:900; line-height:1.18; color:#071A07; padding-right:118px; }
+        .nb-builder-delivery strong { display:flex; align-items:center; gap:10px; font-family:var(--font-bengali),sans-serif; font-size:24px; font-weight:900; line-height:1.18; color:#071A07; padding-right:118px; }
         .nb-builder-delivery strong::before { content:"🚚"; width:42px; height:42px; border-radius:999px; background:#071A07; display:grid; place-items:center; flex-shrink:0; font-size:22px; }
-        .nb-builder-delivery span { font-family:"Hind Siliguri",sans-serif; font-size:14px; font-weight:800; color:#1B3D1B; text-align:right; position:relative; z-index:1; }
+        .nb-builder-delivery span { font-family:var(--font-bengali),sans-serif; font-size:14px; font-weight:800; color:#1B3D1B; text-align:right; position:relative; z-index:1; }
         .nb-offer-panel { margin:0 0 22px; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
         .nb-offer-panel-card { border:1px solid rgba(212,175,55,0.35); background:rgba(255,255,255,0.05); border-radius:16px; padding:16px; }
-        .nb-offer-panel-card b { display:block; color:#F4DF79; font-family:"Hind Siliguri",sans-serif; font-size:20px; line-height:1.25; margin-bottom:6px; }
+        .nb-offer-panel-card b { display:block; color:#F4DF79; font-family:var(--font-bengali),sans-serif; font-size:20px; line-height:1.25; margin-bottom:6px; }
         .nb-offer-panel-card span { color:rgba(232,245,233,0.74); font-size:13px; line-height:1.55; }
 
         /* Gift modal */
@@ -549,16 +549,16 @@ export default function NotebookBundleClient() {
         @keyframes nbGiftBackdrop { from { opacity:0; } to { opacity:1; } }
         @keyframes nbGiftPop { 0% { opacity:0; transform:translateY(18px) scale(.96); } 70% { transform:translateY(-3px) scale(1.01); } 100% { opacity:1; transform:translateY(0) scale(1); } }
         .nb-gift-modal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px; }
-        .nb-gift-modal-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 11px; border-radius:999px; background:#D4AF37; color:#071A07; font-family:"Hind Siliguri",sans-serif; font-weight:900; font-size:13px; margin-bottom:10px; }
-        .nb-gift-modal h3 { margin:0 0 8px; font-family:"Hind Siliguri",sans-serif; font-size:30px; line-height:1.14; }
+        .nb-gift-modal-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 11px; border-radius:999px; background:#D4AF37; color:#071A07; font-family:var(--font-bengali),sans-serif; font-weight:900; font-size:13px; margin-bottom:10px; }
+        .nb-gift-modal h3 { margin:0 0 8px; font-family:var(--font-bengali),sans-serif; font-size:30px; line-height:1.14; }
         .nb-gift-modal p { margin:0; color:#2E4A2E; font-size:15px; line-height:1.65; max-width:580px; }
         .nb-gift-close { width:38px; height:38px; border-radius:999px; border:1px solid #B7D9B7; background:#fff; color:#071A07; cursor:pointer; font-size:22px; line-height:1; display:grid; place-items:center; flex-shrink:0; }
-        .nb-gift-modal-foot { margin-top:14px; text-align:center; color:#4A6B4A; font-family:"Hind Siliguri",sans-serif; font-size:13px; }
+        .nb-gift-modal-foot { margin-top:14px; text-align:center; color:#4A6B4A; font-family:var(--font-bengali),sans-serif; font-size:13px; }
 
         /* Quality */
         .nb-quality-section { background: #EDF4ED; padding: 96px 0; }
         .nb-timer-box { margin:24px auto 0; max-width:520px; border:1px solid #D4AF37; background:#071A07; color:#E8F5E9; border-radius:18px; padding:18px; box-shadow:0 20px 42px -30px rgba(7,26,7,0.7); }
-        .nb-timer-label { font-family:"Hind Siliguri",sans-serif; font-size:14px; color:#D4AF37; font-weight:800; margin-bottom:10px; }
+        .nb-timer-label { font-family:var(--font-bengali),sans-serif; font-size:14px; color:#D4AF37; font-weight:800; margin-bottom:10px; }
         .nb-timer-row { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
         .nb-timer-cell { border:1px solid rgba(212,175,55,0.28); background:rgba(255,255,255,0.06); border-radius:12px; padding:10px 6px; }
         .nb-timer-num { display:block; font-family:"Inter",sans-serif; font-size:30px; font-weight:900; line-height:1; color:#F4DF79; font-feature-settings:"tnum" 1; }
@@ -577,7 +577,7 @@ export default function NotebookBundleClient() {
         .nb-faq-list { max-width:760px; margin:0 auto; display:flex;flex-direction:column;gap:8px; }
         .nb-faq-item { background:#F1F8F1; border:1px solid #C8E6C9; border-radius:14px; overflow:hidden; }
         .nb-faq-item.on { border-color:#1B6B1B; }
-        .nb-faq-q { width:100%;text-align:left;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px; font-weight:600;font-size:15px;color:#071A07; font-family:"Hind Siliguri",sans-serif; cursor:pointer; background:none; border:none; }
+        .nb-faq-q { width:100%;text-align:left;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px; font-weight:600;font-size:15px;color:#071A07; font-family:var(--font-bengali),sans-serif; cursor:pointer; background:none; border:none; }
         .nb-pm { width:26px;height:26px;border-radius:50%; border:1px solid #A5C8A5; display:grid;place-items:center; transition:transform .2s ease,background .15s ease; flex-shrink:0; }
         .nb-faq-item.on .nb-pm { background:#1B6B1B; border-color:#1B6B1B; transform:rotate(45deg); }
         .nb-faq-a { max-height:0; overflow:hidden; transition:max-height .25s ease; border-left:4px solid transparent; }
@@ -592,7 +592,7 @@ export default function NotebookBundleClient() {
         .nb-final-cta { background: #071A07; color: #E8F5E9; text-align:center; padding: 100px 0; position:relative; overflow:hidden; }
         .nb-final-cta::before { content:""; position:absolute; top:0; left:50%; width:90%; max-width:800px; height:1px; background:linear-gradient(90deg,transparent,#D4AF37,transparent); transform:translateX(-50%); }
         .nb-final-cta .nb-section-eyebrow { color:rgba(212,175,55,0.8); }
-        .nb-final-cta h2 { font-family:"Hind Siliguri",sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F1F8F1; line-height:1.18; }
+        .nb-final-cta h2 { font-family:var(--font-bengali),sans-serif; font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 14px; color:#F1F8F1; line-height:1.18; }
         .nb-final-cta p { color:rgba(200,230,201,0.7); max-width:540px; margin:0 auto 26px; }
         .nb-final-cta .nb-btn-ghost { color:#E8F5E9;border-color:rgba(255,255,255,0.2); }
         .nb-final-cta .nb-btn-ghost:hover { background:rgba(255,255,255,0.05); }

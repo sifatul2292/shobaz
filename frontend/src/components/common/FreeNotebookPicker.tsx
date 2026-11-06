@@ -45,7 +45,7 @@ export default function FreeNotebookPicker({
 
   if (loading) {
     return (
-      <div style={{ padding: '14px 16px', color: '#4A6B4A', fontFamily: "'Hind Siliguri', sans-serif", fontSize: 14 }}>
+      <div style={{ padding: '14px 16px', color: '#4A6B4A', fontFamily: "var(--font-bengali), sans-serif", fontSize: 14 }}>
         নোটবুক লোড হচ্ছে...
       </div>
     );
@@ -82,7 +82,7 @@ export default function FreeNotebookPicker({
               alignItems: 'center',
               gap: 8,
               transition: 'border-color .15s ease, background .15s ease',
-              fontFamily: "'Hind Siliguri', sans-serif",
+              fontFamily: "var(--font-bengali), sans-serif",
             }}
           >
             {selected && (

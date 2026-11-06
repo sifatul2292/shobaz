@@ -14,6 +14,8 @@ interface HomeProductCardProps {
   product: Product;
   onAdd: (product: Product) => void | Promise<void>;
   previewState?: ProductCardPreviewState;
+  /** Above-the-fold cards load immediately (better LCP); the rest stay lazy. */
+  eager?: boolean;
 }
 
 function getAuthorName(author: Product['author']): string {
@@ -35,15 +37,18 @@ function HeartIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>;
 }
 
-export default function HomeProductCard({ product, onAdd, previewState = 'default' }: HomeProductCardProps) {
+export default function HomeProductCard({ product, onAdd, previewState = 'default', eager = false }: HomeProductCardProps) {
   const [cartState, setCartState] = useState<AsyncState>('idle');
   const [wishlistState, setWishlistState] = useState<AsyncState>('idle');
+  const [coverLoaded, setCoverLoaded] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const coverRef = useRef<HTMLImageElement>(null);
   const salePrice = product.salePrice || product.price || 0;
   const discount = product.discountAmount || 0;
   const currentPrice = Math.max(0, salePrice - discount);
   const discountPercent = salePrice > 0 ? Math.round((discount / salePrice) * 100) : 0;
   const cover = imgUrl(product.images?.[0]);
+  const hoverImage = imgUrl(product.images?.[1]);
   const authorName = getAuthorName(product.author);
   const href = `/products/${product.slug || product._id}`;
   const isOutOfStock = product.stock === 0;
@@ -55,6 +60,11 @@ export default function HomeProductCard({ product, onAdd, previewState = 'defaul
 
   useEffect(() => () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
+  }, []);
+
+  // Server-rendered images can finish loading before hydration attaches onLoad.
+  useEffect(() => {
+    if (coverRef.current?.complete) setCoverLoaded(true);
   }, []);
 
   const scheduleReset = (delay: number) => {
@@ -112,9 +122,36 @@ export default function HomeProductCard({ product, onAdd, previewState = 'defaul
   return (
     <article className={styles.card} data-preview-state={previewState}>
       <Link href={href} className={styles.mediaLink} aria-label={`${product.name} দেখুন`}>
-        <div className={styles.media}>
+        <div className={styles.media} data-has-hover={hoverImage ? 'true' : undefined}>
           {cover ? (
-            <img className={styles.cover} src={cover} alt={`${product.name} বইয়ের প্রচ্ছদ`} width="320" height="448" loading="lazy" />
+            <>
+              <img
+                ref={coverRef}
+                className={styles.cover}
+                data-loaded={coverLoaded ? 'true' : undefined}
+                src={cover}
+                alt={`${product.name} বইয়ের প্রচ্ছদ`}
+                width="320"
+                height="448"
+                loading={eager ? 'eager' : 'lazy'}
+                decoding="async"
+                {...(eager ? { fetchPriority: 'high' as const } : {})}
+                onLoad={() => setCoverLoaded(true)}
+                onError={() => setCoverLoaded(true)}
+              />
+              {hoverImage && (
+                <img
+                  className={styles.coverAlt}
+                  src={hoverImage}
+                  alt=""
+                  aria-hidden="true"
+                  width="320"
+                  height="448"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </>
           ) : (
             <span className={styles.placeholder}>{product.name}</span>
           )}
