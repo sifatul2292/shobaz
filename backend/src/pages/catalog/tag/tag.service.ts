@@ -155,13 +155,32 @@ export class TagService {
 
       const sectionsWithProducts = await Promise.all(
         tags.map(async (tag) => {
-          const products = await this.productModel
-            .find({ 'tags.slug': tag.slug })
-            .select(
-              'name slug images price salePrice discountAmount discountType author',
-            )
-            .limit(20)
-            .lean();
+          // Order books by the priority set in admin (1 first). Books without
+          // a priority go after numbered ones, same as the sections above;
+          // ties keep the order they were added in.
+          const products = await this.productModel.aggregate([
+            { $match: { 'tags.slug': tag.slug } },
+            {
+              $addFields: {
+                sortPriority: { $ifNull: ['$priority', 999999] },
+              },
+            },
+            { $sort: { sortPriority: 1, _id: 1 } },
+            { $limit: 20 },
+            {
+              $project: {
+                name: 1,
+                slug: 1,
+                images: 1,
+                price: 1,
+                salePrice: 1,
+                discountAmount: 1,
+                discountType: 1,
+                author: 1,
+                priority: 1,
+              },
+            },
+          ]);
           return { ...tag, products };
         }),
       );
