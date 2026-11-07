@@ -1820,6 +1820,115 @@ async updateOrderById(
     }
   }
 
+  /**
+   * Staff edit of a placed order (custom-orders "Edit"): customer details,
+   * books, unit prices, delivery charge and a discount. Totals are worked out
+   * here, and stock follows the change when the order already took stock.
+   * Status, payment status and courier data are not editable here.
+   */
+  async updateOrderByAdmin(id: string, dto: any): Promise<ResponsePayload> {
+    const order: any = await this.orderModel.findById(id).lean();
+    if (!order) throw new NotFoundException('No Data found!');
+    if ([6, 7, 9, 10].includes(Number(order.orderStatus))) {
+      throw new BadRequestException('Cancelled or trashed orders cannot be edited.');
+    }
+    const money = (value: any) => {
+      const n = Number(value);
+      return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0;
+    };
+    const set: any = {};
+    for (const field of ['name', 'phoneNo', 'email', 'city', 'shippingAddress', 'note']) {
+      if (typeof dto?.[field] === 'string') set[field] = dto[field].trim();
+    }
+    for (const field of ['name', 'phoneNo', 'shippingAddress']) {
+      if (field in set && !set[field]) {
+        throw new BadRequestException(`${field === 'phoneNo' ? 'Phone number' : field === 'name' ? 'Customer name' : 'Shipping address'} is required.`);
+      }
+    }
+    if (typeof dto?.paymentType === 'string' && dto.paymentType.trim()) {
+      set.paymentType = dto.paymentType.trim();
+    }
+    const oldDelivery = money(order.deliveryCharge);
+    const delivery = dto?.deliveryCharge !== undefined ? money(dto.deliveryCharge) : oldDelivery;
+    set.deliveryCharge = delivery;
+
+    let items: any[] = null;
+    if (Array.isArray(dto?.orderedItems)) {
+      items = dto.orderedItems
+        .filter((item: any) => item && (item._id || item.product))
+        .map((item: any) => {
+          const quantity = Math.max(1, Math.floor(Number(item.quantity)) || 1);
+          const price = money(item.unitPrice ?? item.salePrice ?? item.regularPrice);
+          if (quantity > 500 || price > 100000) {
+            throw new BadRequestException('Check the quantity and price: a line can have at most 500 copies at up to ৳100,000 each.');
+          }
+          const line = { ...item, quantity, regularPrice: price, unitPrice: price, salePrice: price, discountAmount: 0, discountType: 2 };
+          delete line.editPrice;
+          delete line.editQty;
+          delete line.selectedQty;
+          return line;
+        });
+      if (!items.length) throw new BadRequestException('Select at least one product.');
+    }
+
+    if (items) {
+      // Unit prices are final prices, so the product discount is folded in; what
+      // is left is one order-level discount (it replaces any coupon amount).
+      const subTotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+      const discount = Math.min(money(dto?.discount), subTotal);
+      set.orderedItems = items;
+      set.subTotal = subTotal;
+      set.discount = discount;
+      set.couponDiscount = 0;
+      set.grandTotal = Math.max(0, subTotal + delivery - discount);
+    } else {
+      set.grandTotal = Math.max(0, money(order.grandTotal) + delivery - oldDelivery);
+    }
+
+    // A booked parcel carries the old cash-on-delivery amount: staff may fix
+    // the customer's details, but not change what the order costs.
+    if (
+      order.courierData?.consignmentId &&
+      Math.round(set.grandTotal) !== Math.round(money(order.grandTotal))
+    ) {
+      throw new BadRequestException(
+        'This order is already booked with the courier, so its books, prices and total cannot change here. Customer details can still be edited.',
+      );
+    }
+
+    await this.orderModel.updateOne({ _id: id }, { $set: set });
+
+    if (items && order.stockDecremented === true && !order.stockRestocked) {
+      const tally = (list: any[]) => {
+        const map = new Map<string, number>();
+        for (const item of list || []) {
+          const key = String(item?._id || item?.product || item?.productId || '');
+          if (!key) continue;
+          const qty = Math.max(1, Math.floor(Number(item?.quantity)) || 1);
+          map.set(key, (map.get(key) || 0) + qty);
+        }
+        return map;
+      };
+      const before = tally(order.orderedItems);
+      const after = tally(items);
+      const more: any[] = [];
+      const fewer: any[] = [];
+      for (const key of new Set([...before.keys(), ...after.keys()])) {
+        const diff = (after.get(key) || 0) - (before.get(key) || 0);
+        if (diff > 0) more.push({ _id: key, quantity: diff });
+        if (diff < 0) fewer.push({ _id: key, quantity: -diff });
+      }
+      if (more.length) await this.decreaseProductStock(String(order._id), more);
+      if (fewer.length) await this.restockProducts(String(order._id), fewer, 'cancel_restock');
+    }
+
+    return {
+      success: true,
+      message: 'Order updated successfully',
+      data: { _id: order._id, orderId: order.orderId, grandTotal: set.grandTotal },
+    } as ResponsePayload;
+  }
+
   async updateMultipleOrderById(
     ids: string[],
     updateOrderDto: UpdateOrderDto,

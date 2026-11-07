@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Manager — Shobaz Admin</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="admin-shell.css?v=1">
+  <style>
+    /* Customer Manager (sales CRM): page-only styles on top of admin-shell.css. */
+    [hidden] { display: none !important; }
+    body.modal-open { overflow: hidden; }
+
+    /* Metrics that act as tab shortcuts */
+    .metric-btn { border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+    .metric-btn:hover { background: var(--sa-hover); }
+    .metric-btn:focus-visible { outline: 2px solid var(--sa-focus); outline-offset: -2px; }
+    .metric-btn.active { box-shadow: inset 0 -2px 0 var(--sa-primary); }
+
+    /* Filter bar (inside the list card) */
+    /* Visible overflow so filter popovers are not clipped by the card. */
+    .cm-card { overflow: visible; }
+    .cm-card .pagination-bar { border-radius: 0 0 var(--sa-radius) var(--sa-radius); }
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--sa-border-2); }
+    .filter-bar .spacer { flex: 1; }
+    .page-size { width: auto; height: 28px; min-height: 28px; padding: 2px 28px 2px 10px; font-size: 12px; }
+    .dd-wrap { position: relative; }
+    .filter-btn .val { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .filter-btn .chev { font-size: 9px; color: var(--sa-text-3); }
+    .filter-btn.active { background: var(--sa-selected); }
+    .popover { min-width: 220px; }
+    .pop-panel { display: grid; gap: 8px; padding: 6px; min-width: 270px; }
+    .pop-row { display: flex; gap: 8px; }
+    .pop-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .pop-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--sa-radius-sm); background: none; color: var(--sa-text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+    .pop-item:hover { background: var(--sa-hover); }
+    .pop-item.sel { background: var(--sa-selected); font-weight: 650; }
+    .suggestions { display: grid; max-height: 180px; overflow-y: auto; }
+    .suggestions button { padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--sa-text); font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+    .suggestions button:hover { background: var(--sa-hover); }
+    .quick-ranges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .quick-ranges .btn.active { background: var(--sa-primary); color: #fff; box-shadow: none; }
+    .notice { margin: 0; padding: 8px 12px; background: var(--tone-critical-bg); color: var(--tone-critical-fg); font-size: 12px; font-weight: 550; }
+    .notice:empty { display: none; }
+
+    /* Customer table */
+    .cm-table { min-width: 1060px; }
+    .cm-table tbody tr { cursor: pointer; }
+    .cm-table tbody tr.is-blocked td { color: var(--sa-text-2); }
+    .cust-name { padding: 0; border: 0; background: none; color: var(--sa-text); font: inherit; font-weight: 650; text-align: left; cursor: pointer; }
+    .cust-name:hover { text-decoration: underline; }
+    .cust-name:focus-visible { outline: 2px solid var(--sa-focus); outline-offset: 2px; border-radius: 4px; }
+    .cell-sub { display: block; max-width: 280px; margin-top: 2px; overflow: hidden; color: var(--sa-text-2); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .cell-sub i { width: 12px; font-size: 10px; color: var(--sa-text-3); }
+    .phone-link { color: var(--sa-link); font-variant-numeric: tabular-nums; text-decoration: none; white-space: nowrap; }
+    .phone-link:hover { text-decoration: underline; }
+    .nowrap { white-space: nowrap; }
+    .cell-in { display: block; }
+    .ratio-cell .cell-sub { max-width: none; }
+    .fu { font-weight: 550; white-space: nowrap; }
+    .fu.overdue { color: var(--tone-critical-fg); }
+    .fu.today { color: var(--tone-warning-fg); }
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .empty-row td { padding: 40px 16px !important; color: var(--sa-text-2); text-align: center; cursor: default; }
+    .empty-row td i { display: block; margin-bottom: 8px; font-size: 24px; color: #c9c9c9; }
+    .footnote { margin-top: 12px; color: var(--sa-text-3); font-size: 12px; }
+    .wa-icon { color: #128c4b; }
+
+    /* Customer modal */
+    .cm-box { max-width: 1060px; }
+    .cm-head-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .cm-avatar { width: 36px; height: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--tone-success-bg); color: var(--tone-success-fg); font-weight: 700; font-size: 13px; }
+    .cm-head-main .modal-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cm-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 2px; color: var(--sa-text-2); font-size: 12px; }
+    .cm-body { display: flex; flex-direction: column; gap: 16px; background: var(--sa-bg); }
+    .cm-body > * { flex-shrink: 0; }
+    .cm-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 32px; }
+    .cm-metrics { margin-bottom: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .cm-metrics .metric-value { font-size: 16px; }
+    .cm-cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .cm-cols > .card + .card { margin-top: 0; }
+    .form-section { margin-top: 12px; }
+    .form-section > .field-label { display: block; margin-bottom: 6px; }
+    .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-group input { position: absolute; opacity: 0; pointer-events: none; }
+    .chip-group label { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: var(--sa-radius-sm); background: #fff; color: var(--sa-text); font-size: 12.5px; font-weight: 550; cursor: pointer; box-shadow: inset 0 0 0 1px var(--sa-border-strong); }
+    .chip-group label:hover { background: var(--sa-hover); }
+    .chip-group label i { font-size: 11px; color: var(--sa-text-2); }
+    .chip-group input:checked + label { background: var(--sa-primary); color: #fff; box-shadow: none; }
+    .chip-group input:checked + label i { color: #fff; }
+    .chip-group input:focus-visible + label { outline: 2px solid var(--sa-focus); outline-offset: 1px; }
+    .fu-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .fu-row .input { max-width: 180px; }
+    .hint { color: var(--sa-text-2); font-size: 12px; }
+    .hint strong { color: var(--sa-text); }
+    .save-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+    .form-status { min-height: 18px; margin-top: 8px; color: var(--sa-text-2); font-size: 12px; font-weight: 550; }
+    .form-status.ok { color: #047b5d; }
+    .form-status.error { color: var(--tone-critical-fg); }
+    .blocked-note { margin-top: 10px; padding: 8px 10px; border-radius: var(--sa-radius-sm); background: var(--tone-warning-bg); color: var(--tone-warning-fg); font-size: 12px; font-weight: 550; }
+    details.msg { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sa-border-2); }
+    details.msg summary { color: var(--sa-link); font-size: 12.5px; font-weight: 550; cursor: pointer; }
+    .msg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .pane-tabs { border-bottom: 1px solid var(--sa-border-2); }
+    .cm-pane { display: grid; gap: 8px; max-height: 460px; padding: 12px; overflow-y: auto; }
+    .order-line { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--sa-border-2); border-radius: 10px; }
+    .order-line .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .order-line .items { color: var(--sa-text); font-size: 12.5px; }
+    .order-line .when { color: var(--sa-text-3); font-size: 12px; }
+    .book-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 2px; border-bottom: 1px solid var(--sa-border-2); }
+    .book-line:last-child { border-bottom: 0; }
+    .book-line strong { font-weight: 550; }
+    .timeline-item { padding: 2px 0 10px 12px; border-left: 2px solid var(--sa-border); }
+    .timeline-item p { margin-top: 5px; color: var(--sa-text); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; }
+    .timeline-item small { display: block; margin-top: 4px; color: var(--sa-text-3); font-size: 12px; }
+    .empty-note { padding: 8px 0; color: var(--sa-text-2); font-size: 12.5px; }
+
+    /* Order modal */
+    .order-overlay { z-index: 1010; }
+    .order-box { max-width: 720px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .product-search { display: flex; gap: 8px; }
+    .product-results { display: grid; gap: 6px; margin-top: 8px; color: var(--sa-text-2); font-size: 12.5px; }
+    .product-result { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border: 0; border-radius: var(--sa-radius-sm); background: #fff; color: var(--sa-text); font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; box-shadow: inset 0 0 0 1px var(--sa-border); }
+    .product-result:hover { background: var(--sa-hover); }
+    .product-result img, .product-result .thumb { width: 28px; height: 38px; flex-shrink: 0; border-radius: 4px; background: var(--sa-surface-3); object-fit: cover; }
+    .product-result .pr-name { flex: 1; min-width: 0; }
+    .product-result .pr-name span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .product-result .pr-price { text-align: right; white-space: nowrap; }
+    .product-result s { color: var(--sa-text-3); font-size: 11.5px; }
+    .order-items { display: grid; gap: 6px; margin-top: 10px; }
+    .order-item { display: grid; grid-template-columns: minmax(0, 1fr) 72px 88px 28px; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--sa-border-2); border-radius: var(--sa-radius-sm); font-size: 12.5px; }
+    .order-item .input { min-height: 28px; padding: 3px 6px; }
+    .order-item .line-total { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .order-totals { margin: 14px 0 0; }
+    .order-totals .metric-value { font-size: 16px; }
+    .order-success { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: var(--sa-radius-sm); background: var(--tone-success-bg); color: var(--tone-success-fg); font-size: 13px; }
+    .order-success a { color: var(--tone-success-fg); font-weight: 650; }
+    .modal-footer .hint { margin-right: auto; }
+
+    @media (max-width: 1100px) {
+      .cm-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .cm-cols { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .page-actions .btn { flex: 1; }
+      .filter-bar { padding: 8px; }
+      .filter-btn .val { max-width: 150px; }
+      .popover { position: fixed; left: 12px; right: 12px; top: auto; min-width: 0; }
+      .pop-panel { min-width: 0; }
+      /* Rows become cards on phones. */
+      .cm-table { min-width: 0; }
+      .cm-table, .cm-table tbody { display: block; }
+      .cm-table thead { display: none; }
+      .cm-table tbody tr { display: block; padding: 10px 12px; border-bottom: 1px solid var(--sa-border-2); }
+      .cm-table tbody tr:last-child { border-bottom: 0; }
+      .cm-table tbody td { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 0; border: 0; text-align: right; }
+      .cm-table tbody td::before { content: attr(data-label); flex-shrink: 0; color: var(--sa-text-2); font-size: 12px; text-align: left; }
+      .cm-table tbody tr:hover td { background: none; }
+      .cm-table tbody td.td-main { display: block; padding-bottom: 6px; text-align: left; }
+      .cm-table tbody td.td-main::before, .cm-table tbody td.td-actions::before { content: none; }
+      .cm-table tbody td.td-actions { justify-content: flex-end; padding-top: 8px; }
+      .cm-table .cell-sub { max-width: none; white-space: normal; }
+      .cm-table .cell-in { min-width: 0; text-align: right; }
+      .empty-row td { display: block !important; }
+      .empty-row td::before { content: none !important; }
+      .cm-head-main .cm-avatar { display: none; }
+      .cm-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cm-body { padding: 12px; }
+      .form-grid { grid-template-columns: minmax(0, 1fr); }
+      .order-item { grid-template-columns: minmax(0, 1fr) 56px 28px; }
+      .order-item .line-total { display: none; }
+      .order-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .modal-footer .hint { flex-basis: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+      <label class="search-box"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><input id="search" type="search" placeholder="Search customers by name or phone" autocomplete="off" aria-label="Search customers by name or phone"></label>
+      <div class="topbar-right">
+        <span id="topbarUser"></span>
+        <button class="topbar-icon-btn" id="logoutBtn" type="button" title="Log out" aria-label="Log out"><i class="fas fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </header>
+    <main class="content">
+      <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-address-book" aria-hidden="true"></i> Customer Manager</h1>
+        <div class="page-actions">
+          <button class="btn" id="refresh" type="button" title="Reload with the latest orders"><i class="fas fa-rotate"></i> Refresh</button>
+          <button class="btn" id="export" type="button" hidden><i class="fas fa-file-export"></i> Export</button>
+          <button class="btn btn-primary" id="due-today" type="button"><i class="fas fa-bell"></i> Follow-ups due</button>
+        </div>
+      </div>
+
+      <div class="banner" id="no-access" hidden>
+        <span class="banner-icon"><i class="fas fa-lock"></i></span>
+        <div><strong>Customer Manager is for sales staff.</strong><div class="muted">Sign in with a Super Admin, Admin or Sales Man account to see customers.</div></div>
+      </div>
+
+      <div id="crm">
+        <div class="metrics">
+          <div class="metric"><span class="metric-label">Delivered customers</span><div class="metric-value" id="stat-customers">—</div><div class="metric-sub" id="stat-repeat">&nbsp;</div></div>
+          <div class="metric"><span class="metric-label">Delivered sales</span><div class="metric-value" id="stat-spent">—</div><div class="metric-sub">From these customers</div></div>
+          <button class="metric metric-btn" type="button" data-tab="due"><span class="metric-label">Follow-ups due</span><div class="metric-value" id="stat-due">—</div><div class="metric-sub">Due today or overdue</div></button>
+          <button class="metric metric-btn" type="button" data-tab="never"><span class="metric-label">Never contacted</span><div class="metric-value" id="stat-never">—</div><div class="metric-sub" id="stat-followed">&nbsp;</div></button>
+        </div>
+
+        <div class="card table-card cm-card">
+          <div class="status-tabs" id="tabs" role="tablist" aria-label="Contact status"></div>
+          <div class="filter-bar" id="filter-bar">
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="dates" aria-haspopup="true"><i class="fas fa-calendar"></i><span class="val" data-label="dates">Last purchase</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-dates"><form class="pop-panel" data-panel="dates">
+                <span class="field-label">Last delivered purchase</span>
+                <div class="pop-row"><input class="input" type="date" id="f-lastFrom" aria-label="Last purchase from"><input class="input" type="date" id="f-lastTo" aria-label="Last purchase to"></div>
+                <div class="quick-ranges" id="quick-ranges">
+                  <button class="btn btn-xs" type="button" data-range="0-30">Last 30 days</button>
+                  <button class="btn btn-xs" type="button" data-range="30-90">30–90 days ago</button>
+                  <button class="btn btn-xs" type="button" data-range="90-">No purchase 90+ days</button>
+                </div>
+                <div class="pop-actions"><button type="button" class="btn btn-sm" data-clear="dates">Clear</button><button class="btn btn-sm btn-primary">Apply</button></div>
+              </form></div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="book" aria-haspopup="true"><i class="fas fa-book"></i><span class="val" data-label="book">Book</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-book"><form class="pop-panel" data-panel="product">
+                <label class="field-label" for="f-product">Bought this book / package</label>
+                <input class="input" id="f-product" placeholder="Type a book name…" autocomplete="off">
+                <div class="suggestions" id="book-suggestions"></div>
+                <div class="pop-actions"><button type="button" class="btn btn-sm" data-clear="product">Clear</button><button class="btn btn-sm btn-primary">Apply</button></div>
+              </form></div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="category" aria-haspopup="true"><i class="fas fa-tags"></i><span class="val" data-label="category">Category</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-category"><form class="pop-panel" data-panel="category">
+                <label class="field-label" for="f-category">Bought from category</label>
+                <input class="input" id="f-category" placeholder="Category name" autocomplete="off">
+                <div class="pop-actions"><button type="button" class="btn btn-sm" data-clear="category">Clear</button><button class="btn btn-sm btn-primary">Apply</button></div>
+              </form></div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="spent" aria-haspopup="true"><i class="fas fa-coins"></i><span class="val" data-label="spent">Total spent</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-spent"><form class="pop-panel" data-panel="spent">
+                <span class="field-label">Total delivered spending (৳)</span>
+                <div class="pop-row"><input class="input" id="f-minSpent" type="number" min="0" placeholder="From" aria-label="Spending from"><input class="input" id="f-maxSpent" type="number" min="0" placeholder="To" aria-label="Spending to"></div>
+                <label class="field-label" for="f-minOrderValue">Any single order worth at least (৳)</label>
+                <input class="input" id="f-minOrderValue" type="number" min="0" placeholder="Any">
+                <div class="pop-actions"><button type="button" class="btn btn-sm" data-clear="spent">Clear</button><button class="btn btn-sm btn-primary">Apply</button></div>
+              </form></div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="frequency" aria-haspopup="true"><i class="fas fa-repeat"></i><span class="val" data-label="frequency">Buyers</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-frequency">
+                <button class="pop-item" type="button" data-set="frequency" data-value="">All buyers</button>
+                <button class="pop-item" type="button" data-set="frequency" data-value="repeat">Repeat buyers (2+ delivered)</button>
+                <button class="pop-item" type="button" data-set="frequency" data-value="once">One-time buyers</button>
+              </div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="ratio" aria-haspopup="true"><i class="fas fa-percent"></i><span class="val" data-label="ratio">Order ratio</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-ratio">
+                <button class="pop-item" type="button" data-set="ratio" data-value="">Any order ratio</button>
+                <button class="pop-item" type="button" data-set="ratio" data-value="good"><span class="badge tone-success">80%+</span> Reliable</button>
+                <button class="pop-item" type="button" data-set="ratio" data-value="mid"><span class="badge tone-attention">50–79%</span> Mixed</button>
+                <button class="pop-item" type="button" data-set="ratio" data-value="low"><span class="badge tone-critical">&lt;50%</span> Risky</button>
+              </div>
+            </div>
+            <div class="dd-wrap">
+              <button class="btn btn-sm filter-btn" type="button" data-dd="sort" aria-haspopup="true"><i class="fas fa-arrow-down-wide-short"></i><span class="val" data-label="sort">Latest purchase</span><i class="fas fa-chevron-down chev"></i></button>
+              <div class="popover" id="dd-sort">
+                <button class="pop-item" type="button" data-set="sort" data-value="recent">Latest purchase first</button>
+                <button class="pop-item" type="button" data-set="sort" data-value="spent">Highest spending first</button>
+                <button class="pop-item" type="button" data-set="sort" data-value="orders">Most delivered orders</button>
+                <button class="pop-item" type="button" data-set="sort" data-value="ratio">Best order ratio</button>
+                <button class="pop-item" type="button" data-set="sort" data-value="followup">Next follow-up first</button>
+              </div>
+            </div>
+            <div class="spacer"></div>
+            <select class="select page-size" id="page-size" aria-label="Customers per page">
+              <option value="20">20 / page</option><option value="50">50 / page</option><option value="100">100 / page</option>
+            </select>
+            <button class="btn btn-sm" id="reset" type="button"><i class="fas fa-rotate-left"></i> Reset</button>
+          </div>
+          <p class="notice" id="notice" role="status" aria-live="polite"></p>
+          <div class="table-wrap">
+            <table class="cm-table">
+              <thead><tr>
+                <th>Customer</th><th>Phone</th><th>Last purchase</th><th class="num">Delivered</th><th class="num">Total spent</th><th>Order ratio</th><th>Courier ratio</th><th>Status</th><th>Next follow-up</th><th><span class="sr-only">Actions</span></th>
+              </tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar"><span class="pagination-info" id="range">—</span><div class="pagination-controls" id="pager"></div></div>
+        </div>
+        <p class="footnote" id="footnote"></p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Customer detail -->
+<div class="modal-overlay" id="customer-modal" aria-hidden="true">
+  <div class="modal-box cm-box" role="dialog" aria-modal="true" aria-labelledby="cm-name">
+    <div class="modal-header">
+      <div class="cm-head-main">
+        <span class="cm-avatar" id="cm-avatar" aria-hidden="true">—</span>
+        <div style="min-width:0">
+          <div class="modal-title" id="cm-name">Customer</div>
+          <div class="cm-sub"><a class="phone-link" id="cm-phone" href="#"></a><span id="cm-address"></span><span id="cm-status"></span></div>
+        </div>
+      </div>
+      <div class="btn-group" style="flex-wrap:nowrap">
+        <button class="btn btn-sm btn-icon" id="cm-prev" type="button" title="Previous customer" aria-label="Previous customer"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-sm btn-icon" id="cm-next" type="button" title="Next customer" aria-label="Next customer"><i class="fas fa-chevron-right"></i></button>
+        <button class="modal-close" id="cm-close" type="button" aria-label="Close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body cm-body">
+      <div class="cm-quick" id="cm-quick"></div>
+      <div class="metrics cm-metrics">
+        <div class="metric"><span class="metric-label">Delivered orders</span><div class="metric-value" id="cm-orders">—</div></div>
+        <div class="metric"><span class="metric-label">Total spent</span><div class="metric-value" id="cm-spent">—</div></div>
+        <div class="metric"><span class="metric-label">Average order</span><div class="metric-value" id="cm-avg">—</div></div>
+        <div class="metric"><span class="metric-label">Last purchase</span><div class="metric-value" id="cm-last">—</div></div>
+        <div class="metric"><span class="metric-label">Order ratio</span><div id="cm-ratio" class="metric-sub">—</div></div>
+        <div class="metric"><span class="metric-label">Courier ratio</span><div id="cm-courier" class="metric-sub">—</div></div>
+      </div>
+      <div class="cm-cols">
+        <form class="card card-pad" id="contact-form" novalidate>
+          <div class="card-title"><i class="fas fa-headset" aria-hidden="true"></i> Log this contact</div>
+          <div id="cm-blocked" class="blocked-note" hidden>This customer asked not to be contacted. Choose another outcome only if they agreed again.</div>
+          <div class="form-section"><span class="field-label" id="outcome-label">What happened?</span><div class="chip-group" id="outcomes" role="radiogroup" aria-labelledby="outcome-label"></div></div>
+          <div class="form-section"><span class="field-label" id="channel-label">Channel</span>
+            <div class="chip-group" role="radiogroup" aria-labelledby="channel-label">
+              <input type="radio" name="channel" id="ch-call" value="call" checked><label for="ch-call"><i class="fas fa-phone"></i> Call</label>
+              <input type="radio" name="channel" id="ch-whatsapp" value="whatsapp"><label for="ch-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</label>
+              <input type="radio" name="channel" id="ch-other" value="other"><label for="ch-other"><i class="fas fa-ellipsis"></i> Other</label>
+            </div>
+          </div>
+          <div class="form-section"><label class="field-label" for="note">Note</label><textarea class="textarea" id="note" rows="3" maxlength="2000" placeholder="What did the customer say?"></textarea></div>
+          <div class="form-section"><label class="field-label" for="followup">Next follow-up</label>
+            <div class="fu-row"><input class="input" type="date" id="followup"><span class="hint" id="fu-hint"></span></div>
+          </div>
+          <div class="save-row">
+            <button class="btn btn-primary" id="save" type="submit"><i class="fas fa-check"></i> Save</button>
+            <button class="btn" id="save-next" type="button">Save &amp; next customer <i class="fas fa-arrow-right"></i></button>
+          </div>
+          <p class="form-status" id="save-status" role="status" aria-live="polite"></p>
+          <details class="msg" id="msg-box">
+            <summary><i class="fab fa-whatsapp"></i> WhatsApp message templates</summary>
+            <select class="select" id="template" style="margin-top:10px" aria-label="Message template">
+              <option value="related">Related book recommendation</option>
+              <option value="arrival">New arrival</option>
+              <option value="offer">Repeat-customer offer</option>
+            </select>
+            <textarea class="textarea" id="message" rows="5" maxlength="4000" lang="bn" style="margin-top:8px" aria-label="Message"></textarea>
+            <div class="msg-actions">
+              <a class="btn btn-sm" id="open-whatsapp" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp wa-icon"></i> Open in WhatsApp</a>
+              <button class="btn btn-sm" id="copy" type="button"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <p class="hint" style="margin-top:6px">Opening WhatsApp does not send or log anything. Save the contact after you talk.</p>
+          </details>
+        </form>
+        <div class="card">
+          <div class="status-tabs pane-tabs" role="tablist" aria-label="Customer history">
+            <button type="button" class="status-tab active" role="tab" aria-selected="true" data-pane="orders">Orders <span class="tab-count" id="count-orders"></span></button>
+            <button type="button" class="status-tab" role="tab" aria-selected="false" data-pane="books">Books bought <span class="tab-count" id="count-books"></span></button>
+            <button type="button" class="status-tab" role="tab" aria-selected="false" data-pane="contacts">Contact history <span class="tab-count" id="count-contacts"></span></button>
+          </div>
+          <div class="cm-pane" id="pane-orders" role="tabpanel"></div>
+          <div class="cm-pane" id="pane-books" role="tabpanel" hidden></div>
+          <div class="cm-pane" id="pane-contacts" role="tabpanel" hidden></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Repeat order -->
+<div class="modal-overlay order-overlay" id="order-modal" aria-hidden="true">
+  <form class="modal-box order-box" id="order-form" role="dialog" aria-modal="true" aria-labelledby="order-title" novalidate>
+    <div class="modal-header">
+      <div><div class="modal-title" id="order-title">Create order</div><div class="card-sub">Customer details are prefilled from the last delivered order.</div></div>
+      <button class="modal-close" id="order-close" type="button" aria-label="Close order form">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label for="order-name">Customer name</label><input class="input" id="order-name" maxlength="200" required></div>
+        <div class="field"><label for="order-phone">Phone</label><input class="input" id="order-phone" readonly></div>
+        <div class="field full"><label for="order-address">Delivery address</label><textarea class="textarea" id="order-address" rows="2" maxlength="2000" required style="min-height:56px"></textarea></div>
+        <div class="field"><label for="order-city">City / area</label><input class="input" id="order-city" maxlength="200"></div>
+        <div class="field"><label for="order-email">Email (optional)</label><input class="input" id="order-email" type="email" maxlength="200"></div>
+      </div>
+      <div class="field" style="margin-top:14px"><label for="order-search">Add products</label>
+        <div class="product-search"><input class="input" id="order-search" placeholder="Search book name, SKU or ISBN…" autocomplete="off"><button class="btn" id="order-search-button" type="button">Search</button></div>
+      </div>
+      <div class="product-results" id="order-search-results" aria-live="polite"></div>
+      <div class="order-items" id="order-items"></div>
+      <div class="form-grid" style="margin-top:14px">
+        <div class="field"><label for="order-delivery">Delivery charge (৳)</label><input class="input" id="order-delivery" type="number" min="0" max="10000" step="1" required></div>
+        <div class="field"><label for="order-payment">Payment type</label><select class="select" id="order-payment">
+          <option value="cash_on_delivery">Cash on Delivery</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="card">Card</option><option value="online_payment">Online payment</option>
+        </select></div>
+        <div class="field"><label for="order-source">Order received through</label><select class="select" id="order-source"><option value="phone">Phone call</option><option value="whatsapp">WhatsApp</option></select></div>
+        <div class="field"><label for="order-note">Order note (optional)</label><input class="input" id="order-note" maxlength="1000" placeholder="e.g. deliver after 5 pm"></div>
+      </div>
+      <div class="metrics order-totals">
+        <div class="metric"><span class="metric-label">Products</span><div class="metric-value" id="order-subtotal">৳0</div></div>
+        <div class="metric"><span class="metric-label">Delivery</span><div class="metric-value" id="order-delivery-total">৳0</div></div>
+        <div class="metric"><span class="metric-label">Estimated total</span><div class="metric-value" id="order-total">৳0</div></div>
+      </div>
+      <p class="form-status" id="order-status" role="status" aria-live="polite"></p>
+      <div class="order-success" id="order-success" hidden></div>
+    </div>
+    <div class="modal-footer">
+      <span class="hint">Creates a new unpaid order in Orders. Cash on delivery orders send the customer the usual order SMS.</span>
+      <button class="btn" id="order-cancel" type="button">Close</button>
+      <button class="btn btn-primary" id="order-submit" type="submit"><i class="fas fa-check"></i> Create order</button>
+    </div>
+  </form>
+</div>
+
+<script src="admin-shell.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.ShobazAdmin;
+  const $ = (id) => document.getElementById(id);
+  const esc = A.esc;
+  const money = A.money;
+  const CRM_ROLES = ['super_admin', 'admin', 'salesman'];
+  const today = () => A.dhakaToday();
+  const addDays = (day, n) => { const d = new Date(day + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  // Dates show in Dhaka time; YYYY-MM-DD values are calendar days.
+  const fmtDate = (v) => v ? new Date(String(v).length === 10 ? v + 'T12:00:00+06:00' : v).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const fmtDateTime = (v) => v ? fmtDate(v) + ', ' + new Date(v).toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: 'numeric', minute: '2-digit' }) : '—';
+  const OUTCOMES = [
+    ['interested', 'Interested', 'fa-face-smile'], ['not_interested', 'Not interested', 'fa-face-meh'],
+    ['no_answer', 'No answer', 'fa-phone-slash'], ['follow_up', 'Follow up later', 'fa-clock'],
+    ['ordered', 'Ordered', 'fa-bag-shopping'], ['dont_contact', "Don't contact", 'fa-ban'],
+  ];
+  const LABELS = { never: 'Never contacted', due: 'Follow-up due' };
+  OUTCOMES.forEach((o) => { LABELS[o[0]] = o[1]; });
+  const TONES = { never: 'tone-subdued', due: 'tone-critical badge-dot', interested: 'tone-info', follow_up: 'tone-attention', no_answer: 'tone-warning', ordered: 'tone-success', not_interested: 'tone-neutral', dont_contact: 'tone-neutral' };
+  const CHANNELS = { call: 'Call', whatsapp: 'WhatsApp', other: 'Other' };
+  const TABS = [['', 'All'], ['never', 'Never contacted'], ['due', 'Follow-up due'], ['interested', 'Interested'], ['follow_up', 'Follow up later'], ['no_answer', 'No answer'], ['ordered', 'Ordered'], ['not_interested', 'Not interested'], ['dont_contact', "Don't contact"]];
+  // Same names as the Orders page (custom-orders.html).
+  const ORDER_STATUS = { 0: 'Processing', 1: 'Processing', 2: 'Processing', 3: 'Processing', 4: 'Processing', 5: 'Completed', 6: 'Cancelled', 7: 'Cancelled', 8: 'Confirmed', 9: 'Cancelled', 10: 'Trash' };
+  const SORT_LABELS = { recent: 'Latest purchase', spent: 'Highest spending', orders: 'Most orders', ratio: 'Best ratio', followup: 'Next follow-up' };
+  const PAYMENT_TYPES = ['cash_on_delivery', 'bkash', 'nagad', 'card', 'online_payment'];
+  const FILTERS = ['q', 'status', 'lastFrom', 'lastTo', 'product', 'category', 'minSpent', 'maxSpent', 'minOrderValue', 'frequency', 'ratio', 'sort', 'pageSize', 'page'];
+  const DEFAULTS = { q: '', status: '', lastFrom: '', lastTo: '', product: '', category: '', minSpent: '', maxSpent: '', minOrderValue: '', frequency: '', ratio: '', sort: 'recent', pageSize: '20', page: '1' };
+  // Filters live in the address bar, so a reload or shared link keeps them.
+  const state = Object.assign({}, DEFAULTS);
+  new URLSearchParams(location.search).forEach((value, key) => { if (key in DEFAULTS) state[key] = value; });
+  let data = null, rules = { no_answer: 1, interested: 2, follow_up: 7, ordered: 30, not_interested: 90 };
+  let current = null, listSeq = 0, detailSeq = 0, saving = false, searchTimer = null, followupTouched = false, allowed = false;
+  const focusStack = [];
+  const callIds = {};
+
+  function request(path, options) { return A.api(path, options).then((res) => (res && res.data !== undefined ? res.data : res)); }
+  function query(extra) {
+    const params = new URLSearchParams();
+    FILTERS.forEach((key) => { if (state[key] !== '') params.set(key, state[key]); });
+    Object.keys(extra || {}).forEach((k) => params.set(k, extra[k]));
+    return params;
+  }
+  function syncUrl() {
+    const params = new URLSearchParams();
+    FILTERS.forEach((key) => { if (state[key] !== DEFAULTS[key]) params.set(key, state[key]); });
+    history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : ''));
+  }
+  function setNotice(text) { $('notice').textContent = text || ''; }
+
+  /* ── Calls: tell the team who is calling whom (staff-activity); never blocks the call ── */
+  function startCall(phone, name) {
+    if (!phone) return;
+    try {
+      fetch(A.API + '/api/staff-activity/calls/start', {
+        method: 'POST', headers: A.authHeaders(), keepalive: true,
+        body: JSON.stringify({ phone: phone, kind: 'customer', target: phone, label: String(name || '').slice(0, 40) }),
+      }).then((r) => (r.ok ? r.json() : null)).then((res) => {
+        const d = res && res.data;
+        if (!d) return;
+        if (d.started && d.call && d.call.id) callIds[phone] = d.call.id;
+        else if (d.busy && d.busy.adminName) A.toast(d.busy.adminName + ' is already calling this customer.', 'info');
+      }).catch(() => {});
+    } catch (_) { /* calls are optional */ }
+  }
+  function endCall(phone) {
+    const id = callIds[phone];
+    if (!id) return;
+    delete callIds[phone];
+    try {
+      fetch(A.API + '/api/staff-activity/calls/end', { method: 'POST', headers: A.authHeaders(), body: JSON.stringify({ id: id }) }).catch(() => {});
+    } catch (_) { /* calls are optional */ }
+  }
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('[data-call]');
+    if (link) startCall(link.getAttribute('data-call'), link.getAttribute('data-name'));
+  });
+  const callAttrs = (phone, name) => ' href="tel:' + esc(phone) + '" data-call="' + esc(phone) + '" data-name="' + esc(name || '') + '"';
+  const waNumber = (phone) => '880' + phone.slice(1);
+
+  /* ── Small renderers ── */
+  function contactStatus(contact) {
+    if (!contact) return 'never';
+    if (contact.outcome === 'dont_contact') return 'dont_contact';
+    return contact.nextFollowUp && contact.nextFollowUp <= today() ? 'due' : contact.outcome;
+  }
+  function badge(status) {
+    return '<span class="badge ' + (TONES[status] || 'tone-neutral') + '">' + (status === 'dont_contact' ? '<i class="fas fa-ban" aria-hidden="true"></i>' : '') + esc(LABELS[status] || status) + '</span>';
+  }
+  function statusBadge(contact) { return badge(contactStatus(contact)); }
+  function ratioTone(ratio) { return ratio >= 80 ? 'tone-success' : ratio >= 50 ? 'tone-attention' : 'tone-critical'; }
+  function ratioHtml(delivered, total, failed, ratio, failWord) {
+    return '<span class="badge ' + ratioTone(ratio) + '">' + Number(ratio || 0).toFixed(1) + '%</span>' +
+      '<span class="cell-sub" title="' + delivered + ' delivered of ' + total + '">' + delivered + ' of ' + total + ' delivered' + (failed ? ' · ' + failed + ' ' + failWord : '') + '</span>';
+  }
+  function storeRatio(c) { return ratioHtml(c.orderCount, c.totalOrderCount, c.failedCount || 0, c.ratio != null ? c.ratio : (c.orderCount / c.totalOrderCount) * 100, 'failed'); }
+  function courierRatio(r) { return r ? ratioHtml(r.delivered, r.total, r.returned, r.ratio, 'returned') : '<span class="subtle">Not checked</span>'; }
+  function followupCell(contact) {
+    if (!contact || !contact.nextFollowUp || contact.outcome === 'dont_contact') return '<span class="subtle">—</span>';
+    const d = contact.nextFollowUp, t = today();
+    return '<span class="fu ' + (d < t ? 'overdue' : d === t ? 'today' : '') + '">' + (d === t ? 'Today' : (d < t ? 'Overdue · ' : '') + fmtDate(d)) + '</span>';
+  }
+  function emptyRow(html) { return '<tr class="empty-row"><td colspan="10">' + html + '</td></tr>'; }
+
+  /* ── List ── */
+  function skeleton() {
+    $('rows').innerHTML = Array.from({ length: 6 }, () => '<tr>' + Array.from({ length: 10 }, () => '<td><span class="skeleton"></span></td>').join('') + '</tr>').join('');
+  }
+  function setRefreshing(on) { $('refresh').disabled = on; $('refresh').querySelector('i').classList.toggle('fa-spin', on); }
+  function load(options) {
+    options = options || {};
+    if (!allowed) return Promise.resolve();
+    const seq = ++listSeq;
+    if (!data || options.skeleton) skeleton();
+    setNotice('');
+    syncUrl();
+    renderControls();
+    return request('/api/customer-manager?' + query(options.refresh ? { refresh: '1' } : null)).then((result) => {
+      if (seq !== listSeq) return;
+      data = result;
+      rules = result.followUpRules || rules;
+      state.page = String(result.page);
+      syncUrl();
+      render();
+    }).catch((error) => {
+      if (seq !== listSeq) return;
+      setNotice(error.message);
+      if (!data) $('rows').innerHTML = emptyRow('Could not load customers. Press Refresh to try again.');
+    }).then(() => { if (seq === listSeq) setRefreshing(false); });
+  }
+  function render() {
+    const s = data.summary;
+    $('stat-customers').textContent = A.count(s.customers);
+    $('stat-repeat').textContent = A.count(s.repeat) + ' repeat buyers';
+    $('stat-spent').textContent = money(s.spent);
+    $('stat-due').textContent = A.count(s.due);
+    $('stat-never').textContent = A.count(s.never);
+    $('stat-followed').textContent = A.count(s.followedUp) + ' already contacted';
+    $('tabs').innerHTML = TABS.map((tab) => {
+      const value = tab[0], count = value ? data.tabs[value] || 0 : data.tabs.all;
+      const on = state.status === value;
+      return '<button class="status-tab' + (on ? ' active' : '') + '" type="button" role="tab" aria-selected="' + on + '" data-tab="' + value + '">' + esc(tab[1]) + '<span class="tab-count">' + A.count(count) + '</span></button>';
+    }).join('');
+    $('rows').innerHTML = data.rows.length ? data.rows.map(rowHtml).join('') : emptyRow('<i class="fas fa-users-slash" aria-hidden="true"></i>No customers match these filters.');
+    const size = data.pageSize, page = data.page, total = data.total, pages = Math.max(1, Math.ceil(total / size));
+    $('range').textContent = total ? 'Showing ' + A.count((page - 1) * size + 1) + '–' + A.count(Math.min(page * size, total)) + ' of ' + A.count(total) + ' customers' : 'No customers';
+    let pager = '<button class="page-btn" type="button" data-page="' + (page - 1) + '"' + (page <= 1 ? ' disabled' : '') + ' aria-label="Previous page"><i class="fas fa-chevron-left"></i></button>';
+    const start = Math.max(1, page - 2), end = Math.min(pages, page + 2);
+    if (start > 1) pager += '<button class="page-btn" type="button" data-page="1">1</button>' + (start > 2 ? '<span class="subtle">…</span>' : '');
+    for (let p = start; p <= end; p++) pager += '<button class="page-btn' + (p === page ? ' active' : '') + '" type="button" data-page="' + p + '"' + (p === page ? ' aria-current="page"' : '') + '>' + p + '</button>';
+    if (end < pages) pager += (end < pages - 1 ? '<span class="subtle">…</span>' : '') + '<button class="page-btn" type="button" data-page="' + pages + '">' + pages + '</button>';
+    pager += '<button class="page-btn" type="button" data-page="' + (page + 1) + '"' + (page >= pages ? ' disabled' : '') + ' aria-label="Next page"><i class="fas fa-chevron-right"></i></button>';
+    $('pager').innerHTML = pager;
+    $('footnote').textContent = 'Only customers with at least one delivered order (trashed orders are ignored). Order ratio = delivered ÷ all orders from this phone; failed = cancelled or returned. Courier ratio = the saved FraudSpy check. Updated ' + new Date(data.updatedAt).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' }) + '.';
+  }
+  // One wrapper per cell so the phone card layout has a label and a value.
+  const cell = (label, html, cls) => '<td data-label="' + label + '"' + (cls ? ' class="' + cls + '"' : '') + '><span class="cell-in">' + html + '</span></td>';
+  function rowHtml(c) {
+    const s = contactStatus(c.latestContact), blocked = s === 'dont_contact';
+    const address = [c.shippingAddress, c.city].filter(Boolean).join(', ');
+    const books = c.books && c.books.length ? c.books.join(', ') + (c.bookCount > c.books.length ? ' +' + (c.bookCount - c.books.length) + ' more' : '') : '';
+    return '<tr class="' + (blocked ? 'is-blocked' : '') + '" data-phone="' + esc(c.phone) + '">' +
+      '<td class="td-main"><button class="cust-name" type="button">' + esc(c.name || 'Customer') + '</button>' +
+        (address ? '<span class="cell-sub" title="' + esc(address) + '"><i class="fas fa-location-dot" aria-hidden="true"></i> ' + esc(address) + '</span>' : '') +
+        (books ? '<span class="cell-sub" title="' + esc(books) + '"><i class="fas fa-book" aria-hidden="true"></i> ' + esc(books) + '</span>' : '') + '</td>' +
+      cell('Phone', '<a class="phone-link"' + callAttrs(c.phone, c.name) + '>' + esc(c.phone) + '</a>') +
+      cell('Last purchase', fmtDate(c.lastPurchase) + '<span class="cell-sub">' + esc(A.timeAgo(c.lastPurchase)) + '</span>', 'nowrap') +
+      cell('Delivered', '<strong>' + c.orderCount + '</strong> <span class="subtle">of ' + c.totalOrderCount + '</span>', 'num') +
+      cell('Total spent', '<strong>' + money(c.totalSpent) + '</strong>', 'num') +
+      cell('Order ratio', storeRatio(c), 'ratio-cell') +
+      cell('Courier ratio', courierRatio(c.courierRatio), 'ratio-cell') +
+      cell('Status', statusBadge(c.latestContact) + (c.latestContact && c.latestContact.contactedByName ? '<span class="cell-sub">by ' + esc(c.latestContact.contactedByName) + ' · ' + fmtDate(c.latestContact.createdAt) + '</span>' : '')) +
+      cell('Next follow-up', followupCell(c.latestContact)) +
+      '<td class="td-actions"><div class="row-actions">' + (blocked ? '' :
+        '<a class="btn btn-sm btn-icon"' + callAttrs(c.phone, c.name) + ' title="Call" aria-label="Call ' + esc(c.name) + '"><i class="fas fa-phone"></i></a>' +
+        '<a class="btn btn-sm btn-icon" href="https://wa.me/' + waNumber(c.phone) + '" target="_blank" rel="noopener noreferrer" title="WhatsApp" aria-label="WhatsApp ' + esc(c.name) + '"><i class="fab fa-whatsapp wa-icon"></i></a>') +
+        '<button class="btn btn-sm" type="button" data-open><i class="fas fa-pen-to-square"></i> Log</button></div></td></tr>';
+  }
+  function rangeOf(spec) {
+    const parts = spec.split('-'), a = parts[0], b = parts[1];
+    return [b ? addDays(today(), -Number(b)) : '', a === '0' ? today() : addDays(today(), -Number(a))];
+  }
+  function renderControls() {
+    if (document.activeElement !== $('search')) $('search').value = state.q;
+    $('page-size').value = state.pageSize;
+    const set = (key, text, active) => {
+      const el = document.querySelector('[data-label="' + key + '"]');
+      el.textContent = text;
+      el.closest('.filter-btn').classList.toggle('active', active);
+    };
+    const dates = state.lastFrom || state.lastTo ? (state.lastFrom ? fmtDate(state.lastFrom) : 'Any') + ' – ' + (state.lastTo ? fmtDate(state.lastTo) : 'today') : '';
+    set('dates', dates || 'Last purchase', !!dates);
+    set('book', state.product ? 'Book: ' + state.product : 'Book', !!state.product);
+    set('category', state.category ? 'Category: ' + state.category : 'Category', !!state.category);
+    const spent = state.minSpent || state.maxSpent ? '৳' + (state.minSpent || 0) + '–' + (state.maxSpent || '∞') : '';
+    const spentLabel = [spent, state.minOrderValue ? 'order ≥ ৳' + state.minOrderValue : ''].filter(Boolean).join(' · ');
+    set('spent', spentLabel || 'Total spent', !!spentLabel);
+    set('frequency', { repeat: 'Repeat buyers', once: 'One-time buyers' }[state.frequency] || 'Buyers', !!state.frequency);
+    set('ratio', { good: 'Ratio 80%+', mid: 'Ratio 50–79%', low: 'Ratio below 50%' }[state.ratio] || 'Order ratio', !!state.ratio);
+    set('sort', SORT_LABELS[state.sort] || SORT_LABELS.recent, false);
+    document.querySelectorAll('[data-set]').forEach((el) => el.classList.toggle('sel', state[el.dataset.set] === el.dataset.value));
+    document.querySelectorAll('.metric-btn[data-tab]').forEach((el) => el.classList.toggle('active', state.status === el.dataset.tab));
+  }
+  function apply(changes) { Object.assign(state, changes, { page: '1' }); closeDropdowns(); load(); }
+
+  /* ── Filter bar ── */
+  function closeDropdowns(except) { document.querySelectorAll('.popover.open').forEach((d) => { if (d !== except) d.classList.remove('open'); }); }
+  function markQuickRanges() {
+    const from = $('f-lastFrom').value, to = $('f-lastTo').value;
+    document.querySelectorAll('#quick-ranges [data-range]').forEach((el) => el.classList.toggle('active', rangeOf(el.dataset.range).join() === [from, to].join()));
+  }
+  $('filter-bar').addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-dd]');
+    if (toggle) {
+      const dd = $('dd-' + toggle.dataset.dd);
+      closeDropdowns(dd);
+      dd.classList.toggle('open');
+      if (dd.classList.contains('open')) {
+        $('f-lastFrom').value = state.lastFrom; $('f-lastTo').value = state.lastTo; markQuickRanges();
+        $('f-product').value = state.product; $('f-category').value = state.category;
+        $('f-minSpent').value = state.minSpent; $('f-maxSpent').value = state.maxSpent; $('f-minOrderValue').value = state.minOrderValue;
+        const input = dd.querySelector('input:not([type="date"])');
+        if (input) input.focus();
+      }
+      return;
+    }
+    const range = event.target.closest('[data-range]');
+    if (range) {
+      const r = rangeOf(range.dataset.range);
+      return apply(range.classList.contains('active') ? { lastFrom: '', lastTo: '' } : { lastFrom: r[0], lastTo: r[1] });
+    }
+    const item = event.target.closest('[data-set]');
+    if (item) return apply({ [item.dataset.set]: item.dataset.value });
+    const clear = event.target.closest('[data-clear]');
+    if (clear) {
+      const key = clear.dataset.clear;
+      return apply(key === 'spent' ? { minSpent: '', maxSpent: '', minOrderValue: '' } : key === 'dates' ? { lastFrom: '', lastTo: '' } : { [key]: '' });
+    }
+    const suggestion = event.target.closest('[data-book]');
+    if (suggestion) return apply({ product: suggestion.dataset.book });
+  });
+  $('filter-bar').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const panel = event.target.dataset.panel;
+    if (panel === 'dates') {
+      const from = $('f-lastFrom').value, to = $('f-lastTo').value;
+      if (from && to && from > to) { setNotice('The "from" date must be on or before the "to" date.'); return; }
+      apply({ lastFrom: from, lastTo: to });
+    }
+    if (panel === 'product') apply({ product: $('f-product').value.trim() });
+    if (panel === 'category') apply({ category: $('f-category').value.trim() });
+    if (panel === 'spent') {
+      const min = $('f-minSpent').value, max = $('f-maxSpent').value;
+      if (min && max && Number(min) > Number(max)) { setNotice('Spending "From" must not be more than "To".'); return; }
+      apply({ minSpent: min, maxSpent: max, minOrderValue: $('f-minOrderValue').value });
+    }
+  });
+  ['f-lastFrom', 'f-lastTo'].forEach((id) => $(id).addEventListener('change', markQuickRanges));
+  document.addEventListener('click', (event) => { if (!event.target.closest('.dd-wrap')) closeDropdowns(); });
+  let bookTimer = null, bookSeq = 0;
+  $('f-product').addEventListener('input', () => {
+    clearTimeout(bookTimer);
+    const term = $('f-product').value.trim();
+    if (term.length < 2) { $('book-suggestions').innerHTML = ''; return; }
+    bookTimer = setTimeout(() => {
+      const seq = ++bookSeq;
+      request('/api/customer-manager/purchased-books/search?q=' + encodeURIComponent(term)).then((books) => {
+        if (seq !== bookSeq) return;
+        $('book-suggestions').innerHTML = books.length ? books.map((b) => '<button type="button" data-book="' + esc(b.name) + '">' + esc(b.name) + '</button>').join('') : '<span class="hint">No delivered book matches.</span>';
+      }).catch((error) => { if (seq === bookSeq) $('book-suggestions').textContent = error.message; });
+    }, 200);
+  });
+  $('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => apply({ q: $('search').value.trim() }), 350); });
+  $('search').addEventListener('keydown', (e) => { if (e.key === 'Enter') { clearTimeout(searchTimer); apply({ q: $('search').value.trim() }); } });
+  $('due-today').onclick = () => apply({ status: 'due', sort: 'followup' });
+  document.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-tab]');
+    if (tab && !event.target.closest('.modal-overlay')) apply({ status: tab.dataset.tab });
+  });
+  $('page-size').onchange = () => apply({ pageSize: $('page-size').value });
+  $('pager').onclick = (event) => {
+    const b = event.target.closest('[data-page]');
+    if (b && !b.disabled) { state.page = b.dataset.page; load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  };
+  $('reset').onclick = () => { Object.assign(state, DEFAULTS); $('search').value = ''; closeDropdowns(); load({ skeleton: true }); };
+  $('refresh').onclick = () => { setRefreshing(true); load({ refresh: true }); };
+  $('export').onclick = () => {
+    $('export').disabled = true;
+    request('/api/customer-manager?' + query({ export: '1', page: '1' })).then((result) => {
+      const cell = (v) => { const t = v == null ? '' : String(v); return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+      const lines = [['Name', 'Phone', 'Address', 'Delivered orders', 'All orders', 'Cancelled/returned', 'Order ratio %', 'Courier ratio %', 'Total spent', 'Last purchase', 'Status', 'Next follow-up']].concat(result.rows.map((c) => [
+        c.name, c.phone, [c.shippingAddress, c.city].filter(Boolean).join(', '), c.orderCount, c.totalOrderCount, c.failedCount, c.ratio,
+        c.courierRatio ? c.courierRatio.ratio : '', c.totalSpent, fmtDate(c.lastPurchase), LABELS[contactStatus(c.latestContact)], c.latestContact ? c.latestContact.nextFollowUp : '',
+      ]));
+      const blob = new Blob(['﻿' + lines.map((l) => l.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'customers-' + today() + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      A.toast('Exported ' + A.count(result.rows.length) + ' customers', 'success');
+    }).catch((error) => setNotice(error.message)).then(() => { $('export').disabled = false; });
+  };
+  $('rows').addEventListener('click', (event) => {
+    if (event.target.closest('a')) return;
+    const row = event.target.closest('tr[data-phone]');
+    if (row) openCustomer(row.dataset.phone);
+  });
+
+  /* ── Modals ── */
+  function anyModalOpen() { return !!document.querySelector('.modal-overlay.open'); }
+  function openModal(id) {
+    const el = $(id);
+    if (el.classList.contains('open')) return;
+    focusStack.push(document.activeElement);
+    el.classList.add('open');
+    el.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+  }
+  function closeModal(id) {
+    const el = $(id);
+    if (!el.classList.contains('open')) return;
+    el.classList.remove('open');
+    el.setAttribute('aria-hidden', 'true');
+    if (!anyModalOpen()) document.body.classList.remove('modal-open');
+    const back = focusStack.pop();
+    if (back && back.focus && document.contains(back)) back.focus();
+    if (id === 'customer-modal') { detailSeq++; current = null; }
+  }
+  function closeCustomer() { if (!saving && !creatingOrder) { closeModal('order-modal'); closeModal('customer-modal'); } }
+  function closeOrder() { if (!creatingOrder) closeModal('order-modal'); }
+  $('customer-modal').addEventListener('click', (event) => { if (event.target === $('customer-modal')) closeCustomer(); });
+  $('order-modal').addEventListener('click', (event) => { if (event.target === $('order-modal')) closeOrder(); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if ($('order-modal').classList.contains('open')) closeOrder();
+    else if ($('customer-modal').classList.contains('open')) closeCustomer();
+    else closeDropdowns();
+  });
+
+  /* ── Customer detail ── */
+  $('outcomes').innerHTML = OUTCOMES.map((o) => '<input type="radio" name="outcome" id="oc-' + o[0] + '" value="' + o[0] + '"><label for="oc-' + o[0] + '"><i class="fas ' + o[2] + '"></i> ' + o[1] + '</label>').join('');
+  const outcome = () => (document.querySelector('[name="outcome"]:checked') || {}).value || '';
+  const channel = () => (document.querySelector('[name="channel"]:checked') || {}).value || 'call';
+  // Picking an outcome fills in its suggested follow-up date; staff can still change it.
+  function suggestFollowup() {
+    const value = outcome(), days = rules[value];
+    $('followup').disabled = value === 'dont_contact';
+    if (value === 'dont_contact') { $('followup').value = ''; $('fu-hint').textContent = 'No follow-up — this customer will not be contacted.'; return; }
+    if (!value) { $('fu-hint').textContent = 'Choose what happened to get a suggested date.'; return; }
+    if (!followupTouched) $('followup').value = days ? addDays(today(), days) : '';
+    $('fu-hint').innerHTML = days ? 'Suggested for <strong>' + esc(LABELS[value]) + '</strong>: in ' + days + (days === 1 ? ' day' : ' days') + (followupTouched ? ' · <a href="#" id="fu-reset">use suggestion</a>' : '') : '';
+  }
+  $('outcomes').addEventListener('change', () => { followupTouched = false; suggestFollowup(); $('save-status').textContent = ''; });
+  $('followup').addEventListener('input', () => { followupTouched = true; suggestFollowup(); });
+  $('fu-hint').addEventListener('click', (event) => { if (event.target.id === 'fu-reset') { event.preventDefault(); followupTouched = false; suggestFollowup(); } });
+  function neighbours() {
+    const phones = data ? data.rows.map((r) => r.phone) : [];
+    const i = current ? phones.indexOf(current.phone) : -1;
+    return { prev: i > 0 ? phones[i - 1] : null, next: i >= 0 && i < phones.length - 1 ? phones[i + 1] : null };
+  }
+  function fillHeader(c, address) {
+    $('cm-avatar').textContent = (c.name || '').split(/\s+/).filter((w) => /^\p{L}/u.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
+    $('cm-name').textContent = c.name || 'Customer';
+    $('cm-phone').textContent = c.phone;
+    $('cm-phone').href = 'tel:' + c.phone;
+    $('cm-phone').setAttribute('data-call', c.phone);
+    $('cm-phone').setAttribute('data-name', c.name || '');
+    $('cm-address').textContent = address || '';
+    $('cm-orders').textContent = c.orderCount + ' of ' + c.totalOrderCount;
+    $('cm-spent').textContent = money(c.totalSpent);
+    $('cm-avg').textContent = money(c.orderCount ? c.totalSpent / c.orderCount : 0);
+    $('cm-ratio').innerHTML = storeRatio(c);
+    $('cm-courier').innerHTML = courierRatio(c.courierRatio);
+    const n = neighbours();
+    $('cm-prev').disabled = !n.prev; $('cm-next').disabled = !n.next; $('save-next').hidden = !n.next;
+  }
+  function selectPane(name) {
+    document.querySelectorAll('.pane-tabs [data-pane]').forEach((b) => {
+      const on = b.dataset.pane === name;
+      b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on));
+    });
+    ['orders', 'books', 'contacts'].forEach((p) => { $('pane-' + p).hidden = p !== name; });
+  }
+  document.querySelectorAll('.pane-tabs [data-pane]').forEach((b) => { b.onclick = () => selectPane(b.dataset.pane); });
+  function openCustomer(phone) {
+    if (saving || creatingOrder) return;
+    const row = data && data.rows.find((r) => r.phone === phone);
+    current = { phone: phone };
+    $('save-status').textContent = ''; $('save-status').className = 'form-status';
+    $('note').value = '';
+    document.querySelectorAll('[name="outcome"]').forEach((el) => { el.checked = false; });
+    $('ch-call').checked = true; followupTouched = false; $('followup').value = ''; suggestFollowup();
+    $('msg-box').open = false; $('cm-blocked').hidden = true;
+    if (row) {
+      fillHeader(row, [row.shippingAddress, row.city].filter(Boolean).join(', '));
+      $('cm-status').innerHTML = statusBadge(row.latestContact);
+      $('cm-last').textContent = fmtDate(row.lastPurchase);
+    }
+    const loading = '<span class="skeleton" style="height:54px"></span><span class="skeleton" style="height:54px"></span>';
+    $('pane-orders').innerHTML = $('pane-books').innerHTML = $('pane-contacts').innerHTML = loading;
+    ['orders', 'books', 'contacts'].forEach((p) => { $('count-' + p).textContent = ''; });
+    $('cm-quick').innerHTML = '';
+    openModal('customer-modal');
+    $('cm-close').focus();
+    loadDetail(phone);
+  }
+  function loadDetail(phone, keepForm) {
+    const seq = ++detailSeq;
+    return request('/api/customer-manager/' + encodeURIComponent(phone)).then((detail) => {
+      if (seq !== detailSeq) return;
+      current = Object.assign({}, detail, { phone: phone });
+      renderDetail(keepForm);
+    }).catch((error) => {
+      if (seq !== detailSeq) return;
+      $('pane-orders').innerHTML = '<p class="empty-note">' + esc(error.message) + '</p>';
+      $('pane-books').innerHTML = $('pane-contacts').innerHTML = '';
+    });
+  }
+  function orderBadge(o) {
+    const courier = o.courierStatus && o.courierStatus.status;
+    if (o.crmDelivered) return '<span class="badge tone-success">Delivered</span>';
+    if (o.crmFailed) return '<span class="badge tone-critical">' + esc(courier === 'returned' ? 'Returned' : ORDER_STATUS[o.orderStatus] || 'Cancelled') + '</span>';
+    return '<span class="badge ' + (o.orderStatus === 8 ? 'tone-info' : 'tone-attention') + '">' + esc(ORDER_STATUS[o.orderStatus] || courier || 'Order') + '</span>';
+  }
+  function renderDetail(keepForm) {
+    const c = current, last = c.history[0], blocked = !!last && last.outcome === 'dont_contact';
+    rules = c.followUpRules || rules;
+    fillHeader(c, [c.customerInfo.shippingAddress, c.customerInfo.city].filter(Boolean).join(', '));
+    $('cm-status').innerHTML = statusBadge(last);
+    $('cm-last').textContent = fmtDate(c.lastPurchase);
+    $('cm-blocked').hidden = !blocked;
+    $('cm-quick').innerHTML = (blocked ? '' :
+      '<a class="btn"' + callAttrs(c.phone, c.name) + '><i class="fas fa-phone"></i> Call ' + esc(c.phone) + '</a>' +
+      '<a class="btn" id="quick-wa" href="https://wa.me/' + waNumber(c.phone) + '" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp wa-icon"></i> WhatsApp</a>') +
+      '<button class="btn btn-primary" id="create-order" type="button"><i class="fas fa-cart-plus"></i> Create order</button>' +
+      (last && last.nextFollowUp && !blocked ? '<span class="hint">Next follow-up: <strong>' + fmtDate(last.nextFollowUp) + '</strong></span>' : '');
+    const orders = c.allOrders || [];
+    $('count-orders').textContent = orders.length;
+    $('pane-orders').innerHTML = orders.map((o) => '<div class="order-line"><div class="top"><strong>#' + esc(o.orderId) + ' · ' + money(o.grandTotal) + '</strong>' + orderBadge(o) + '</div>' +
+      '<div class="items">' + esc((o.orderedItems || []).map((i) => (i.name || 'Book') + (i.quantity > 1 ? ' ×' + i.quantity : '')).join(', ') || 'No item details') + '</div>' +
+      '<div class="when">' + fmtDateTime(o.createdAt) + ' · ' + esc(A.timeAgo(o.createdAt)) + (o.orderFrom ? ' · ' + esc(o.orderFrom) : '') + '</div></div>').join('') || '<p class="empty-note">No orders.</p>';
+    const books = c.books || [];
+    $('count-books').textContent = books.length;
+    $('pane-books').innerHTML = books.length ? books.map((b) => '<div class="book-line"><strong>' + esc(b.name) + '</strong><span class="hint nowrap">×' + b.quantity + ' · ' + b.orders + (b.orders === 1 ? ' order' : ' orders') + ' · ' + fmtDate(b.lastAt) + '</span></div>').join('') : '<p class="empty-note">No book details on the delivered orders (imported orders have no items).</p>';
+    $('count-contacts').textContent = c.history.length;
+    $('pane-contacts').innerHTML = c.history.length ? c.history.map((h) => '<div class="timeline-item">' + badge(h.outcome) + (h.note ? '<p>' + esc(h.note) + '</p>' : '') +
+      '<small>' + esc(CHANNELS[h.channel] || h.channel) + ' · ' + esc(h.contactedByName || 'Staff') + ' · ' + fmtDateTime(h.createdAt) + (h.nextFollowUp ? ' · follow-up ' + fmtDate(h.nextFollowUp) : '') + '</small></div>').join('') : '<p class="empty-note">Not contacted yet.</p>';
+    if (!keepForm) { $('template').value = 'related'; updateMessage(); }
+    $('create-order').onclick = openOrder;
+  }
+  $('cm-close').onclick = closeCustomer;
+  $('cm-prev').onclick = () => { const n = neighbours(); if (n.prev) openCustomer(n.prev); };
+  $('cm-next').onclick = () => { const n = neighbours(); if (n.next) openCustomer(n.next); };
+  function updateMessage() {
+    if (!current) return;
+    const name = current.name || '';
+    const templates = {
+      related: 'আসসালামু আলাইকুম ' + name + '। আপনি আগে শোবাজ থেকে বই নিয়েছিলেন। আপনার পছন্দের বিষয়ের আরও কিছু বই এসেছে। আগ্রহী হলে বইয়ের বিস্তারিত পাঠাতে পারি।\nhttps://shobaz.com',
+      arrival: 'আসসালামু আলাইকুম ' + name + '। শোবাজে নতুন কিছু বই এসেছে। আপনার পছন্দের বিষয় জানালে কয়েকটি বই সাজেস্ট করতে পারি।\nhttps://shobaz.com',
+      offer: 'আসসালামু আলাইকুম ' + name + '। আমাদের আগের পাঠকদের জন্য কিছু বইয়ের অফার আছে। চাইলে বর্তমান অফারের বিস্তারিত পাঠাতে পারি।\nhttps://shobaz.com',
+    };
+    $('message').value = templates[$('template').value];
+    updateWhatsApp();
+  }
+  function updateWhatsApp() { if (current) $('open-whatsapp').href = 'https://wa.me/' + waNumber(current.phone) + '?text=' + encodeURIComponent($('message').value); }
+  $('template').onchange = updateMessage;
+  $('message').oninput = updateWhatsApp;
+  $('open-whatsapp').addEventListener('click', () => { $('ch-whatsapp').checked = true; });
+  $('cm-quick').addEventListener('click', (event) => { if (event.target.closest('#quick-wa')) $('ch-whatsapp').checked = true; });
+  $('copy').onclick = () => {
+    const done = () => { $('copy').innerHTML = '<i class="fas fa-check"></i> Copied'; setTimeout(() => { $('copy').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 1600); };
+    const manual = () => { $('message').select(); $('save-status').textContent = 'Select and copy the message manually.'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText($('message').value).then(done, manual); else manual();
+  };
+  function setSaving(on) {
+    saving = on;
+    $('save').disabled = $('save-next').disabled = $('cm-close').disabled = on;
+  }
+  function saveContact(goNext) {
+    if (!current || saving) return;
+    if (!outcome()) { $('save-status').className = 'form-status error'; $('save-status').textContent = 'Choose what happened first.'; return; }
+    const phone = current.phone, next = neighbours().next, followup = $('followup').value;
+    setSaving(true);
+    $('save-status').className = 'form-status'; $('save-status').textContent = 'Saving…';
+    request('/api/customer-manager/' + encodeURIComponent(phone) + '/contacts', { method: 'POST', body: { outcome: outcome(), channel: channel(), note: $('note').value, nextFollowUp: followup } }).then(() => {
+      endCall(phone);
+      load();
+      setSaving(false);
+      if (goNext && next) { openCustomer(next); return; }
+      $('save-status').className = 'form-status ok';
+      $('save-status').textContent = 'Saved' + (followup ? ' · next follow-up ' + fmtDate(followup) : '') + '.';
+      $('note').value = '';
+      return loadDetail(phone, true);
+    }).catch((error) => {
+      $('save-status').className = 'form-status error'; $('save-status').textContent = error.message;
+    }).then(() => setSaving(false));
+  }
+  $('contact-form').onsubmit = (event) => { event.preventDefault(); saveContact(false); };
+  $('save-next').onclick = () => saveContact(true);
+
+  /* ── Create order ── */
+  let orderItems = [], orderProducts = [], orderRequestId = '', orderCustomer = null, creatingOrder = false, orderCreated = false, productSeq = 0, orderSearchTimer = null;
+  function newRequestId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') return 'crm-' + crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes); else bytes.forEach((_, i) => { bytes[i] = Math.floor(Math.random() * 256); });
+    return 'crm-' + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  function renderOrderItems() {
+    $('order-items').innerHTML = orderItems.length ? orderItems.map((item, i) => '<div class="order-item"><div style="min-width:0"><strong>' + esc(item.name) + '</strong><span class="cell-sub">' + money(item.price) + ' each</span></div>' +
+      '<input class="input" aria-label="Quantity for ' + esc(item.name) + '" type="number" min="1" max="100" step="1" data-order-qty="' + i + '" value="' + item.quantity + '">' +
+      '<span class="line-total">' + money(item.price * item.quantity) + '</span>' +
+      '<button class="btn btn-sm btn-icon" type="button" aria-label="Remove ' + esc(item.name) + '" data-order-remove="' + i + '"><i class="fas fa-xmark"></i></button></div>').join('') : '<p class="empty-note">No products added yet.</p>';
+    const subtotal = orderItems.reduce((s, item) => s + item.price * item.quantity, 0), delivery = Number($('order-delivery').value) || 0;
+    $('order-subtotal').textContent = money(subtotal); $('order-delivery-total').textContent = money(delivery); $('order-total').textContent = money(subtotal + delivery);
+  }
+  function lockOrderForm(locked) {
+    $('order-form').querySelectorAll('input,select,textarea,button').forEach((el) => { if (el.id !== 'order-close' && el.id !== 'order-cancel') el.disabled = locked; });
+  }
+  function paymentFrom(value) {
+    if (PAYMENT_TYPES.indexOf(value) !== -1) return value;
+    const v = String(value || '').toLowerCase();
+    if (v.indexOf('bkash') !== -1) return 'bkash';
+    if (v.indexOf('nagad') !== -1) return 'nagad';
+    return 'cash_on_delivery';
+  }
+  function openOrder() {
+    if (!current || !current.customerInfo || creatingOrder) return;
+    orderCustomer = current; orderItems = []; orderProducts = []; orderCreated = false; orderRequestId = newRequestId();
+    lockOrderForm(false);
+    const info = current.customerInfo;
+    $('order-form').reset();
+    $('order-name').value = info.name || ''; $('order-phone').value = current.phone; $('order-address').value = info.shippingAddress || '';
+    $('order-city').value = info.city || ''; $('order-email').value = info.email || ''; $('order-delivery').value = Number(info.deliveryCharge) || 0;
+    $('order-payment').value = paymentFrom(info.paymentType);
+    $('order-source').value = channel() === 'whatsapp' ? 'whatsapp' : 'phone';
+    $('order-search-results').innerHTML = ''; $('order-status').textContent = ''; $('order-status').className = 'form-status'; $('order-success').hidden = true;
+    $('order-submit').hidden = false;
+    renderOrderItems();
+    openModal('order-modal');
+    $('order-search').focus();
+  }
+  function productHtml(p, i) {
+    const stock = typeof p.stock === 'number' ? (p.stock > 0 ? '<span class="badge tone-subdued">' + A.count(p.stock) + ' in stock</span>' : '<span class="badge tone-critical">Out of stock</span>') : '';
+    return '<button class="product-result" type="button" data-order-add="' + i + '">' +
+      (p.image ? '<img src="' + esc(p.image) + '" alt="" loading="lazy">' : '<span class="thumb"></span>') +
+      '<span class="pr-name"><span>' + esc(p.name) + '</span>' + (p.nameEn ? '<span class="subtle">' + esc(p.nameEn) + '</span>' : '') + '</span>' +
+      (p.published ? '' : '<span class="badge tone-warning">Unpublished</span>') + stock +
+      '<span class="pr-price">' + (p.regularPrice > p.price ? '<s>' + money(p.regularPrice) + '</s> ' : '') + '<strong>' + money(p.price) + '</strong><br><span class="subtle">Add</span></span></button>';
+  }
+  function searchOrderProducts() {
+    clearTimeout(orderSearchTimer);
+    if (creatingOrder || orderCreated) return;
+    const term = $('order-search').value.trim();
+    const seq = ++productSeq;
+    if (term.length < 2) { $('order-search-results').textContent = 'Enter at least two characters.'; return; }
+    $('order-search-results').textContent = 'Searching…';
+    request('/api/customer-manager/products/search?q=' + encodeURIComponent(term)).then((products) => {
+      if (seq !== productSeq) return;
+      orderProducts = products;
+      $('order-search-results').innerHTML = products.length ? products.map(productHtml).join('') : 'No products found.';
+    }).catch((error) => { if (seq === productSeq) $('order-search-results').textContent = error.message; });
+  }
+  $('order-close').onclick = closeOrder;
+  $('order-cancel').onclick = closeOrder;
+  $('order-search').addEventListener('input', () => { clearTimeout(orderSearchTimer); orderSearchTimer = setTimeout(searchOrderProducts, 300); });
+  $('order-search').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchOrderProducts(); } });
+  $('order-search-button').onclick = searchOrderProducts;
+  $('order-search-results').onclick = (event) => {
+    const b = event.target.closest('[data-order-add]');
+    if (!b || creatingOrder || orderCreated) return;
+    const p = orderProducts[Number(b.dataset.orderAdd)];
+    if (!p) return;
+    const existing = orderItems.find((i) => i.product === p._id);
+    if (existing) existing.quantity = Math.min(100, existing.quantity + 1);
+    else orderItems.push({ product: p._id, name: p.name, price: p.price, quantity: 1 });
+    renderOrderItems();
+  };
+  $('order-items').addEventListener('change', (event) => {
+    const input = event.target.closest('[data-order-qty]');
+    if (!input || creatingOrder || orderCreated) return;
+    orderItems[Number(input.dataset.orderQty)].quantity = Math.max(1, Math.min(100, Math.floor(Number(input.value) || 1)));
+    renderOrderItems();
+  });
+  $('order-items').onclick = (event) => {
+    const b = event.target.closest('[data-order-remove]');
+    if (b && !creatingOrder && !orderCreated) { orderItems.splice(Number(b.dataset.orderRemove), 1); renderOrderItems(); }
+  };
+  $('order-delivery').oninput = renderOrderItems;
+  $('order-form').onsubmit = (event) => {
+    event.preventDefault();
+    if (creatingOrder || orderCreated || !orderCustomer) return;
+    const fail = (text, focusId) => { $('order-status').className = 'form-status error'; $('order-status').textContent = text; if (focusId) $(focusId).focus(); };
+    if (!$('order-name').value.trim()) return fail('Customer name is required.', 'order-name');
+    if (!$('order-address').value.trim()) return fail('Delivery address is required.', 'order-address');
+    if (!orderItems.length) return fail('Add at least one product.', 'order-search');
+    const delivery = Number($('order-delivery').value);
+    if ($('order-delivery').value === '' || !isFinite(delivery) || delivery < 0 || delivery > 10000) return fail('Enter a delivery charge between ৳0 and ৳10,000.', 'order-delivery');
+    creatingOrder = true; lockOrderForm(true); $('order-close').disabled = $('order-cancel').disabled = true;
+    $('order-status').className = 'form-status'; $('order-status').textContent = 'Creating order…';
+    const phone = orderCustomer.phone;
+    request('/api/customer-manager/' + encodeURIComponent(phone) + '/orders', { method: 'POST', body: {
+      name: $('order-name').value, shippingAddress: $('order-address').value, city: $('order-city').value, email: $('order-email').value,
+      note: $('order-note').value, deliveryCharge: delivery, paymentType: $('order-payment').value, source: $('order-source').value,
+      requestId: orderRequestId, items: orderItems.map((i) => ({ product: i.product, quantity: i.quantity })),
+    } }).then((result) => {
+      orderCreated = true;
+      $('order-status').textContent = '';
+      $('order-success').hidden = false;
+      $('order-success').innerHTML = '<strong>Order #' + esc(result.orderId) + ' created' + (result.grandTotal != null ? ' · ' + money(result.grandTotal) : '') + '.</strong><a href="' + esc(A.STATIC + 'custom-orders.html') + '" target="_blank" rel="noopener noreferrer">Open Orders <i class="fas fa-arrow-up-right-from-square"></i></a>';
+      $('order-submit').hidden = true;
+      A.toast('Order #' + result.orderId + ' created', 'success');
+      if (current && current.phone === phone) {
+        $('oc-ordered').checked = true; followupTouched = false; suggestFollowup();
+        loadDetail(phone, true);
+      }
+      load();
+    }).catch((error) => {
+      fail(error.message + ' If the request was interrupted, press Create order again — it will not be duplicated.');
+    }).then(() => {
+      creatingOrder = false;
+      $('order-close').disabled = $('order-cancel').disabled = false;
+      lockOrderForm(orderCreated);
+    });
+  };
+
+  /* ── Boot ── */
+  function init() {
+    allowed = CRM_ROLES.indexOf(A.role()) !== -1;
+    $('no-access').hidden = allowed;
+    $('crm').hidden = !allowed;
+    document.querySelectorAll('.page-actions .btn').forEach((b) => { b.hidden = !allowed; });
+    if (!allowed) return;
+    $('export').hidden = !A.isManager();
+    load({ skeleton: true });
+  }
+  window.addEventListener('shobaz:admin-auth-restored', init);
+  A.boot({ active: 'customer-manager', ready: init });
+})();
+</script>
+</body>
+</html>

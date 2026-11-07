@@ -66,6 +66,11 @@ import { CourierModule } from './shared/courier/courier.module';
 import { PreOrderModule } from './pages/pre-order/pre-order.module';
 import { FbFeedModule } from './pages/fb-feed/fb-feed.module';
 import { MetaAdsModule } from './pages/meta-ads/meta-ads.module';
+import { StaffActivityModule } from './pages/staff-activity/staff-activity.module';
+import { SearchInsightsModule } from './pages/search-insights/search-insights.module';
+import { CustomerInsightsModule } from './pages/customer-insights/customer-insights.module';
+import { CourierStatusModule } from './pages/courier-status/courier-status.module';
+import { CustomerManagerModule } from './pages/customer-manager/customer-manager.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -140,6 +145,11 @@ import { MetaAdsModule } from './pages/meta-ads/meta-ads.module';
     PreOrderModule,
     FbFeedModule,
     MetaAdsModule,
+    StaffActivityModule,
+    SearchInsightsModule,
+    CustomerInsightsModule,
+    CourierStatusModule,
+    CustomerManagerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

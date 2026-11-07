@@ -123,7 +123,7 @@
   if (!root.document) return;
 
   var document = root.document;
-  var API = root.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://api.shobaz.com';
+  var API = /^(localhost|127\.0\.0\.1)$/.test(root.location.hostname) ? 'http://localhost:4000' : 'https://api.shobaz.com';
   var ids = { button: 'shobaz-ai-assist-button', overlay: 'shobaz-ai-assist-overlay' };
   var selectedProducts = [];
   var searchTimer = null;

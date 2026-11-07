@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer &amp; Bundle Insights — Shobaz Admin</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="admin-shell.css?v=1">
+  <style>
+    [hidden] { display: none !important; }
+
+    /* ── Bundle profit calculator ── */
+    .card-head h2 { margin: 0; }
+    .card-head > div { min-width: 0; }
+    .calc-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); gap: 16px; padding: 16px; align-items: start; }
+    .calc-grid > * { min-width: 0; }
+    .search-wrap { position: relative; }
+    .search-field { position: relative; }
+    .search-field > i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--sa-text-3); font-size: 12px; pointer-events: none; }
+    .search-field .input { padding-left: 30px; }
+    .search-results {
+      position: absolute; z-index: 50; top: calc(100% + 4px); left: 0; right: 0;
+      display: none; max-height: 320px; overflow-y: auto; padding: 4px;
+      background: #fff; border-radius: var(--sa-radius); box-shadow: var(--sa-shadow-pop);
+    }
+    .search-results.open { display: block; }
+    .result-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none;
+      color: var(--sa-text); font-size: 13px; text-align: left; cursor: pointer;
+    }
+    .result-item:hover, .result-item:focus-visible { background: var(--sa-hover); outline: 0; }
+    .result-item:focus-visible { box-shadow: inset 0 0 0 2px var(--sa-focus); }
+    .result-item strong { font-weight: 600; overflow-wrap: anywhere; }
+    .result-item small { display: block; margin-top: 2px; color: var(--sa-text-2); font-size: 12px; }
+    .result-status { padding: 14px 10px; color: var(--sa-text-2); text-align: center; }
+    .selected-wrap { margin-top: 12px; border: 1px solid var(--sa-border); border-radius: var(--sa-radius-sm); }
+    .selected-wrap table { min-width: 470px; }
+    .calc-book { font-weight: 600; overflow-wrap: anywhere; }
+    .calc-book .badge { margin-top: 3px; }
+    .strike { font-size: 12px; color: var(--sa-text-3); text-decoration: line-through; }
+    .qty-input { width: 64px; min-height: 28px; padding: 4px 6px; text-align: center; }
+    .calc-panel { display: flex; flex-direction: column; gap: 12px; }
+    .calc-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field-hint { font-size: 11px; color: var(--sa-text-3); }
+    .calc-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0; box-shadow: none; }
+    .calc-metrics .metric { padding: 10px 12px; }
+    .calc-metrics .metric-label { text-decoration: none; }
+    .calc-metrics .metric-value { font-size: 17px; }
+    .metric-value.pos { color: #047b5d; }
+    .metric-value.neg { color: #c70a24; }
+    .verdict {
+      display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;
+      padding: 10px 12px; border: 1px solid var(--sa-border); border-radius: var(--sa-radius-sm);
+      background: var(--sa-surface-2); font-size: 13px;
+    }
+    .verdict-text { flex: 1; min-width: 160px; }
+    .cost-warning { display: none; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--tone-warning-fg); }
+    .cost-warning.show { display: flex; }
+
+    /* ── Insight tables ── */
+    .insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    .insights-grid > .card { min-width: 0; margin-top: 0; }
+    .insights-grid > .wide { grid-column: 1 / -1; }
+    .insights-table { min-width: 560px; }
+    .cust-name { font-weight: 600; }
+    .cust-phone { font-size: 12px; color: var(--sa-link); text-decoration: none; }
+    .cust-phone:hover { text-decoration: underline; }
+    .books { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; max-width: 640px; }
+    .book-chip {
+      display: inline-block; max-width: 100%; padding: 2px 8px; border-radius: 8px;
+      background: var(--sa-surface-3); border: 1px solid var(--sa-border);
+      font-size: 12px; font-weight: 550; line-height: 18px; overflow-wrap: anywhere;
+    }
+    .book-plus { color: var(--sa-text-3); font-size: 12px; }
+    .rank {
+      display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px;
+      border-radius: 50%; background: var(--sa-surface-3); font-size: 12px; font-weight: 650;
+    }
+    .rank.top { background: var(--tone-attention-bg); color: var(--tone-attention-fg); }
+    .table-msg { padding: 24px 12px; text-align: center; color: var(--sa-text-2); }
+    .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border-top: 1px solid var(--sa-border-2); font-size: 12px; color: var(--sa-text-2); }
+    .no-access { max-width: 560px; }
+
+    /* Two tables side by side only when each gets ~560px. */
+    @media (max-width: 1439px) {
+      .insights-grid { grid-template-columns: 1fr; }
+      .insights-grid > .wide { grid-column: auto; }
+    }
+    @media (max-width: 900px) {
+      .calc-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .calc-grid { padding: 12px; }
+      .calc-fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right">
+        <span id="topbarUser"></span>
+        <button class="topbar-icon-btn" id="logoutBtn" type="button" title="Log out" aria-label="Log out"><i class="fas fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </header>
+    <main class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title"><i class="fas fa-users" aria-hidden="true"></i>Customer &amp; Bundle Insights</h1>
+          <p class="page-subtitle" id="pageSubtitle">Repeat customers and book combinations from valid orders.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" id="refreshBtn" type="button"><i class="fas fa-rotate" aria-hidden="true"></i> Refresh</button>
+        </div>
+      </div>
+
+      <section class="card card-pad no-access" id="noAccess" hidden>
+        <div class="empty-state">
+          <i class="fas fa-lock" aria-hidden="true"></i>
+          <strong>Managers only</strong>
+          <p>Customer &amp; Bundle Insights shows customer spend and book costs, so it is not available to the salesman role.</p>
+        </div>
+      </section>
+
+      <div id="insightsApp">
+        <div class="metrics top-metrics" aria-live="polite">
+          <div class="metric">
+            <span class="metric-label" title="Phone numbers with two or more valid orders">Repeat customers</span>
+            <div class="metric-value" id="mCustomers">—</div>
+          </div>
+          <div class="metric">
+            <span class="metric-label" title="Lifetime grand total of all repeat customers' valid orders">Repeat customer spend</span>
+            <div class="metric-value" id="mSpend">—</div>
+          </div>
+          <div class="metric">
+            <span class="metric-label" title="Valid orders with two or more different paid books (free gifts not counted)">Multi-item orders</span>
+            <div class="metric-value" id="mMulti">—</div>
+          </div>
+          <div class="metric">
+            <span class="metric-label" title="3–4 book combinations ordered together more than once recently">Recommended bundles</span>
+            <div class="metric-value" id="mSuggestions">—</div>
+            <div class="metric-sub" id="mWindow">Last 90 days</div>
+          </div>
+        </div>
+
+        <section class="card" id="calcCard" aria-labelledby="calcTitle">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title" id="calcTitle">Bundle profit calculator</h2>
+              <p class="card-sub">Pick books, set a bundle price and costs, and check whether the bundle still makes money.</p>
+            </div>
+            <button class="btn btn-sm" id="calcReset" type="button"><i class="fas fa-rotate-left" aria-hidden="true"></i> Reset</button>
+          </div>
+          <div class="calc-grid">
+            <div>
+              <div class="search-wrap" id="searchWrap">
+                <div class="search-field">
+                  <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                  <input class="input" id="bundleSearch" type="search" placeholder="Search and add books…" autocomplete="off"
+                    aria-label="Search books to add to the bundle" aria-controls="searchResults">
+                </div>
+                <div class="search-results" id="searchResults"></div>
+              </div>
+              <div class="selected-wrap table-wrap">
+                <table>
+                  <thead><tr><th>Book</th><th class="num">Discounted price</th><th class="num">Unit cost</th><th>Qty</th><th class="num"><span class="sr-only">Remove</span></th></tr></thead>
+                  <tbody id="calcBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="calc-panel">
+              <div class="calc-fields">
+                <div class="field">
+                  <label for="bundlePrice">Bundle selling price</label>
+                  <input class="input" id="bundlePrice" type="number" min="0" step="1" inputmode="numeric" value="0">
+                </div>
+                <div class="field">
+                  <label for="adCost">Ad cost per sale</label>
+                  <input class="input" id="adCost" type="number" min="0" step="1" inputmode="numeric" value="0">
+                </div>
+                <div class="field">
+                  <label for="otherCost">Courier + packaging</label>
+                  <input class="input" id="otherCost" type="number" min="0" step="1" inputmode="numeric" value="0">
+                  <span class="field-hint">Your cost per parcel</span>
+                </div>
+                <div class="field">
+                  <label for="targetMargin">Healthy margin target (%)</label>
+                  <input class="input" id="targetMargin" type="number" min="0" max="100" step="1" inputmode="numeric" value="20">
+                </div>
+              </div>
+              <div class="metrics calc-metrics">
+                <div class="metric"><span class="metric-label">Discounted total</span><div class="metric-value" id="cTotal">৳0</div></div>
+                <div class="metric"><span class="metric-label">Product cost</span><div class="metric-value" id="cCost">৳0</div></div>
+                <div class="metric"><span class="metric-label">Bundle discount</span><div class="metric-value" id="cDiscount">৳0</div></div>
+                <div class="metric"><span class="metric-label">Expected profit</span><div class="metric-value" id="cProfit">—</div></div>
+                <div class="metric"><span class="metric-label">Profit margin</span><div class="metric-value" id="cMargin">—</div></div>
+                <div class="metric"><span class="metric-label">Break-even ad cost</span><div class="metric-value" id="cBreakEven">—</div></div>
+              </div>
+              <div class="verdict" id="verdict" role="status">
+                <span class="badge tone-neutral" id="verdictBadge">No verdict</span>
+                <span class="verdict-text" id="verdictText">Add books to calculate viability.</span>
+              </div>
+              <div class="cost-warning" id="costWarning">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span id="costWarningText"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="insights-grid">
+          <section class="card table-card" aria-labelledby="customersTitle">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title" id="customersTitle">Customers with multiple orders</h2>
+                <p class="card-sub">Sorted by order count, then total spend.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="insights-table">
+                <thead><tr><th>Customer</th><th class="num">Orders</th><th class="num">Items</th><th class="num">Spent</th><th>Last order</th></tr></thead>
+                <tbody id="customersBody"></tbody>
+              </table>
+            </div>
+            <div class="card-foot" id="customersFoot" hidden>
+              <span id="customersShownText"></span>
+              <button class="btn btn-sm" id="customersMore" type="button">Show more</button>
+            </div>
+          </section>
+
+          <section class="card table-card" aria-labelledby="suggestionsTitle">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title" id="suggestionsTitle">Recommended ad bundles</h2>
+                <p class="card-sub" id="suggestionsSub">Best repeated 3–4 book combinations from the last 90 days.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="insights-table">
+                <thead><tr><th>#</th><th>Suggested bundle</th><th class="num">Recent</th><th class="num">All time</th><th>Last order</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody id="suggestionsBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card table-card wide" aria-labelledby="packagesTitle">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title" id="packagesTitle">Complete multi-item packages</h2>
+                <p class="card-sub">Every paid book in the customer's basket, grouped by identical combinations (top 100).</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="insights-table">
+                <thead><tr><th class="num">Books</th><th>Complete package</th><th class="num">Exact orders</th><th>Last order</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody id="packagesBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="admin-shell.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.ShobazAdmin;
+  var esc = A.esc;
+  var money = A.money;
+  var count = A.count;
+  var CUSTOMER_PAGE = 50;
+  var LOADING = '<div class="spinner"></div>Loading…';
+
+  var report = null;
+  var customersShown = CUSTOMER_PAGE;
+  var calcItems = [];   // { id, name, salePrice, listPrice, costPrice|null, qty, notInCatalogue }
+  var searchHits = {};
+  var priceManual = false;
+  var searchTimer = null;
+  var searchSeq = 0;
+  var wired = false;
+
+  function $(id) { return document.getElementById(id); }
+  function inputNumber(id) { return Math.max(0, Number($(id).value) || 0); }
+  function rowMessage(cols, html) { return '<tr><td colspan="' + cols + '"><div class="table-msg">' + html + '</div></td></tr>'; }
+
+  /** Same rule as the backend (UtilsService.transform 'salePrice'): 1 = percent, 2 = cash off. */
+  function effectivePrice(product) {
+    var sale = Number(product && product.salePrice) || 0;
+    var off = Number(product && product.discountAmount) || 0;
+    var type = Number(product && product.discountType);
+    if (type === 1) return Math.max(0, Math.floor(sale - (off / 100) * sale));
+    if (type === 2) return Math.max(0, Math.floor(sale - off));
+    return Math.max(0, Math.floor(sale));
+  }
+  /** Product.costPrice; blank or 0 counts as missing so a bundle never looks free to make. */
+  function knownCost(value) {
+    var n = Number(value);
+    return value !== null && value !== undefined && value !== '' && isFinite(n) && n > 0 ? n : null;
+  }
+
+  /* ── Report ── */
+  function loadReport() {
+    var btn = $('refreshBtn');
+    btn.disabled = true;
+    $('customersBody').innerHTML = rowMessage(5, LOADING);
+    $('suggestionsBody').innerHTML = rowMessage(6, LOADING);
+    $('packagesBody').innerHTML = rowMessage(5, LOADING);
+    $('customersFoot').hidden = true;
+    A.api('/api/customer-insights/report')
+      .then(function (res) {
+        report = res.data || {};
+        customersShown = CUSTOMER_PAGE;
+        renderReport();
+      })
+      .catch(function (err) {
+        var msg = 'Could not load insights. ' + esc(err.message || '');
+        $('customersBody').innerHTML = rowMessage(5, msg);
+        $('suggestionsBody').innerHTML = rowMessage(6, msg);
+        $('packagesBody').innerHTML = rowMessage(5, msg);
+        A.toast(err.message || 'Could not load insights', 'error');
+      })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function bookChips(products) {
+    return '<div class="books">' + (products || []).map(function (product) {
+      return '<span class="book-chip">' + esc(product.name || 'Unknown book') + '</span>';
+    }).join('<span class="book-plus" aria-hidden="true">+</span>') + '</div>';
+  }
+  function calcButton(kind, index) {
+    return '<button type="button" class="btn btn-xs" data-load="' + kind + ':' + index + '" title="Load these books into the profit calculator">' +
+      '<i class="fas fa-calculator" aria-hidden="true"></i> Calculate</button>';
+  }
+
+  function renderReport() {
+    var customers = report.repeatCustomers || [];
+    var suggestions = report.bundleSuggestions || [];
+    var windowDays = Number(report.recommendationWindowDays) || 90;
+    var spend = customers.reduce(function (sum, c) { return sum + (Number(c.totalSpent) || 0); }, 0);
+
+    $('mCustomers').textContent = count(customers.length);
+    $('mSpend').textContent = money(spend);
+    $('mMulti').textContent = count(report.multiItemOrderCount);
+    $('mSuggestions').textContent = count(suggestions.length);
+    $('mWindow').textContent = 'Last ' + windowDays + ' days';
+    $('suggestionsSub').textContent = 'Best repeated 3–4 book combinations from the last ' + windowDays + ' days.';
+    $('pageSubtitle').textContent = 'Repeat customers and book combinations from valid orders' +
+      (report.generatedAt ? ' · updated ' + A.fmtDate(report.generatedAt, true) : '') + '.';
+
+    renderCustomers();
+    renderSuggestions(windowDays);
+    renderPackages();
+  }
+
+  function renderCustomers() {
+    var customers = (report && report.repeatCustomers) || [];
+    var shown = customers.slice(0, customersShown);
+    $('customersBody').innerHTML = shown.length ? shown.map(function (customer) {
+      var phone = String(customer.phoneNo || '');
+      return '<tr>' +
+        '<td><div class="cust-name">' + esc(customer.name || 'Unknown') + '</div>' +
+          (phone ? '<a class="cust-phone" href="tel:' + esc(phone) + '">' + esc(phone) + '</a>' : '<span class="subtle">—</span>') + '</td>' +
+        '<td class="num"><strong>' + count(customer.orderCount) + '</strong></td>' +
+        '<td class="num">' + count(customer.itemCount) + '</td>' +
+        '<td class="num"><strong>' + money(customer.totalSpent) + '</strong></td>' +
+        '<td title="' + esc(A.timeAgo(customer.lastOrderAt)) + '">' + esc(A.fmtDate(customer.lastOrderAt)) + '</td>' +
+      '</tr>';
+    }).join('') : rowMessage(5, 'No repeat customers found.');
+
+    var more = customers.length > customersShown;
+    $('customersFoot').hidden = customers.length <= CUSTOMER_PAGE;
+    $('customersShownText').textContent = 'Showing ' + count(shown.length) + ' of ' + count(customers.length);
+    $('customersMore').hidden = !more;
+  }
+
+  function renderSuggestions(windowDays) {
+    var suggestions = report.bundleSuggestions || [];
+    $('suggestionsBody').innerHTML = suggestions.length ? suggestions.map(function (bundle, index) {
+      return '<tr>' +
+        '<td><span class="rank' + (index < 3 ? ' top' : '') + '">' + (index + 1) + '</span></td>' +
+        '<td>' + bookChips(bundle.products) + '</td>' +
+        '<td class="num" title="Orders in the last ' + windowDays + ' days"><strong>' + count(bundle.recentOrderCount) + '</strong></td>' +
+        '<td class="num">' + count(bundle.orderCount) + '</td>' +
+        '<td>' + esc(A.fmtDate(bundle.lastOrderAt)) + '</td>' +
+        '<td>' + calcButton('s', index) + '</td>' +
+      '</tr>';
+    }).join('') : rowMessage(6, 'No 3–4 book combination was ordered more than once in the last ' + windowDays + ' days.');
+  }
+
+  function renderPackages() {
+    var packages = report.orderBundles || [];
+    $('packagesBody').innerHTML = packages.length ? packages.map(function (bundle, index) {
+      return '<tr>' +
+        '<td class="num"><strong>' + count((bundle.products || []).length) + '</strong></td>' +
+        '<td>' + bookChips(bundle.products) + '</td>' +
+        '<td class="num"><strong>' + count(bundle.orderCount) + '</strong></td>' +
+        '<td>' + esc(A.fmtDate(bundle.lastOrderAt)) + '</td>' +
+        '<td>' + calcButton('p', index) + '</td>' +
+      '</tr>';
+    }).join('') : rowMessage(5, 'No multi-item orders found.');
+  }
+
+  /* ── Calculator ── */
+  function normalTotal() {
+    return calcItems.reduce(function (total, item) { return total + item.salePrice * item.qty; }, 0);
+  }
+  function syncPrice() {
+    if (!priceManual) $('bundlePrice').value = String(normalTotal());
+  }
+  function findItem(id) {
+    for (var i = 0; i < calcItems.length; i++) if (calcItems[i].id === id) return calcItems[i];
+    return null;
+  }
+  function addItem(item) {
+    var existing = findItem(item.id);
+    if (existing) existing.qty += 1;
+    else calcItems.push(item);
+  }
+
+  function renderCalc() {
+    $('calcBody').innerHTML = calcItems.length ? calcItems.map(function (item) {
+      return '<tr>' +
+        '<td><div class="calc-book">' + esc(item.name) +
+          (item.notInCatalogue ? '<div><span class="badge tone-critical">Not in catalogue</span></div>' : '') + '</div></td>' +
+        '<td class="num"><strong>' + money(item.salePrice) + '</strong>' +
+          (item.salePrice < item.listPrice ? '<div class="strike">' + money(item.listPrice) + '</div>' : '') + '</td>' +
+        '<td class="num">' + (item.costPrice === null ? '<span class="badge tone-warning">Missing</span>' : money(item.costPrice)) + '</td>' +
+        '<td><input class="input qty-input" type="number" min="1" step="1" inputmode="numeric" value="' + item.qty + '" data-qty="' + esc(item.id) + '" aria-label="Quantity for ' + esc(item.name) + '"></td>' +
+        '<td class="num"><button type="button" class="btn btn-sm btn-icon" data-remove="' + esc(item.id) + '" title="Remove" aria-label="Remove ' + esc(item.name) + '"><i class="fas fa-trash-can" aria-hidden="true"></i></button></td>' +
+      '</tr>';
+    }).join('') : rowMessage(5, 'Search above to add books, or press <strong>Calculate</strong> on a bundle below.');
+    calculate();
+  }
+
+  function setVerdict(tone, label, text) {
+    var badge = $('verdictBadge');
+    badge.className = 'badge tone-' + tone;
+    badge.textContent = label;
+    $('verdictText').textContent = text;
+  }
+  function setValue(id, text, cls) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = 'metric-value' + (cls ? ' ' + cls : '');
+  }
+
+  function calculate() {
+    var total = normalTotal();
+    var price = inputNumber('bundlePrice');
+    var adCost = inputNumber('adCost');
+    var otherCost = inputNumber('otherCost');
+    var target = Math.min(100, inputNumber('targetMargin'));
+    var missing = calcItems.filter(function (item) { return item.costPrice === null; });
+    var productCost = calcItems.reduce(function (sum, item) { return sum + (item.costPrice || 0) * item.qty; }, 0);
+    var profit = price - productCost - adCost - otherCost;
+    var margin = price > 0 ? profit / price * 100 : 0;
+    var breakEven = price - productCost - otherCost;
+    var hidden = missing.length > 0 || !calcItems.length;
+
+    setValue('cTotal', money(total));
+    setValue('cCost', missing.length ? 'Incomplete' : money(productCost));
+    setValue('cDiscount', money(total - price));
+    setValue('cProfit', hidden ? '—' : money(profit), hidden ? '' : (profit > 0 ? 'pos' : 'neg'));
+    setValue('cMargin', hidden ? '—' : margin.toFixed(1) + '%', hidden ? '' : (profit > 0 ? 'pos' : 'neg'));
+    setValue('cBreakEven', hidden ? '—' : money(breakEven));
+
+    var warning = $('costWarning');
+    warning.classList.toggle('show', missing.length > 0);
+    $('costWarningText').textContent = missing.length
+      ? 'Add a cost price for: ' + missing.map(function (item) { return item.name; }).join(', ') + '. Profit stays hidden until every cost is known.'
+      : '';
+
+    if (!calcItems.length) setVerdict('neutral', 'No verdict', 'Add books to calculate viability.');
+    else if (missing.length) setVerdict('neutral', 'No verdict', 'Viability unavailable because product cost data is missing.');
+    else if (profit <= 0) setVerdict('critical', 'Not viable', 'This bundle loses ' + money(Math.abs(profit)) + ' per sale.');
+    else if (margin >= target) setVerdict('success', 'Viable', margin.toFixed(1) + '% margin after product, ad and fulfilment costs.');
+    else setVerdict('attention', 'Tight margin', margin.toFixed(1) + '% is below your ' + target.toFixed(0) + '% target.');
+  }
+
+  function resetCalc() {
+    calcItems = [];
+    priceManual = false;
+    $('bundleSearch').value = '';
+    $('bundlePrice').value = '0';
+    $('adCost').value = '0';
+    $('otherCost').value = '0';
+    $('targetMargin').value = '20';
+    closeResults();
+    renderCalc();
+  }
+
+  /** Puts a suggested bundle or package into the calculator, one of each book. */
+  function loadBundle(bundle) {
+    var catalogue = (report && report.products) || {};
+    calcItems = [];
+    priceManual = false;
+    (bundle.products || []).forEach(function (product) {
+      var info = catalogue[product.id];
+      calcItems.push({
+        id: product.id,
+        name: (info && info.name) || product.name || 'Unknown book',
+        salePrice: info ? Math.max(0, Number(info.salePrice) || 0) : 0,
+        listPrice: info ? Math.max(0, Number(info.listPrice) || 0) : 0,
+        costPrice: info ? knownCost(info.costPrice) : null,
+        qty: 1,
+        notInCatalogue: !info,
+      });
+    });
+    syncPrice();
+    renderCalc();
+    $('calcCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    A.toast('Loaded ' + calcItems.length + ' books into the calculator', 'info');
+  }
+
+  /* ── Product search (existing /api/product/get-all, same as the AI assist widget) ── */
+  function openResults(html) {
+    var box = $('searchResults');
+    box.innerHTML = html;
+    box.classList.add('open');
+  }
+  function closeResults() {
+    $('searchResults').classList.remove('open');
+    $('searchResults').innerHTML = '';
+  }
+
+  function searchProducts() {
+    var query = $('bundleSearch').value.trim();
+    if (query.length < 2) { closeResults(); return; }
+    var seq = ++searchSeq;
+    openResults('<div class="result-status"><div class="spinner"></div>Searching…</div>');
+    A.api('/api/product/get-all?q=' + encodeURIComponent(query), {
+      method: 'POST',
+      body: {
+        filter: { salePrice: { $gte: 0 } },
+        pagination: { pageSize: 15, currentPage: 0 },
+        sort: { totalSold: -1, createdAt: -1 },
+        select: { name: 1, nameEn: 1, salePrice: 1, costPrice: 1, discountType: 1, discountAmount: 1 },
+      },
+    })
+      .then(function (res) {
+        if (seq !== searchSeq) return;
+        var products = Array.isArray(res.data) ? res.data : [];
+        searchHits = {};
+        if (!products.length) { openResults('<div class="result-status">No books found.</div>'); return; }
+        openResults(products.map(function (product) {
+          var id = String(product._id);
+          var price = effectivePrice(product);
+          var list = Math.max(0, Number(product.salePrice) || 0);
+          var cost = knownCost(product.costPrice);
+          searchHits[id] = {
+            id: id,
+            name: product.name || product.nameEn || 'Unknown book',
+            salePrice: price,
+            listPrice: list,
+            costPrice: cost,
+            qty: 1,
+          };
+          return '<button type="button" class="result-item" data-add="' + esc(id) + '">' +
+            '<span><strong>' + esc(searchHits[id].name) + '</strong>' +
+              '<small>Price ' + money(price) + (price < list ? ' (was ' + money(list) + ')' : '') +
+              ' · Cost ' + (cost === null ? 'missing' : money(cost)) + '</small></span>' +
+            '<span class="badge tone-subdued"><i class="fas fa-plus" aria-hidden="true"></i> Add</span>' +
+          '</button>';
+        }).join(''));
+      })
+      .catch(function (err) {
+        if (seq !== searchSeq) return;
+        openResults('<div class="result-status">' + esc(err.message || 'Product search failed.') + '</div>');
+      });
+  }
+
+  /* ── Wiring ── */
+  function wire() {
+    if (wired) return;
+    wired = true;
+    $('refreshBtn').addEventListener('click', loadReport);
+    $('calcReset').addEventListener('click', resetCalc);
+    $('customersMore').addEventListener('click', function () {
+      customersShown += CUSTOMER_PAGE;
+      renderCustomers();
+    });
+
+    $('bundleSearch').addEventListener('input', function () {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(searchProducts, 300);
+    });
+    $('bundleSearch').addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeResults();
+      if (event.key === 'ArrowDown') {
+        var first = $('searchResults').querySelector('.result-item');
+        if (first) { event.preventDefault(); first.focus(); }
+      }
+    });
+    $('searchResults').addEventListener('keydown', function (event) {
+      var current = document.activeElement;
+      if (!current || !current.classList.contains('result-item')) return;
+      if (event.key === 'ArrowDown' && current.nextElementSibling) { event.preventDefault(); current.nextElementSibling.focus(); }
+      if (event.key === 'ArrowUp') { event.preventDefault(); (current.previousElementSibling || $('bundleSearch')).focus(); }
+      if (event.key === 'Escape') { closeResults(); $('bundleSearch').focus(); }
+    });
+    $('searchResults').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-add]');
+      if (!button) return;
+      var hit = searchHits[button.getAttribute('data-add')];
+      if (!hit) return;
+      addItem({ id: hit.id, name: hit.name, salePrice: hit.salePrice, listPrice: hit.listPrice, costPrice: hit.costPrice, qty: 1 });
+      $('bundleSearch').value = '';
+      closeResults();
+      syncPrice();
+      renderCalc();
+      $('bundleSearch').focus();
+    });
+    document.addEventListener('click', function (event) {
+      if (!$('searchWrap').contains(event.target)) closeResults();
+    });
+
+    $('calcBody').addEventListener('change', function (event) {
+      var id = event.target.getAttribute && event.target.getAttribute('data-qty');
+      if (!id) return;
+      var item = findItem(id);
+      if (!item) return;
+      item.qty = Math.max(1, parseInt(event.target.value, 10) || 1);
+      syncPrice();
+      renderCalc();
+    });
+    $('calcBody').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-remove]');
+      if (!button) return;
+      var id = button.getAttribute('data-remove');
+      calcItems = calcItems.filter(function (item) { return item.id !== id; });
+      syncPrice();
+      renderCalc();
+    });
+
+    $('bundlePrice').addEventListener('input', function () { priceManual = true; calculate(); });
+    ['adCost', 'otherCost', 'targetMargin'].forEach(function (id) { $(id).addEventListener('input', calculate); });
+
+    function onLoadClick(event) {
+      var button = event.target.closest('[data-load]');
+      if (!button || !report) return;
+      var parts = button.getAttribute('data-load').split(':');
+      var list = parts[0] === 's' ? report.bundleSuggestions : report.orderBundles;
+      var bundle = list && list[Number(parts[1])];
+      if (bundle) loadBundle(bundle);
+    }
+    $('suggestionsBody').addEventListener('click', onLoadClick);
+    $('packagesBody').addEventListener('click', onLoadClick);
+  }
+
+  function init() {
+    if (A.isSalesman()) {
+      // The API refuses this role; calling it would sign the user out.
+      $('insightsApp').hidden = true;
+      $('refreshBtn').hidden = true;
+      $('noAccess').hidden = false;
+      return;
+    }
+    wire();
+    renderCalc();
+    loadReport();
+  }
+
+  A.boot({ active: 'insights', ready: init });
+})();
+</script>
+</body>
+</html>

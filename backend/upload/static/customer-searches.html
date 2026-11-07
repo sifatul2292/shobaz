@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Searches — Shobaz Admin</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="admin-shell.css?v=1">
+  <style>
+    /* Customer Searches: period bar, metrics, one tabbed table. */
+    .range-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 12px 16px; margin-bottom: 16px; }
+    .range-bar .field { width: 180px; }
+    .custom-dates { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+    .custom-dates[hidden] { display: none; }
+    .range-label { margin-left: auto; align-self: center; font-size: 12px; color: var(--sa-text-2); }
+    .table-tools { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--sa-border-2); }
+    .filter-input { position: relative; flex: 1; max-width: 360px; }
+    .filter-input i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--sa-text-3); pointer-events: none; }
+    .filter-input .input { padding-left: 30px; }
+    .table-tools .shown { margin-left: auto; font-size: 12px; color: var(--sa-text-2); white-space: nowrap; }
+    #searchTable td.rank { width: 44px; color: var(--sa-text-3); }
+    #searchTable td.term-cell { min-width: 200px; }
+    .term-line { display: flex; align-items: center; gap: 8px; }
+    .term { font-weight: 600; overflow-wrap: anywhere; }
+    .shop-link { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; color: var(--sa-text-3); font-size: 11px; text-decoration: none; }
+    .shop-link:hover { background: var(--sa-selected); color: var(--sa-text); }
+    .shop-link:focus-visible { outline: 2px solid var(--sa-focus); outline-offset: 1px; }
+    #searchTable td.when { white-space: nowrap; color: var(--sa-text-2); }
+    #searchTable tr.empty-row td { padding: 0; }
+    #searchTable tr.empty-row:hover td { background: none; }
+    .more-bar { padding: 10px 12px; text-align: center; border-top: 1px solid var(--sa-border-2); }
+    .more-bar[hidden] { display: none; }
+    .notes { padding: 12px 16px 14px; border-top: 1px solid var(--sa-border-2); font-size: 12px; color: var(--sa-text-2); }
+    .notes ul { padding-left: 18px; }
+    .notes li + li { margin-top: 4px; }
+
+    @media (max-width: 640px) {
+      .range-bar { padding: 12px; }
+      .range-bar .field { width: auto; flex: 1 1 140px; }
+      .custom-dates { width: 100%; }
+      .range-label { margin-left: 0; width: 100%; }
+      .table-tools { flex-wrap: wrap; }
+      .filter-input { max-width: none; flex-basis: 100%; }
+      .table-tools .shown { margin-left: 0; }
+      /* Rows turn into small cards: the search on top, numbers underneath. */
+      #searchTable thead { display: none; }
+      #searchTable, #searchTable tbody { display: block; }
+      #searchTable tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; padding: 10px 12px; border-bottom: 1px solid var(--sa-border-2); }
+      #searchTable tbody tr:last-child { border-bottom: 0; }
+      #searchTable tbody td { display: block; padding: 0; border: 0; text-align: left; }
+      #searchTable tbody tr:hover td { background: none; }
+      #searchTable td.rank { display: none; }
+      #searchTable td.term-cell, #searchTable td.when { grid-column: 1 / -1; min-width: 0; }
+      #searchTable td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; color: var(--sa-text-3); }
+      #searchTable tr.empty-row { display: block; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right">
+        <span id="topbarUser"></span>
+        <button class="topbar-icon-btn" id="logoutBtn" type="button" title="Log out" aria-label="Log out"><i class="fas fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </header>
+    <main class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Customer Searches</h1>
+          <p class="page-subtitle">What shoppers type in the shop's search box, and which searches find nothing</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" id="copyBtn" type="button"><i class="fas fa-copy" aria-hidden="true"></i> Copy list</button>
+          <button class="btn" id="refreshBtn" type="button"><i class="fas fa-rotate-right" aria-hidden="true"></i> Refresh</button>
+        </div>
+      </div>
+
+      <form class="card range-bar" id="rangeForm">
+        <div class="field">
+          <label for="period">Period</label>
+          <select class="select" id="period">
+            <option value="today">Today</option>
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 12 months</option>
+            <option value="custom">Custom dates</option>
+          </select>
+        </div>
+        <div class="custom-dates" id="customDates" hidden>
+          <div class="field">
+            <label for="fromDate">From</label>
+            <input class="input" id="fromDate" type="date">
+          </div>
+          <div class="field">
+            <label for="toDate">To</label>
+            <input class="input" id="toDate" type="date">
+          </div>
+          <button class="btn btn-primary" id="applyBtn" type="submit">Apply</button>
+        </div>
+        <div class="range-label" id="rangeLabel" aria-live="polite"></div>
+      </form>
+
+      <section class="metrics" aria-label="Search totals">
+        <div class="metric">
+          <span class="metric-label" title="Every search counted once; typing a word step by step counts as one search.">Searches</span>
+          <div class="metric-value" id="mSearches">—</div>
+          <div class="metric-sub" id="mSearchesSub">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Different words or phrases searched.">Different searches</span>
+          <div class="metric-value" id="mTerms">—</div>
+          <div class="metric-sub">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Searches where the shop found no products. Most useful for deciding what to stock.">No results</span>
+          <div class="metric-value" id="mMissing">—</div>
+          <div class="metric-sub" id="mMissingSub">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Different visitors, counted per day. No names, phone numbers or IP addresses are kept.">Shoppers searching</span>
+          <div class="metric-value" id="mPeople">—</div>
+          <div class="metric-sub">counted per day</div>
+        </div>
+      </section>
+
+      <section class="card table-card">
+        <div class="status-tabs" role="tablist" aria-label="Which searches">
+          <button class="status-tab active" type="button" role="tab" data-view="missing" aria-selected="true">No results <span class="tab-count" id="countMissing"></span></button>
+          <button class="status-tab" type="button" role="tab" data-view="all" aria-selected="false">Top searches <span class="tab-count" id="countAll"></span></button>
+          <button class="status-tab" type="button" role="tab" data-view="recent" aria-selected="false">Recent</button>
+        </div>
+        <div class="table-tools">
+          <div class="filter-input">
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+            <input class="input" id="filter" type="search" placeholder="Filter searches" autocomplete="off" aria-label="Filter searches">
+          </div>
+          <span class="shown" id="shownLabel"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="searchTable">
+            <thead>
+              <tr>
+                <th class="num">#</th>
+                <th>Search</th>
+                <th class="num">Searches</th>
+                <th class="num" title="Different visitors per day">People</th>
+                <th class="num" title="Products the shop search matched the last time">Results</th>
+                <th>Last searched</th>
+              </tr>
+            </thead>
+            <tbody id="rows">
+              <tr class="empty-row"><td colspan="6"><div class="empty-state"><div class="spinner"></div>Loading searches…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="more-bar" id="moreBar" hidden>
+          <button class="btn btn-sm" id="moreBtn" type="button">Show more</button>
+        </div>
+        <div class="notes">
+          <ul>
+            <li>Counts searches typed in the shop's header search box (2 letters or more). Typing step by step (“rich”, “rich dad”) within a minute counts once. Opening a <code>/products?q=</code> link directly is not counted, because that page searches inside the browser.</li>
+            <li>“People” counts different visitors per day; no names, phone numbers or IP addresses are kept. Staff searches from the admin panel and bots are not counted.</li>
+            <li>“No results” means the shop search found nothing for those words. Spelling mistakes show up here too, so check the search in the shop (<i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>) before stocking a book.</li>
+            <li>Times are Dhaka time. Searches are kept for 12 months.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="admin-shell.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.ShobazAdmin;
+  var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+  // The storefront, to check a search by hand (its /products page searches in the browser, so it is not logged).
+  var STORE = LOCAL ? 'http://localhost:3006' : 'https://shobaz.com';
+  var PAGE_SIZE = 100;
+  var BLOCKED_ROLES = ['salesman', 'Collector'];
+  var COLS = 6;
+
+  var data = null;
+  var view = 'missing';
+  var shown = PAGE_SIZE;
+  var requestSeq = 0;
+
+  function $(id) { return document.getElementById(id); }
+
+  function dhaka(value, withYear) {
+    var d = new Date(value);
+    if (isNaN(d)) return '';
+    var opts = { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short' };
+    if (withYear) opts.year = 'numeric';
+    return d.toLocaleDateString('en-GB', opts);
+  }
+  function dhakaDateTime(value) {
+    var d = new Date(value);
+    if (isNaN(d)) return '—';
+    var sameYear = d.getUTCFullYear() === new Date().getUTCFullYear();
+    var opts = { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true };
+    if (!sameYear) opts.year = 'numeric';
+    return d.toLocaleString('en-GB', opts);
+  }
+  function dayLabel(ymd) { return dhaka(ymd + 'T00:00:00+06:00', true); }
+
+  function emptyRow(icon, text) {
+    return '<tr class="empty-row"><td colspan="' + COLS + '"><div class="empty-state"><i class="fas ' + icon + '" aria-hidden="true"></i>' + A.esc(text) + '</div></td></tr>';
+  }
+
+  /* ── Period ── */
+  function periodQuery() {
+    var period = $('period').value;
+    if (period === 'today') {
+      var today = A.dhakaToday();
+      return 'startDate=' + today + '&endDate=' + today;
+    }
+    if (period === 'custom') {
+      return 'startDate=' + encodeURIComponent($('fromDate').value) + '&endDate=' + encodeURIComponent($('toDate').value);
+    }
+    return 'days=' + encodeURIComponent(period);
+  }
+  function rangeText(d) {
+    if (d.startDate && d.endDate) {
+      return d.startDate === d.endDate ? dayLabel(d.startDate) : dayLabel(d.startDate) + ' – ' + dayLabel(d.endDate);
+    }
+    return dhaka(d.since, true) + ' – now';
+  }
+
+  /* ── Rows for the current tab + filter ── */
+  function visibleRows() {
+    var words = $('filter').value.trim().toLowerCase();
+    var rows = (data ? data.rows : []).filter(function (row) {
+      if (view === 'missing' && row.results) return false;
+      return !words || String(row.term).toLowerCase().indexOf(words) !== -1;
+    });
+    if (view === 'recent') {
+      rows = rows.slice().sort(function (a, b) { return new Date(b.lastAt) - new Date(a.lastAt); });
+    }
+    return rows;
+  }
+
+  function rowHtml(row, i) {
+    var results = row.results
+      ? A.count(row.results)
+      : '<span class="badge tone-critical">None</span>';
+    var shopUrl = STORE + '/products?q=' + encodeURIComponent(row.term);
+    return '<tr>' +
+      '<td class="rank num">' + (i + 1) + '</td>' +
+      '<td class="term-cell"><div class="term-line"><span class="term">' + A.esc(row.term) + '</span>' +
+        '<a class="shop-link" href="' + A.esc(shopUrl) + '" target="_blank" rel="noopener" title="Open this search in the shop" aria-label="Open “' + A.esc(row.term) + '” in the shop">' +
+        '<i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a></div></td>' +
+      '<td class="num" data-label="Searches">' + A.count(row.searches) + '</td>' +
+      '<td class="num" data-label="People">' + A.count(row.visitors) + '</td>' +
+      '<td class="num" data-label="Results">' + results + '</td>' +
+      '<td class="when" data-label="Last searched" title="' + A.esc(A.timeAgo(row.lastAt)) + '">' + A.esc(dhakaDateTime(row.lastAt)) + '</td>' +
+    '</tr>';
+  }
+
+  /* ── Render ── */
+  function renderMetrics() {
+    var d = data;
+    $('mSearches').textContent = d ? A.count(d.searches) : '—';
+    $('mSearchesSub').textContent = d ? (d.days === 1 ? 'in 1 day' : 'in ' + A.count(d.days) + ' days') : ' ';
+    $('mTerms').textContent = d ? A.count(d.terms) : '—';
+    $('mMissing').textContent = d ? A.count(d.notFound) : '—';
+    var pct = d && d.searches ? Math.round((d.notFoundSearches / d.searches) * 100) : 0;
+    $('mMissingSub').textContent = d
+      ? A.count(d.notFoundSearches) + (d.notFoundSearches === 1 ? ' search' : ' searches') + ' · ' + pct + '%'
+      : ' ';
+    $('mPeople').textContent = d ? A.count(d.visitors) : '—';
+    $('countMissing').textContent = d ? A.count(d.notFound) : '';
+    $('countAll').textContent = d ? A.count(d.terms) : '';
+    $('rangeLabel').textContent = d ? rangeText(d) + ' · Dhaka time' : '';
+  }
+
+  function renderTable() {
+    var tabs = document.querySelectorAll('.status-tab');
+    for (var t = 0; t < tabs.length; t++) {
+      var on = tabs[t].getAttribute('data-view') === view;
+      tabs[t].classList.toggle('active', on);
+      tabs[t].setAttribute('aria-selected', String(on));
+    }
+    if (!data) return;
+    var rows = visibleRows();
+    var words = $('filter').value.trim();
+    if (!rows.length) {
+      if (!data.rows.length) $('rows').innerHTML = emptyRow('fa-inbox', 'No customer searches in this period yet.');
+      else if (words) $('rows').innerHTML = emptyRow('fa-magnifying-glass', 'No search matches “' + words + '”.');
+      else $('rows').innerHTML = emptyRow('fa-circle-check', 'Every search in this period found something.');
+    } else {
+      $('rows').innerHTML = rows.slice(0, shown).map(rowHtml).join('');
+    }
+    var left = rows.length - Math.min(shown, rows.length);
+    $('moreBar').hidden = left <= 0;
+    $('moreBtn').textContent = 'Show ' + A.count(Math.min(PAGE_SIZE, left)) + ' more (' + A.count(left) + ' left)';
+    $('shownLabel').textContent = rows.length
+      ? 'Showing ' + A.count(Math.min(shown, rows.length)) + ' of ' + A.count(rows.length)
+      : '';
+  }
+
+  function render() {
+    renderMetrics();
+    renderTable();
+  }
+
+  /* ── Load ── */
+  function load() {
+    var period = $('period').value;
+    if (period === 'custom') {
+      var from = $('fromDate').value;
+      var to = $('toDate').value;
+      if (!from || !to) { A.toast('Pick both dates.', 'error'); return; }
+      if (from > to) { A.toast('The start date must be on or before the end date.', 'error'); return; }
+    }
+    var seq = ++requestSeq;
+    $('refreshBtn').disabled = true;
+    $('applyBtn').disabled = true;
+    $('rows').innerHTML = '<tr class="empty-row"><td colspan="' + COLS + '"><div class="empty-state"><div class="spinner"></div>Loading searches…</div></td></tr>';
+    $('moreBar').hidden = true;
+    A.api('/api/search-insights/report?' + periodQuery())
+      .then(function (body) {
+        if (seq !== requestSeq) return;
+        data = body.data || null;
+        shown = PAGE_SIZE;
+        render();
+      })
+      .catch(function (error) {
+        if (seq !== requestSeq) return;
+        data = null;
+        renderMetrics();
+        $('shownLabel').textContent = '';
+        $('rows').innerHTML = emptyRow('fa-triangle-exclamation', error.message || 'Could not load searches. Please try again.');
+      })
+      .then(function () {
+        if (seq !== requestSeq) return;
+        $('refreshBtn').disabled = false;
+        $('applyBtn').disabled = false;
+      });
+  }
+
+  /* ── Copy list ── */
+  function copyList() {
+    var rows = visibleRows();
+    if (!rows.length) { A.toast('Nothing to copy.', 'info'); return; }
+    var text = ['Search\tSearches\tPeople\tResults'].concat(rows.map(function (row) {
+      return String(row.term).replace(/[\t\r\n]+/g, ' ') + '\t' + row.searches + '\t' + row.visitors + '\t' + (row.results || 0);
+    })).join('\n');
+    var done = function () { A.toast('Copied ' + A.count(rows.length) + (rows.length === 1 ? ' search.' : ' searches.'), 'success'); };
+    var fail = function () { A.toast('Copy is blocked in this browser. Select the table and copy it instead.', 'error'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fail);
+    } else {
+      fail();
+    }
+  }
+
+  /* ── Wiring ── */
+  function wire() {
+    $('period').addEventListener('change', function () {
+      var custom = this.value === 'custom';
+      $('customDates').hidden = !custom;
+      if (custom) {
+        if (!$('fromDate').value) $('fromDate').value = A.dhakaToday(-29);
+        if (!$('toDate').value) $('toDate').value = A.dhakaToday();
+        $('fromDate').focus();
+        return;
+      }
+      load();
+    });
+    $('rangeForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      load();
+    });
+    $('refreshBtn').addEventListener('click', load);
+    $('copyBtn').addEventListener('click', copyList);
+    $('filter').addEventListener('input', function () { shown = PAGE_SIZE; renderTable(); });
+    $('moreBtn').addEventListener('click', function () { shown += PAGE_SIZE; renderTable(); });
+    var tabs = document.querySelectorAll('.status-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function () {
+        view = this.getAttribute('data-view');
+        shown = PAGE_SIZE;
+        renderTable();
+      });
+    }
+  }
+
+  var wired = false;
+  function init() {
+    if (BLOCKED_ROLES.indexOf(A.role()) !== -1) {
+      // The report is for managers, editors and accountants; asking would sign this role out.
+      $('refreshBtn').disabled = true;
+      $('copyBtn').disabled = true;
+      $('rows').innerHTML = emptyRow('fa-lock', 'Your role cannot see customer searches. Ask an admin if you need them.');
+      return;
+    }
+    if (!wired) { wire(); wired = true; }
+    $('toDate').max = A.dhakaToday();
+    $('fromDate').max = A.dhakaToday();
+    load();
+  }
+
+  A.boot({ active: 'searches', ready: init });
+})();
+</script>
+</body>
+</html>

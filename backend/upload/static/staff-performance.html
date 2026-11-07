@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Performance — Shobaz Admin</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="admin-shell.css?v=1">
+  <style>
+    /* Staff Performance (ported from Amolbooks gtm-snippets/staff-performance.html). */
+    :root {
+      --sp-bar: #8a8a8a;      /* every bar */
+      --sp-accent: #047857;   /* the one highlight: top performer / best day */
+    }
+    [hidden] { display: none !important; }
+    .page-heading { min-width: 0; }
+    .page-heading .page-subtitle { margin-top: 2px; }
+
+    /* Filters */
+    .filters {
+      display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)) auto;
+      gap: 12px; align-items: end; padding: 12px 16px; margin-bottom: 16px;
+    }
+    .filters .btn { height: 32px; }
+    @media (min-width: 1101px) {
+      .filters.is-self { grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr)) auto; }
+    }
+
+    /* Spotlight: top performer / needs a push */
+    .spotlight { margin-bottom: 16px; }
+    .spotlight > .card, .charts > .card { margin-top: 0; }
+    .spot { padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+    .spot-name { font-size: 15px; font-weight: 650; color: var(--sa-text); overflow-wrap: anywhere; }
+    .spot-detail { font-size: 12px; color: var(--sa-text-2); line-height: 1.5; }
+
+    /* Charts */
+    .charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; align-items: start; margin-bottom: 16px; }
+    .charts .card-head { flex-wrap: wrap; }
+    .chart-body { padding: 14px 16px 16px; }
+    .chart-key { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sa-text-2); }
+    .chart-key i { width: 8px; height: 8px; border-radius: 2px; background: var(--sp-accent); }
+    .chart-empty { padding: 28px 8px; text-align: center; color: var(--sa-text-2); font-size: 13px; }
+    .hbars { display: grid; gap: 10px; }
+    .hbar { display: grid; grid-template-columns: 136px minmax(0, 1fr) 64px; gap: 10px; align-items: center; cursor: default; }
+    .hbar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+    .hbar-name small { color: var(--sa-text-3); font-weight: 500; }
+    .hbar .progress { height: 10px; }
+    .hbar .progress > span { background: var(--sp-bar); }
+    .hbar.is-top .progress > span { background: var(--sp-accent); }
+    .hbar-total { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .head-select { width: auto; max-width: 200px; min-height: 28px; padding-top: 4px; padding-bottom: 4px; font-size: 12px; }
+    .daily svg { display: block; width: 100%; overflow: visible; touch-action: pan-y; }
+    .daily text { font-size: 11px; fill: var(--sa-text-3); font-variant-numeric: tabular-nums; }
+    .daily .grid { stroke: var(--sa-border-2); }
+    .daily .axis { stroke: var(--sa-border-strong); }
+    .daily .col { fill: var(--sp-bar); }
+    .daily .col.best { fill: var(--sp-accent); }
+    .daily .band { fill: var(--sa-surface-3); }
+    .daily-table { margin-top: 10px; }
+    .daily-table summary { cursor: pointer; font-size: 12px; font-weight: 550; color: var(--sa-link); }
+    .daily-table .table-wrap { margin-top: 8px; border: 1px solid var(--sa-border-2); border-radius: var(--sa-radius-sm); }
+    .daily-table td, .daily-table th { white-space: nowrap; }
+
+    /* Tooltip shared by both charts */
+    .sp-tip {
+      position: fixed; z-index: 500; pointer-events: none; min-width: 170px; padding: 8px 10px;
+      background: #fff; border-radius: var(--sa-radius-sm); box-shadow: var(--sa-shadow-pop);
+      font-size: 12px; color: var(--sa-text);
+    }
+    .sp-tip > strong { display: block; margin-bottom: 4px; font-weight: 650; }
+    .tip-row { display: flex; justify-content: space-between; gap: 16px; line-height: 1.7; color: var(--sa-text-2); }
+    .tip-row b { color: var(--sa-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tip-total { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--sa-border-2); color: var(--sa-text); }
+
+    /* Leaderboard */
+    .lb-card { overflow: hidden; }
+    .lb-table td, .lb-table th { white-space: nowrap; }
+    .lb-table th:first-child, .lb-table td:first-child {
+      position: sticky; left: 0; z-index: 1; background: var(--sa-surface);
+      min-width: 190px; box-shadow: inset -1px 0 0 var(--sa-border-2);
+    }
+    .lb-table thead th:first-child { z-index: 2; background: var(--sa-surface-2); }
+    .lb-table tbody tr.is-me td { background: #fafafa; }
+    .lb-table tfoot td {
+      padding: 8px 12px; border-top: 1px solid var(--sa-border);
+      background: var(--sa-surface-2); font-weight: 650; font-variant-numeric: tabular-nums;
+    }
+    .lb-table tfoot td:first-child { background: var(--sa-surface-2); }
+    .lb-table tfoot td.num { text-align: right; }
+    .lb-table td.pts { font-weight: 650; font-size: 14px; }
+    .staff-cell { display: flex; align-items: center; gap: 10px; }
+    .staff-name { font-weight: 600; }
+    .staff-name small { font-weight: 500; color: var(--sa-text-3); }
+    .staff-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; font-size: 12px; color: var(--sa-text-2); }
+    .staff-meta .badge { font-size: 11px; line-height: 14px; padding: 1px 7px; }
+    .rank {
+      width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--sa-surface-3); color: var(--sa-text-2); font-size: 11px; font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .rank.is-top { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+    .lb-table td.empty-cell { white-space: normal; position: static; box-shadow: none; }
+    .lb-loading { opacity: .55; transition: opacity .15s; }
+
+    /* Points settings */
+    .points-form {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+      gap: 12px; align-items: end; margin-top: 14px;
+    }
+    .points-status { min-height: 18px; margin-top: 8px; font-size: 12px; color: var(--sa-text-2); }
+    .points-status:empty { min-height: 0; margin-top: 0; }
+    .points-status.is-error { color: var(--tone-critical-fg); }
+    .points-status.is-ok { color: var(--tone-success-fg); }
+    .rules { margin-top: 12px; padding-left: 18px; color: var(--sa-text-2); font-size: 12px; line-height: 1.6; }
+    .rules li + li { margin-top: 2px; }
+
+    @media (max-width: 1100px) {
+      .charts { grid-template-columns: minmax(0, 1fr); }
+      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filters .field-period { grid-column: 1 / -1; }
+      .points-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .points-form .btn { grid-column: 1 / -1; justify-self: start; }
+    }
+    @media (max-width: 600px) {
+      .filters { padding: 12px; }
+      .hbar { grid-template-columns: 92px minmax(0, 1fr) 52px; gap: 8px; }
+      .lb-table th:first-child, .lb-table td:first-child { min-width: 160px; }
+      .chart-body { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right">
+        <span id="topbarUser"></span>
+        <button class="topbar-icon-btn" id="logoutBtn" type="button" title="Log out" aria-label="Log out"><i class="fas fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </header>
+    <main class="content">
+      <div class="page-header">
+        <div class="page-heading">
+          <h1 class="page-title"><i class="fas fa-trophy" aria-hidden="true"></i> Staff Performance</h1>
+          <p class="page-subtitle">Points for parcels sent, orders won by phone and extra books added</p>
+        </div>
+      </div>
+
+      <form class="card filters" id="filters" novalidate>
+        <div class="field field-period">
+          <label for="preset">Period</label>
+          <select class="select" id="preset">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="7">Last 7 days</option>
+            <option value="month" selected>This month</option>
+            <option value="lastMonth">Last month</option>
+            <option value="custom">Custom dates</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="from">From</label>
+          <input class="input" type="date" id="from" required>
+        </div>
+        <div class="field">
+          <label for="to">To</label>
+          <input class="input" type="date" id="to" required>
+        </div>
+        <div class="field" id="role-field">
+          <label for="role">Role</label>
+          <select class="select" id="role"><option value="">All roles</option></select>
+        </div>
+        <button class="btn btn-primary" id="apply" type="submit">Show</button>
+      </form>
+
+      <div class="metrics" id="metrics">
+        <div class="metric">
+          <span class="metric-label" title="Parcels sent to the courier. Each order counts once, for whoever sent it first.">Parcels sent to courier</span>
+          <div class="metric-value" id="m-courierSent">—</div>
+          <div class="metric-sub" id="ms-courierSent">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Incomplete orders turned into orders (Send / Add Order), counted when the parcel is sent.">Incomplete orders converted</span>
+          <div class="metric-value" id="m-incompleteConverted">—</div>
+          <div class="metric-sub" id="ms-incompleteConverted">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Orders created from a customer's popup in Customer Manager, counted when the parcel is sent.">Customer Manager orders</span>
+          <div class="metric-value" id="m-crmConverted">—</div>
+          <div class="metric-sub" id="ms-crmConverted">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Books in the parcel beyond what the customer chose. Free gifts do not count.">Extra books added</span>
+          <div class="metric-value" id="m-extraItems">—</div>
+          <div class="metric-sub" id="ms-extraItems">&nbsp;</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Calls marked with “I’m calling” on the order pages. Calls do not score points.">Calls logged</span>
+          <div class="metric-value" id="m-callsLogged">—</div>
+          <div class="metric-sub">No points</div>
+        </div>
+        <div class="metric">
+          <span class="metric-label" title="Sum of everyone's points in this period (and role).">Total points</span>
+          <div class="metric-value" id="m-points">—</div>
+          <div class="metric-sub" id="ms-points">&nbsp;</div>
+        </div>
+      </div>
+
+      <div class="grid-2 spotlight" id="spotlight" hidden>
+        <section class="card spot" aria-label="Top performer">
+          <span class="badge tone-success"><i class="fas fa-trophy" aria-hidden="true"></i> Top performer</span>
+          <div class="spot-name" id="spot-top-name">—</div>
+          <p class="spot-detail" id="spot-top-detail"></p>
+        </section>
+        <section class="card spot" aria-label="Needs a push">
+          <span class="badge tone-critical" id="spot-push-badge"><i class="fas fa-flag" aria-hidden="true"></i> Needs a push</span>
+          <div class="spot-name" id="spot-push-name">—</div>
+          <p class="spot-detail" id="spot-push-detail"></p>
+        </section>
+      </div>
+
+      <div class="charts" id="charts" hidden>
+        <section class="card" aria-labelledby="bars-title">
+          <div class="card-head">
+            <div>
+              <div class="card-title" id="bars-title">Points by staff</div>
+              <div class="card-sub" id="bars-note">Employees only. The owner’s account is not ranked.</div>
+            </div>
+            <span class="chart-key" id="bars-key"><i></i>Top</span>
+          </div>
+          <div class="chart-body"><div class="hbars" id="hbars"></div></div>
+        </section>
+        <section class="card" aria-labelledby="daily-title">
+          <div class="card-head">
+            <div>
+              <div class="card-title" id="daily-title">Points per day</div>
+              <div class="card-sub" id="daily-note">—</div>
+            </div>
+            <select class="select head-select" id="daily-who" aria-label="Whose points to show"></select>
+          </div>
+          <div class="chart-body">
+            <div class="daily" id="daily"></div>
+            <details class="daily-table">
+              <summary>Show the numbers</summary>
+              <div class="table-wrap" id="daily-table"></div>
+            </details>
+          </div>
+        </section>
+      </div>
+      <div class="sp-tip" id="tip" role="tooltip" hidden></div>
+
+      <section class="card lb-card" id="board" aria-labelledby="board-title">
+        <div class="card-head">
+          <div>
+            <div class="card-title" id="board-title">Leaderboard</div>
+            <div class="card-sub" id="range-label">—</div>
+          </div>
+          <span class="badge tone-info" id="scope-note" hidden>Your score only</span>
+        </div>
+        <div class="table-wrap">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>Staff</th>
+                <th class="num">Parcels sent</th>
+                <th class="num">Incomplete converted</th>
+                <th class="num">Customer Manager orders</th>
+                <th class="num">Extra books</th>
+                <th class="num" title="Calls marked with “I’m calling” on the order pages (no points)">Calls logged</th>
+                <th class="num">Points</th>
+              </tr>
+            </thead>
+            <tbody id="rows">
+              <tr><td colspan="7" class="empty-cell"><div class="empty-state"><div class="spinner"></div>Loading…</div></td></tr>
+            </tbody>
+            <tfoot id="foot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="card card-pad" id="points-card" aria-labelledby="points-title">
+        <div class="card-title" id="points-title">Points per action</div>
+        <p class="card-sub" id="points-summary" style="margin-top: 4px">—</p>
+        <form class="points-form" id="points-form" hidden>
+          <div class="field">
+            <label for="p-courierSent">Parcel sent to courier</label>
+            <input class="input" id="p-courierSent" type="number" inputmode="numeric" min="0" max="1000" step="1" required>
+          </div>
+          <div class="field">
+            <label for="p-incompleteConverted">Incomplete order converted</label>
+            <input class="input" id="p-incompleteConverted" type="number" inputmode="numeric" min="0" max="1000" step="1" required>
+          </div>
+          <div class="field">
+            <label for="p-crmConverted">Customer Manager order</label>
+            <input class="input" id="p-crmConverted" type="number" inputmode="numeric" min="0" max="1000" step="1" required>
+          </div>
+          <div class="field">
+            <label for="p-extraItems">Each extra book added</label>
+            <input class="input" id="p-extraItems" type="number" inputmode="numeric" min="0" max="1000" step="1" required>
+          </div>
+          <button class="btn btn-primary" id="save-points" type="submit">Save points</button>
+        </form>
+        <p class="points-status" id="points-status" role="status"></p>
+        <ul class="rules">
+          <li>Each order counts once per action, for the staff member who did it first. Re-sending, double clicks or switching a status back and forth never add points.</li>
+          <li>“Incomplete converted” is the Incomplete Orders page’s Send / Add Order; “Customer Manager order” is Create order in a customer’s popup. Both count when that order’s parcel is sent to the courier, so cancelled orders never score.</li>
+          <li>“Extra books” are the books in the parcel beyond what the customer chose: the abandoned cart for an incomplete order, or the order before the first staff edit for any other order. They go to the staff member who added them, when the parcel is sent. Free gifts do not count and a package counts as one; Customer Manager orders score as a whole, without extra books.</li>
+          <li>Status: <span class="badge tone-success">Top performer</span> most points; <span class="badge tone-critical">Needs a push</span> under 40% of the leader once the leader has 10+; <span class="badge tone-attention">Behind</span> the rest; <span class="badge tone-neutral">No points yet</span>. The owner’s account is shown but never ranked.</li>
+          <li>Changing the points recalculates every period. Actions are recorded from the day this feature went live.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="admin-shell.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.ShobazAdmin;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = A.esc;
+  var num = A.count;
+
+  var ROLE_LABELS = {
+    super_admin: 'Super Admin',
+    admin: 'Admin',
+    salesman: 'Sales Man',
+    editor: 'Editor',
+    accountant: 'Accountant',
+    Collector: 'Collector',
+  };
+  var TYPES = [
+    { key: 'courierSent', label: 'Parcels sent', one: 'parcel' },
+    { key: 'incompleteConverted', label: 'Incomplete converted', one: 'conversion' },
+    { key: 'crmConverted', label: 'Customer Manager orders', one: 'Customer Manager order' },
+    { key: 'extraItems', label: 'Extra books', one: 'extra book' },
+  ];
+  var POINT_KEYS = TYPES.map(function (t) { return t.key; });
+  var STATUS = {
+    top: { label: 'Top performer', tone: 'tone-success' },
+    poor: { label: 'Needs a push', tone: 'tone-critical' },
+    behind: { label: 'Behind', tone: 'tone-attention' },
+    idle: { label: 'No points yet', tone: 'tone-neutral' },
+    owner: { label: 'Owner · not ranked', tone: 'tone-subdued' },
+  };
+
+  var data = null;
+  var loadSeq = 0;
+  var started = false;
+
+  function roleLabel(role) { return ROLE_LABELS[role] || role || 'Staff'; }
+  function plural(n, word) { return num(n) + ' ' + word + (Number(n) === 1 ? '' : 's'); }
+  // People are called by the last part of their name ("Golam Masum Munna" → "Munna").
+  function shortName(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : 'Staff';
+  }
+  function typePoints(row, key) { return (row[key] || 0) * ((data && data.points && data.points[key]) || 0); }
+  function viewerId() {
+    if (data && data.viewerId) return String(data.viewerId);
+    var p = A.tokenPayload();
+    return p && p._id ? String(p._id) : '';
+  }
+
+  /* ── Dates (Asia/Dhaka calendar days, YYYY-MM-DD) ── */
+  function shift(day, days) {
+    var d = new Date(day + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  function presetRange(preset) {
+    var today = A.dhakaToday();
+    if (preset === 'today') return [today, today];
+    if (preset === 'yesterday') return [shift(today, -1), shift(today, -1)];
+    if (preset === '7') return [shift(today, -6), today];
+    var monthStart = today.slice(0, 8) + '01';
+    if (preset === 'lastMonth') {
+      var end = shift(monthStart, -1);
+      return [end.slice(0, 8) + '01', end];
+    }
+    return [monthStart, today];
+  }
+  function fmtDay(day) {
+    return new Date(day + 'T12:00:00+06:00').toLocaleDateString('en-GB', {
+      timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric',
+    });
+  }
+  function showDates(from, to) { return from === to ? fmtDay(from) : fmtDay(from) + ' – ' + fmtDay(to); }
+
+  /* ── Tooltip shared by both charts (the same numbers are in the tables) ── */
+  function tipShow(event, html) {
+    var tip = $('tip');
+    tip.innerHTML = html;
+    tip.hidden = false;
+    var pad = 14;
+    var w = tip.offsetWidth;
+    var h = tip.offsetHeight;
+    var x = event.clientX + pad;
+    var y = event.clientY + pad;
+    if (x + w > window.innerWidth - 8) x = event.clientX - w - pad;
+    if (y + h > window.innerHeight - 8) y = event.clientY - h - pad;
+    tip.style.left = Math.max(8, x) + 'px';
+    tip.style.top = Math.max(8, y) + 'px';
+  }
+  function tipHide() { $('tip').hidden = true; }
+  function tipRows(row) {
+    var total = 0;
+    var lines = TYPES.map(function (t) {
+      var pts = typePoints(row, t.key);
+      total += pts;
+      return '<div class="tip-row"><span>' + esc(t.label) + (row[t.key] ? ' · ' + num(row[t.key]) : '') +
+        '</span><b>' + num(pts) + ' pts</b></div>';
+    }).join('');
+    return lines + '<div class="tip-row tip-total"><span>Total</span><b>' + num(total) + ' pts</b></div>';
+  }
+  /** Mouse: follow the pointer. Touch: show on tap, hide on the next tap elsewhere or scroll. */
+  function bindTip(host, htmlFor) {
+    host.setAttribute('data-tip-host', '');
+    host.onpointermove = function (event) {
+      if (event.pointerType === 'touch') return;
+      var html = htmlFor(event);
+      if (html) tipShow(event, html); else tipHide();
+    };
+    host.onpointerdown = function (event) {
+      var html = htmlFor(event);
+      if (html) tipShow(event, html); else tipHide();
+    };
+    host.onpointerleave = function (event) {
+      if (event.pointerType === 'touch') return;
+      if (host.onleave) host.onleave();
+      tipHide();
+    };
+  }
+
+  /* ── Metrics, spotlight, leaderboard ── */
+  function renderMetrics(rows) {
+    var totals = { courierSent: 0, incompleteConverted: 0, crmConverted: 0, extraItems: 0, callsLogged: 0, points: 0 };
+    rows.forEach(function (r) { Object.keys(totals).forEach(function (k) { totals[k] += r[k] || 0; }); });
+    Object.keys(totals).forEach(function (k) { $('m-' + k).textContent = num(totals[k]); });
+    POINT_KEYS.forEach(function (k) {
+      var p = data.points[k];
+      $('ms-' + k).textContent = num(typePoints(totals, k)) + ' pts · ' + p + (p === 1 ? ' pt' : ' pts') + ' each';
+    });
+    $('ms-points').textContent = data.scope === 'self'
+      ? 'Your points'
+      : plural(rows.filter(function (r) { return r.ranked; }).length, 'ranked employee');
+    return totals;
+  }
+
+  function breakdown(row) {
+    return TYPES.filter(function (t) { return row[t.key]; }).map(function (t) {
+      return t.key === 'incompleteConverted' ? num(row[t.key]) + ' converted' : plural(row[t.key], t.one);
+    }).join(' · ');
+  }
+
+  function renderSpotlight(rows) {
+    var ranked = rows.filter(function (r) { return r.ranked; });
+    var show = data.scope !== 'self' && ranked.length > 0;
+    $('spotlight').hidden = !show;
+    if (!show) return;
+    var leaders = ranked.filter(function (r) { return r.status === 'top'; });
+    var teamPoints = ranked.reduce(function (sum, r) { return sum + r.points; }, 0);
+    if (leaders.length) {
+      var lead = leaders[0];
+      $('spot-top-name').textContent = leaders.map(function (r) { return r.name; }).join(' & ') + ' · ' + plural(lead.points, 'point');
+      $('spot-top-detail').textContent =
+        (leaders.length > 1 ? 'Sharing first place. ' : '') +
+        (teamPoints ? Math.round((lead.points / teamPoints) * 100) + '% of the team’s points' : '') +
+        (breakdown(lead) ? ' — ' + breakdown(lead) : '') + '.';
+    } else {
+      $('spot-top-name').textContent = 'No points yet';
+      $('spot-top-detail').textContent = 'Nobody has scored in this period.';
+    }
+    var rules = data.rules || { poorShare: 0.4, poorMinLeader: 10 };
+    var share = Math.round(rules.poorShare * 100);
+    var poor = ranked.filter(function (r) { return r.status === 'poor'; });
+    var badge = $('spot-push-badge');
+    if (poor.length) {
+      badge.className = 'badge tone-critical';
+      badge.innerHTML = '<i class="fas fa-flag" aria-hidden="true"></i> Needs a push';
+      $('spot-push-name').textContent = poor.map(function (r) { return shortName(r.name); }).join(', ');
+      $('spot-push-detail').textContent =
+        poor.map(function (r) { return r.name + ': ' + plural(r.points, 'point'); }).join(' · ') +
+        ' — under ' + share + '% of the top score (' + num(data.leaderPoints) + ').';
+    } else {
+      badge.className = 'badge tone-success';
+      badge.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i> On track';
+      $('spot-push-name').textContent = 'Everyone is on track';
+      $('spot-push-detail').textContent =
+        'Nobody is under ' + share + '% of the top score' +
+        ((data.leaderPoints || 0) < rules.poorMinLeader ? ' (checked once the leader has ' + rules.poorMinLeader + ' points).' : '.');
+    }
+  }
+
+  function statusBadge(status) {
+    var s = STATUS[status];
+    return s ? '<span class="badge ' + s.tone + '">' + esc(s.label) + '</span>' : '';
+  }
+
+  function renderTable(rows, totals) {
+    var me = viewerId();
+    // Staff who see only themselves are "ranked" against nobody: no rank or status for them.
+    var self = data.scope === 'self';
+    $('rows').innerHTML = rows.length
+      ? rows.map(function (r) {
+          var mine = r.adminId === me;
+          var rank = self ? '' : r.ranked
+            ? '<span class="rank' + (r.status === 'top' ? ' is-top' : '') + '">' + r.rank + '</span>'
+            : '<span class="rank" title="Not ranked">—</span>';
+          return '<tr' + (mine ? ' class="is-me"' : '') + '>' +
+            '<td><div class="staff-cell">' + rank + '<div>' +
+              '<div class="staff-name">' + esc(r.name) + (mine ? ' <small>(you)</small>' : '') + '</div>' +
+              '<div class="staff-meta">' + (r.status === 'owner' ? '' : '<span>' + esc(roleLabel(r.role)) + '</span>') + (self ? '' : statusBadge(r.status)) + '</div>' +
+            '</div></div></td>' +
+            '<td class="num">' + num(r.courierSent) + '</td>' +
+            '<td class="num">' + num(r.incompleteConverted) + '</td>' +
+            '<td class="num">' + num(r.crmConverted) + '</td>' +
+            '<td class="num">' + num(r.extraItems) + '</td>' +
+            '<td class="num">' + num(r.callsLogged) + '</td>' +
+            '<td class="num pts">' + num(r.points) + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fas fa-users" aria-hidden="true"></i>No staff activity in this period.</div></td></tr>';
+    $('foot').innerHTML = rows.length > 1
+      ? '<tr><td>Total</td><td class="num">' + num(totals.courierSent) +
+        '</td><td class="num">' + num(totals.incompleteConverted) +
+        '</td><td class="num">' + num(totals.crmConverted) +
+        '</td><td class="num">' + num(totals.extraItems) +
+        '</td><td class="num">' + num(totals.callsLogged) +
+        '</td><td class="num">' + num(totals.points) + '</td></tr>'
+      : '';
+  }
+
+  /* ── Chart 1: points by staff (or, for staff who see only themselves, by type of work) ── */
+  function renderBars(rows) {
+    var self = data.scope === 'self';
+    $('bars-title').textContent = self ? 'Your points' : 'Points by staff';
+    $('bars-note').textContent = self ? 'By type of work.' : 'Employees only. The owner’s account is not ranked.';
+    $('bars-key').innerHTML = '<i></i>' + (self ? 'Most points' : 'Top performer');
+    var box = $('hbars');
+    var items;
+    if (self) {
+      var mine = rows[0] || {};
+      items = TYPES.map(function (t) {
+        return { name: t.label, sub: mine[t.key] ? num(mine[t.key]) : '', value: typePoints(mine, t.key), tip: function () {
+          return '<strong>' + esc(t.label) + '</strong><div class="tip-row"><span>' + plural(mine[t.key] || 0, t.one) +
+            ' × ' + data.points[t.key] + '</span><b>' + num(typePoints(mine, t.key)) + ' pts</b></div>';
+        } };
+      });
+    } else {
+      items = rows.filter(function (r) { return r.ranked; }).map(function (r) {
+        return { name: r.name, sub: '', value: r.points, top: r.status === 'top', tip: function () {
+          return '<strong>' + esc(r.name) + (r.rank ? ' · #' + r.rank : '') + '</strong>' + tipRows(r);
+        } };
+      });
+    }
+    var max = items.reduce(function (m, it) { return Math.max(m, it.value); }, 0);
+    if (self) items.forEach(function (it) { it.top = max > 0 && it.value === max; });
+    if (!items.length || !max) {
+      box.innerHTML = '<div class="chart-empty">No points in this period.</div>';
+      box.onpointermove = box.onpointerdown = box.onpointerleave = null;
+      return;
+    }
+    box.innerHTML = items.map(function (it, i) {
+      var pct = Math.max(it.value > 0 ? 1.5 : 0, (it.value / max) * 100);
+      return '<div class="hbar' + (it.top ? ' is-top' : '') + '" data-row="' + i + '">' +
+        '<span class="hbar-name" title="' + esc(it.name) + '">' + esc(it.name) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '') + '</span>' +
+        '<span class="progress" role="img" aria-label="' + esc(it.name + ': ' + it.value + ' points') + '"><span style="width:' + pct.toFixed(2) + '%"></span></span>' +
+        '<span class="hbar-total">' + num(it.value) + '</span></div>';
+    }).join('');
+    bindTip(box, function (event) {
+      var bar = event.target.closest && event.target.closest('.hbar');
+      return bar ? items[Number(bar.getAttribute('data-row'))].tip() : '';
+    });
+  }
+
+  /* ── Chart 2: points per day (per month for ranges over 62 days) ── */
+  function dayList(from, to) {
+    var out = [];
+    for (var d = from; d <= to && out.length < 400; d = shift(d, 1)) out.push(d);
+    return out;
+  }
+  function buckets(days) {
+    var label = function (d) {
+      return new Date(d + 'T12:00:00+06:00').toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short' });
+    };
+    if (days.length <= 62) return days.map(function (d) { return { key: d, label: label(d), title: fmtDay(d), days: [d] }; });
+    var list = [];
+    var byMonth = {};
+    days.forEach(function (d) {
+      var k = d.slice(0, 7);
+      if (!byMonth[k]) {
+        var name = new Date(k + '-15T12:00:00+06:00').toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', month: 'short', year: 'numeric' });
+        byMonth[k] = { key: k, label: name, title: name, days: [] };
+        list.push(byMonth[k]);
+      }
+      byMonth[k].days.push(d);
+    });
+    return list;
+  }
+  function fillWho(rows) {
+    var sel = $('daily-who');
+    var current = sel.value;
+    var options = (data.scope === 'self' ? [] : [['team', 'All employees']])
+      .concat(rows.filter(function (r) { return r.ranked; }).map(function (r) { return [r.adminId, r.name]; }))
+      .concat(rows.filter(function (r) { return !r.ranked; }).map(function (r) { return [r.adminId, r.name + (r.status === 'owner' ? ' (owner)' : '')]; }));
+    sel.innerHTML = options.map(function (o) { return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>'; }).join('');
+    sel.value = options.some(function (o) { return o[0] === current; }) ? current : (options.length ? options[0][0] : '');
+    sel.hidden = options.length < 2;
+  }
+  function niceMax(value) {
+    if (value <= 4) return 4;
+    var step = Math.pow(10, Math.floor(Math.log10(value / 4)));
+    var unit = [1, 2, 2.5, 5, 10].map(function (m) { return m * step; }).find(function (u) { return u * 4 >= value; });
+    return unit * 4;
+  }
+  function renderDaily(rows) {
+    var sel = $('daily-who');
+    var who = sel.value;
+    var ids = {};
+    (who === 'team' ? rows.filter(function (r) { return r.ranked; }).map(function (r) { return r.adminId; }) : [who])
+      .forEach(function (id) { ids[id] = true; });
+    var series = buckets(dayList(data.from, data.to)).map(function (b) {
+      return { key: b.key, label: b.label, title: b.title, days: b.days, sum: { courierSent: 0, incompleteConverted: 0, crmConverted: 0, extraItems: 0 }, total: 0 };
+    });
+    var bucketOf = {};
+    series.forEach(function (b, i) { b.days.forEach(function (d) { bucketOf[d] = i; }); });
+    (data.daily || []).forEach(function (d) {
+      var i = bucketOf[d.day];
+      if (i === undefined || !ids[d.adminId]) return;
+      TYPES.forEach(function (t) { series[i].sum[t.key] += d[t.key] || 0; });
+    });
+    series.forEach(function (b) { b.total = TYPES.reduce(function (acc, t) { return acc + typePoints(b.sum, t.key); }, 0); });
+
+    var monthly = series[0] && series[0].days.length > 1;
+    var selected = sel.selectedOptions && sel.selectedOptions[0];
+    var whoLabel = selected ? selected.textContent : '';
+    var grand = series.reduce(function (a, b) { return a + b.total; }, 0);
+    var best = series.reduce(function (m, b) { return Math.max(m, b.total); }, 0);
+    $('daily-title').textContent = monthly ? 'Points per month' : 'Points per day';
+    $('daily-note').textContent = (whoLabel ? whoLabel + ' · ' : '') + plural(grand, 'point') +
+      (series.length > 1 ? ' over ' + plural(series.length, monthly ? 'month' : 'day') : '') +
+      (best ? ' · best ' + (monthly ? 'month' : 'day') + ' in green' : '');
+
+    // Table view (same numbers as the chart).
+    $('daily-table').innerHTML =
+      '<table><thead><tr><th>' + (monthly ? 'Month' : 'Day') + '</th>' +
+      TYPES.map(function (t) { return '<th class="num">' + esc(t.label) + '</th>'; }).join('') + '<th class="num">Points</th></tr></thead><tbody>' +
+      series.map(function (b) {
+        return '<tr><td>' + esc(b.title) + '</td>' + TYPES.map(function (t) { return '<td class="num">' + num(b.sum[t.key]) + '</td>'; }).join('') +
+          '<td class="num">' + num(b.total) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+
+    var box = $('daily');
+    if (!grand) {
+      box.innerHTML = '<div class="chart-empty">No points in this period.</div>';
+      box.onpointermove = box.onpointerdown = box.onpointerleave = null;
+      return;
+    }
+    var W = Math.max(280, box.clientWidth || 600);
+    var H = 220;
+    var m = { l: 36, r: 6, t: 10, b: 26 };
+    var pw = W - m.l - m.r;
+    var ph = H - m.t - m.b;
+    var top = niceMax(best);
+    var y = function (v) { return m.t + ph - (v / top) * ph; };
+    var band = pw / series.length;
+    var bw = Math.max(3, Math.min(28, band * 0.62));
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '" role="img" aria-label="' + esc($('daily-title').textContent + ': ' + $('daily-note').textContent) + '">';
+    for (var i = 0; i <= 4; i++) {
+      var v = (top / 4) * i;
+      svg += '<line class="' + (i ? 'grid' : 'axis') + '" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(v) + '" y2="' + y(v) + '" />';
+      svg += '<text x="' + (m.l - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + num(v) + '</text>';
+    }
+    svg += '<rect class="band" x="0" y="' + m.t + '" width="' + band + '" height="' + ph + '" visibility="hidden" />';
+    var every = Math.max(1, Math.ceil(series.length / Math.max(1, Math.floor(pw / 46))));
+    series.forEach(function (b, idx) {
+      var cx = m.l + band * idx + band / 2;
+      if (b.total > 0) {
+        var x = cx - bw / 2;
+        var h = (b.total / top) * ph;
+        var y0 = y(0) - h;
+        var r = Math.min(3, h, bw / 2);
+        svg += '<path class="col' + (b.total === best ? ' best' : '') + '" d="M' + x + ',' + (y0 + h) + 'V' + (y0 + r) +
+          'Q' + x + ',' + y0 + ' ' + (x + r) + ',' + y0 + 'H' + (x + bw - r) + 'Q' + (x + bw) + ',' + y0 + ' ' + (x + bw) + ',' + (y0 + r) +
+          'V' + (y0 + h) + 'Z" />';
+      }
+      if (idx % every === 0) svg += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(b.label) + '</text>';
+    });
+    svg += '</svg>';
+    box.innerHTML = svg;
+    var hover = box.querySelector('.band');
+    box.onleave = function () { hover.setAttribute('visibility', 'hidden'); };
+    bindTip(box, function (event) {
+      var rect = box.querySelector('svg').getBoundingClientRect();
+      var px = ((event.clientX - rect.left) / rect.width) * W - m.l;
+      var at = Math.floor(px / band);
+      if (at < 0 || at >= series.length) { hover.setAttribute('visibility', 'hidden'); return ''; }
+      hover.setAttribute('x', m.l + band * at);
+      hover.setAttribute('visibility', 'visible');
+      var b = series[at];
+      return '<strong>' + esc(b.title) + '</strong>' + tipRows(b.sum);
+    });
+  }
+
+  /* ── Points settings ── */
+  function renderPoints() {
+    var p = data.points;
+    var changed = data.pointsUpdatedBy
+      ? ' Last changed by ' + data.pointsUpdatedBy + (data.pointsUpdatedAt ? ', ' + A.fmtDate(data.pointsUpdatedAt, true) : '') + '.'
+      : (data.pointsAreDefault ? ' Default values.' : '');
+    $('points-summary').textContent =
+      p.courierSent + ' per parcel sent · ' + p.incompleteConverted + ' per incomplete order converted · ' +
+      p.crmConverted + ' per Customer Manager order · ' + p.extraItems + ' per extra book added.' + changed +
+      (data.canEditPoints ? '' : ' Only Super Admin and Admin can change points.');
+    var form = $('points-form');
+    form.hidden = !data.canEditPoints;
+    if (data.canEditPoints && !form.contains(document.activeElement)) {
+      POINT_KEYS.forEach(function (k) { $('p-' + k).value = p[k]; });
+    }
+  }
+
+  /* ── Whole page ── */
+  function currentRows() {
+    var role = $('role').value;
+    var filtered = data.rows.filter(function (r) { return !role || r.role === role; });
+    // Employees by rank first; the owner's account (not ranked) after them.
+    return filtered.filter(function (r) { return r.ranked; }).concat(filtered.filter(function (r) { return !r.ranked; }));
+  }
+  function render() {
+    var rows = currentRows();
+    var totals = renderMetrics(rows);
+    $('range-label').textContent = showDates(data.from, data.to);
+    $('scope-note').hidden = data.scope !== 'self';
+    $('role-field').hidden = data.scope === 'self';
+    $('filters').classList.toggle('is-self', data.scope === 'self');
+    renderTable(rows, totals);
+    renderSpotlight(rows);
+    $('charts').hidden = !rows.length;
+    if (rows.length) {
+      renderBars(rows);
+      fillWho(rows);
+      renderDaily(rows);
+    }
+    renderPoints();
+  }
+
+  function fillRoles() {
+    var sel = $('role');
+    var current = sel.value;
+    var roles = data.rows.map(function (r) { return r.role; })
+      .filter(function (r, i, all) { return r && all.indexOf(r) === i; }).sort();
+    sel.innerHTML = '<option value="">All roles</option>' +
+      roles.map(function (r) { return '<option value="' + esc(r) + '">' + esc(roleLabel(r)) + '</option>'; }).join('');
+    sel.value = roles.indexOf(current) !== -1 ? current : '';
+  }
+
+  function showError(message) {
+    data = null;
+    tipHide();
+    ['courierSent', 'incompleteConverted', 'crmConverted', 'extraItems', 'callsLogged', 'points'].forEach(function (k) { $('m-' + k).textContent = '—'; });
+    $('spotlight').hidden = true;
+    $('charts').hidden = true;
+    $('rows').innerHTML = '<tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i>' + esc(message) + '</div></td></tr>';
+    $('foot').innerHTML = '';
+  }
+
+  function load() {
+    var from = $('from').value;
+    var to = $('to').value;
+    if (!from || !to) { showError('Choose both dates.'); return Promise.resolve(); }
+    if (from > to) { showError('“From” must be on or before “To”.'); return Promise.resolve(); }
+    var seq = ++loadSeq;
+    $('apply').disabled = true;
+    $('board').classList.add('lb-loading');
+    return A.api('/api/staff-activity/performance?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to))
+      .then(function (body) {
+        if (seq !== loadSeq) return;
+        if (!body || !body.data || !Array.isArray(body.data.rows)) throw new Error('Unexpected response from the server.');
+        data = body.data;
+        fillRoles();
+        render();
+      })
+      .catch(function (error) {
+        if (seq !== loadSeq) return;
+        showError(error.message || 'Could not load staff performance.');
+      })
+      .then(function () {
+        if (seq !== loadSeq) return;
+        $('apply').disabled = false;
+        $('board').classList.remove('lb-loading');
+      });
+  }
+
+  function applyPreset() {
+    var preset = $('preset').value;
+    if (preset === 'custom') return;
+    var range = presetRange(preset);
+    $('from').value = range[0];
+    $('to').value = range[1];
+  }
+
+  function savePoints(event) {
+    event.preventDefault();
+    var status = $('points-status');
+    var body = {};
+    for (var i = 0; i < POINT_KEYS.length; i++) {
+      var k = POINT_KEYS[i];
+      var raw = $('p-' + k).value.trim();
+      var value = Number(raw);
+      if (raw === '' || !Number.isInteger(value) || value < 0 || value > 1000) {
+        status.className = 'points-status is-error';
+        status.textContent = $('p-' + k).labels[0].textContent + ' points must be a whole number from 0 to 1000.';
+        $('p-' + k).focus();
+        return;
+      }
+      body[k] = value;
+    }
+    var btn = $('save-points');
+    btn.disabled = true;
+    status.className = 'points-status';
+    status.textContent = 'Saving…';
+    A.api('/api/staff-activity/points', { method: 'PUT', body: body })
+      .then(function () {
+        status.className = 'points-status is-ok';
+        status.textContent = 'Points saved. Scores above use the new values.';
+        A.toast('Points saved');
+        if (document.activeElement && $('points-form').contains(document.activeElement)) document.activeElement.blur();
+        return load();
+      })
+      .catch(function (error) {
+        status.className = 'points-status is-error';
+        status.textContent = error.message;
+        A.toast(error.message, 'error');
+      })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function bind() {
+    $('preset').addEventListener('change', function () {
+      applyPreset();
+      if ($('preset').value !== 'custom') load();
+    });
+    ['from', 'to'].forEach(function (id) {
+      $(id).addEventListener('input', function () { $('preset').value = 'custom'; });
+    });
+    $('role').addEventListener('change', function () { if (data) render(); });
+    $('daily-who').addEventListener('change', function () { if (data) { tipHide(); renderDaily(currentRows()); } });
+    $('filters').addEventListener('submit', function (event) { event.preventDefault(); load(); });
+    $('points-form').addEventListener('submit', savePoints);
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () { if (data && !$('charts').hidden) renderDaily(currentRows()); }, 150);
+    });
+    // Touch: a tap outside a chart, or scrolling, closes the tooltip.
+    document.addEventListener('pointerdown', function (event) {
+      if (!(event.target.closest && event.target.closest('[data-tip-host]'))) tipHide();
+    });
+    window.addEventListener('scroll', tipHide, { passive: true });
+    // Signed in again after a 401: reload with the new token.
+    window.addEventListener('shobaz:admin-auth-restored', function () { load(); });
+  }
+
+  function init() {
+    if (started) return;
+    started = true;
+    applyPreset();
+    bind();
+    load();
+  }
+
+  A.boot({ active: 'staff-performance', ready: init });
+})();
+</script>
+</body>
+</html>

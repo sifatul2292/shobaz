@@ -15,6 +15,7 @@ import { SettingSchema } from '../../customization/setting/schema/setting.schema
 import { AdminSchema } from '../../../schema/admin.schema';
 import { IncompleteOrderSchema } from '../../../schema/incomplete-order.schema';
 import { StockMovementSchema } from '../../../schema/stock-movement.schema';
+import { StaffActivityModule } from '../../staff-activity/staff-activity.module';
 
 @Module({
   imports: [
@@ -33,8 +34,10 @@ import { StockMovementSchema } from '../../../schema/stock-movement.schema';
       { name: 'Admin', schema: AdminSchema },
       { name: 'StockMovement', schema: StockMovementSchema },
     ]),
+    StaffActivityModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],
+  exports: [OrderService],
 })
 export class OrderModule {}

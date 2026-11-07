@@ -3,47 +3,66 @@
 
   if (!root.document) return;
 
+  /*
+   * Order editor for custom-orders.html. Two modes:
+   *  - incomplete: abandoned checkout (PUT /api/order/update-incomplete-order-by-id/:id)
+   *  - order:      placed order      (PUT /api/order/update-order-admin/:id)
+   * Exposed as window.ShobazIncompleteEditor.{open, openOrder, close}.
+   */
   var document = root.document;
-  var API = root.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://api.shobaz.com';
+  var API = /^(localhost|127\.0\.0\.1)$/.test(root.location.hostname) ? 'http://localhost:4000' : 'https://api.shobaz.com';
   var items = [];
   var currentId = '';
+  var currentMode = 'incomplete';
   var lastFocus = null;
   var searchTimer = null;
   var searchController = null;
 
   var CSS = [
-    '.ie-overlay{position:fixed;inset:0;z-index:12500;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(5px)}',
-    '.ie-overlay.open{display:flex}.ie-dialog{width:min(820px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 80px rgba(15,23,42,.35)}',
-    '.ie-header{display:flex;align-items:center;gap:12px;padding:18px 22px;background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff}.ie-header h2{margin:0;font-size:19px}.ie-header p{margin:3px 0 0;color:#ddd6fe;font-size:12px}.ie-close{margin-left:auto;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:20px;cursor:pointer}',
-    '.ie-body{min-height:0;overflow:auto;padding:22px}.ie-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}.ie-grid.full{grid-template-columns:1fr}.ie-label{display:block;margin-bottom:6px;color:#475569;font-size:11px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}',
-    '.ie-control{width:100%;min-height:44px;border:1.5px solid #dbe3ed;border-radius:10px;padding:9px 11px;background:#fff;color:#172033;font:500 14px/1.4 inherit}.ie-control:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12);outline:none}.ie-control[aria-invalid="true"]{border-color:#dc2626}',
-    '.ie-search-row{display:grid;grid-template-columns:1fr auto;gap:8px}.ie-results{display:none;max-height:180px;overflow:auto;margin-top:7px;border:1px solid #dbe3ed;border-radius:10px}.ie-results.open{display:block}.ie-result{display:flex;width:100%;justify-content:space-between;gap:12px;padding:11px;border:0;border-bottom:1px solid #eef2f7;background:#fff;text-align:left;cursor:pointer}.ie-result:hover{background:#f8fafc}.ie-result:last-child{border-bottom:0}.ie-result strong{color:#6d28d9;white-space:nowrap}',
-    '.ie-button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:7px;border:0;border-radius:999px;padding:10px 18px;background:#6d28d9;color:#fff;font:800 13px/1 inherit;cursor:pointer}.ie-button:hover{background:#5b21b6}.ie-button.secondary{background:#eef2f7;color:#475569}.ie-button:disabled{cursor:wait;opacity:.6}',
-    '.ie-items{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}.ie-empty{padding:22px;color:#94a3b8;text-align:center}.ie-item{display:grid;grid-template-columns:minmax(0,1fr) 100px 76px 44px;align-items:end;gap:9px;padding:11px;border-bottom:1px solid #eef2f7}.ie-item:last-child{border-bottom:0}.ie-item-name{align-self:center;min-width:0;color:#172033;font-size:13px;font-weight:750;overflow-wrap:anywhere}.ie-small-label{display:block;margin-bottom:4px;color:#64748b;font-size:10px;font-weight:700}.ie-item input{width:100%;min-height:44px;border:1px solid #dbe3ed;border-radius:8px;padding:7px;text-align:center}.ie-remove{width:44px;height:44px;border:0;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:18px;cursor:pointer}',
-    '.ie-totals{display:flex;justify-content:flex-end;gap:18px;margin-top:12px;color:#64748b;font-size:12px}.ie-totals strong{display:block;margin-top:2px;color:#172033;font-size:16px}.ie-status{min-height:18px;margin:10px 0 0;color:#64748b;font-size:12px}.ie-status.error{color:#b91c1c}.ie-status.success{color:#047857}',
-    '.ie-footer{display:flex;justify-content:flex-end;gap:9px;padding:15px 22px;border-top:1px solid #eef2f7}',
-    '@media(max-width:620px){.ie-overlay{align-items:flex-end;padding:0}.ie-dialog{max-height:97vh;border-radius:18px 18px 0 0}.ie-body{padding:16px}.ie-grid{grid-template-columns:1fr}.ie-item{grid-template-columns:minmax(0,1fr) 82px 64px 44px}.ie-header,.ie-footer{padding:14px 16px}.ie-footer{display:grid;grid-template-columns:1fr 1fr}.ie-button{padding:9px 12px}}'
+    '.ie-overlay{position:fixed;inset:0;z-index:12500;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)}',
+    '.ie-overlay.open{display:flex}.ie-dialog{width:min(780px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 20px 20px -8px rgba(26,26,26,.28),0 0 0 1px rgba(0,0,0,.08);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#303030}',
+    '.ie-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f3f3f3;border-bottom:1px solid #e3e3e3}.ie-header h2{margin:0;font-size:14px;font-weight:650}.ie-header p{margin:2px 0 0;color:#616161;font-size:12px}',
+    '.ie-close{margin-left:auto;width:28px;height:28px;border:0;border-radius:8px;background:none;color:#616161;font-size:20px;line-height:1;cursor:pointer}.ie-close:hover{background:rgba(0,0,0,.06);color:#303030}',
+    '.ie-body{min-height:0;overflow:auto;padding:16px}.ie-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.ie-grid.full{grid-template-columns:1fr}',
+    '.ie-label,.ie-small-label{display:block;margin-bottom:4px;color:#303030;font-size:12px;font-weight:550}.ie-small-label{color:#616161;font-weight:500}',
+    '.ie-control,.ie-item input{width:100%;min-height:32px;border:1px solid #b5b5b5;border-top-color:#8a8a8a;border-radius:8px;padding:6px 10px;background:#fdfdfd;color:#303030;font:400 13px/1.4 inherit;outline:0}',
+    '.ie-control:focus,.ie-item input:focus{border-color:#005bd3;box-shadow:0 0 0 1px #005bd3;background:#fff}.ie-control[aria-invalid="true"]{border-color:#c70a24;background:#fff4f4}textarea.ie-control{resize:vertical}',
+    '.ie-search-row{display:grid;grid-template-columns:1fr auto;gap:8px}.ie-results{display:none;max-height:200px;overflow:auto;margin-top:6px;border:1px solid #e3e3e3;border-radius:10px;box-shadow:0 4px 6px -2px rgba(26,26,26,.15)}.ie-results.open{display:block}',
+    '.ie-result{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:0;border-bottom:1px solid #ebebeb;background:#fff;color:#303030;font:400 13px/1.35 inherit;text-align:left;cursor:pointer}.ie-result:last-child{border-bottom:0}.ie-result:hover,.ie-result:focus{background:#f7f7f7;outline:0}.ie-result strong{white-space:nowrap;font-weight:600}',
+    '.ie-button{display:inline-flex;height:32px;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;padding:0 12px;background:#303030;color:#fff;font:550 13px/1 inherit;cursor:pointer;box-shadow:inset 0 -1px 0 1px rgba(0,0,0,.8),inset 0 .5px 0 1.5px rgba(255,255,255,.25)}.ie-button:hover{background:#1a1a1a}.ie-button:disabled{opacity:.6;cursor:not-allowed}',
+    '.ie-button.secondary{background:#fff;color:#303030;box-shadow:inset 0 -1px 0 0 #b5b5b5,inset 0 0 0 1px rgba(0,0,0,.1)}.ie-button.secondary:hover{background:#f7f7f7}',
+    '.ie-items{border:1px solid #e3e3e3;border-radius:12px;overflow:hidden}.ie-empty{padding:16px;color:#8a8a8a;text-align:center;font-size:13px}',
+    '.ie-item{display:grid;grid-template-columns:minmax(0,1fr) 110px 80px 32px;align-items:end;gap:8px;padding:10px 12px;border-bottom:1px solid #ebebeb}.ie-item:last-child{border-bottom:0}.ie-item-name{align-self:center;font-size:13px;font-weight:550;line-height:1.35}',
+    '.ie-remove{width:32px;height:32px;border:0;border-radius:8px;background:#fff;color:#8e0b21;font-size:18px;line-height:1;cursor:pointer;box-shadow:inset 0 0 0 1px #e3e3e3}.ie-remove:hover{background:#fee8e7}',
+    '.ie-totals{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:20px;margin-top:10px;color:#616161;font-size:12px}.ie-totals strong{display:block;margin-top:2px;color:#303030;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums}',
+    '.ie-status{min-height:18px;margin:10px 0 0;color:#616161;font-size:12px;font-weight:550}.ie-status.error{color:#8e0b21}.ie-status.success{color:#014b40}',
+    '.ie-warning{display:none;margin-bottom:12px;padding:8px 12px;border-radius:10px;background:#fff1a8;color:#4f4700;font-size:12px;font-weight:550}.ie-warning.show{display:block}',
+    '.ie-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e3e3e3}',
+    '.ie-only-order{display:none}.ie-mode-order .ie-only-order{display:block}',
+    '@media(max-width:620px){.ie-overlay{align-items:flex-end;padding:0}.ie-dialog{max-height:96vh;border-radius:16px 16px 0 0}.ie-grid{grid-template-columns:1fr}.ie-item{grid-template-columns:minmax(0,1fr) 88px 64px 32px}.ie-item-name{grid-column:1/-1}}'
   ].join('\n');
 
   var HTML = [
     '<div class="ie-overlay" id="ie-overlay" aria-hidden="true">',
-    '<section class="ie-dialog" role="dialog" aria-modal="true" aria-labelledby="ie-title">',
-    '<header class="ie-header"><div><h2 id="ie-title">Edit incomplete order</h2><p>Changes will be used when this order is added or sent to courier.</p></div><button class="ie-close" id="ie-close" type="button" aria-label="Close">&times;</button></header>',
+    '<section class="ie-dialog" id="ie-dialog" role="dialog" aria-modal="true" aria-labelledby="ie-title">',
+    '<header class="ie-header"><div><h2 id="ie-title">Edit incomplete order</h2><p id="ie-subtitle">Changes will be used when this order is added or sent to courier.</p></div><button class="ie-close" id="ie-close" type="button" aria-label="Close">&times;</button></header>',
     '<div class="ie-body">',
+    '<div class="ie-warning" id="ie-warning" role="note"></div>',
     '<div class="ie-grid"><div><label class="ie-label" for="ie-name">Customer name</label><input class="ie-control" id="ie-name" autocomplete="name"></div><div><label class="ie-label" for="ie-phone">Phone</label><input class="ie-control" id="ie-phone" inputmode="tel" autocomplete="tel"></div></div>',
     '<div class="ie-grid full"><div><label class="ie-label" for="ie-address">Shipping address</label><input class="ie-control" id="ie-address" autocomplete="street-address"></div></div>',
     '<div class="ie-grid"><div><label class="ie-label" for="ie-city">City / area</label><input class="ie-control" id="ie-city" autocomplete="address-level2"></div><div><label class="ie-label" for="ie-email">Email (optional)</label><input class="ie-control" id="ie-email" type="email" autocomplete="email"></div></div>',
     '<div class="ie-grid"><div><label class="ie-label" for="ie-payment">Payment type</label><select class="ie-control" id="ie-payment"><option value="cash_on_delivery">Cash on Delivery</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="card">Card</option><option value="online_payment">Online payment</option></select></div><div><label class="ie-label" for="ie-delivery">Delivery charge (৳)</label><input class="ie-control" id="ie-delivery" type="number" min="0" step="1" inputmode="decimal"></div></div>',
-    '<div class="ie-grid full"><div><label class="ie-label" for="ie-search">Add or replace products</label><div class="ie-search-row"><input class="ie-control" id="ie-search" autocomplete="off" placeholder="Search product name…"><button class="ie-button" id="ie-search-button" type="button"><i class="fas fa-search"></i> Search</button></div><div class="ie-results" id="ie-results"></div></div></div>',
-    '<span class="ie-label">Products, unit prices and quantities</span><div class="ie-items" id="ie-items"></div><div class="ie-totals"><span>Products<strong id="ie-subtotal">৳0</strong></span><span>Delivery<strong id="ie-delivery-total">৳0</strong></span><span>Total<strong id="ie-grand-total">৳0</strong></span></div>',
-    '<div class="ie-grid full" style="margin-top:15px"><div><label class="ie-label" for="ie-note">Customer note</label><textarea class="ie-control" id="ie-note" rows="2"></textarea></div></div>',
+    '<div class="ie-grid full ie-only-order"><div><label class="ie-label" for="ie-discount">Discount (৳)</label><input class="ie-control" id="ie-discount" type="number" min="0" step="1" inputmode="decimal"><span class="ie-small-label" style="margin-top:4px">Coupon or order discount. Book prices below are final prices.</span></div></div>',
+    '<div class="ie-grid full"><div><label class="ie-label" for="ie-search">Add or replace products</label><div class="ie-search-row"><input class="ie-control" id="ie-search" autocomplete="off" placeholder="Search product name…"><button class="ie-button secondary" id="ie-search-button" type="button"><i class="fas fa-search"></i> Search</button></div><div class="ie-results" id="ie-results"></div></div></div>',
+    '<span class="ie-label">Products, unit prices and quantities</span><div class="ie-items" id="ie-items"></div><div class="ie-totals"><span>Products<strong id="ie-subtotal">৳0</strong></span><span class="ie-only-order">Discount<strong id="ie-discount-total">৳0</strong></span><span>Delivery<strong id="ie-delivery-total">৳0</strong></span><span>Total<strong id="ie-grand-total">৳0</strong></span></div>',
+    '<div class="ie-grid full" style="margin-top:14px"><div><label class="ie-label" for="ie-note">Customer note</label><textarea class="ie-control" id="ie-note" rows="2"></textarea></div></div>',
     '<p class="ie-status" id="ie-status" role="status" aria-live="polite"></p></div>',
     '<footer class="ie-footer"><button class="ie-button secondary" id="ie-cancel" type="button">Cancel</button><button class="ie-button" id="ie-save" type="button"><i class="fas fa-save"></i> Save changes</button></footer>',
     '</section></div>'
   ].join('');
 
   function byId(id) { return document.getElementById(id); }
-  function token() { return root.localStorage.getItem('co_admin_token') || ''; }
+  function token() { try { return root.localStorage.getItem('co_admin_token') || ''; } catch (e) { return ''; } }
   function headers() { return { 'Content-Type': 'application/json', administrator: token() }; }
   function setStatus(message, type) { var el = byId('ie-status'); el.textContent = message || ''; el.className = 'ie-status' + (type ? ' ' + type : ''); }
   function number(value) { var parsed = Number(value); return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0; }
@@ -64,17 +83,27 @@
     return response.text().then(function (text) {
       var payload = {};
       try { payload = text ? JSON.parse(text) : {}; } catch (error) { payload = { message: text || 'Unexpected server response' }; }
-      if (!response.ok || payload.success === false) throw new Error(payload.message || 'Request failed (HTTP ' + response.status + ')');
+      if (response.status === 401) {
+        root.dispatchEvent(new CustomEvent('shobaz:admin-auth-required', { detail: { message: 'Session expired. Please log in again.' } }));
+      }
+      if (!response.ok || payload.success === false) {
+        var message = payload.message || 'Request failed (HTTP ' + response.status + ')';
+        throw new Error(Array.isArray(message) ? message.join(', ') : message);
+      }
       return payload;
     });
   }
+  function money(value) { return '৳' + Math.round(value).toLocaleString(); }
   function totals() {
     var subtotal = items.reduce(function (sum, item) { return sum + number(item.editPrice) * quantity(item); }, 0);
     var delivery = number(byId('ie-delivery').value);
-    byId('ie-subtotal').textContent = '৳' + subtotal.toLocaleString();
-    byId('ie-delivery-total').textContent = '৳' + delivery.toLocaleString();
-    byId('ie-grand-total').textContent = '৳' + (subtotal + delivery).toLocaleString();
-    return { subTotal: subtotal, deliveryCharge: delivery, grandTotal: subtotal + delivery };
+    var discount = currentMode === 'order' ? Math.min(number(byId('ie-discount').value), subtotal) : 0;
+    var grand = Math.max(0, subtotal + delivery - discount);
+    byId('ie-subtotal').textContent = money(subtotal);
+    byId('ie-discount-total').textContent = discount ? '-' + money(discount) : money(0);
+    byId('ie-delivery-total').textContent = money(delivery);
+    byId('ie-grand-total').textContent = money(grand);
+    return { subTotal: subtotal, deliveryCharge: delivery, discount: discount, grandTotal: grand };
   }
   function renderItems() {
     var box = byId('ie-items');
@@ -119,26 +148,70 @@
     box.classList.add('open'); box.innerHTML = '<div class="ie-empty">Searching…</div>';
     fetch(API + '/api/product/search?q=' + encodeURIComponent(query) + '&limit=12', { signal: searchController.signal })
       .then(parseResponse).then(function (payload) { renderResults(Array.isArray(payload.data) ? payload.data : []); })
-      .catch(function (error) { if (error.name !== 'AbortError') box.innerHTML = '<div class="ie-empty">' + String(error.message || 'Search failed') + '</div>'; });
+      .catch(function (error) {
+        if (error.name === 'AbortError') return;
+        var empty = document.createElement('div'); empty.className = 'ie-empty'; empty.textContent = String(error.message || 'Search failed');
+        box.innerHTML = ''; box.appendChild(empty);
+      });
   }
   function close() {
     byId('ie-overlay').classList.remove('open'); byId('ie-overlay').setAttribute('aria-hidden', 'true'); document.body.style.overflow = '';
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
-  function open(id) {
-    if (!id) return; currentId = id; lastFocus = document.activeElement; items = []; renderItems(); setStatus('Loading order…');
+  function setMode(mode, order) {
+    currentMode = mode;
+    byId('ie-dialog').classList.toggle('ie-mode-order', mode === 'order');
+    byId('ie-title').textContent = mode === 'order'
+      ? 'Edit order' + (order && order.orderId ? ' #' + order.orderId : '')
+      : 'Edit incomplete order';
+    byId('ie-subtitle').textContent = mode === 'order'
+      ? 'Customer, books, prices and delivery. Status and payment stay as they are.'
+      : 'Changes will be used when this order is added or sent to courier.';
+    var warn = byId('ie-warning');
+    var booked = mode === 'order' && order && order.courierData && order.courierData.providerName;
+    warn.textContent = booked ? 'This order is already booked with ' + order.courierData.providerName + '. You can fix the customer\'s details, but changes that alter the total are blocked because the parcel\'s cash-on-delivery amount would no longer match.' : '';
+    warn.classList.toggle('show', !!booked);
+  }
+  function fill(order) {
+    byId('ie-name').value = order.name || ''; byId('ie-phone').value = order.phoneNo || ''; byId('ie-address').value = order.shippingAddress || '';
+    byId('ie-city').value = order.city || ''; byId('ie-email').value = order.email || ''; byId('ie-payment').value = normalizePayment(order.paymentType);
+    if (!byId('ie-payment').value) byId('ie-payment').value = 'cash_on_delivery';
+    byId('ie-delivery').value = number(order.deliveryCharge); byId('ie-note').value = order.note || '';
+    items = (Array.isArray(order.orderedItems) ? order.orderedItems : []).map(function (item) { return Object.assign({}, item, { editPrice: itemPrice(item), editQty: quantity(item) }); });
+    if (currentMode === 'order') {
+      // What the customer pays beyond the book prices: coupon / order discount.
+      var lineTotal = items.reduce(function (sum, item) { return sum + number(item.editPrice) * quantity(item); }, 0);
+      var extra = lineTotal + number(order.deliveryCharge) - number(order.grandTotal);
+      byId('ie-discount').value = Math.max(0, Math.round(extra));
+    } else {
+      byId('ie-discount').value = 0;
+    }
+    loadedMoney = moneySignature();
+  }
+  // Books, prices, quantities, delivery and discount as one string, to tell
+  // whether a save changes money at all (customer-only edits keep the stored total).
+  var loadedMoney = '';
+  function moneySignature() {
+    return JSON.stringify({
+      items: items.map(function (item) { return [String(item._id || item.product || ''), number(item.editPrice), quantity(item)]; }),
+      delivery: number(byId('ie-delivery').value),
+      discount: number(byId('ie-discount').value),
+    });
+  }
+  function openWith(id, mode) {
+    if (!id) return; currentId = id; lastFocus = document.activeElement; items = []; setMode(mode); renderItems(); setStatus('Loading order…');
+    byId('ie-save').disabled = false;
     byId('ie-overlay').classList.add('open'); byId('ie-overlay').setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
-    fetch(API + '/api/order/incomplete/' + encodeURIComponent(id), { headers: headers() }).then(parseResponse).then(function (payload) {
+    var url = mode === 'order' ? '/api/order/' + encodeURIComponent(id) : '/api/order/incomplete/' + encodeURIComponent(id);
+    fetch(API + url, { headers: headers() }).then(parseResponse).then(function (payload) {
       var order = payload.data;
-      if (!order) throw new Error('Incomplete order was not found.');
-      if (order.status === 'converted') throw new Error('Converted orders can no longer be edited here.');
-      byId('ie-name').value = order.name || ''; byId('ie-phone').value = order.phoneNo || ''; byId('ie-address').value = order.shippingAddress || '';
-      byId('ie-city').value = order.city || ''; byId('ie-email').value = order.email || ''; byId('ie-payment').value = normalizePayment(order.paymentType);
-      if (!byId('ie-payment').value) byId('ie-payment').value = 'cash_on_delivery';
-      byId('ie-delivery').value = number(order.deliveryCharge); byId('ie-note').value = order.note || '';
-      items = (Array.isArray(order.orderedItems) ? order.orderedItems : []).map(function (item) { return Object.assign({}, item, { editPrice: itemPrice(item), editQty: quantity(item) }); });
+      if (!order) throw new Error('Order was not found.');
+      if (mode === 'incomplete' && order.status === 'converted') throw new Error('Converted orders can no longer be edited here.');
+      if (mode === 'order' && [6, 7, 9, 10].indexOf(Number(order.orderStatus)) !== -1) throw new Error('Cancelled or trashed orders cannot be edited.');
+      setMode(mode, order);
+      fill(order);
       renderItems(); setStatus(''); byId('ie-name').focus();
-    }).catch(function (error) { setStatus(error.message || 'Could not load order.', 'error'); });
+    }).catch(function (error) { setStatus(error.message || 'Could not load order.', 'error'); byId('ie-save').disabled = true; });
   }
   function validate() {
     var fields = [['ie-name', 'Customer name is required.'], ['ie-phone', 'Phone number is required.'], ['ie-address', 'Shipping address is required.']];
@@ -160,12 +233,30 @@
     var payload = {
       name: byId('ie-name').value.trim(), phoneNo: byId('ie-phone').value.trim(), shippingAddress: byId('ie-address').value.trim(),
       city: byId('ie-city').value.trim(), email: byId('ie-email').value.trim(), paymentType: byId('ie-payment').value,
-      paymentStatus: 'unpaid', deliveryCharge: computed.deliveryCharge, subTotal: computed.subTotal, discount: 0,
-      grandTotal: computed.grandTotal, orderedItems: orderedItems, note: byId('ie-note').value.trim()
+      deliveryCharge: computed.deliveryCharge, orderedItems: orderedItems, note: byId('ie-note').value.trim()
     };
+    var path;
+    if (currentMode === 'order') {
+      if (moneySignature() === loadedMoney) {
+        // Only customer details changed: leave books and totals exactly as stored.
+        delete payload.orderedItems;
+        delete payload.deliveryCharge;
+      } else {
+        payload.discount = computed.discount;
+      }
+      path = '/api/order/update-order-admin/';
+    } else {
+      payload.paymentStatus = 'unpaid'; payload.subTotal = computed.subTotal; payload.discount = 0; payload.grandTotal = computed.grandTotal;
+      path = '/api/order/update-incomplete-order-by-id/';
+    }
     var button = byId('ie-save'); button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…'; setStatus('');
-    fetch(API + '/api/order/update-incomplete-order-by-id/' + encodeURIComponent(currentId), { method: 'PUT', headers: headers(), body: JSON.stringify(payload) })
-      .then(parseResponse).then(function () { setStatus('Changes saved. Refreshing the order list…', 'success'); root.setTimeout(function () { root.location.reload(); }, 450); })
+    fetch(API + path + encodeURIComponent(currentId), { method: 'PUT', headers: headers(), body: JSON.stringify(payload) })
+      .then(parseResponse).then(function () {
+        setStatus('Changes saved.', 'success');
+        root.dispatchEvent(new CustomEvent('shobaz:order-edited', { detail: { id: currentId, mode: currentMode } }));
+        root.setTimeout(close, 350);
+        button.disabled = false; button.innerHTML = '<i class="fas fa-save"></i> Save changes';
+      })
       .catch(function (error) { setStatus(error.message || 'Could not save changes.', 'error'); button.disabled = false; button.innerHTML = '<i class="fas fa-save"></i> Save changes'; });
   }
 
@@ -174,7 +265,12 @@
   byId('ie-close').addEventListener('click', close); byId('ie-cancel').addEventListener('click', close); byId('ie-save').addEventListener('click', save);
   byId('ie-search-button').addEventListener('click', search); byId('ie-search').addEventListener('input', function () { clearTimeout(searchTimer); searchTimer = setTimeout(search, 320); });
   byId('ie-search').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); search(); } });
-  byId('ie-delivery').addEventListener('input', totals); byId('ie-overlay').addEventListener('click', function (event) { if (event.target === this) close(); });
+  byId('ie-delivery').addEventListener('input', totals); byId('ie-discount').addEventListener('input', totals);
+  byId('ie-overlay').addEventListener('click', function (event) { if (event.target === this) close(); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && byId('ie-overlay').classList.contains('open')) close(); });
-  root.ShobazIncompleteEditor = { open: open, close: close };
+  root.ShobazIncompleteEditor = {
+    open: function (id) { openWith(id, 'incomplete'); },
+    openOrder: function (id) { openWith(id, 'order'); },
+    close: close,
+  };
 })(window);

@@ -220,6 +220,54 @@ export const OrderSchema = new mongoose.Schema(
       ref: 'User',
       required: false,
     },
+    // Staff who last wrote adminNote (staff-activity).
+    adminNoteBy: {
+      _id: { type: Schema.Types.ObjectId, ref: 'Admin' },
+      name: { type: String },
+      role: { type: String },
+      at: { type: Date },
+    },
+    // Staff whose action booked the courier parcel (staff-activity).
+    courierSentBy: {
+      _id: { type: Schema.Types.ObjectId, ref: 'Admin' },
+      name: { type: String },
+      role: { type: String },
+      at: { type: Date },
+    },
+    // Staff credit scored when the parcel is sent (staff-activity): who converted
+    // the order (incomplete / Customer Manager) and who added books beyond the
+    // customer's own count.
+    staffCredit: {
+      type: Schema.Types.Mixed,
+      required: false,
+    },
+    // Latest courier status (Steadfast webhook / status sync) and charge.
+    courierStatus: {
+      status: { type: String, required: false },
+      notificationType: { type: String, required: false },
+      trackingMessage: { type: String, required: false },
+      codAmount: { type: Number, required: false },
+      deliveryCharge: { type: Number, required: false },
+      updatedAt: { type: String, required: false },
+      receivedAt: { type: Date, required: false },
+      lastSyncedAt: { type: Date, required: false },
+      lastSyncError: { type: String, required: false },
+      chargeLookupAttemptedAt: { type: Date, required: false },
+      chargeLookupError: { type: String, required: false },
+      backfillAttemptedAt: { type: Date, required: false },
+      backfillError: { type: String, required: false },
+    },
+    courierStatusHistory: [
+      {
+        _id: false,
+        eventKey: { type: String, required: true },
+        notificationType: { type: String, required: true },
+        status: { type: String, required: false },
+        trackingMessage: { type: String, required: false },
+        updatedAt: { type: String, required: false },
+        receivedAt: { type: Date, required: true },
+      },
+    ],
     admin: {
       _id: {
         type: Schema.Types.ObjectId,

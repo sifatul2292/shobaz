@@ -1,0 +1,1031 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { AddOrderDto } from '../../dto/order.dto';
+import { OrderStatus } from '../../enum/order.enum';
+import { UtilsService } from '../../shared/utils/utils.service';
+import { OrderService } from '../sales/order/order.service';
+
+export const CONTACT_OUTCOMES = [
+  'interested',
+  'not_interested',
+  'no_answer',
+  'follow_up',
+  'ordered',
+  'dont_contact',
+];
+export const CONTACT_CHANNELS = ['call', 'whatsapp', 'other'];
+// Days until the next follow-up suggested for each outcome ("Don't contact" has none).
+export const FOLLOW_UP_DAYS = {
+  no_answer: 1,
+  interested: 2,
+  follow_up: 7,
+  ordered: 30,
+  not_interested: 90,
+};
+const PAYMENT_TYPES = [
+  'cash_on_delivery',
+  'bkash',
+  'nagad',
+  'card',
+  'online_payment',
+];
+// Stored as the order's orderFrom, so the orders pages can tell where it came from.
+const ORDER_SOURCES = {
+  phone: 'Customer Manager (Phone)',
+  whatsapp: 'Customer Manager (WhatsApp)',
+};
+// Order statuses as the Shobaz order pages use them: 5 completed, 6/7/9
+// cancelled, 10 trash, the rest processing.
+const FAILED_STATUSES = [
+  OrderStatus.CANCEL,
+  OrderStatus.REFUND,
+  OrderStatus.RETURN,
+];
+const TRASH_STATUS = OrderStatus.HOLD;
+const COURIER_FAILED = ['cancelled', 'returned'];
+const COURIER_NOT_DELIVERED = ['cancelled', 'partial_delivered', 'returned'];
+const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
+// What may come before the last ten digits of a Bangladesh mobile number:
+// nothing (old imports dropped the 0), 0, +88 / 0088 forms and the 8800 typo.
+const PHONE_PREFIXES = ['', '0', '88', '880', '0088', '00880', '8800'];
+const INDEX_REFRESH_MS = 60 * 1000;
+const ACTOR_CACHE_MS = 5 * 60 * 1000;
+
+interface CustomerIndex {
+  builtAt: number;
+  orderCount: number;
+  rows: any[];
+}
+
+interface StaffActor {
+  _id: Types.ObjectId;
+  name: string;
+  role: string;
+}
+
+function categoryNames(category: any): string[] {
+  return []
+    .concat(category || [])
+    .map((entry: any) =>
+      String((entry && typeof entry === 'object' ? entry.name : entry) || '').trim(),
+    )
+    .filter(Boolean);
+}
+
+/** The customer key: 01XXXXXXXXX from any stored form, or '' when it is not a BD mobile. */
+export function normalizeCustomerPhone(value: any): string {
+  const digits = String(value == null ? '' : value)
+    .replace(/[০-৯]/g, (c) => String(BN_DIGITS.indexOf(c)))
+    .replace(/\D/g, '');
+  if (digits.length < 10) return '';
+  const last = digits.slice(-10);
+  return PHONE_PREFIXES.includes(digits.slice(0, -10)) &&
+    /^1[3-9]\d{8}$/.test(last)
+    ? '0' + last
+    : '';
+}
+
+export function dhakaToday(): string {
+  return new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
+}
+
+export function followUpDate(outcome: string, from = dhakaToday()): string {
+  const days = FOLLOW_UP_DAYS[outcome];
+  if (!days) return '';
+  const date = new Date(from + 'T00:00:00Z');
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function validDay(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value + 'T00:00:00Z');
+  return (
+    Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
+}
+
+@Injectable()
+export class CustomerManagerService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(CustomerManagerService.name);
+  private index: CustomerIndex | null = null;
+  private building: Promise<CustomerIndex> | null = null;
+  private actors = new Map<string, { at: number; actor: StaffActor }>();
+  // Order requests in flight, so a double submit cannot create two orders.
+  private pendingOrders = new Map<string, Promise<any>>();
+
+  constructor(
+    @InjectModel('Order') private readonly orders: Model<any>,
+    @InjectModel('Product') private readonly products: Model<any>,
+    @InjectModel('Admin') private readonly admins: Model<any>,
+    @InjectModel('CustomerContact') private readonly contacts: Model<any>,
+    private readonly orderService: OrderService,
+    private readonly utils: UtilsService,
+  ) {}
+
+  // Build the customer index after startup so the first page load is fast.
+  onApplicationBootstrap() {
+    const timer = setTimeout(
+      () => this.customers().catch(() => undefined),
+      5000,
+    );
+    if (timer && typeof timer.unref === 'function') timer.unref();
+  }
+
+  /* ── Aggregation pieces ── */
+
+  private deliveredExpression(): any {
+    return {
+      $and: [
+        { $not: [{ $in: ['$orderStatus', FAILED_STATUSES] }] },
+        {
+          $not: [
+            {
+              $in: [
+                { $ifNull: ['$courierStatus.status', ''] },
+                COURIER_NOT_DELIVERED,
+              ],
+            },
+          ],
+        },
+        {
+          $or: [
+            { $eq: ['$orderStatus', OrderStatus.DELIVERED] },
+            { $eq: ['$courierStatus.status', 'delivered'] },
+          ],
+        },
+      ],
+    };
+  }
+
+  private failedExpression(): any {
+    return {
+      $or: [
+        { $in: ['$orderStatus', FAILED_STATUSES] },
+        {
+          $in: [{ $ifNull: ['$courierStatus.status', ''] }, COURIER_FAILED],
+        },
+      ],
+    };
+  }
+
+  /** normalizeCustomerPhone() as an aggregation expression over phoneNo. */
+  private phoneExpression(): any {
+    let text: any = {
+      $convert: { input: '$phoneNo', to: 'string', onError: '', onNull: '' },
+    };
+    Array.from(BN_DIGITS).forEach((digit, i) => {
+      text = {
+        $replaceAll: { input: text, find: digit, replacement: String(i) },
+      };
+    });
+    const digits = {
+      $reduce: {
+        input: { $regexFindAll: { input: text, regex: /[0-9]/ } },
+        initialValue: '',
+        in: { $concat: ['$$value', '$$this.match'] },
+      },
+    };
+    return {
+      $let: {
+        vars: { d: digits },
+        in: {
+          $let: {
+            vars: {
+              cut: { $max: [0, { $subtract: [{ $strLenCP: '$$d' }, 10] }] },
+            },
+            in: {
+              $let: {
+                vars: {
+                  last: { $substrCP: ['$$d', '$$cut', 10] },
+                  prefix: { $substrCP: ['$$d', 0, '$$cut'] },
+                },
+                in: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ['$$prefix', PHONE_PREFIXES] },
+                        {
+                          $regexMatch: {
+                            input: '$$last',
+                            regex: /^1[3-9][0-9]{8}$/,
+                          },
+                        },
+                      ],
+                    },
+                    { $concat: ['0', '$$last'] },
+                    '',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+
+  /** Orders (never trashed ones) with crmDelivered and the normalised crmPhone. */
+  private base(deliveredOnly = true, match: any = {}): any[] {
+    return [
+      { $match: { ...match, orderStatus: { $ne: TRASH_STATUS } } },
+      { $set: { crmDelivered: this.deliveredExpression() } },
+      ...(deliveredOnly ? [{ $match: { crmDelivered: true } }] : []),
+      { $set: { crmPhone: this.phoneExpression() } },
+      { $match: { crmPhone: { $ne: '' } } },
+    ];
+  }
+
+  /** Orders whose phoneNo ends with this number's last ten digits (any separators). */
+  private phoneCandidates(phone: string): any {
+    const separators = "[\\s()+.'\\-]*";
+    const digits = phone
+      .slice(1)
+      .split('')
+      .map((digit) => '[' + digit + BN_DIGITS[Number(digit)] + ']')
+      .join(separators);
+    return { phoneNo: new RegExp(digits + separators + '$') };
+  }
+
+  private courierRatio(overall: any) {
+    return overall && typeof overall === 'object'
+      ? {
+          total: Number(overall.total) || 0,
+          delivered: Number(overall.delivered) || 0,
+          returned: Number(overall.returned) || 0,
+          ratio: Number(overall.success_ratio) || 0,
+        }
+      : null;
+  }
+
+  /** Who is acting: the display name comes from the Admin record. */
+  private async actor(admin: any): Promise<StaffActor> {
+    const id = admin?._id ? String(admin._id) : '';
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException('Unknown staff account');
+    const cached = this.actors.get(id);
+    if (cached && Date.now() - cached.at < ACTOR_CACHE_MS) return cached.actor;
+    const record: any = await this.admins
+      .findById(id)
+      .select('name username role')
+      .lean();
+    const actor = {
+      _id: new Types.ObjectId(id),
+      name: String(record?.name || record?.username || admin.username || 'Staff')
+        .trim()
+        .slice(0, 80),
+      role: String(record?.role || admin.role || ''),
+    };
+    this.actors.set(id, { at: Date.now(), actor });
+    return actor;
+  }
+
+  /* ── Customer index ── */
+
+  /**
+   * One row per phone with at least one delivered order. Building it scans
+   * every order, so it is cached: rebuilt when the order count changes (new or
+   * deleted orders) and refreshed in the background once it is a minute old.
+   */
+  private async customers(force = false): Promise<CustomerIndex> {
+    const orderCount = await this.orders.estimatedDocumentCount();
+    const current = this.index;
+    if (!force && current && current.orderCount === orderCount) {
+      if (Date.now() - current.builtAt > INDEX_REFRESH_MS)
+        this.rebuild(orderCount).catch(() => undefined);
+      return current;
+    }
+    return this.rebuild(orderCount);
+  }
+
+  private rebuild(orderCount: number): Promise<CustomerIndex> {
+    if (!this.building) {
+      this.building = this.buildIndex(orderCount)
+        .then((index) => (this.index = index))
+        .finally(() => (this.building = null));
+    }
+    return this.building;
+  }
+
+  private async buildIndex(orderCount: number): Promise<CustomerIndex> {
+    const [groups, products] = await Promise.all([
+      this.orders
+        .aggregate([
+          ...this.base(false),
+          {
+            $project: {
+              crmPhone: 1,
+              crmDelivered: 1,
+              crmFailed: this.failedExpression(),
+              name: 1,
+              shippingAddress: 1,
+              city: 1,
+              createdAt: 1,
+              grandTotal: 1,
+              'orderedItems._id': 1,
+              'orderedItems.name': 1,
+              'orderedItems.category.name': 1,
+              courier: {
+                $cond: [
+                  { $ifNull: ['$fraudChecker.overall', false] },
+                  { at: '$createdAt', overall: '$fraudChecker.overall' },
+                  null,
+                ],
+              },
+            },
+          },
+          { $sort: { crmDelivered: -1, createdAt: -1, _id: -1 } },
+          {
+            $group: {
+              _id: '$crmPhone',
+              name: { $first: '$name' },
+              shippingAddress: { $first: '$shippingAddress' },
+              city: { $first: '$city' },
+              lastPurchase: { $first: '$createdAt' },
+              orderCount: { $sum: { $cond: ['$crmDelivered', 1, 0] } },
+              totalOrderCount: { $sum: 1 },
+              failedCount: { $sum: { $cond: ['$crmFailed', 1, 0] } },
+              totalSpent: {
+                $sum: { $cond: ['$crmDelivered', '$grandTotal', 0] },
+              },
+              maxOrderValue: {
+                $max: { $cond: ['$crmDelivered', '$grandTotal', 0] },
+              },
+              // Latest saved courier (FraudSpy) ratio for this phone.
+              courier: { $max: '$courier' },
+              items: {
+                $push: {
+                  $cond: ['$crmDelivered', '$orderedItems', '$$REMOVE'],
+                },
+              },
+            },
+          },
+          { $match: { orderCount: { $gt: 0 } } },
+        ])
+        .allowDiskUse(true),
+      this.products.find({}).select('category.name').lean(),
+    ]);
+    // Order snapshots usually lack category names; fall back to the catalog.
+    const catalog = new Map<string, string[]>();
+    for (const product of products as any[])
+      catalog.set(String(product._id), categoryNames(product.category));
+    const rows = groups.map((group: any) => {
+      const books = new Set<string>();
+      const categories = new Set<string>();
+      for (const item of [].concat(...(group.items || []))) {
+        if (!item) continue;
+        if (item.name) books.add(String(item.name).trim());
+        const names = categoryNames(item.category);
+        (names.length ? names : catalog.get(String(item._id)) || []).forEach(
+          (name) => categories.add(name),
+        );
+      }
+      return {
+        phone: group._id,
+        name: group.name || '',
+        shippingAddress: group.shippingAddress || '',
+        city: group.city || '',
+        orderCount: group.orderCount,
+        totalOrderCount: group.totalOrderCount,
+        failedCount: group.failedCount,
+        totalSpent: group.totalSpent || 0,
+        maxOrderValue: group.maxOrderValue || 0,
+        lastPurchase: group.lastPurchase,
+        ratio:
+          Math.round((group.orderCount / group.totalOrderCount) * 1000) / 10,
+        courierRatio: this.courierRatio(group.courier?.overall),
+        books: [...books],
+        bookText: [...books].join('\n').toLowerCase(),
+        categoryText: [...categories].join('\n').toLowerCase(),
+      };
+    });
+    return { builtAt: Date.now(), orderCount, rows };
+  }
+
+  /** Latest contact per phone (the contact log is small and indexed by phone). */
+  private async latestContacts(): Promise<Map<string, any>> {
+    const rows = await this.contacts.aggregate([
+      { $sort: { phone: 1, createdAt: -1, _id: -1 } },
+      {
+        $group: {
+          _id: '$phone',
+          outcome: { $first: '$outcome' },
+          nextFollowUp: { $first: '$nextFollowUp' },
+          createdAt: { $first: '$createdAt' },
+          contactedByName: { $first: '$contactedByName' },
+        },
+      },
+    ]);
+    return new Map(rows.map((row: any) => [row._id, row]));
+  }
+
+  /* ── Routes ── */
+
+  async list(query: any, admin?: any) {
+    query = query || {};
+    const numeric = (key: string) => {
+      if (query[key] === undefined || query[key] === '') return undefined;
+      const value = Number(query[key]);
+      if (!Number.isFinite(value) || value < 0)
+        throw new BadRequestException('Invalid ' + key);
+      return value;
+    };
+    const min = numeric('minSpent'),
+      max = numeric('maxSpent'),
+      orderMin = numeric('minOrderValue'),
+      days = numeric('days');
+    const day = (key: string, time: string) => {
+      if (!query[key]) return undefined;
+      const value = String(query[key]);
+      if (!validDay(value)) throw new BadRequestException('Invalid ' + key);
+      return new Date(value + 'T' + time + '+06:00');
+    };
+    const lastFrom = day('lastFrom', '00:00:00.000'),
+      lastTo = day('lastTo', '23:59:59.999');
+    if (query.frequency && !['once', 'repeat'].includes(query.frequency))
+      throw new BadRequestException('Invalid frequency');
+    if (query.ratio && !['good', 'mid', 'low'].includes(query.ratio))
+      throw new BadRequestException('Invalid ratio');
+    const status = query.status || '';
+    if (
+      status &&
+      !['never', 'contacted', 'due', ...CONTACT_OUTCOMES].includes(status)
+    )
+      throw new BadRequestException('Invalid contact status');
+    const sorts = {
+      recent: (a: any, b: any) =>
+        new Date(b.lastPurchase).getTime() - new Date(a.lastPurchase).getTime(),
+      spent: (a: any, b: any) => b.totalSpent - a.totalSpent,
+      orders: (a: any, b: any) => b.orderCount - a.orderCount,
+      ratio: (a: any, b: any) =>
+        b.ratio - a.ratio || b.orderCount - a.orderCount,
+      followup: (a: any, b: any) =>
+        (a.contact?.nextFollowUp || '9999').localeCompare(
+          b.contact?.nextFollowUp || '9999',
+        ),
+    };
+    const sort = sorts[query.sort] || sorts.recent;
+    const exporting = query.export === '1';
+    if (exporting && !['super_admin', 'admin'].includes(admin?.role))
+      throw new ForbiddenException(
+        'Only Super Admin and Admin can export customers',
+      );
+    const pageSize = exporting
+      ? 50000
+      : [20, 50, 100].includes(Number(query.pageSize))
+      ? Number(query.pageSize)
+      : 20;
+    const page = Math.max(
+      1,
+      Math.min(100000, Math.floor(Number(query.page) || 1)),
+    );
+
+    const [index, contacts] = await Promise.all([
+      this.customers(query.refresh === '1'),
+      this.latestContacts(),
+    ]);
+    const text = (value: any) =>
+      String(value || '')
+        .trim()
+        .toLowerCase()
+        .slice(0, 120);
+    const q = text(query.q);
+    const qDigits = q
+      .replace(/[০-৯]/g, (c) => String(BN_DIGITS.indexOf(c)))
+      .replace(/\D/g, '');
+    const product = text(query.product),
+      category = text(query.category);
+    const cutoff =
+      days !== undefined ? Date.now() - days * 86400000 : undefined;
+    const today = dhakaToday();
+    const isDue = (contact: any) =>
+      Boolean(
+        contact &&
+          contact.outcome !== 'dont_contact' &&
+          contact.nextFollowUp &&
+          contact.nextFollowUp <= today,
+      );
+
+    const filtered = [];
+    for (const row of index.rows) {
+      if (
+        q &&
+        !row.name.toLowerCase().includes(q) &&
+        !(qDigits.length >= 3 && row.phone.includes(qDigits))
+      )
+        continue;
+      if (product && !row.bookText.includes(product)) continue;
+      if (category && !row.categoryText.includes(category)) continue;
+      const last = new Date(row.lastPurchase).getTime();
+      if (lastFrom && last < lastFrom.getTime()) continue;
+      if (lastTo && last > lastTo.getTime()) continue;
+      if (cutoff !== undefined && last > cutoff) continue;
+      if (min !== undefined && row.totalSpent < min) continue;
+      if (max !== undefined && row.totalSpent > max) continue;
+      if (orderMin !== undefined && row.maxOrderValue < orderMin) continue;
+      if (query.frequency === 'repeat' && row.orderCount < 2) continue;
+      if (query.frequency === 'once' && row.orderCount !== 1) continue;
+      if (query.ratio === 'good' && row.ratio < 80) continue;
+      if (query.ratio === 'mid' && (row.ratio < 50 || row.ratio >= 80))
+        continue;
+      if (query.ratio === 'low' && row.ratio >= 50) continue;
+      filtered.push({ ...row, contact: contacts.get(row.phone) });
+    }
+
+    // Summary cards and tab counts follow every filter except the tab itself.
+    const tabs: any = { all: 0, never: 0, due: 0, contacted: 0 };
+    CONTACT_OUTCOMES.forEach((outcome) => (tabs[outcome] = 0));
+    const summary = {
+      customers: filtered.length,
+      followedUp: 0,
+      never: 0,
+      due: 0,
+      repeat: 0,
+      spent: 0,
+    };
+    for (const row of filtered) {
+      const contact = row.contact;
+      summary.spent += row.totalSpent;
+      if (row.orderCount > 1) summary.repeat++;
+      if (!contact) {
+        summary.never++;
+        tabs.never++;
+      } else {
+        summary.followedUp++;
+        tabs.contacted++;
+        tabs[contact.outcome] = (tabs[contact.outcome] || 0) + 1;
+      }
+      if (isDue(contact)) {
+        summary.due++;
+        tabs.due++;
+      }
+      if (contact?.outcome !== 'dont_contact') tabs.all++;
+    }
+    const inTab = (row: any) => {
+      const contact = row.contact;
+      if (status === 'never') return !contact;
+      if (status === 'contacted') return Boolean(contact);
+      if (status === 'due') return isDue(contact);
+      if (status) return contact?.outcome === status;
+      return contact?.outcome !== 'dont_contact';
+    };
+    const matching = filtered
+      .filter(inTab)
+      .sort((a, b) => sort(a, b) || (a.phone < b.phone ? -1 : 1));
+    const rows = matching
+      .slice((page - 1) * pageSize, page * pageSize)
+      .map((row) => ({
+        phone: row.phone,
+        name: row.name,
+        shippingAddress: row.shippingAddress,
+        city: row.city,
+        orderCount: row.orderCount,
+        totalOrderCount: row.totalOrderCount,
+        failedCount: row.failedCount,
+        totalSpent: row.totalSpent,
+        maxOrderValue: row.maxOrderValue,
+        lastPurchase: row.lastPurchase,
+        ratio: row.ratio,
+        courierRatio: row.courierRatio,
+        books: row.books.slice(0, 3),
+        bookCount: row.books.length,
+        ...(row.contact
+          ? {
+              latestContact: {
+                outcome: row.contact.outcome,
+                nextFollowUp: row.contact.nextFollowUp,
+                createdAt: row.contact.createdAt,
+                contactedByName: row.contact.contactedByName,
+              },
+            }
+          : {}),
+      }));
+    return {
+      success: true,
+      data: {
+        rows,
+        total: matching.length,
+        page,
+        pageSize,
+        summary,
+        tabs,
+        followUpRules: FOLLOW_UP_DAYS,
+        updatedAt: new Date(index.builtAt),
+      },
+    };
+  }
+
+  async detail(rawPhone: string) {
+    const phone = normalizeCustomerPhone(rawPhone);
+    if (!phone) throw new BadRequestException('Invalid phone number');
+    const [result, history] = await Promise.all([
+      this.orders.aggregate([
+        ...this.base(false, this.phoneCandidates(phone)),
+        { $match: { crmPhone: phone } },
+        { $set: { crmFailed: this.failedExpression() } },
+        {
+          $facet: {
+            customer: [
+              {
+                $group: {
+                  _id: null,
+                  orderCount: { $sum: { $cond: ['$crmDelivered', 1, 0] } },
+                  totalOrderCount: { $sum: 1 },
+                  failedCount: { $sum: { $cond: ['$crmFailed', 1, 0] } },
+                  totalSpent: {
+                    $sum: { $cond: ['$crmDelivered', '$grandTotal', 0] },
+                  },
+                },
+              },
+            ],
+            // Every order (any status but trash) for the order history.
+            allOrders: [
+              { $sort: { createdAt: -1, _id: -1 } },
+              { $limit: 50 },
+              {
+                $project: {
+                  orderId: 1,
+                  createdAt: 1,
+                  grandTotal: 1,
+                  orderStatus: 1,
+                  orderFrom: 1,
+                  crmDelivered: 1,
+                  crmFailed: 1,
+                  'courierStatus.status': 1,
+                  'courierData.providerName': 1,
+                  'fraudChecker.overall': 1,
+                  'orderedItems.name': 1,
+                  'orderedItems.quantity': 1,
+                },
+              },
+            ],
+            // Latest delivered orders: the customer details for a repeat order.
+            orders: [
+              { $match: { crmDelivered: true } },
+              { $sort: { createdAt: -1, _id: -1 } },
+              { $limit: 1 },
+              {
+                $project: {
+                  orderId: 1,
+                  name: 1,
+                  createdAt: 1,
+                  shippingAddress: 1,
+                  city: 1,
+                  email: 1,
+                  division: 1,
+                  area: 1,
+                  zone: 1,
+                  deliveryCharge: 1,
+                  paymentType: 1,
+                },
+              },
+            ],
+            // Books bought across delivered orders.
+            books: [
+              { $match: { crmDelivered: true } },
+              { $unwind: '$orderedItems' },
+              { $match: { 'orderedItems.name': { $nin: [null, ''] } } },
+              {
+                $group: {
+                  _id: '$orderedItems.name',
+                  product: { $first: '$orderedItems._id' },
+                  quantity: {
+                    $sum: { $ifNull: ['$orderedItems.quantity', 1] },
+                  },
+                  orders: { $sum: 1 },
+                  lastAt: { $max: '$createdAt' },
+                },
+              },
+              { $sort: { lastAt: -1, _id: 1 } },
+              { $limit: 100 },
+            ],
+          },
+        },
+      ]),
+      this.contacts
+        .find({ phone })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(50)
+        .lean(),
+    ]);
+    const customer = result[0].customer,
+      latest = result[0].orders[0],
+      allOrders = result[0].allOrders;
+    if (!customer.length || !customer[0].orderCount || !latest)
+      throw new NotFoundException('No delivered orders for this customer');
+    const overall = allOrders.find((order: any) => order.fraudChecker?.overall)
+      ?.fraudChecker.overall;
+    const stats = customer[0];
+    return {
+      success: true,
+      data: {
+        phone,
+        name: latest.name,
+        customerInfo: {
+          name: latest.name,
+          phoneNo: phone,
+          email: latest.email || '',
+          shippingAddress: latest.shippingAddress || '',
+          city: latest.city || '',
+          division: latest.division,
+          area: latest.area,
+          zone: latest.zone,
+          deliveryCharge: Number(latest.deliveryCharge) || 0,
+          paymentType: latest.paymentType || 'cash_on_delivery',
+        },
+        lastPurchase: latest.createdAt,
+        orderCount: stats.orderCount,
+        totalOrderCount: stats.totalOrderCount,
+        failedCount: stats.failedCount,
+        totalSpent: stats.totalSpent,
+        ratio:
+          Math.round((stats.orderCount / stats.totalOrderCount) * 1000) / 10,
+        courierRatio: this.courierRatio(overall),
+        allOrders: allOrders.map(({ fraudChecker, ...order }: any) => order),
+        books: result[0].books.map((book: any) => ({
+          name: book._id,
+          product: book.product ? String(book.product) : '',
+          quantity: book.quantity,
+          orders: book.orders,
+          lastAt: book.lastAt,
+        })),
+        history,
+        followUpRules: FOLLOW_UP_DAYS,
+      },
+    };
+  }
+
+  async searchPurchasedBooks(query: string) {
+    const term = String(query || '')
+      .trim()
+      .toLowerCase()
+      .slice(0, 120);
+    if (term.length < 2) return { success: true, data: [] };
+    const names = new Set<string>();
+    for (const row of (await this.customers()).rows)
+      for (const book of row.books)
+        if (book.toLowerCase().includes(term)) names.add(book);
+    return {
+      success: true,
+      data: [...names]
+        .sort()
+        .slice(0, 12)
+        .map((name) => ({ name })),
+    };
+  }
+
+  async searchProducts(query: string) {
+    const term = String(query || '')
+      .trim()
+      .slice(0, 120);
+    if (term.length < 2) return { success: true, data: [] };
+    const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const products = await this.products
+      .find({
+        $or: [{ name: regex }, { nameEn: regex }, { sku: regex }, { isbn: regex }],
+      })
+      .select(
+        'name nameEn salePrice discountType discountAmount images stock status',
+      )
+      .sort({ name: 1, _id: 1 })
+      .limit(12)
+      .lean();
+    return {
+      success: true,
+      data: products.map((product: any) => ({
+        _id: String(product._id),
+        name: product.name,
+        nameEn: product.nameEn || '',
+        image: (product.images && product.images[0]) || '',
+        regularPrice: this.utils.transform(product, 'regularPrice'),
+        price: this.utils.transform(product, 'salePrice'),
+        // Manual stock counter; null when the product's stock is not tracked.
+        stock: typeof product.stock === 'number' ? product.stock : null,
+        published: product.status === 'publish',
+      })),
+    };
+  }
+
+  async createOrder(rawPhone: string, body: any, admin: any) {
+    if (!body || typeof body !== 'object')
+      throw new BadRequestException('Invalid order details');
+    if (
+      typeof body.requestId !== 'string' ||
+      !/^crm-[a-zA-Z0-9-]{16,80}$/.test(body.requestId)
+    )
+      throw new BadRequestException('Invalid order request ID');
+    const requestId: string = body.requestId;
+    const pending = this.pendingOrders.get(requestId);
+    if (pending) return pending;
+    const job = this.placeOrder(rawPhone, body, admin, requestId).finally(() =>
+      this.pendingOrders.delete(requestId),
+    );
+    this.pendingOrders.set(requestId, job);
+    return job;
+  }
+
+  private async placeOrder(
+    rawPhone: string,
+    body: any,
+    admin: any,
+    requestId: string,
+  ) {
+    const detail = (await this.detail(rawPhone)).data;
+    const info = detail.customerInfo;
+    // A retried request (lost response) returns the order it already created.
+    const existing: any = await this.orders
+      .findOne({ phoneNo: detail.phone, 'staffCredit.crm.requestId': requestId })
+      .select('orderId grandTotal')
+      .lean();
+    if (existing)
+      return {
+        success: true,
+        message: 'Order already created',
+        data: {
+          _id: existing._id,
+          orderId: existing.orderId,
+          grandTotal: existing.grandTotal,
+        },
+      };
+
+    const text = (key: string, fallback: string, limit: number) => {
+      const value = body[key] === undefined ? fallback || '' : body[key];
+      if (typeof value !== 'string' || value.length > limit)
+        throw new BadRequestException('Invalid ' + key);
+      return value.trim();
+    };
+    const name = text('name', info.name, 200),
+      shippingAddress = text('shippingAddress', info.shippingAddress, 2000),
+      city = text('city', info.city, 200),
+      email = text('email', info.email, 200),
+      note = text('note', '', 1000);
+    if (!name || !shippingAddress)
+      throw new BadRequestException('Customer name and address are required');
+    if (
+      !Array.isArray(body.items) ||
+      !body.items.length ||
+      body.items.length > 50 ||
+      body.items.some(
+        (item: any) =>
+          !item ||
+          typeof item.product !== 'string' ||
+          !Types.ObjectId.isValid(item.product) ||
+          !Number.isInteger(item.quantity) ||
+          item.quantity < 1 ||
+          item.quantity > 100,
+      )
+    )
+      throw new BadRequestException('Choose products with valid quantities');
+    const quantities = new Map<string, number>();
+    for (const item of body.items)
+      quantities.set(
+        item.product,
+        Math.min(100, (quantities.get(item.product) || 0) + item.quantity),
+      );
+    const deliveryCharge =
+      body.deliveryCharge === undefined
+        ? Number(info.deliveryCharge) || 0
+        : body.deliveryCharge;
+    if (
+      typeof deliveryCharge !== 'number' ||
+      !Number.isFinite(deliveryCharge) ||
+      deliveryCharge < 0 ||
+      deliveryCharge > 10000
+    )
+      throw new BadRequestException('Invalid delivery charge');
+    if (!PAYMENT_TYPES.includes(body.paymentType))
+      throw new BadRequestException('Choose a valid payment type');
+    if (!ORDER_SOURCES[body.source])
+      throw new BadRequestException('Choose a valid order source');
+
+    const ids = [...quantities.keys()];
+    const found = await this.products
+      .find({ _id: { $in: ids.map((id) => new Types.ObjectId(id)) } })
+      .select('_id')
+      .lean();
+    if (found.length !== ids.length)
+      throw new BadRequestException(
+        'One or more selected products are no longer available',
+      );
+    const actor = await this.actor(admin);
+
+    // Same path as POST /order/add-assisted: catalog pricing, order numbering,
+    // stock, FraudSpy check, invoice and the customer SMS.
+    const payload = {
+      name,
+      phoneNo: detail.phone,
+      shippingAddress,
+      city,
+      email: email || undefined,
+      division: info.division,
+      area: info.area,
+      zone: info.zone,
+      note: note || undefined,
+      paymentType: body.paymentType,
+      deliveryCharge,
+      orderFrom: ORDER_SOURCES[body.source],
+      carts: ids,
+      cartData: ids.map((id) => ({
+        product: id,
+        selectedQty: quantities.get(id),
+        cartType: 0,
+      })),
+    } as unknown as AddOrderDto;
+    const result: any = await this.orderService.addOrder(payload);
+    const created = result?.data;
+    if (!created?._id)
+      throw new InternalServerErrorException('The order could not be created');
+
+    // Staff points: the Customer Manager order scores when the parcel goes to
+    // the courier (staff-activity creditOnSend reads staffCredit.crm).
+    try {
+      await this.orders.updateOne(
+        { _id: created._id },
+        {
+          $set: {
+            'staffCredit.crm': {
+              _id: actor._id,
+              name: actor.name,
+              role: actor.role,
+              at: new Date(),
+              requestId,
+            },
+          },
+        },
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Order ${created.orderId} created, but the Customer Manager credit was not saved: ${
+          error?.message || error
+        }`,
+      );
+    }
+    const saved: any = await this.orders
+      .findById(created._id)
+      .select('orderId grandTotal')
+      .lean();
+    return {
+      success: true,
+      message: 'Order created',
+      data: {
+        _id: created._id,
+        orderId: saved?.orderId || created.orderId,
+        grandTotal: saved?.grandTotal,
+      },
+    };
+  }
+
+  async save(rawPhone: string, body: any, admin: any) {
+    if (!body || typeof body !== 'object')
+      throw new BadRequestException('Invalid contact details');
+    const phone = normalizeCustomerPhone(rawPhone);
+    if (
+      !phone ||
+      !CONTACT_OUTCOMES.includes(body.outcome) ||
+      !CONTACT_CHANNELS.includes(body.channel) ||
+      typeof body.note !== 'string' ||
+      body.note.length > 2000
+    )
+      throw new BadRequestException('Invalid contact details');
+    // Omitted follow-up date: use the outcome's default. An empty string means none.
+    const date =
+      body.nextFollowUp === undefined
+        ? followUpDate(body.outcome)
+        : body.nextFollowUp || '';
+    if (typeof date !== 'string' || (date && !validDay(date)))
+      throw new BadRequestException('Invalid follow-up date');
+    const exists = await this.orders.aggregate([
+      ...this.base(true, this.phoneCandidates(phone)),
+      { $match: { crmPhone: phone } },
+      { $limit: 1 },
+      { $project: { _id: 1 } },
+    ]);
+    if (!exists.length)
+      throw new NotFoundException('No delivered orders for this customer');
+    const actor = await this.actor(admin);
+    const contact = await this.contacts.create({
+      phone,
+      outcome: body.outcome,
+      channel: body.channel,
+      note: body.note.trim(),
+      nextFollowUp: body.outcome === 'dont_contact' ? '' : date,
+      contactedBy: actor._id,
+      contactedByName: actor.name,
+      contactedByRole: actor.role,
+    });
+    return {
+      success: true,
+      message: 'Contact saved',
+      data: { _id: contact._id },
+    };
+  }
+}

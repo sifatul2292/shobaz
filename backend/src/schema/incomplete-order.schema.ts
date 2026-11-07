@@ -82,6 +82,20 @@ export const IncompleteOrderSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    // Staff who last wrote adminNote (staff-activity).
+    adminNoteBy: {
+      _id: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
+      name: { type: String },
+      role: { type: String },
+      at: { type: Date },
+    },
+    // Staff whose Send/Add Order converted this record (staff-activity).
+    convertedBy: {
+      _id: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
+      name: { type: String },
+      role: { type: String },
+      at: { type: Date },
+    },
     fraudChecker: {
       type: mongoose.Schema.Types.Mixed,
       required: false,

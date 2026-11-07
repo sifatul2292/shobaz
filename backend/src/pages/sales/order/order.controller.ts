@@ -40,12 +40,16 @@ import { GetTokenUser } from '../../../decorator/get-token-user.decorator';
 import { User } from '../../../interfaces/user/user.interface';
 import { GetAdmin } from '../../../decorator/get-admin.decorator';
 import { Admin } from '../../../interfaces/admin/admin.interface';
+import { StaffActivityService } from '../../staff-activity/staff-activity.service';
 
 @Controller('order')
 export class OrderController {
   private logger = new Logger(OrderController.name);
 
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private staffActivity: StaffActivityService,
+  ) {}
 
   /**
    * addOrder
@@ -69,7 +73,11 @@ export class OrderController {
     addOrderDto: AddOrderDto,
     @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return await this.orderService.addOrderAdmin(admin, addOrderDto);
+    const result = await this.orderService.addOrderAdmin(admin, addOrderDto);
+    await this.staffActivity.safely('order added', () =>
+      this.staffActivity.afterOrderAdded(result, addOrderDto, admin),
+    );
+    return result;
   }
 
   @Post('/add-assisted')
@@ -215,8 +223,14 @@ export class OrderController {
   async updateIncompleteOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() dto: any,
+    @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return this.orderService.updateIncompleteOrderById(id, dto);
+    const before = await this.staffActivity.before('incomplete', id);
+    const result = await this.orderService.updateIncompleteOrderById(id, dto);
+    await this.staffActivity.safely('incomplete note', () =>
+      this.staffActivity.afterIncompleteUpdate(before, dto, admin),
+    );
+    return result;
   }
 
   @Post('/delete-multiple-incomplete-orders')
@@ -290,8 +304,31 @@ export class OrderController {
   async updateOrderById(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateOrderDto: UpdateOrderDto,
+    @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return await this.orderService.updateOrderById(id, updateOrderDto);
+    const before = await this.staffActivity.before('order', id);
+    const result = await this.orderService.updateOrderById(id, updateOrderDto);
+    await this.staffActivity.safely('order update', () =>
+      this.staffActivity.afterOrderUpdate(before, updateOrderDto, admin),
+    );
+    return result;
+  }
+
+  /** Staff edit of a placed order: customer, books, prices, delivery, discount. */
+  @Version(VERSION_NEUTRAL)
+  @Put('/update-order-admin/:id')
+  @UseGuards(AdminJwtAuthGuard)
+  async updateOrderByAdmin(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @Body() dto: any,
+    @GetAdmin() admin: Admin,
+  ): Promise<ResponsePayload> {
+    const before = await this.staffActivity.before('order', id);
+    const result = await this.orderService.updateOrderByAdmin(id, dto);
+    await this.staffActivity.safely('order edit', () =>
+      this.staffActivity.afterOrderUpdate(before, dto, admin),
+    );
+    return result;
   }
 
   @Version(VERSION_NEUTRAL)
@@ -304,11 +341,22 @@ export class OrderController {
   @UseGuards(AdminJwtAuthGuard)
   async updateMultipleOrderById(
     @Body() updateOrderDto: UpdateOrderDto,
+    @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return await this.orderService.updateMultipleOrderById(
+    const befores =
+      updateOrderDto?.orderStatus !== undefined
+        ? await this.staffActivity.beforeMany(updateOrderDto.ids)
+        : [];
+    const result = await this.orderService.updateMultipleOrderById(
       updateOrderDto.ids,
       updateOrderDto,
     );
+    if (befores.length) {
+      await this.staffActivity.safely('bulk status', () =>
+        this.staffActivity.afterStatusChange(befores, updateOrderDto.orderStatus, admin),
+      );
+    }
+    return result;
   }
 
   @Version(VERSION_NEUTRAL)
@@ -333,8 +381,18 @@ export class OrderController {
   async changeOrderStatus(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+    @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return await this.orderService.changeOrderStatus(id, updateOrderStatusDto);
+    const before = await this.staffActivity.before('order', id);
+    const result = await this.orderService.changeOrderStatus(id, updateOrderStatusDto);
+    await this.staffActivity.safely('status change', () =>
+      this.staffActivity.afterStatusChange(
+        before ? [before] : [],
+        (updateOrderStatusDto as any)?.orderStatus,
+        admin,
+      ),
+    );
+    return result;
   }
 
   @Version(VERSION_NEUTRAL)
@@ -342,8 +400,15 @@ export class OrderController {
   @UseGuards(AdminJwtAuthGuard)
   async sendToCourier(
     @Param('id', MongoIdValidationPipe) id: string,
+    @GetAdmin() admin: Admin,
   ): Promise<ResponsePayload> {
-    return await this.orderService.sendOrderToCourier(id);
+    const result = await this.orderService.sendOrderToCourier(id);
+    if (result?.success !== false) {
+      await this.staffActivity.safely('courier sent', () =>
+        this.staffActivity.afterCourierSent(id, admin),
+      );
+    }
+    return result;
   }
 
   /**
