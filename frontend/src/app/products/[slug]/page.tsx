@@ -20,6 +20,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const product = await fetchProductBySlug(slug);
   const authors = product ? await fetchProductAuthors(product) : [];
+  // The server lookup tolerates letter-case differences (e.g. /products/edventure);
+  // hand the client the stored slug so its refetch — and view_item — succeed too.
+  const resolvedParams = Promise.resolve({ slug: product?.slug || slug });
 
   return (
     <>
@@ -29,7 +32,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           dangerouslySetInnerHTML={{ __html: jsonLdString(buildProductJsonLd(product, product.slug || slug, authors)) }}
         />
       )}
-      <ProductDetailPage params={params} initialProduct={product || undefined} initialAuthors={authors} />
+      <ProductDetailPage params={resolvedParams} initialProduct={product || undefined} initialAuthors={authors} />
     </>
   );
 }

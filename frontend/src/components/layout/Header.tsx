@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
+import { trackAddToCart } from '@/lib/trackCart';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Product, ShopInfo } from '@/types';
 import api, { imgUrl } from '@/lib/api';
@@ -222,6 +223,7 @@ export default function Header() {
     e.preventDefault();
     e.stopPropagation();
     addItem(product, 1);
+    trackAddToCart(product, 1);
   };
 
   const Logo = () => (

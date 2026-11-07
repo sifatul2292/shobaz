@@ -22,12 +22,17 @@ const getNameParts = (name?: string) => {
 
 const getUserData = (source: any = {}) => {
   const nameParts = getNameParts(source.name);
+  // Logged-in customer's id (orders carry `user` as an id or a populated object).
+  const userId = typeof source.user === 'string' ? source.user : source.user?._id;
   return {
     first_name: source.firstName || source.first_name || nameParts.first_name,
     last_name: source.lastName || source.last_name || nameParts.last_name,
     phone_number: source.phoneNo || source.phone || source.phone_number,
     email_address: source.email || source.email_address,
     customer_id: source.customerId || source.customer_id || source.orderId,
+    // The GTM container reads user_data.external_id (Meta/GA4 user matching).
+    // A stable person id only — never the order id. Empty for guest checkouts.
+    external_id: source.externalId || source.external_id || source.customerId || source.customer_id || userId || undefined,
   };
 };
 

@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { gtmViewItem, gtmAddToCart } from '@/lib/gtm';
 import { phViewItem, phAddToCart } from '@/lib/posthog';
+import { trackAddToCart, trackAddToCartGroup } from '@/lib/trackCart';
 import { Product, ShippingCharge, Review, Author } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { HiOutlineBookOpen } from 'react-icons/hi';
+import { HiOutlineBookOpen, HiOutlineTag, HiOutlineOfficeBuilding, HiOutlinePencil, HiOutlineTranslate, HiOutlineQrcode } from 'react-icons/hi';
 import { FaTimes, FaStar } from 'react-icons/fa';
 import HomeProductCard from '@/components/home/HomeProductCard';
 import ProductRail from '@/components/home/ProductRail';
@@ -31,6 +32,37 @@ interface Props {
   /** Full author record(s) (photo + bio) fetched on the server. */
   initialAuthors?: Author[];
 }
+
+// ── Book facts strip helpers ──
+interface SpecItem {
+  key: string;
+  label: string;
+  /** Short big value (number / code); shown instead of icon + text. */
+  big?: string;
+  sub?: string;
+  icon?: ReactNode;
+  value?: string;
+  href?: string;
+}
+
+const LANGS: Record<string, [string, string]> = {
+  bangla: ['BN', 'বাংলা'], bengali: ['BN', 'বাংলা'], 'বাংলা': ['BN', 'বাংলা'],
+  english: ['EN', 'ইংরেজি'], 'ইংরেজি': ['EN', 'ইংরেজি'],
+  arabic: ['AR', 'আরবি'], 'আরবি': ['AR', 'আরবি'],
+  urdu: ['UR', 'উর্দু'], hindi: ['HI', 'হিন্দি'],
+};
+const langCode = (l: string) => LANGS[l.trim().toLowerCase()]?.[0] || l.trim().slice(0, 2).toUpperCase();
+const langName = (l: string) => LANGS[l.trim().toLowerCase()]?.[1] || l.trim();
+
+const COUNTRIES: Record<string, [string, string]> = {
+  bangladesh: ['BD', 'বাংলাদেশ'], 'বাংলাদেশ': ['BD', 'বাংলাদেশ'],
+  india: ['IN', 'ভারত'], 'ভারত': ['IN', 'ভারত'],
+  pakistan: ['PK', 'পাকিস্তান'],
+  'united states': ['US', 'যুক্তরাষ্ট্র'], usa: ['US', 'যুক্তরাষ্ট্র'],
+  'united kingdom': ['GB', 'যুক্তরাজ্য'], uk: ['GB', 'যুক্তরাজ্য'],
+};
+const countryCode = (c: string) => COUNTRIES[c.trim().toLowerCase()]?.[0] || c.trim().slice(0, 2).toUpperCase();
+const countryName = (c: string) => COUNTRIES[c.trim().toLowerCase()]?.[1] || c.trim();
 
 const CV_CLASSES = ['cv-1','cv-2','cv-3','cv-4','cv-5','cv-6','cv-7','cv-8','cv-9','cv-10','cv-11','cv-12'];
 function cvClass(id: string) {
@@ -423,10 +455,12 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
   const handleAddBundleToCart = () => {
     if (product) {
       addItem(product, quantity);
+      const bundleLines = [{ product, quantity }];
       selectedBundle.forEach(id => {
         const item = bundleProducts.find(b => b.product._id === id);
-        if (item) addItem(item.product, 1);
+        if (item) { addItem(item.product, 1); bundleLines.push({ product: item.product, quantity: 1 }); }
       });
+      trackAddToCartGroup('Bundle', bundleLines);
       toast.success('বান্ডেল কার্টে যোগ হয়েছে!');
     }
   };
@@ -574,16 +608,29 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
     return sum + (item ? getCurrentPrice(item.product) * 0.1 : 0);
   }, 0);
 
-  const productSpecRows = [
-    ['শিরোনাম', product.name],
-    authorName ? ['লেখক', authorName] : null,
-    publisherName ? ['প্রকাশনী', publisherName] : null,
-    product.edition ? ['সংস্করণ', product.edition] : null,
-    product.totalPages ? ['পৃষ্ঠা সংখ্যা', String(product.totalPages)] : null,
-    product.country ? ['দেশ', product.country] : null,
-    product.language ? ['ভাষা', Array.isArray(product.language) ? product.language.join(', ') : product.language] : null,
-    product.weight ? ['ওজন', `${product.weight}g`] : null,
-  ].filter((row): row is [string, string] => Boolean(row));
+  // Book facts strip (label · icon or big value · sub-line). Only fields the
+  // product actually has are shown.
+  const p: any = product;
+  const languages: string[] = (Array.isArray(p.language) ? p.language : [p.language]).filter(Boolean).map(String);
+  const published = p.publishedDate ? new Date(p.publishedDate) : null;
+  const publishedOk = published && !Number.isNaN(published.getTime());
+  const publisherSlug = typeof p.publisher === 'object' ? p.publisher?.slug : '';
+  const translatorName = typeof p.translatorName === 'string' ? p.translatorName.trim() : '';
+  const specItems = [
+    categoryName && { key: 'genre', label: 'বিষয়', icon: <HiOutlineTag />, value: categoryName, href: categorySlug ? `/products?category=${categorySlug}` : '' },
+    p.totalPages && { key: 'pages', label: 'পৃষ্ঠা সংখ্যা', big: String(p.totalPages), sub: 'পৃষ্ঠা' },
+    languages.length > 0 && { key: 'lang', label: 'ভাষা', big: languages.map(langCode).join(' · '), sub: languages.map(langName).join(', ') },
+    publisherName && { key: 'pub', label: 'প্রকাশনী', icon: <HiOutlineOfficeBuilding />, value: publisherName, href: publisherSlug ? `/products?publisher=${encodeURIComponent(publisherSlug)}` : '' },
+    authorName && { key: 'author', label: 'লেখক', icon: <HiOutlinePencil />, value: authorName, href: authorSlug ? `/products?author=${encodeURIComponent(authorSlug)}` : '' },
+    translatorName && { key: 'translator', label: 'অনুবাদক', icon: <HiOutlineTranslate />, value: translatorName },
+    p.isbn && { key: 'isbn', label: 'ISBN', icon: <HiOutlineQrcode />, value: String(p.isbn) },
+    publishedOk
+      ? { key: 'published', label: 'প্রকাশকাল', big: String(published!.getFullYear()), sub: p.edition || published!.toLocaleDateString('bn-BD', { month: 'long', year: 'numeric', timeZone: 'Asia/Dhaka' }) }
+      : p.edition && { key: 'edition', label: 'সংস্করণ', icon: <HiOutlineBookOpen />, value: String(p.edition) },
+    p.currentVersion && { key: 'binding', label: 'বাঁধাই', icon: <HiOutlineBookOpen />, value: String(p.currentVersion) },
+    p.country && { key: 'country', label: 'দেশ', big: countryCode(String(p.country)), sub: countryName(String(p.country)) },
+    p.weight && { key: 'weight', label: 'ওজন', big: String(p.weight), sub: 'গ্রাম' },
+  ].filter(Boolean) as SpecItem[];
 
   const descriptionHtml = product.description ? decodeHTML(product.description) : '';
   const authorHref = authorSlug ? `/products?author=${encodeURIComponent(authorSlug)}` : `/products?q=${encodeURIComponent(authorName)}`;
@@ -777,17 +824,6 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
                 </details>
 
                 <details className="pdp-acc">
-                  <summary>স্পেসিফিকেশন</summary>
-                  <div className="pdp-acc-body">
-                    <dl className="pdp-specs">
-                      {productSpecRows.map(([k, v]) => (
-                        <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
-                      ))}
-                    </dl>
-                  </div>
-                </details>
-
-                <details className="pdp-acc">
                   <summary>ডেলিভারি ও রিটার্ন</summary>
                   <div className="pdp-acc-body">
                     <dl className="pdp-specs">
@@ -803,6 +839,36 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
             </div>
           </section>
         </div>
+
+        {/* ── Book facts strip ── */}
+        {specItems.length > 0 && (
+          <section className="pdp-section pdp-section--specs" aria-label="বইয়ের তথ্য">
+            <div className="pdp-wrap">
+              <dl className="pdp-specbar" style={{ '--n': specItems.length } as CSSProperties}>
+                {specItems.map((s) => (
+                  <div key={s.key} className="pdp-spec">
+                    <dt>{s.label}</dt>
+                    <dd>
+                      {s.big ? (
+                        <>
+                          <b className="pdp-spec-big">{s.big}</b>
+                          {s.sub && <span className="pdp-spec-sub">{s.sub}</span>}
+                        </>
+                      ) : (
+                        <>
+                          <span className="pdp-spec-icon" aria-hidden="true">{s.icon}</span>
+                          {s.href
+                            ? <Link href={s.href} className="pdp-spec-text">{s.value}</Link>
+                            : <span className="pdp-spec-text">{s.value}</span>}
+                        </>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </section>
+        )}
 
         {/* ── About the author (outside the accordions) ── */}
         {authorName && (() => {
@@ -849,7 +915,7 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
                     </div>
                     <ProductRail label={`${authorName}-এর আরও বই`}>
                       {authorBooks.map(b => (
-                        <HomeProductCard key={b._id} product={b} onAdd={(p) => addItem(p, 1)} />
+                        <HomeProductCard key={b._id} product={b} onAdd={(p) => { addItem(p, 1); trackAddToCart(p, 1); }} />
                       ))}
                     </ProductRail>
                   </div>
@@ -1110,7 +1176,7 @@ export default function ProductDetailClient({ params, initialProduct, initialAut
               </div>
               <ProductRail label="সর্বাধিক বিক্রিত বই">
                 {recommendations.map(b => (
-                  <HomeProductCard key={b._id} product={b} onAdd={(p) => addItem(p, 1)} />
+                  <HomeProductCard key={b._id} product={b} onAdd={(p) => { addItem(p, 1); trackAddToCart(p, 1); }} />
                 ))}
               </ProductRail>
             </div>

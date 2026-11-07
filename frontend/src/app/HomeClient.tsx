@@ -11,6 +11,7 @@ import api, { imgUrl } from '@/lib/api';
 import { getCached, setCached } from '@/lib/cache';
 import { Product, Author, Publisher, Blog, Tag } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
+import { trackAddToCart } from '@/lib/trackCart';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -126,6 +127,7 @@ export default function HomePage({ initialData }: { initialData?: HomeInitialDat
 
   const handleAddToCart = useCallback((product: Product) => {
     addItem(product, 1);
+    trackAddToCart(product, 1);
   }, [addItem]);
 
   useEffect(() => {

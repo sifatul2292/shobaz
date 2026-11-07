@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { HiOutlineBookOpen } from 'react-icons/hi';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -10,6 +10,7 @@ import { getCached, setCached } from '@/lib/cache';
 import { gtmSearch } from '@/lib/gtm';
 import { Product, Category, Author, Publisher } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
+import { trackAddToCart } from '@/lib/trackCart';
 import HomeProductCard from '@/components/home/HomeProductCard';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -235,10 +236,15 @@ function ProductsContent() {
     return filtered;
   }, [allProducts, filters, sortBy]);
 
+  // Search event once per search term — not again on every sort/filter/price change.
+  const trackedSearchRef = useRef('');
   useEffect(() => {
     if (filters.q && filteredProducts.length >= 0 && !loading) {
       document.title = `"${filters.q}" সার্চ রেজাল্ট | Shobaz`;
-      gtmSearch(filters.q, filteredProducts);
+      if (trackedSearchRef.current !== filters.q) {
+        trackedSearchRef.current = filters.q;
+        gtmSearch(filters.q, filteredProducts);
+      }
     }
   }, [filters.q, filteredProducts, loading]);
 
@@ -273,6 +279,7 @@ function ProductsContent() {
   // Feedback is shown by the card itself + the global add-to-cart notification.
   const handleAddToCart = (product: any) => {
     addItem(product, 1);
+    trackAddToCart(product, 1);
   };
 
   const goToPage = (next: number) => {

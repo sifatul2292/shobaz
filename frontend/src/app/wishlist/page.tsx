@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import api, { imgUrl } from '@/lib/api';
 import { Product } from '@/types';
 import { useCartStore } from '@/store/useCartStore';
+import { trackAddToCart } from '@/lib/trackCart';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -29,6 +30,7 @@ export default function WishlistPage() {
 
   const handleAddToCart = (product: Product) => {
     addItem(product);
+    trackAddToCart(product, 1);
     toast.success('কার্টে যোগ হয়েছে');
   };
 

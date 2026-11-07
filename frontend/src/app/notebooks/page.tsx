@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import LazyImage from '@/components/ui/LazyImage';
 import api, { imgUrl } from '@/lib/api';
 import { useCartStore } from '@/store/useCartStore';
+import { trackAddToCart, trackAddToCartGroup } from '@/lib/trackCart';
 import { Product } from '@/types';
 
 const FEATURES = [
@@ -128,6 +129,7 @@ export default function NotebooksPage() {
   const handleAddToCart = useCallback(
     (product: Product) => {
       addItem(product, 1);
+      trackAddToCart(product, 1);
       setAddedIds((prev) => new Set(prev).add(product._id));
     },
     [addItem],
@@ -138,6 +140,7 @@ export default function NotebooksPage() {
       addItem(p, 1);
       setAddedIds((prev) => new Set(prev).add(p._id));
     });
+    trackAddToCartGroup('Notebooks', products.map((p) => ({ product: p, quantity: 1 })));
   }, [products, addItem]);
 
   const totalPrice = products.reduce((sum, p) => sum + (p.salePrice || p.price), 0);
