@@ -43,36 +43,6 @@ const USPS = [
   { icon: <IcReaders />, label: '১০,০০০+ সন্তুষ্ট পাঠক' },
 ];
 
-const STATIC_REVIEWS = [
-  {
-    name: 'রিফাত আহমেদ',
-    city: 'ঢাকা',
-    rating: 5,
-    quote: 'অর্ডার দেওয়ার পরদিনই বই হাতে পেয়েছি। প্যাকেজিং চমৎকার, দামও সাশ্রয়ী। শবাজ এখন আমার যাওয়ার প্রথম জায়গা।',
-  },
-  {
-    name: 'নাবিলা ইসলাম',
-    city: 'চট্টগ্রাম',
-    rating: 5,
-    quote: 'দুর্লভ পুরোনো বই পেয়েছি যা অন্য কোথাও খুঁজে পাইনি। bKash-এ পেমেন্ট দিয়েছি, কোনো ঝামেলা ছাড়াই।',
-  },
-  {
-    name: 'তানভীর হাসান',
-    city: 'সিলেট',
-    rating: 4,
-    quote: 'কালেকশন বিশাল, ক্যাটাগরি অনুযায়ী খুঁজে পেতে সহজ। শিশুদের বইয়ের সেকশনটা বিশেষ ভালো লেগেছে।',
-  },
-];
-
-function Stars({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  return (
-    <span className="home-stars" aria-label={`${rating} / 5`}>
-      {'★'.repeat(full)}<span>{'★'.repeat(5 - full)}</span>
-    </span>
-  );
-}
-
 function SectionHead({ title, href, linkLabel = 'সব দেখুন' }: { title: string; href?: string; linkLabel?: string }) {
   return (
     <div className="home-head rv">
@@ -270,22 +240,6 @@ export default function HomePage({ initialData }: { initialData?: HomeInitialDat
           </Fragment>
         ))}
         {rails.length === 0 && <PromoBanner />}
-
-        {/* ── Reviews ── */}
-        <section className="home-section" data-reveal="">
-          <div className="home-wrap">
-            <SectionHead title="পাঠকদের অভিজ্ঞতা" />
-            <ProductRail label="পাঠকদের অভিজ্ঞতা" variant="wide">
-              {STATIC_REVIEWS.map(r => (
-                <figure key={r.name} className="home-review">
-                  <Stars rating={r.rating} />
-                  <blockquote>{r.quote}</blockquote>
-                  <figcaption><b>{r.name}</b> · {r.city}</figcaption>
-                </figure>
-              ))}
-            </ProductRail>
-          </div>
-        </section>
 
         {/* ── Authors ── */}
         {authors.length > 0 && (
