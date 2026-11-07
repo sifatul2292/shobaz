@@ -33,6 +33,7 @@
     /* Team today */
     .team-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin-bottom: 12px; }
     .team-grid[hidden], .calls-strip[hidden] { display: none; }
+    .team-grid > .card + .card { margin-top: 0; }
     .team-hero { display: flex; gap: 14px; align-items: flex-start; padding: 16px; }
     .team-hero .hero-icon { width: 40px; height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--tone-info-bg); color: var(--tone-info-fg); font-size: 16px; }
     .team-hero[data-state="top"] .hero-icon { background: var(--tone-success-bg); color: var(--tone-success-fg); }
@@ -88,13 +89,21 @@
     .in-review-copy i { margin-right: 4px; }
 
     /* Rows */
-    .orders-table td { line-height: 1.35; }
+    .orders-table td { line-height: 1.35; vertical-align: top; }
+    .orders-table thead th, .orders-table tbody td { padding-left: 10px; padding-right: 10px; }
+    .orders-table tbody td { padding-top: 10px; padding-bottom: 10px; }
+    .orders-table td.c-check { vertical-align: middle; }
     .orders-table th:first-child, .orders-table td:first-child { width: 36px; padding-right: 0; }
     .order-no { font-weight: 650; color: var(--sa-text); text-decoration: none; }
     a.order-no:hover { color: var(--sa-link); text-decoration: underline; }
-    .order-by { display: block; margin-top: 2px; font-size: 12px; color: var(--sa-text-3); }
+    /* Order column: number, then date + time, then "x ago", then who placed it. */
+    .c-order { white-space: nowrap; }
+    .c-order .order-no { display: inline-block; font-size: 13px; }
+    .c-order .date-cell { margin-top: 3px; font-size: 12px; }
+    .order-sub { font-size: 12px; color: var(--sa-text-3); }
+    .order-by { display: block; color: var(--sa-text-3); }
     .cust-name { font-weight: 550; max-width: 200px; overflow-wrap: anywhere; }
-    .phone-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .phone-cell { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-top: 2px; }
     .phone-link { color: var(--sa-link); text-decoration: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .phone-link:hover { text-decoration: underline; }
     .phone-link i { font-size: 10px; margin-right: 3px; }
@@ -120,14 +129,23 @@
     .orders-table tbody tr.row-sent td { background: #e6f6eb; }
     .orders-table tbody tr.row-sent:hover td { background: #d9f1e1; }
     .orders-table tbody tr.call-busy td { background: #fffbeb; }
-    .addr { max-width: 220px; font-size: 12px; color: var(--sa-text); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    /* Full address, never cut: a real column width so it wraps on words, not letters. */
+    .addr { min-width: 170px; max-width: 240px; font-size: 12px; line-height: 1.4; color: var(--sa-text); overflow-wrap: break-word; white-space: normal; }
     .date-cell { white-space: nowrap; font-size: 13px; }
-    .date-cell .time, .date-cell .ago { display: block; font-size: 12px; color: var(--sa-text-2); }
-    .date-cell .ago { color: var(--sa-text-3); }
+    .date-cell .time { color: var(--sa-text-2); }
     .amount { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    /* Total & status column: amount, payment badges in one line, then the status. */
+    .c-total .amount { display: block; font-size: 14px; }
+    .c-total .stack { flex-direction: row; flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
+    .status-wrap { margin-top: 6px; }
+    .status-wrap .staff-by { margin-top: 3px; }
     .stack { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    /* Courier column: who/which parcel, then its live status and charge. */
+    .c-courier { min-width: 140px; }
     .courier-cell { font-size: 12px; line-height: 1.4; }
-    .courier-name { font-weight: 550; font-size: 13px; }
+    .courier-name { font-weight: 550; font-size: 12px; }
+    .cs-line { margin-top: 4px; font-size: 12px; white-space: nowrap; }
+    .cs-label { color: var(--sa-text-3); }
     .courier-id { color: var(--sa-text-2); font-variant-numeric: tabular-nums; }
     .tracking-link { color: var(--sa-link); text-decoration: none; }
     .tracking-link:hover { text-decoration: underline; }
@@ -135,23 +153,35 @@
     .staff-by strong { color: var(--sa-text-2); font-weight: 600; }
     .charge { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .dash { color: var(--sa-text-3); }
-    .fraud-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-    .fraud-chip { font-size: 12px; line-height: 1.35; white-space: nowrap; }
+    /* Fraud: success % badge + small recheck icon, delivered/returned counts below. */
+    .fraud-cell { display: flex; align-items: flex-start; gap: 4px; }
+    .fraud-chip { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 12px; line-height: 1.35; white-space: nowrap; }
     .fraud-chip .ok { color: #29845a; font-weight: 600; }
     .fraud-chip .bad { color: #c70a24; font-weight: 600; }
-    .fraud-chip .badge { margin-top: 2px; }
-    .row-actions { display: flex; gap: 4px; flex-wrap: wrap; min-width: 150px; }
+    .fraud-chip .lbl { display: none; }
+    .fraud-counts { color: var(--sa-text-2); }
+    .fraud-icon { display: inline; font-size: 10px; margin-right: 3px; }
+    .fraud-cell:has(.fraud-chip) .btn-fraud-check { width: 24px; height: 22px; padding: 0; font-size: 0; }
+    .fraud-cell:has(.fraud-chip) .btn-fraud-check::before { content: "\f2f1"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 10px; }
+    /* Actions: one row of icon buttons (names show on hover), pinned to the right edge. */
+    .row-actions { display: flex; gap: 4px; flex-wrap: nowrap; }
+    .row-actions .btn { min-width: 30px; justify-content: center; }
+    .row-actions .lbl { display: none; }
+    .row-actions .cnt { margin-left: 2px; font-size: 12px; color: var(--sa-text-2); }
     .row-actions .mobile-only { display: none; }
-    .fraud-chip { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-    .fraud-icon { display: none; }
+    .orders-table thead th.th-actions, .orders-table tbody td.c-actions { position: sticky; right: 0; z-index: 1; }
+    .orders-table thead th.th-actions { z-index: 3; box-shadow: inset 1px 0 0 var(--sa-border), -8px 0 8px -8px rgba(0, 0, 0, .18); }
+    .orders-table tbody td.c-actions { background: #fff; box-shadow: inset 1px 0 0 var(--sa-border-2), -8px 0 8px -8px rgba(0, 0, 0, .18); }
     .btn-whatsapp i { color: #25a35a; }
     .status-select { height: 28px; padding: 0 24px 0 8px; border: 1px solid #b5b5b5; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 20 20'%3E%3Cpath fill='%23616161' d='M5 7l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 7px center; appearance: none; font: 500 12px var(--sa-font); color: var(--sa-text); cursor: pointer; }
     .status-select:focus { outline: 0; border-color: var(--sa-focus); box-shadow: 0 0 0 1px var(--sa-focus); }
-    .note-cell { max-width: 200px; font-size: 12px; overflow-wrap: anywhere; }
+    .note-cell { min-width: 140px; max-width: 220px; font-size: 12px; overflow-wrap: break-word; }
+    .note-cell.cnote { margin-bottom: 6px; color: var(--sa-text); }
+    .note-cell.cnote::before { content: 'Customer: '; color: var(--sa-text-3); }
     .admin-note-text { cursor: pointer; border-bottom: 1px dashed #b5b5b5; }
     .admin-note-text:hover { color: var(--sa-link); }
     .btn-add-note { border: 0; background: none; color: var(--sa-link); font: 550 12px var(--sa-font); cursor: pointer; padding: 0; }
-    .admin-note-input { width: 180px; min-height: 56px; padding: 6px 8px; border: 1px solid var(--sa-focus); border-radius: 8px; font: 12px var(--sa-font); outline: 0; box-shadow: 0 0 0 1px var(--sa-focus); }
+    .admin-note-input { width: 100%; min-width: 140px; min-height: 56px; padding: 6px 8px; border: 1px solid var(--sa-focus); border-radius: 8px; font: 12px var(--sa-font); outline: 0; box-shadow: 0 0 0 1px var(--sa-focus); }
     .note-actions { display: flex; gap: 4px; margin-top: 4px; }
     .loading-row td, .empty-row td { padding: 40px 16px !important; text-align: center; color: var(--sa-text-2); }
 
@@ -274,54 +304,53 @@
       .orders-table tbody tr td, .orders-table tbody tr:hover td { background: none !important; box-shadow: none !important; }
       .orders-table tbody td { display: block; min-width: 0; padding: 0 !important; border: 0 !important; width: auto !important; }
       .orders-table td.c-check { position: absolute; left: 12px; top: 11px; }
-      .orders-table td.c-order { order: 1; }
-      .orders-table td.c-order .order-no { font-size: 14px; }
-      .orders-table td.c-date { order: 2; flex: 1 1 auto; }
-      .orders-table td.c-total { order: 3; margin-left: auto; }
-      .orders-table td.c-total .amount { font-size: 14px; }
+      /* Order and Total cells hold several pieces on laptop; on the phone each
+         piece is placed on its own (number · date · total, then chips). */
+      .orders-table tbody td.c-order, .orders-table tbody td.c-total { display: contents; }
+      .orders-table td.c-order .order-no { order: 1; font-size: 14px; }
+      .orders-table td.c-order .date-cell { order: 2; margin-top: 0; }
+      .orders-table td.c-order .order-sub { order: 2; flex: 1 1 auto; white-space: nowrap; }
+      .orders-table td.c-order .order-by { display: none; }
+      .orders-table td.c-total .amount { order: 3; margin-left: auto; font-size: 14px; }
       .orders-table td.c-cust { order: 4; flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
       .orders-table td.c-addr { order: 5; flex: 1 1 100%; }
-      .orders-table td.c-pay { order: 6; }
-      .orders-table td.c-status { order: 7; }
-      .orders-table td.c-courier { order: 8; }
-      .orders-table td.c-cstatus { order: 9; }
-      .orders-table td.c-charge { order: 10; }
+      .orders-table td.c-total .stack { order: 6; margin-top: 0; }
+      .orders-table td.c-total .status-wrap { order: 7; margin-top: 0; }
+      .orders-table tbody td.c-courier { display: contents; }
+      .orders-table td.c-courier > * { order: 8; }
+      .orders-table td.c-courier .cs-line { order: 9; margin-top: 0; }
+      .orders-table td.c-courier .cs-line:has(.subtle) { display: none; }
       .orders-table td.c-fraud { order: 11; }
-      .orders-table td.c-actions { order: 12; flex: 1 1 100%; }
-      .orders-table td.c-anote { order: 13; flex: 1 1 100%; }
-      .orders-table td.c-cnote { order: 14; flex: 1 1 100%; }
-      .orders-table td.c-orderby,
-      .orders-table td.c-cstatus:has(.dash), .orders-table td.c-courier:has(.dash),
-      .orders-table td.c-charge:has(.dash), .orders-table td.c-charge:has(.subtle),
-      .orders-table td.c-cnote:has(.dash), .orders-table td.c-anote:has(.btn-add-note) { display: none; }
+      .orders-table tbody td.c-actions { order: 12; flex: 1 1 100%; position: static; }
+      .orders-table td.c-notes { order: 13; flex: 1 1 100%; }
+      .orders-table td.c-courier:has(.dash),
+      .orders-table td.c-notes:not(:has(.cnote)):has(.btn-add-note),
+      .orders-table .admin-note-cell:has(.btn-add-note) { display: none; }
       .orders-table .date-cell { display: flex; flex-wrap: wrap; gap: 0 6px; font-size: 12px; color: var(--sa-text-2); white-space: nowrap; }
       .orders-table .date-cell .time { display: none; }
-      .orders-table .date-cell .ago { display: inline; }
-      .orders-table .date-cell .ago::before { content: '· '; }
+      .orders-table .order-sub .ago::before { content: '· '; }
       .orders-table .cust-name { flex: 1 1 0; min-width: 56px; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .orders-table .phone-cell { flex: 0 0 auto; flex-wrap: nowrap; }
       .orders-table .phone-cell, .orders-table .call-box { margin-top: 0; }
       .orders-table .call-box { margin-left: auto; }
-      .orders-table .addr { max-width: none; -webkit-line-clamp: 1; font-size: 12px; color: var(--sa-text-2); }
-      .orders-table td.c-pay .stack { flex-direction: row; gap: 4px; }
+      .orders-table .addr { min-width: 0; max-width: none; font-size: 12px; color: var(--sa-text-2); }
       .orders-table .status-select { height: 24px; font-size: 12px; padding-left: 6px; }
       .orders-table .courier-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-size: 12px; }
       .orders-table .courier-cell br { display: none; }
       .orders-table .courier-name { font-size: 12px; }
       .orders-table .staff-by { margin-top: 0; }
       .orders-table .fraud-cell { flex-direction: row; align-items: center; gap: 4px; }
-      .orders-table .fraud-counts, .orders-table .fraud-chip .lbl { display: none; }
-      .orders-table .fraud-icon { display: inline; font-size: 10px; margin-right: 2px; }
-      .orders-table .fraud-cell:has(.fraud-chip) .btn-fraud-check { width: 24px; padding: 0; font-size: 0; }
-      .orders-table .fraud-cell:has(.fraud-chip) .btn-fraud-check::before { content: "\f2f1"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 10px; }
+      .orders-table .fraud-counts { display: none; }
+      .orders-table .fraud-cell:has(.fraud-chip) .btn-fraud-check { height: 24px; }
       .orders-table .row-actions { min-width: 0; flex-wrap: nowrap; gap: 6px; }
       .orders-table .row-actions .btn { flex: 1 1 0; height: 34px; padding: 0 6px; }
       .orders-table .row-actions .btn i { font-size: 14px; }
       .orders-table .row-actions .lbl { display: none; }
       .orders-table .row-actions .cnt { font-size: 12px; color: var(--sa-text-2); }
       .orders-table .row-actions .mobile-only { display: inline-flex !important; }
-      .orders-table .note-cell { max-width: none; font-size: 12px; }
-      .orders-table td.c-cnote .note-cell::before { content: 'Customer note: '; color: var(--sa-text-3); }
+      .orders-table .note-cell { min-width: 0; max-width: none; font-size: 12px; }
+      .orders-table .note-cell.cnote { margin-bottom: 4px; }
+      .orders-table .note-cell.cnote::before { content: 'Customer note: '; }
       .orders-table .admin-note-input { width: 100%; }
       .orders-table tbody tr.loading-row, .orders-table tbody tr.empty-row { display: block; padding: 0; }
       .stock-card-body { grid-template-columns: 1fr; }
@@ -540,23 +569,16 @@
                 <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all orders"></th>
                 <th>Order</th>
                 <th>Customer</th>
-                <th>Address</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Courier</th>
-                <th>Courier status</th>
-                <th>Courier charge</th>
                 <th>Fraud check</th>
-                <th>Actions</th>
-                <th>Status</th>
-                <th>Order by</th>
-                <th>Customer note</th>
-                <th>Admin note</th>
+                <th>Address</th>
+                <th>Total &amp; status</th>
+                <th>Courier</th>
+                <th>Notes</th>
+                <th class="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="ordersBody">
-              <tr class="loading-row"><td colspan="16"><div class="spinner"></div>Loading orders…</td></tr>
+              <tr class="loading-row"><td colspan="9"><div class="spinner"></div>Loading orders…</td></tr>
             </tbody>
           </table>
         </div>
@@ -976,7 +998,7 @@
   var loadSeq = 0;
   function loadOrders() {
     var seq = ++loadSeq;
-    document.getElementById('ordersBody').innerHTML = '<tr class="loading-row"><td colspan="16"><div class="spinner"></div>Loading orders…</td></tr>';
+    document.getElementById('ordersBody').innerHTML = '<tr class="loading-row"><td colspan="9"><div class="spinner"></div>Loading orders…</td></tr>';
     var url = API + (isIncompleteView ? '/api/order/get-all-incomplete-orders' : '/api/order/get-all');
     if (state.search) url += '?q=' + encodeURIComponent(state.search);
     fetch(url, { method: 'POST', headers: authHeaders(), body: JSON.stringify(buildRequestBody()) })
@@ -1005,7 +1027,7 @@
       })
       .catch(function (err) {
         if (seq !== loadSeq) return;
-        document.getElementById('ordersBody').innerHTML = '<tr class="empty-row"><td colspan="16"><div class="empty-state"><i class="fas fa-triangle-exclamation"></i>Could not load orders: ' + esc(err.message) + '<br><small>Check that the API is running at ' + esc(API) + '</small></div></td></tr>';
+        document.getElementById('ordersBody').innerHTML = '<tr class="empty-row"><td colspan="9"><div class="empty-state"><i class="fas fa-triangle-exclamation"></i>Could not load orders: ' + esc(err.message) + '<br><small>Check that the API is running at ' + esc(API) + '</small></div></td></tr>';
         document.getElementById('paginationInfo').textContent = '';
       });
   }
@@ -1096,16 +1118,23 @@
   }
 
   /* ── Cells ── */
-  function dateCell(val) {
-    if (!val) return '<span class="dash">—</span>';
-    var d = new Date(val);
-    if (isNaN(d)) return esc(String(val));
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var hr = d.getHours(); var mn = String(d.getMinutes()).padStart(2, '0');
-    var ampm = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
-    return '<div class="date-cell"><span>' + d.getDate() + ' ' + months[d.getMonth()] + ', ' + d.getFullYear() + '</span>' +
-      '<span class="time">' + hr + ':' + mn + ' ' + ampm + '</span>' +
-      '<span class="ago" data-ago="' + esc(d.toISOString()) + '">' + esc(A.timeAgo(d)) + '</span></div>';
+  /* Order column: number, then "7 Nov, 6:18 PM" (year only when not this year), then "2 hrs ago · by Rahim". */
+  function orderCell(numberHtml, val, by) {
+    var html = numberHtml;
+    var d = val ? new Date(val) : null;
+    if (d && !isNaN(d)) {
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var hr = d.getHours(); var mn = String(d.getMinutes()).padStart(2, '0');
+      var ampm = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
+      var year = d.getFullYear() === new Date().getFullYear() ? '' : ' ' + d.getFullYear();
+      html += '<div class="date-cell"><span>' + d.getDate() + ' ' + months[d.getMonth()] + year + '</span>' +
+        '<span class="time">, ' + hr + ':' + mn + ' ' + ampm + '</span></div>' +
+        '<div class="order-sub"><span class="ago" data-ago="' + esc(d.toISOString()) + '">' + esc(A.timeAgo(d)) + '</span>' +
+        (by ? '<span class="order-by">by ' + by + '</span>' : '') + '</div>';
+    } else if (by) {
+      html += '<div class="order-sub"><span class="order-by">by ' + by + '</span></div>';
+    }
+    return html;
   }
   function refreshAgo() {
     document.querySelectorAll('.ago[data-ago]').forEach(function (el) { el.textContent = A.timeAgo(el.getAttribute('data-ago')); });
@@ -1140,7 +1169,9 @@
   function rowAddress(order) {
     var street = String(order.shippingAddress || '').trim();
     var place = [order.area && (order.area.name || order.area), order.zone && (order.zone.name || order.zone), order.division && (order.division.name || order.division), order.city]
-      .filter(function (v) { return v && typeof v === 'string' && v.trim(); }).map(function (v) { return v.trim(); });
+      .filter(function (v) { return v && typeof v === 'string' && v.trim(); }).map(function (v) { return v.trim(); })
+      // Skip area/city names the customer already typed in the street line.
+      .filter(function (v) { return street.toLowerCase().indexOf(v.toLowerCase()) === -1; });
     var parts = (street ? [street] : []).concat(place);
     return parts.filter(function (v, i) { return parts.findIndex(function (o) { return o.toLowerCase() === v.toLowerCase(); }) === i; }).join(', ') || '—';
   }
@@ -1152,7 +1183,7 @@
       html += fraudChipHtml(fraud.overall);
       hasStored = true;
     }
-    html += '<button class="btn btn-xs btn-fraud-check" type="button" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')" title="Fraud check" aria-label="' + (hasStored ? 'Recheck fraud' : 'Check fraud') + '">' + (hasStored ? 'Recheck' : 'Check') + '</button></div>';
+    html += '<button class="btn btn-xs btn-fraud-check" type="button" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')" title="' + (hasStored ? 'Recheck fraud' : 'Fraud check') + '" aria-label="' + (hasStored ? 'Recheck fraud' : 'Check fraud') + '">' + (hasStored ? 'Recheck' : 'Check') + '</button></div>';
     return html;
   }
   function fraudChipHtml(o) {
@@ -1161,8 +1192,8 @@
     var tone = ratio >= 80 ? 'success' : ratio >= 50 ? 'attention' : 'critical';
     if (!total) tone = 'neutral';
     return '<div class="fraud-chip" title="All orders: ' + total + ' · delivered: ' + delivered + ' · returned: ' + returned + '">' +
-      '<span class="fraud-counts">All ' + total + ' · <span class="ok">✓' + delivered + '</span> <span class="bad">✗' + returned + '</span></span>' +
-      '<span class="badge tone-' + tone + '"><i class="fas fa-shield-halved fraud-icon" aria-hidden="true"></i>' + ratio.toFixed(1) + '%<span class="lbl"> success</span></span></div>';
+      '<span class="badge tone-' + tone + '"><i class="fas fa-shield-halved fraud-icon" aria-hidden="true"></i>' + ratio.toFixed(1) + '%<span class="lbl"> success</span></span>' +
+      '<span class="fraud-counts"><span class="ok">✓' + delivered + '</span> <span class="bad">✗' + returned + '</span></span></div>';
   }
 
   function courierCell(o) {
@@ -1192,25 +1223,30 @@
     hold: ['On hold', 'warning'],
     unknown: ['Unknown', 'neutral'],
   };
+  /* Live parcel status and charge, shown under the parcel in the Courier column ('' when there is none). */
   function courierStatusCell(o) {
-    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '<span class="dash">—</span>';
-    if (o.courierData.providerName !== 'Steadfast Courier' && !(o.courierStatus && o.courierStatus.status)) {
-      return '<span class="dash" title="Status tracking is available for Steadfast parcels">—</span>';
-    }
+    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '';
+    if (o.courierData.providerName !== 'Steadfast Courier' && !(o.courierStatus && o.courierStatus.status)) return '';
     var raw = o.courierStatus && o.courierStatus.status ? String(o.courierStatus.status).toLowerCase() : '';
     var mapped = COURIER_STATUSES[raw] || (raw ? [raw.replace(/_/g, ' ').replace(/^\w/, function (c) { return c.toUpperCase(); }), 'neutral'] : ['Awaiting update', 'subdued']);
     var message = o.courierStatus && o.courierStatus.trackingMessage ? o.courierStatus.trackingMessage : '';
     return '<span class="badge badge-dot tone-' + mapped[1] + '"' + (message ? ' title="' + esc(message) + '"' : '') + '>' + esc(mapped[0]) + '</span>';
   }
   function courierChargeCell(o) {
-    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '<span class="dash">—</span>';
+    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '';
     var charge = o.courierStatus && o.courierStatus.deliveryCharge;
     if (charge === undefined || charge === null || charge === '' || !isFinite(Number(charge))) {
-      if (o.courierData.providerName !== 'Steadfast Courier') return '<span class="dash">—</span>';
+      if (o.courierData.providerName !== 'Steadfast Courier') return '';
       var lookupError = o.courierStatus && o.courierStatus.chargeLookupError;
-      return '<span class="subtle" style="font-size:12px;white-space:nowrap"' + (lookupError ? ' title="' + esc(lookupError) + '"' : '') + '>Awaiting charge</span>';
+      return '<span class="subtle"' + (lookupError ? ' title="' + esc(lookupError) + '"' : '') + '>Awaiting charge</span>';
     }
-    return '<span class="charge" title="Charge reported by Steadfast">৳' + Number(charge).toLocaleString('en-BD', { maximumFractionDigits: 2 }) + '</span>';
+    return '<span class="cs-label">Charge</span> <span class="charge" title="Charge reported by Steadfast">৳' + Number(charge).toLocaleString('en-BD', { maximumFractionDigits: 2 }) + '</span>';
+  }
+  function courierColumn(o) {
+    var status = courierStatusCell(o), charge = courierChargeCell(o);
+    return courierCell(o) +
+      (status ? '<div class="cs-line">' + status + '</div>' : '') +
+      (charge ? '<div class="cs-line">' + charge + '</div>' : '');
   }
 
   /* WhatsApp */
@@ -1263,10 +1299,11 @@
     return html + '</select>';
   }
 
-  function noteCells(o) {
-    var customer = '<td class="c-cnote"><div class="note-cell">' + (o.note ? esc(o.note) : '<span class="dash">—</span>') + '</div></td>';
-    var admin = '<td class="c-anote"><div class="note-cell admin-note-cell" data-id="' + o._id + '">' + adminNoteInner(o) + '</div></td>';
-    return customer + admin;
+  /* One Notes column: the customer's checkout note (if any), then the team's admin note. */
+  function notesCell(o) {
+    return '<td class="c-notes">' +
+      (o.note ? '<div class="note-cell cnote">' + esc(o.note) + '</div>' : '') +
+      '<div class="note-cell admin-note-cell" data-id="' + o._id + '">' + adminNoteInner(o) + '</div></td>';
   }
   function adminNoteInner(o) {
     return o.adminNote
@@ -1278,8 +1315,8 @@
   function incompleteRow(o) {
     var converted = o.status === 'converted';
     var actions = '<div class="row-actions">' +
-      '<button class="btn btn-xs" type="button" onclick="openProducts(\'' + o._id + '\')" aria-label="View"><i class="fas fa-eye"></i><span class="lbl"> View</span></button>' +
-      (converted ? '' : '<button class="btn btn-xs" type="button" onclick="ShobazIncompleteEditor.open(\'' + o._id + '\')" aria-label="Edit"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
+      '<button class="btn btn-xs" type="button" onclick="openProducts(\'' + o._id + '\')" title="View items" aria-label="View"><i class="fas fa-eye"></i><span class="lbl"> View</span></button>' +
+      (converted ? '' : '<button class="btn btn-xs" type="button" onclick="ShobazIncompleteEditor.open(\'' + o._id + '\')" title="Edit customer and books" aria-label="Edit"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
       (converted ? '' : '<button class="btn btn-xs" type="button" onclick="convertIncompleteOrder(\'' + o._id + '\')" title="Create an order from this checkout" aria-label="Add order"><i class="fas fa-plus"></i><span class="lbl"> Add order</span></button>') +
       whatsappAction(o, 'incomplete') +
       '<button class="btn btn-xs btn-icon" type="button" onclick="deleteIncompleteOrder(\'' + o._id + '\')" title="Delete" aria-label="Delete incomplete order"><i class="fas fa-trash" style="color:#c70a24"></i></button>' +
@@ -1295,20 +1332,16 @@
     var sentRow = o.courierData && o.courierData.providerName ? ' row-sent' : '';
     return '<tr data-id="' + o._id + '" class="row-tone-' + (converted ? 'success' : 'attention') + sentRow + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
-      '<td class="c-order"><span class="order-no">' + esc(o.orderId || String(o._id).slice(-6)) + '</span></td>' +
+      '<td class="c-order">' + orderCell('<span class="order-no">' + esc(o.orderId || String(o._id).slice(-6)) + '</span>', o.createdAt || o.checkoutDate, o.user ? 'Customer' : 'Guest') + '</td>' +
       '<td class="c-cust">' + customerCell(o) + '</td>' +
-      '<td class="c-addr"><div class="addr">' + esc(rowAddress(o)) + '</div></td>' +
-      '<td class="c-date">' + dateCell(o.createdAt || o.checkoutDate) + '</td>' +
-      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span></td>' +
-      '<td class="c-pay"><div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus || 'unpaid') + '</div></td>' +
-      '<td class="c-courier">' + courier + '</td>' +
-      '<td class="c-cstatus"><span class="dash">—</span></td>' +
-      '<td class="c-charge"><span class="dash">—</span></td>' +
       '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
+      '<td class="c-addr"><div class="addr">' + esc(rowAddress(o)) + '</div></td>' +
+      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span>' +
+        '<div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus || 'unpaid') + '</div>' +
+        '<div class="status-wrap">' + status + '</div></td>' +
+      '<td class="c-courier">' + courier + '</td>' +
+      notesCell(o) +
       '<td class="c-actions">' + actions + '</td>' +
-      '<td class="c-status">' + status + '</td>' +
-      '<td class="c-orderby"><span class="subtle">' + (o.user ? 'Customer' : 'Guest') + '</span></td>' +
-      noteCells(o) +
       '</tr>';
   }
 
@@ -1326,27 +1359,23 @@
     var sent = o.courierData && o.courierData.providerName ? ' row-sent' : '';
     return '<tr data-id="' + o._id + '" class="row-tone-' + (STATUS_TONES[o.orderStatus] || 'neutral') + sent + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
-      '<td class="c-order"><a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" rel="noopener" class="order-no">#' + esc(o.orderId || String(o._id).slice(-6)) + '</a></td>' +
+      '<td class="c-order">' + orderCell('<a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" rel="noopener" class="order-no">#' + esc(o.orderId || String(o._id).slice(-6)) + '</a>', o.createdAt || o.checkoutDate, orderBy) + '</td>' +
       '<td class="c-cust">' + customerCell(o) + '</td>' +
-      '<td class="c-addr"><div class="addr">' + esc(o.shippingAddress || '—') + '</div></td>' +
-      '<td class="c-date">' + dateCell(o.createdAt || o.checkoutDate) + '</td>' +
-      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span></td>' +
-      '<td class="c-pay"><div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus) + '</div></td>' +
-      '<td class="c-courier">' + courierCell(o) + '</td>' +
-      '<td class="c-cstatus">' + courierStatusCell(o) + '</td>' +
-      '<td class="c-charge">' + courierChargeCell(o) + '</td>' +
       '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
+      '<td class="c-addr"><div class="addr">' + esc(rowAddress(o)) + '</div></td>' +
+      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span>' +
+        '<div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus) + '</div>' +
+        '<div class="status-wrap">' + statusSelect(o._id, o.orderStatus) + '</div></td>' +
+      '<td class="c-courier">' + courierColumn(o) + '</td>' +
+      notesCell(o) +
       '<td class="c-actions">' + actions + '</td>' +
-      '<td class="c-status">' + statusSelect(o._id, o.orderStatus) + '</td>' +
-      '<td class="c-orderby"><span class="subtle">' + orderBy + '</span></td>' +
-      noteCells(o) +
       '</tr>';
   }
 
   function renderTable(orders) {
     var tbody = document.getElementById('ordersBody');
     if (!orders.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="16"><div class="empty-state"><i class="fas fa-inbox"></i>No orders found</div></td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i>No orders found</div></td></tr>';
       return;
     }
     tbody.innerHTML = orders.map(function (o) { return isIncompleteView ? incompleteRow(o) : orderRow(o); }).join('');
