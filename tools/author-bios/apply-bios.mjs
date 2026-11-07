@@ -16,8 +16,9 @@
  * Which rows are used
  *   Only rows whose `approve` column is yes / y / true / 1 / হ্যাঁ.
  *   `bio_bn`    → author description (edit the text in the sheet before approving).
- *   `image_url` → author photo, optional; must be an http(s) URL (e.g. uploaded via
- *                 admin → Gallery first).
+ *   `image_url` → author photo, optional. Either an http(s) URL, or a local image
+ *                 file (webp/jpg/png, path relative to the CSV, e.g.
+ *                 photos/author.webp) that is uploaded during --apply.
  *
  * Login (only for --apply)
  *   Uses $ADMIN_TOKEN if set, otherwise asks for your admin username and password
@@ -25,8 +26,8 @@
  *
  * Needs Node 18+ (built-in fetch). No npm install required.
  */
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { basename, dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline';
 
@@ -77,6 +78,34 @@ function parseCsv(text) {
 const APPROVED = new Set(['yes', 'y', 'true', '1', 'হ্যাঁ', 'ok']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const short = (t, n = 60) => (t.length > n ? `${t.slice(0, n)}…` : t);
+const indent = (t) => t.split('\n').map((l) => `    ${l}`).join('\n');
+
+// Local photo files are uploaded through the admin upload API during --apply.
+const IMAGE_MIME = { '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png' };
+const MAX_IMAGE_BYTES = 10 * 1000 * 1000; // API limit
+
+function checkImageFile(file) {
+  if (!existsSync(file)) return `file not found: ${file}`;
+  if (!IMAGE_MIME[extname(file).toLowerCase()]) return 'must be a .webp, .jpg or .png file (or an http(s) URL)';
+  if (statSync(file).size > MAX_IMAGE_BYTES) return 'file is larger than 10 MB';
+  return null;
+}
+
+async function uploadImage(file, token) {
+  const form = new FormData();
+  const type = IMAGE_MIME[extname(file).toLowerCase()];
+  form.append('image', new Blob([readFileSync(file)], { type }), basename(file));
+  const { status, body } = await getJson(`${API}/api/upload/single-image`, {
+    method: 'POST',
+    headers: { administrator: token },
+    body: form,
+  });
+  if (status === 401 || status === 403) {
+    throw Object.assign(new Error(`Not authorised to upload (${status}).`), { auth: true });
+  }
+  if (!body?.url) throw new Error(`photo upload failed (${status}) ${body?.message || ''}`.trim());
+  return body.url;
+}
 
 async function getJson(url, init = {}) {
   const res = await fetch(url, init);
@@ -145,7 +174,12 @@ async function main() {
     const bio = (r.bio_bn || '').trim();
     const image = (r.image_url || '').trim();
     if (!bio && !image) { counts.invalid++; console.log(`✗ ${label}: approved but bio_bn and image_url are empty`); continue; }
-    if (image && !/^https?:\/\//i.test(image)) { counts.invalid++; console.log(`✗ ${label}: image_url must start with http(s)://`); continue; }
+    let imageFile = null;
+    if (image && !/^https?:\/\//i.test(image)) {
+      imageFile = resolve(dirname(CSV_PATH), image);
+      const problem = checkImageFile(imageFile);
+      if (problem) { counts.invalid++; console.log(`✗ ${label}: image_url ${problem}`); continue; }
+    }
 
     const { status, body } = await getJson(`${API}/api/author/${r.author_id}`);
     const current = body?.data;
@@ -159,8 +193,9 @@ async function main() {
       else changes.description = bio;
     }
     if (image) {
-      if ((current.image || '') === image) notes.push('photo already set');
+      if (!imageFile && (current.image || '') === image) notes.push('photo already set');
       else if (current.image && !OVERWRITE) notes.push('has a photo already — skipped (use --overwrite)');
+      else if (imageFile) changes.imageFile = imageFile;
       else changes.image = image;
     }
     if (!Object.keys(changes).length) {
@@ -170,8 +205,14 @@ async function main() {
     }
     counts.update++;
     plan.push({ id: r.author_id, current, changes });
-    const what = [changes.description && `bio "${short(changes.description)}"`, changes.image && 'photo'].filter(Boolean).join(' + ');
+    const fullText = picked.length <= 3; // show the whole bio when loading just a few authors
+    const what = [
+      changes.description && (fullText ? 'bio' : `bio "${short(changes.description)}"`),
+      changes.image && 'photo',
+      changes.imageFile && `photo (upload ${basename(changes.imageFile)})`,
+    ].filter(Boolean).join(' + ');
     console.log(`→ ${current.name}: set ${what}${notes.length ? ` (${notes.join('; ')})` : ''}`);
+    if (fullText && changes.description) console.log(`${indent(changes.description)}\n`);
     await sleep(60);
   }
 
@@ -193,6 +234,16 @@ async function main() {
   let ok = 0;
   let failed = 0;
   for (const { id, current, changes } of plan) {
+    if (changes.imageFile) {
+      try {
+        changes.image = await uploadImage(changes.imageFile, token);
+        console.log(`↑ ${current.name}: photo uploaded → ${changes.image}`);
+      } catch (err) {
+        if (err.auth) throw new Error(`${err.message} Check the admin login/token — stopped after ${ok} update(s).`);
+        failed++; console.log(`✗ ${current.name}: ${err.message} — author not changed`); continue;
+      }
+      delete changes.imageFile;
+    }
     const payload = { name: current.name, slug: current.slug, ...changes };
     const { status, body } = await getJson(`${API}/api/author/update/${id}`, {
       method: 'PUT',

@@ -13,8 +13,10 @@ Open `author-bios-draft.csv` in Google Sheets or Excel.
   `needs-info` (blank — write it yourself), `not-an-author` (translator/editor/publisher).
 - Edit the text in **bio_bn** if needed.
 - Put `yes` in **approve** for each author you want loaded.
-- Optional: paste a photo URL into **image_url** (upload it in admin → Gallery first;
-  it must start with `https://`).
+- Optional photo in **image_url**: either a URL starting with `https://` (e.g. from
+  admin → Gallery), or a local file next to the CSV such as
+  `photos/author-name.webp` (webp/jpg/png, max 10 MB) — it is uploaded for you
+  during `--apply`. Square ~600×600 WebP works best (the site shows it as a circle).
 - Save as **CSV UTF-8** (Excel: *File → Save As → CSV UTF-8*; Google Sheets:
   *File → Download → CSV*). Plain "CSV" in Excel can break the Bangla text.
 
