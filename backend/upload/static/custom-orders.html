@@ -116,6 +116,9 @@
     .orders-table tr.row-tone-success { --row-accent: #29845a; }
     .orders-table tr.row-tone-critical { --row-accent: #e51c00; }
     .orders-table tr.row-tone-neutral { --row-accent: #b5b5b5; }
+    /* Already sent to the courier: light green instead of the stripe. */
+    .orders-table tbody tr.row-sent td { background: #e6f6eb; }
+    .orders-table tbody tr.row-sent:hover td { background: #d9f1e1; }
     .orders-table tbody tr.call-busy td { background: #fffbeb; }
     .addr { max-width: 220px; font-size: 12px; color: var(--sa-text); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .date-cell { white-space: nowrap; font-size: 13px; }
@@ -266,6 +269,7 @@
       }
       .orders-table tbody tr { box-shadow: inset 4px 0 0 var(--row-accent, transparent); }
       .orders-table tbody tr:nth-child(even) { background: #f4f4f5; }
+      .orders-table tbody tr.row-sent { background: #e6f6eb; }
       .orders-table tbody tr.call-busy { background: #fffbeb; }
       .orders-table tbody tr td, .orders-table tbody tr:hover td { background: none !important; box-shadow: none !important; }
       .orders-table tbody td { display: block; min-width: 0; padding: 0 !important; border: 0 !important; width: auto !important; }
@@ -1288,7 +1292,8 @@
     var status = converted
       ? '<span class="badge badge-dot tone-success">Converted</span>' + staffBy('by', o.convertedBy)
       : '<span class="badge badge-hollow tone-attention">Incomplete</span>';
-    return '<tr data-id="' + o._id + '" class="row-tone-' + (converted ? 'success' : 'attention') + '">' +
+    var sentRow = o.courierData && o.courierData.providerName ? ' row-sent' : '';
+    return '<tr data-id="' + o._id + '" class="row-tone-' + (converted ? 'success' : 'attention') + sentRow + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
       '<td class="c-order"><span class="order-no">' + esc(o.orderId || String(o._id).slice(-6)) + '</span></td>' +
       '<td class="c-cust">' + customerCell(o) + '</td>' +
@@ -1318,7 +1323,8 @@
       '<a class="btn btn-xs btn-icon" href="' + API + '/invoice/invoice-' + esc(o.orderId) + '.pdf" target="_blank" rel="noopener" title="Invoice" aria-label="Invoice"><i class="fas fa-file-invoice"></i></a>' +
       noteAction(o) +
       '</div>';
-    return '<tr data-id="' + o._id + '" class="row-tone-' + (STATUS_TONES[o.orderStatus] || 'neutral') + '">' +
+    var sent = o.courierData && o.courierData.providerName ? ' row-sent' : '';
+    return '<tr data-id="' + o._id + '" class="row-tone-' + (STATUS_TONES[o.orderStatus] || 'neutral') + sent + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
       '<td class="c-order"><a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" rel="noopener" class="order-no">#' + esc(o.orderId || String(o._id).slice(-6)) + '</a></td>' +
       '<td class="c-cust">' + customerCell(o) + '</td>' +
