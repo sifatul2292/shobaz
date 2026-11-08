@@ -3,357 +3,1343 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders — Shobaz Admin</title>
+  <title>Order List — Shobaz Admin</title>
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="admin-shell.css?v=1">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
   <style>
-    /* Orders page only. Shared look lives in admin-shell.css. */
-    body.salesman-mode [data-salesman-hidden] { display: none !important; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --p:       #7c3aed;
+      --p-dark:  #5b21b6;
+      --p-light: #ede9fe;
+      --blue:    #2563eb;
+      --green:   #059669;
+      --orange:  #d97706;
+      --red:     #dc2626;
+      --cyan:    #0891b2;
+      --g50:     #f8fafc;
+      --g100:    #f1f5f9;
+      --g200:    #e2e8f0;
+      --g300:    #cbd5e1;
+      --g400:    #94a3b8;
+      --g500:    #64748b;
+      --g700:    #334155;
+      --g900:    #0f172a;
+      --sidebar: 240px;
+      --radius:  14px;
+    }
+    html, body { height: 100%; overflow-x: clip; font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f2f8; color: #1e293b; -webkit-font-smoothing: antialiased; }
 
-    /* Date filters */
-    .filters-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; margin-bottom: 16px; }
-    .date-filter-box { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 12px; background: #fff; border: 1px solid var(--sa-border); border-radius: var(--sa-radius); box-shadow: var(--sa-shadow); }
-    .date-filter-box > i { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--sa-surface-3); color: var(--sa-text-2); font-size: 13px; }
-    .date-filter-box label { display: block; font-size: 12px; font-weight: 550; color: var(--sa-text-2); }
-    .date-range { display: flex; align-items: center; gap: 6px; }
-    .date-range input { min-width: 0; flex: 1; height: 26px; padding: 0 6px; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--sa-text); font: 500 13px var(--sa-font); }
-    .date-range input:hover { background: var(--sa-hover); }
-    .date-range input:focus { outline: 0; border-color: var(--sa-focus); background: #fff; }
-    .date-range span { color: var(--sa-text-3); }
-    .date-clear { width: 28px; height: 28px; flex-shrink: 0; border: 0; border-radius: 8px; background: none; color: var(--sa-text-3); cursor: pointer; }
-    .date-clear:hover { background: rgba(0, 0, 0, .05); color: var(--sa-text); }
-    .filters-row .btn { height: auto; min-height: 44px; }
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
 
-    /* Team today */
-    .team-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin-bottom: 12px; }
-    .team-grid[hidden], .calls-strip[hidden] { display: none; }
-    .team-grid > .card + .card { margin-top: 0; }
-    .team-hero { display: flex; gap: 14px; align-items: flex-start; padding: 16px; }
-    .team-hero .hero-icon { width: 40px; height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--tone-info-bg); color: var(--tone-info-fg); font-size: 16px; }
-    .team-hero[data-state="top"] .hero-icon { background: var(--tone-success-bg); color: var(--tone-success-fg); }
-    .team-hero[data-state="poor"] .hero-icon { background: var(--tone-critical-bg); color: var(--tone-critical-fg); }
-    .team-hero[data-state="behind"] .hero-icon { background: var(--tone-attention-bg); color: var(--tone-attention-fg); }
-    .team-hero[data-state="idle"] .hero-icon { background: var(--tone-neutral-bg); color: var(--sa-text-2); }
-    .hero-eyebrow { font-size: 12px; font-weight: 550; color: var(--sa-text-2); }
-    .hero-title { margin-top: 2px; font-size: 16px; font-weight: 650; letter-spacing: -.01em; line-height: 1.3; }
-    .hero-sub { margin-top: 4px; color: var(--sa-text-2); }
-    .team-board .card-head { padding: 10px 16px; }
-    .live-stamp { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sa-text-2); }
-    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #29845a; box-shadow: 0 0 0 3px rgba(41, 132, 90, .18); }
-    .team-list { list-style: none; padding: 6px 16px 10px; }
-    .team-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(70px, 1.1fr) auto; align-items: center; gap: 10px; padding: 6px 0; }
-    .team-list li + li { border-top: 1px solid var(--sa-border-2); }
-    .team-rank { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--sa-surface-3); color: var(--sa-text-2); font-size: 11px; font-weight: 650; }
-    .team-list li.is-top .team-rank { background: var(--tone-success-bg); color: var(--tone-success-fg); }
-    .team-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
-    .team-name small { color: var(--sa-text-3); font-weight: 500; }
-    .team-name .on-call { margin-left: 6px; color: #29845a; font-size: 11px; }
-    .team-list .progress > span { background: #8a8a8a; }
-    .team-list li.is-top .progress > span { background: #29845a; }
-    .team-list li.is-poor .progress > span { background: #e51c00; }
-    .team-pts { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.15; }
-    .team-pts small { display: block; font-size: 11px; font-weight: 500; color: var(--sa-text-3); }
-    .team-list li.is-me .team-name { color: var(--sa-text); }
-    .calls-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; margin-bottom: 16px; }
-    .calls-strip > strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
-    .calls-strip .muted { font-size: 12px; }
-    .call-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--sa-surface-3); font-size: 12px; font-weight: 550; }
-    .call-chip.is-mine { background: var(--tone-success-bg); color: var(--tone-success-fg); }
-    .pulse { width: 7px; height: 7px; border-radius: 50%; background: #29845a; animation: co-pulse 1.4s ease-in-out infinite; }
-    @keyframes co-pulse { 50% { opacity: .35; } }
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar);
+      background: linear-gradient(180deg, #13111e 0%, #1a1730 100%);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 200;
+      overflow-y: auto; border-right: 1px solid rgba(255,255,255,.06);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    .sidebar-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sidebar-logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--p), #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .sidebar-logo span { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+    .sidebar-logo small { display: block; font-size: 10px; color: #64748b; font-weight: 500; margin-top: 1px; }
+    .sidebar-nav { padding: 16px 0; flex: 1; }
+    .nav-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: #475569;
+      padding: 10px 20px 5px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; font-size: 13px; font-weight: 600;
+      color: #94a3b8; text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; transition: all .15s;
+      position: relative;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.04); color: #cbd5e1; }
+    .nav-item.active {
+      background: rgba(124,58,237,.15); color: #a78bfa;
+      border-left-color: #7c3aed;
+    }
+    .nav-item i { width: 17px; text-align: center; font-size: 13px; opacity: .85; }
+    .nav-subitem { padding-left: 36px; font-size: 12.5px; }
+    .sidebar-footer {
+      padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .sidebar-footer a {
+      display: flex; align-items: center; gap: 8px;
+      color: #64748b; text-decoration: none; font-size: 12px; font-weight: 600;
+      transition: color .15s;
+    }
+    .sidebar-footer a:hover { color: #94a3b8; }
 
-    /* Table card internals */
-    .filter-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--sa-border-2); }
-    .filter-bar .spacer { flex: 1; }
-    .filter-btn { height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px dashed #b5b5b5; border-radius: 8px; background: #fff; color: var(--sa-text); font: 550 12px var(--sa-font); cursor: pointer; white-space: nowrap; }
-    .filter-btn:hover { background: var(--sa-hover); }
-    .filter-btn.active { border-style: solid; border-color: #8a8a8a; background: #f1f1f1; }
-    .filter-btn i { font-size: 11px; color: var(--sa-text-2); }
-    .dropdown { position: absolute; top: calc(100% + 4px); left: 0; z-index: 200; min-width: 190px; padding: 6px; display: none; background: #fff; border-radius: var(--sa-radius); box-shadow: var(--sa-shadow-pop); }
-    .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-    .dropdown-item:hover { background: var(--sa-hover); }
-    .dropdown-item .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .per-page-select { height: 28px; padding: 0 26px 0 10px; border: 1px solid #e3e3e3; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 20 20'%3E%3Cpath fill='%23616161' d='M5 7l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center; appearance: none; font: 550 12px var(--sa-font); color: var(--sa-text); cursor: pointer; }
-    #bulkBar { display: none; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: var(--sa-surface-2); border-bottom: 1px solid var(--sa-border); }
-    #bulkBar .bulk-count { font-weight: 650; margin-right: 4px; }
-    #bulkBar select { height: 28px; padding: 0 8px; border: 1px solid #b5b5b5; border-radius: 8px; background: #fff; font: 500 12px var(--sa-font); }
-    .in-review-tools { display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 12px; background: #f0f7ff; border-bottom: 1px solid #d5ebff; }
-    .in-review-tools.show { display: flex; }
-    .in-review-copy { font-size: 12px; font-weight: 550; color: var(--tone-info-fg); }
-    .in-review-copy i { margin-right: 4px; }
+    /* ── Mobile overlay ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 199; backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.open { display: block; }
+    @media(max-width:768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+    }
 
-    /* Rows */
-    .orders-table td { line-height: 1.35; vertical-align: top; }
-    .orders-table thead th, .orders-table tbody td { padding-left: 10px; padding-right: 10px; }
-    .orders-table tbody td { padding-top: 10px; padding-bottom: 10px; }
-    .orders-table td.c-check { vertical-align: middle; }
-    .orders-table th:first-child, .orders-table td:first-child { width: 36px; padding-right: 0; }
-    .order-no { font-weight: 650; color: var(--sa-text); text-decoration: none; }
-    a.order-no:hover { color: var(--sa-link); text-decoration: underline; }
-    /* Order column: number, then date + time, then "x ago", then who placed it. */
-    .c-order { white-space: nowrap; }
-    .c-order .order-no { display: inline-block; font-size: 13px; }
-    .c-order .date-cell { margin-top: 3px; font-size: 12px; }
-    .order-sub { font-size: 12px; color: var(--sa-text-3); }
-    .order-by { display: block; color: var(--sa-text-3); }
-    .cust-name { font-weight: 550; max-width: 200px; overflow-wrap: anywhere; }
-    .phone-cell { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-top: 2px; }
-    .phone-link { color: var(--sa-link); text-decoration: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar); flex: 1; min-width: 0; }
+    @media(max-width:768px) { .main { margin-left: 0; } }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%);
+      color: #fff; padding: 0 24px;
+      display: flex; align-items: center; gap: 14px;
+      height: 62px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 0 rgba(255,255,255,.08), 0 4px 20px rgba(109,40,217,.4);
+    }
+    .hamburger {
+      display: none; background: none; border: none; color: #fff;
+      font-size: 18px; cursor: pointer; padding: 4px; border-radius: 6px;
+      transition: background .15s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,.12); }
+    @media(max-width:768px) { .hamburger { display: flex; align-items: center; justify-content: center; } }
+    .topbar-title { font-size: 17px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; }
+    .topbar-title i { margin-right: 8px; opacity: .8; }
+    .topbar-spacer { flex: 1; }
+    .search-wrap {
+      display: flex; align-items: center;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 100px; padding: 0 14px; gap: 8px;
+      transition: background .15s, border-color .15s;
+      min-width: 260px;
+    }
+    .search-wrap:focus-within { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); }
+    .search-wrap i { color: rgba(255,255,255,.6); font-size: 12px; }
+    .search-wrap input {
+      background: none; border: none; outline: none; color: #fff;
+      font-size: 13px; font-weight: 500; width: 100%; padding: 9px 0;
+    }
+    .search-wrap input::placeholder { color: rgba(255,255,255,.5); }
+    .topbar-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 100px; font-size: 12px; font-weight: 700;
+      border: 1px solid rgba(255,255,255,.25); cursor: pointer; transition: all .15s;
+      text-decoration: none; color: #fff; background: rgba(255,255,255,.12); white-space: nowrap;
+    }
+    .topbar-btn:hover { background: rgba(255,255,255,.22); }
+    .topbar-btn.danger { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.4); }
+    .topbar-btn.danger:hover { background: rgba(239,68,68,.3); }
+    @media(max-width:768px) {
+      .topbar { padding: 0 14px; gap: 10px; }
+      .topbar-title { font-size: 14px; }
+      .search-wrap { min-width: 0; flex: 1; }
+      .topbar-btn .btn-label { display: none; }
+      .topbar-btn { padding: 8px 10px; }
+    }
+
+    /* ── Content ── */
+    .content { padding: 22px 24px; }
+    @media(max-width:768px) { .content { padding: 12px; } }
+
+    /* ── Date Filters ── */
+    .date-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: stretch; }
+    .date-box {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 1.5px solid var(--g200);
+      border-radius: var(--radius); padding: 10px 14px;
+      flex: 1; min-width: 220px; transition: border-color .2s, box-shadow .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .date-box:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+    .date-box-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .date-box-icon.v { background: #ede9fe; color: #7c3aed; }
+    .date-box-icon.o { background: #fff7ed; color: #d97706; }
+    .date-box label { display: block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--g400); margin-bottom: 4px; }
+    .date-inputs { display: flex; align-items: center; gap: 6px; flex: 1; }
+    .date-inputs input { border: none; outline: none; font-size: 12.5px; font-weight: 500; color: #1e293b; background: none; cursor: pointer; flex: 1; min-width: 0; font-family: inherit; }
+    .date-inputs span { color: var(--g300); font-size: 11px; flex-shrink: 0; }
+    .date-clear { border: none; background: none; color: var(--g300); cursor: pointer; padding: 4px; border-radius: 4px; transition: color .15s; flex-shrink: 0; }
+    .date-clear:hover { color: var(--g500); }
+    .btn-today {
+      display: flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg, var(--p), #4f46e5);
+      color: #fff; border: none; border-radius: var(--radius);
+      padding: 0 20px; font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; box-shadow: 0 2px 8px rgba(124,58,237,.35);
+      transition: opacity .15s; min-height: 50px;
+    }
+    .btn-today:hover { opacity: .88; }
+    @media(max-width:600px) {
+      .date-row { display: grid; grid-template-columns: 1fr 1fr; }
+      .btn-today { grid-column: 1/-1; min-height: 42px; }
+      .date-box { min-width: 0; }
+    }
+
+    /* ── Stats ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+    @media(max-width:900px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:480px) { .stats-row { grid-template-columns: repeat(2,1fr); gap: 8px; } }
+    .stat-card {
+      border-radius: 16px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      color: #fff; position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+    .stat-card::before {
+      content: ''; position: absolute; right: -16px; top: -16px;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(255,255,255,.12);
+    }
+    .stat-card::after {
+      content: ''; position: absolute; right: 16px; bottom: -24px;
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(255,255,255,.08);
+    }
+    .stat-card.c1 { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .stat-card.c2 { background: linear-gradient(135deg, #d97706, #b45309); }
+    .stat-card.c3 { background: linear-gradient(135deg, #059669, #047857); }
+    .stat-card.c4 { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+    .stat-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: rgba(255,255,255,.2); display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0; position: relative; z-index: 1;
+    }
+    .stat-info { position: relative; z-index: 1; }
+    .stat-info label { font-size: 10px; font-weight: 700; opacity: .75; text-transform: uppercase; letter-spacing: .07em; display: block; }
+    .stat-info .val { font-size: 26px; font-weight: 900; line-height: 1.1; margin-top: 3px; letter-spacing: -.02em; }
+    @media(max-width:480px) {
+      .stat-card { padding: 12px 14px; gap: 10px; border-radius: 12px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 9px; }
+      .stat-info .val { font-size: 20px; }
+    }
+
+    /* ── Filter Bar ── */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+    .dd-wrap { position: relative; }
+    .filter-btn {
+      display: flex; align-items: center; gap: 7px;
+      background: #fff; border: 1.5px solid var(--g200);
+      border-radius: 10px; padding: 8px 13px;
+      font-size: 12.5px; font-weight: 600; color: var(--g700);
+      cursor: pointer; transition: all .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+      font-family: inherit;
+    }
+    .filter-btn:hover { border-color: var(--p); color: var(--p); }
+    .filter-btn.active { background: var(--p); color: #fff; border-color: var(--p); }
+    .filter-btn i { font-size: 11px; }
+    .filter-btn .chev { font-size: 9px; opacity: .6; }
+    .filter-btn .pill {
+      background: rgba(255,255,255,.25); border-radius: 20px;
+      padding: 1px 7px; font-size: 10.5px; font-weight: 700;
+    }
+    .filter-btn:not(.active) .pill { background: #ede9fe; color: var(--p); }
+    .dropdown {
+      position: absolute; top: calc(100% + 6px); left: 0;
+      background: #fff; border: 1px solid var(--g200);
+      border-radius: 12px; min-width: 190px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.14); z-index: 300;
+      display: none; overflow: hidden;
+      animation: dropIn .15s ease;
+    }
+    @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      padding: 10px 16px; font-size: 13px; font-weight: 500;
+      color: var(--g700); cursor: pointer;
+      display: flex; align-items: center; gap: 9px; transition: background .1s;
+    }
+    .dropdown-item:hover { background: var(--g50); }
+    .dropdown-item.sel { color: var(--p); font-weight: 700; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .per-page-select {
+      border: 1.5px solid var(--g200); border-radius: 10px;
+      padding: 8px 12px; font-size: 12.5px; font-weight: 600;
+      color: var(--g700); background: #fff; cursor: pointer; outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05); font-family: inherit;
+    }
+    .per-page-select:focus { border-color: var(--p); }
+    .spacer { flex: 1; }
+    .btn-reset {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff; border: 1.5px solid var(--g200); border-radius: 10px;
+      padding: 8px 13px; font-size: 12.5px; font-weight: 600; color: var(--g500);
+      cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+      font-family: inherit;
+    }
+    .btn-reset:hover { border-color: var(--g400); color: var(--g700); }
+    .btn-export {
+      display: flex; align-items: center; gap: 7px;
+      background: #13111e; color: #fff; border: none; border-radius: 10px;
+      padding: 8px 15px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+      transition: background .15s; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+      font-family: inherit;
+    }
+    .btn-export:hover { background: #2d2b42; }
+    @media(max-width:768px) {
+      .filter-bar { gap: 6px; }
+      .filter-btn, .per-page-select, .btn-reset, .btn-export { font-size: 12px; padding: 7px 11px; }
+    }
+
+    /* ── Bulk Bar ── */
+    .bulk-bar {
+      display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: #1e1b4b; border-radius: 12px; padding: 10px 16px; margin-bottom: 12px;
+      border: 1px solid #312e81;
+    }
+    .bulk-bar.show { display: flex; }
+    #bulkCount { color: #c4b5fd; font-size: 13px; font-weight: 700; }
+    #bulkStatus {
+      border: 1px solid #4c1d95; background: #2e1065; color: #e9d5ff;
+      border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600;
+      outline: none; font-family: inherit;
+    }
+    .btn-bulk-apply {
+      background: var(--p); color: #fff; border: none; border-radius: 8px;
+      padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-bulk-clear {
+      background: transparent; color: #94a3b8; border: 1px solid #334155;
+      border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* ── Table Card ── */
+    .table-card {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07); overflow: hidden;
+      border: 1px solid var(--g100);
+    }
+    .table-wrap { overflow-x: auto; }
+    .orders-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+    .orders-table thead { background: linear-gradient(135deg, #6d28d9, #4338ca); }
+    .orders-table thead th {
+      padding: 13px 10px; font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .05em; color: #fff;
+      white-space: nowrap; text-align: left;
+    }
+    .orders-table thead th:first-child { padding-left: 18px; width: 38px; }
+    .orders-table thead th:nth-child(5), .orders-table tbody td:nth-child(5) { min-width: 200px; }
+    .orders-table tbody tr { border-bottom: 1px solid var(--g100); transition: background .1s; }
+    .orders-table tbody tr:nth-child(even) { background: #fafbff; }
+    .orders-table tbody tr:hover { background: #f5f3ff !important; }
+    .orders-table tbody td { padding: 10px 10px; vertical-align: middle; color: #334155; font-weight: 500; }
+    .orders-table tbody td:first-child { padding-left: 18px; }
+
+    /* Row accents */
+    .orders-table tr.row-processing { border-left: 3px solid #7c3aed; }
+    .orders-table tr.row-confirmed  { border-left: 3px solid #16a34a; background: #f0fdf4 !important; }
+    .orders-table tr.row-completed  { border-left: 3px solid #059669; background: #dcfce7 !important; }
+    .orders-table tr.row-cancelled  { border-left: 3px solid #dc2626; background: #fff5f5 !important; }
+    .orders-table tr.row-trash      { border-left: 3px solid #94a3b8; background: var(--g50) !important; opacity: .7; }
+    .orders-table tr.row-confirmed:hover { background: #dcfce7 !important; }
+    .orders-table tr.row-completed:hover { background: #bbf7d0 !important; }
+    .orders-table tr.row-cancelled:hover { background: #fee2e2 !important; }
+
+    .order-no {
+      font-weight: 800; color: var(--blue); text-decoration: none;
+      font-size: 13px; letter-spacing: -.01em;
+    }
+    .order-no:hover { text-decoration: underline; }
+    .phone-cell { white-space: nowrap; }
+    .phone-link { font-weight: 600; font-size: 12px; color: #0284c7; text-decoration: none; }
     .phone-link:hover { text-decoration: underline; }
-    .phone-link i { font-size: 10px; margin-right: 3px; }
-    .repeat-badge { padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 650; line-height: 18px; }
-    .call-box { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-    .call-btn { height: 24px; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: 7px; background: #fff; color: var(--sa-text); font: 550 12px var(--sa-font); cursor: pointer; box-shadow: inset 0 -1px 0 0 #b5b5b5, inset 0 0 0 1px rgba(0, 0, 0, .1); white-space: nowrap; }
-    .call-btn:hover { background: var(--sa-hover); }
-    .call-btn i { font-size: 10px; }
-    .call-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 7px; font-size: 12px; font-weight: 550; white-space: nowrap; }
-    .call-pill.is-mine { background: var(--tone-success-bg); color: var(--tone-success-fg); }
-    .call-pill.is-busy { background: var(--tone-warning-bg); color: var(--tone-warning-fg); }
-    .call-pill.is-recent { background: var(--sa-surface-3); color: var(--sa-text-2); font-weight: 500; }
-    /* Alternating shading + a status strip on the left, so rows are easy to tell apart. */
-    .orders-table tbody tr:nth-child(even) td { background: #f6f6f7; }
-    .orders-table tbody tr:hover td { background: #efeff0; }
-    .orders-table tbody td.c-check { box-shadow: inset 4px 0 0 var(--row-accent, transparent); }
-    .orders-table tr.row-tone-attention { --row-accent: #ffb800; }
-    .orders-table tr.row-tone-info { --row-accent: #0094d5; }
-    .orders-table tr.row-tone-success { --row-accent: #29845a; }
-    .orders-table tr.row-tone-critical { --row-accent: #e51c00; }
-    .orders-table tr.row-tone-neutral { --row-accent: #b5b5b5; }
-    /* Already sent to the courier: light green instead of the stripe. */
-    .orders-table tbody tr.row-sent td { background: #e6f6eb; }
-    .orders-table tbody tr.row-sent:hover td { background: #d9f1e1; }
-    .orders-table tbody tr.call-busy td { background: #fffbeb; }
-    /* Full address, never cut: a real column width so it wraps on words, not letters. */
-    .addr { min-width: 170px; max-width: 240px; font-size: 12px; line-height: 1.4; color: var(--sa-text); overflow-wrap: break-word; white-space: normal; }
-    .date-cell { white-space: nowrap; font-size: 13px; }
-    .date-cell .time { color: var(--sa-text-2); }
-    .amount { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    /* Total & status column: amount, payment badges in one line, then the status. */
-    .c-total .amount { display: block; font-size: 14px; }
-    .c-total .stack { flex-direction: row; flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
-    .status-wrap { margin-top: 6px; }
-    .status-wrap .staff-by { margin-top: 3px; }
-    .stack { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-    /* Courier column: who/which parcel, then its live status and charge. */
-    .c-courier { min-width: 140px; }
-    .courier-cell { font-size: 12px; line-height: 1.4; }
-    .courier-name { font-weight: 550; font-size: 12px; }
-    .cs-line { margin-top: 4px; font-size: 12px; white-space: nowrap; }
-    .cs-label { color: var(--sa-text-3); }
-    .courier-id { color: var(--sa-text-2); font-variant-numeric: tabular-nums; }
-    .tracking-link { color: var(--sa-link); text-decoration: none; }
+    .source-cell { min-width: 112px; line-height: 1.25; }
+    .source-badge {
+      display: inline-flex; align-items: center; gap: 5px; max-width: 150px;
+      border-radius: 999px; padding: 4px 8px; font-size: 10.5px;
+      font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;
+    }
+    .source-badge.source-incomplete { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+    .source-badge.source-admin { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+    .source-badge.source-facebook { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .source-badge.source-google { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+    .source-detail {
+      display:block; max-width:150px; margin-top:3px; color:#64748b;
+      font-size:9.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .repeat-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 20px;
+      font-size: 10px; font-weight: 800; color: #fff; margin-left: 4px;
+      vertical-align: middle;
+    }
+    .date-cell { font-size: 11.5px; line-height: 1.5; white-space: nowrap; }
+    .date-cell .time { color: var(--g400); font-size: 11px; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .03em; white-space: nowrap;
+    }
+    .badge-unpaid    { background: #fef3c7; color: #92400e; }
+    .badge-paid      { background: #d1fae5; color: #065f46; }
+    .badge-cod       { background: #dbeafe; color: #1e40af; }
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+    .badge-processing{ background: #ede9fe; color: #5b21b6; }
+    .badge-confirm   { background: #d1fae5; color: #065f46; }
+    .badge-delivered  { background: #d1fae5; color: #065f46; }
+    .badge-cancel    { background: #fee2e2; color: #991b1b; }
+    .badge-hold      { background: var(--g100); color: #475569; }
+    .badge-shipping  { background: #cffafe; color: #0e7490; }
+    .badge-refund    { background: #fce7f3; color: #9d174d; }
+
+    /* Status tab bar */
+    .status-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--g100); margin-bottom: 14px; flex-wrap: wrap; background: #fff; border-radius: 10px 10px 0 0; padding: 0 4px; }
+    .status-tab { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--g400); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s,border-color .15s; white-space: nowrap; user-select: none; }
+    .status-tab:hover { color: var(--p); }
+    .status-tab.active { color: var(--p); border-bottom-color: var(--p); }
+    .status-tab .tab-count { font-size: 11px; font-weight: 700; background: var(--g100); color: var(--g500); border-radius: 10px; padding: 1px 7px; margin-left: 5px; transition: background .15s,color .15s; }
+    .status-tab.active .tab-count { background: var(--p); color: #fff; }
+    .in-review-tools {
+      display: none; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 10px 14px; margin: -4px 0 14px;
+      background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px;
+    }
+    .in-review-tools.show { display: flex; }
+    .in-review-tools-copy { font-size: 11.5px; color: #5b21b6; font-weight: 600; }
+    .in-review-tools-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-label-print {
+      border: 1px solid #c4b5fd; background: #fff; color: #5b21b6;
+      border-radius: 7px; padding: 6px 11px; font-size: 11px;
+      font-weight: 800; cursor: pointer; white-space: nowrap; font-family: inherit;
+    }
+    .btn-label-print.primary { background: #6d28d9; border-color: #6d28d9; color: #fff; }
+    .btn-label-print:hover { filter: brightness(.97); }
+    @media(max-width:680px) {
+      .in-review-tools { align-items: flex-start; flex-direction: column; }
+    }
+
+    /* Status select */
+    .status-select {
+      border: 1.5px solid var(--g200); border-radius: 7px;
+      padding: 4px 8px; font-size: 11px; font-weight: 600; color: #334155;
+      background: #fff; cursor: pointer; outline: none; font-family: inherit;
+    }
+    .status-select:focus { border-color: var(--p); }
+
+    /* Courier */
+    .courier-cell { font-size: 11.5px; line-height: 1.6; }
+    .courier-name { font-weight: 700; color: #334155; }
+    .tracking-link { color: var(--blue); text-decoration: none; font-weight: 600; }
     .tracking-link:hover { text-decoration: underline; }
-    .staff-by { display: block; margin-top: 2px; font-size: 11px; color: var(--sa-text-3); }
-    .staff-by strong { color: var(--sa-text-2); font-weight: 600; }
-    .charge { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .dash { color: var(--sa-text-3); }
-    /* Fraud: success % badge + small recheck icon, delivered/returned counts below. */
-    .fraud-cell { display: flex; align-items: flex-start; gap: 4px; }
-    .fraud-chip { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 12px; line-height: 1.35; white-space: nowrap; }
-    .fraud-chip .ok { color: #29845a; font-weight: 600; }
-    .fraud-chip .bad { color: #c70a24; font-weight: 600; }
-    .fraud-chip .lbl { display: none; }
-    .fraud-counts { color: var(--sa-text-2); }
-    .fraud-icon { display: inline; font-size: 10px; margin-right: 3px; }
-    .fraud-cell:has(.fraud-chip) .btn-fraud-check { width: 24px; height: 22px; padding: 0; font-size: 0; }
-    .fraud-cell:has(.fraud-chip) .btn-fraud-check::before { content: "\f2f1"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 10px; }
-    /* Actions: one row of icon buttons (names show on hover), pinned to the right edge. */
-    .row-actions { display: flex; gap: 4px; flex-wrap: nowrap; }
-    .row-actions .btn { min-width: 30px; justify-content: center; }
-    .row-actions .lbl { display: none; }
-    .row-actions .cnt { margin-left: 2px; font-size: 12px; color: var(--sa-text-2); }
-    .row-actions .mobile-only { display: none; }
-    .orders-table thead th.th-actions, .orders-table tbody td.c-actions { position: sticky; right: 0; z-index: 1; }
-    .orders-table thead th.th-actions { z-index: 3; box-shadow: inset 1px 0 0 var(--sa-border), -8px 0 8px -8px rgba(0, 0, 0, .18); }
-    .orders-table tbody td.c-actions { background: #fff; box-shadow: inset 1px 0 0 var(--sa-border-2), -8px 0 8px -8px rgba(0, 0, 0, .18); }
-    .btn-whatsapp i { color: #25a35a; }
-    .status-select { height: 28px; padding: 0 24px 0 8px; border: 1px solid #b5b5b5; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 20 20'%3E%3Cpath fill='%23616161' d='M5 7l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 7px center; appearance: none; font: 500 12px var(--sa-font); color: var(--sa-text); cursor: pointer; }
-    .status-select:focus { outline: 0; border-color: var(--sa-focus); box-shadow: 0 0 0 1px var(--sa-focus); }
-    .note-cell { min-width: 140px; max-width: 220px; font-size: 12px; overflow-wrap: break-word; }
-    .note-cell.cnote { margin-bottom: 6px; color: var(--sa-text); }
-    .note-cell.cnote::before { content: 'Customer: '; color: var(--sa-text-3); }
-    .admin-note-text { cursor: pointer; border-bottom: 1px dashed #b5b5b5; }
-    .admin-note-text:hover { color: var(--sa-link); }
-    .btn-add-note { border: 0; background: none; color: var(--sa-link); font: 550 12px var(--sa-font); cursor: pointer; padding: 0; }
-    .admin-note-input { width: 100%; min-width: 140px; min-height: 56px; padding: 6px 8px; border: 1px solid var(--sa-focus); border-radius: 8px; font: 12px var(--sa-font); outline: 0; box-shadow: 0 0 0 1px var(--sa-focus); }
-    .note-actions { display: flex; gap: 4px; margin-top: 4px; }
-    .loading-row td, .empty-row td { padding: 40px 16px !important; text-align: center; color: var(--sa-text-2); }
+    .courier-status-badge {
+      display: inline-flex; align-items: center; border-radius: 999px;
+      padding: 4px 9px; font-size: 10.5px; font-weight: 800;
+      white-space: nowrap; line-height: 1.3;
+    }
+    .courier-status-delivered { background: #d1fae5; color: #065f46; }
+    .courier-status-pending { background: #fef3c7; color: #92400e; }
+    .courier-status-review { background: #ede9fe; color: #5b21b6; }
+    .courier-status-partial { background: #ffedd5; color: #9a3412; }
+    .courier-status-cancelled { background: #fee2e2; color: #991b1b; }
+    .courier-status-hold { background: #cffafe; color: #0e7490; }
+    .courier-status-unknown { background: #f1f5f9; color: #475569; }
+    .btn-courier {
+      background: #0891b2; color: #fff; border: none; border-radius: 7px;
+      padding: 5px 11px; font-size: 11px; font-weight: 700; cursor: pointer;
+      transition: background .15s; white-space: nowrap; font-family: inherit;
+    }
+    .btn-courier:hover { background: #0e7490; }
 
-    /* Order modal */
-    .modal-sub { font-size: 12px; color: var(--sa-text-2); margin-top: 2px; }
-    .modal-head-right { display: flex; align-items: center; gap: 8px; }
-    .info-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
-    .info-card { padding: 12px; border: 1px solid var(--sa-border); border-radius: var(--sa-radius); }
-    .info-label { font-size: 12px; font-weight: 550; color: var(--sa-text-2); margin-top: 8px; }
-    .info-label:first-child { margin-top: 0; }
-    .info-value { margin-top: 2px; overflow-wrap: anywhere; }
-    .info-value a { color: var(--sa-link); text-decoration: none; }
-    .fraud-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--sa-border); border-radius: var(--sa-radius); }
-    .fraud-row .fraud-stats { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
-    .section-title { margin: 4px 0 8px; font-size: 13px; font-weight: 650; }
-    .product-table { width: 100%; border-collapse: collapse; border: 1px solid var(--sa-border); border-radius: var(--sa-radius); overflow: hidden; }
-    .product-table th { padding: 8px 12px; background: var(--sa-surface-2); color: var(--sa-text-2); font-size: 12px; font-weight: 550; text-align: left; border-bottom: 1px solid var(--sa-border); }
-    .product-table td { padding: 8px 12px; border-bottom: 1px solid var(--sa-border-2); font-size: 13px; }
-    .product-table tr:last-child td { border-bottom: 0; }
-    .product-table .r { text-align: right; font-variant-numeric: tabular-nums; }
-    .product-author { font-size: 12px; color: var(--sa-text-2); }
-    .modal-totals { display: flex; gap: 18px; margin-right: auto; flex-wrap: wrap; font-size: 12px; color: var(--sa-text-2); }
-    .modal-totals strong { display: block; font-size: 14px; color: var(--sa-text); font-variant-numeric: tabular-nums; }
+    /* Fraud */
+    .fraud-cell { display: flex; flex-direction: column; gap: 5px; min-width: 72px; align-items: flex-start; }
+    .note-cell { max-width: 160px; font-size: 12px; color: #334155; line-height: 1.5; word-break: break-word; }
+    .customer-note-text { display: block; }
+    .admin-note-cell { min-width: 140px; max-width: 180px; }
+    .admin-note-text { display: block; font-size: 12px; color: #1e40af; cursor: pointer; line-height: 1.5; word-break: break-word; padding: 3px 6px; border-radius: 5px; background: #eff6ff; }
+    .admin-note-text:hover { background: #dbeafe; }
+    .btn-add-note { font-size: 11px; color: #6366f1; background: none; border: 1px dashed #a5b4fc; border-radius: 5px; padding: 3px 8px; cursor: pointer; }
+    .btn-add-note:hover { background: #eef2ff; }
+    .admin-note-input { width: 100%; font-size: 12px; border: 1px solid #a5b4fc; border-radius: 5px; padding: 5px 7px; resize: vertical; font-family: inherit; outline: none; box-sizing: border-box; }
+    .admin-note-input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px #eef2ff; }
+    .btn-note-save { margin-top: 4px; margin-right: 4px; font-size: 11px; background: #6366f1; color: #fff; border: none; border-radius: 5px; padding: 3px 10px; cursor: pointer; }
+    .btn-note-save:hover { background: #4f46e5; }
+    .btn-note-cancel { margin-top: 4px; font-size: 11px; background: none; color: #64748b; border: 1px solid #e2e8f0; border-radius: 5px; padding: 3px 8px; cursor: pointer; }
+    .fraud-chip {
+      display: inline-flex; align-items: center; padding: 3px 8px;
+      border-radius: 20px; font-size: 11px; font-weight: 700;
+      background: var(--g100); color: var(--g700); white-space: nowrap; line-height: 1.5;
+    }
+    .fraud-chip.low  { background: #d1fae5; color: #065f46; }
+    .fraud-chip.mid  { background: #fef3c7; color: #92400e; }
+    .fraud-chip.high { background: #fee2e2; color: #991b1b; }
+    .btn-fraud {
+      border: 1px solid #c4b5fd; background: #f5f3ff; color: #5b21b6;
+      border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; font-family: inherit; transition: background .15s;
+    }
+    .btn-fraud:hover { background: #ede9fe; }
+    .btn-fraud.loading { opacity: .5; cursor: wait; }
 
-    /* Stock view */
+    /* Action buttons */
+    .action-cell { display: flex; gap: 5px; align-items: center; }
+    .btn-action {
+      border: none; border-radius: 7px; padding: 5px 10px;
+      font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      transition: all .15s; font-family: inherit;
+    }
+    .btn-invoice { background: #ede9fe; color: #5b21b6; }
+    .btn-invoice:hover { background: #ddd6fe; }
+    .btn-view { background: #dbeafe; color: #1d4ed8; }
+    .btn-view:hover { background: #bfdbfe; }
+    .btn-edit { background: #ede9fe; color: #6d28d9; }
+    .btn-edit:hover { background: #ddd6fe; }
+    .btn-whatsapp { background: #dcfce7; color: #15803d; }
+    .btn-whatsapp:hover { background: #bbf7d0; }
+    .order-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* Pagination */
+    .pagination-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-top: 1px solid var(--g100); flex-wrap: wrap; gap: 10px;
+    }
+    .pagination-info { font-size: 12.5px; color: var(--g500); font-weight: 500; }
+    .pagination-controls { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .page-btn {
+      border: 1.5px solid var(--g200); background: #fff; border-radius: 8px;
+      padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: var(--g700);
+      cursor: pointer; transition: all .12s; min-width: 36px; text-align: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--p); color: var(--p); }
+    .page-btn.active { background: var(--p); color: #fff; border-color: var(--p); }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .page-ellipsis { padding: 0 4px; color: var(--g400); font-size: 13px; }
+
+    /* Loading / Empty */
+    .loading-row td, .empty-row td {
+      text-align: center; padding: 56px 20px;
+      color: var(--g500); font-size: 14px;
+    }
+    .skeleton-row td { padding: 14px 10px; }
+    .skel {
+      height: 14px; border-radius: 6px;
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .spinner {
+      display: inline-block; width: 28px; height: 28px;
+      border: 3px solid var(--g200); border-top-color: var(--p);
+      border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 13px 18px; border-radius: 12px;
+      font-size: 13px; font-weight: 600; color: #fff;
+      box-shadow: 0 12px 32px rgba(0,0,0,.2); z-index: 9999;
+      display: none; max-width: 340px; align-items: center; gap: 10px;
+      backdrop-filter: blur(8px);
+      animation: toastIn .25s ease;
+    }
+    @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    #toast.show { display: flex; }
+    #toast.success { background: rgba(5,150,105,.9); }
+    #toast.error   { background: rgba(220,38,38,.9); }
+    #toast.info    { background: rgba(37,99,235,.9); }
+    #toast-icon { font-size: 15px; }
+    #toast-msg { flex: 1; }
+    #toast-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 15px; padding: 2px; line-height: 1; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.65);
+      z-index: 1000; display: none; align-items: center; justify-content: center;
+      padding: 16px; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 20px; width: 100%; max-width: 840px;
+      max-height: 92vh; overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 40px 80px rgba(0,0,0,.3);
+      animation: modalIn .22s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modalIn { from { opacity:0; transform:translateY(16px) scale(.97); } to { opacity:1; transform:none; } }
+
+    .modal-header {
+      padding: 20px 24px 16px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+      border-bottom: 1px solid var(--g100);
+    }
+    .modal-order-id { font-size: 20px; font-weight: 900; color: var(--g900); letter-spacing: -.02em; }
+    .modal-order-date { font-size: 12px; color: var(--g400); margin-top: 2px; }
+    .modal-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .modal-close {
+      border: none; background: var(--g100); color: var(--g500);
+      width: 34px; height: 34px; border-radius: 10px; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .modal-close:hover { background: var(--g200); color: var(--g700); }
+
+    .modal-body { overflow-y: auto; overflow-x: hidden; flex: 1; }
+
+    .modal-info-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border-bottom: 1px solid var(--g100);
+    }
+    .mic {
+      padding: 16px 20px; border-right: 1px solid var(--g100);
+    }
+    .mic:last-child { border-right: none; }
+    .mic-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; margin-bottom: 8px;
+    }
+    .mic-icon.b { background: #eff6ff; color: #2563eb; }
+    .mic-icon.g { background: #f0fdf4; color: #16a34a; }
+    .mic-icon.o { background: #fff7ed; color: #ea580c; }
+    .mic-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--g400); margin-bottom: 3px; }
+    .mic-val { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.5; }
+    .mic-val a { color: #2563eb; text-decoration: none; }
+    .mic-val a:hover { text-decoration: underline; }
+
+    .modal-fraud-row {
+      padding: 12px 20px; background: #fafbff;
+      border-bottom: 1px solid var(--g100);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .mfr-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--g400); }
+    .mfr-stats { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .mfr-chip { font-size: 12px; font-weight: 700; }
+    .mfr-chip.ok { color: #059669; }
+    .mfr-chip.ret { color: #dc2626; }
+    .mfr-chip.all { color: #334155; }
+    .mfr-ratio { font-size: 14px; font-weight: 800; }
+    .mfr-ratio.good { color: #059669; }
+    .mfr-ratio.mid  { color: #d97706; }
+    .mfr-ratio.bad  { color: #dc2626; }
+    .mfr-btn { margin-left: auto; }
+    .btn-fraud-modal {
+      border: 1px solid #c4b5fd; background: #f5f3ff; color: #5b21b6;
+      border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    .btn-fraud-modal:hover { background: #ede9fe; }
+
+    .modal-section-title {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--g400); padding: 14px 20px 8px;
+    }
+    .product-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .product-table th {
+      padding: 9px 16px; font-size: 10px; font-weight: 700; color: var(--g400);
+      text-transform: uppercase; letter-spacing: .05em; background: var(--g50);
+      border-top: 1px solid var(--g100); border-bottom: 1px solid var(--g100); text-align: left;
+    }
+    .product-table th.r { text-align: right; }
+    .product-table th.c { text-align: center; }
+    .product-table td { padding: 12px 16px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+    .product-table td.r { text-align: right; }
+    .product-table td.c { text-align: center; }
+    .product-table tbody tr:last-child td { border-bottom: none; }
+    .product-table tbody tr:hover td { background: #f8f7ff; }
+    .product-name { font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.5; word-break: break-word; }
+    .product-author { font-size: 11px; color: var(--g400); margin-top: 2px; }
+
+    .modal-footer {
+      border-top: 1px solid var(--g100); background: var(--g50);
+      padding: 14px 20px; display: flex; align-items: center;
+      justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .modal-totals { display: flex; gap: 20px; flex-wrap: wrap; }
+    .mt-item { font-size: 11.5px; color: var(--g500); }
+    .mt-item span { display: block; font-size: 14px; font-weight: 800; color: #1e293b; margin-top: 1px; }
+    .mt-item.grand span { color: var(--p); font-size: 16px; }
+    .footer-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-m-invoice {
+      background: #ede9fe; color: #5b21b6; border: none; border-radius: 10px;
+      padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; text-decoration: none;
+      transition: background .15s; font-family: inherit;
+    }
+    .btn-m-invoice:hover { background: #ddd6fe; }
+    .btn-m-courier {
+      background: #0891b2; color: #fff; border: none; border-radius: 10px;
+      padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: background .15s;
+      font-family: inherit;
+    }
+    .btn-m-courier:hover { background: #0e7490; }
+    .btn-m-close {
+      background: #13111e; color: #fff; border: none; border-radius: 10px;
+      padding: 9px 20px; font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: background .15s; font-family: inherit;
+    }
+    .btn-m-close:hover { background: #2d2b42; }
+
+    /* ── Login ── */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: radial-gradient(ellipse at 60% 40%, #1a1040 0%, #0f0c1e 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #login-overlay.hidden { display: none; }
+    .login-box {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; padding: 42px 38px; width: 100%; max-width: 390px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6); backdrop-filter: blur(20px);
+      text-align: center;
+    }
+    .login-logo {
+      width: 58px; height: 58px;
+      background: linear-gradient(135deg, var(--p), #4f46e5);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; font-size: 26px; box-shadow: 0 8px 24px rgba(124,58,237,.5);
+    }
+    .login-title { font-size: 24px; font-weight: 900; color: #f1f5f9; margin-bottom: 6px; letter-spacing: -.02em; }
+    .login-sub { font-size: 13px; color: #64748b; margin-bottom: 30px; }
+    .login-field { margin-bottom: 14px; text-align: left; }
+    .login-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .login-input-wrap { position: relative; }
+    .login-field input {
+      width: 100%; padding: 12px 14px; background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 10px;
+      color: #f1f5f9; font-size: 14px; outline: none; transition: border-color .15s;
+      font-family: inherit;
+    }
+    .login-field input:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.2); }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px;
+    }
+    .login-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 10px; margin-top: 8px;
+      background: linear-gradient(135deg, var(--p), #4f46e5);
+      color: #fff; font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: opacity .15s; box-shadow: 0 4px 16px rgba(124,58,237,.4);
+      font-family: inherit; letter-spacing: -.01em;
+    }
+    .login-btn:hover { opacity: .9; }
+    .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .login-error {
+      margin-top: 14px; padding: 10px 14px;
+      background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 9px; color: #fca5a5; font-size: 13px; display: none;
+    }
+
+    /* ── Checkbox ── */
+    input[type="checkbox"] { accent-color: var(--p); width: 15px; height: 15px; cursor: pointer; }
+
+    /* ── Stock Management ── */
+    body.stock-mode .content > :not(#stockView) { display: none !important; }
     #stockView { display: none; }
     body.stock-mode #stockView { display: block; }
+    body.stock-mode .topbar .search-wrap,
+    body.stock-mode .topbar .ai-topbar-btn { display: none; }
+    .stock-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stock-head h2 { font-size: 19px; font-weight: 900; color: var(--g900); letter-spacing: -.02em; }
+    .stock-head h2 i { color: var(--p); margin-right: 8px; }
+    #stockView .stock-stats { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .stock-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .stock-search {
+      display: flex; align-items: center; gap: 8px; background: #fff;
+      border: 1.5px solid var(--g200); border-radius: 10px; padding: 8px 13px;
+      flex: 1; min-width: 220px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .stock-search i { color: var(--g400); font-size: 12px; }
+    .stock-search input { border: none; outline: none; font-size: 13px; font-weight: 500; width: 100%; font-family: inherit; color: #1e293b; background: none; }
+    .stock-publisher-filter {
+      display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 300px;
+      background: #fff; border: 1.5px solid var(--g200); border-radius: 10px;
+      padding: 0 11px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .stock-publisher-filter i { color: var(--p); font-size: 12px; }
+    .stock-publisher-filter select {
+      min-width: 0; width: 100%; height: 36px; border: none; outline: none; background: #fff;
+      color: var(--g700); font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    }
+    .stock-publisher-filter:focus-within { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+    .stock-low-toggle {
+      display: flex; align-items: center; gap: 7px; background: #fff;
+      border: 1.5px solid var(--g200); border-radius: 10px; padding: 8px 13px;
+      font-size: 12.5px; font-weight: 600; color: var(--g700); cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05); user-select: none; white-space: nowrap;
+    }
+    .stock-low-toggle.active { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .stock-layout {
+      display: grid; grid-template-columns: minmax(0,1fr) 340px;
+      grid-template-areas: "main rail"; gap: 14px; align-items: start;
+    }
+    .stock-main { grid-area: main; min-width: 0; }
+    .stock-grid {
+      display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 14px; padding: 14px; background: var(--g100);
+    }
+    .stock-card {
+      min-width: 0; background: #fff; border: 1px solid var(--g200); border-radius: 14px;
+      padding: 16px; display: flex; flex-direction: column; gap: 15px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04); transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .stock-card:hover { border-color: var(--g300); box-shadow: 0 8px 24px rgba(15,23,42,.08); transform: translateY(-1px); }
+    .stock-card.is-saving { border-color: var(--p); }
+    .stock-card.is-error { border-color: var(--red); }
+    .stock-card-head { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+    .stock-card-img {
+      width: 58px; height: 72px; object-fit: cover; border-radius: 9px;
+      background: var(--g100); border: 1px solid var(--g200); flex-shrink: 0;
+    }
+    .stock-card-img-placeholder { display: flex; align-items: center; justify-content: center; color: var(--g300); font-size: 20px; }
+    .stock-prod { min-width: 0; flex: 1; }
+    .stock-prod-name {
+      min-width: 0; font-weight: 800; color: #1e293b; font-size: 13px; line-height: 1.4;
+      overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .stock-prod-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 6px; }
+    .stock-prod-sku { font-size: 10.5px; color: var(--g500); }
+    .stock-prod-price { font-size: 11.5px; color: var(--g700); font-weight: 800; }
+    .stock-prod-sold { font-size: 10.5px; color: var(--p-dark); font-weight: 800; }
+    .stock-status { min-height: 23px; display: flex; justify-content: flex-end; flex-shrink: 0; }
+    .stock-demand-metrics {
+      display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+      border: 1px solid var(--g200); border-radius: 10px; overflow: hidden; background: var(--g50);
+    }
+    .stock-demand-metric { min-width: 0; padding: 8px; border-right: 1px solid var(--g200); }
+    .stock-demand-metric:last-child { border-right: none; background: var(--p-light); }
+    .stock-demand-label {
+      display: block; color: var(--g500); font-size: 9.5px; font-weight: 800;
+      letter-spacing: .055em; line-height: 1.25; text-transform: uppercase; white-space: nowrap;
+    }
+    .stock-demand-value { display: block; margin-top: 4px; color: var(--g900); font-size: 13px; font-weight: 900; white-space: nowrap; }
+    .stock-demand-metric:last-child .stock-demand-value { color: var(--p-dark); }
+    .stock-demand-unit { color: var(--g500); font-size: 9px; font-weight: 700; }
+    .stock-card-body { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(92px,.65fr); gap: 12px; align-items: end; }
+    .stock-field { min-width: 0; }
+    .stock-field-label {
+      display: block; margin-bottom: 6px; color: var(--g500); font-size: 9.5px;
+      font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    }
+    .stock-stepper { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; min-width: 0; }
+    .stock-step-btn {
+      height: 38px; border: 1.5px solid var(--g200); background: var(--g50); color: var(--g700);
+      font-size: 15px; font-weight: 800; cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .stock-step-btn:first-child { border-radius: 9px 0 0 9px; }
+    .stock-step-btn:last-child { border-radius: 0 9px 9px 0; }
+    .stock-step-btn:hover { background: var(--p-light); border-color: var(--p); color: var(--p-dark); }
+    .stock-step-btn:focus-visible, .stock-action:focus-visible { outline: 3px solid rgba(124,58,237,.2); outline-offset: 2px; }
+    .stock-input {
+      width: 80px; border: 1.5px solid var(--g200); border-radius: 8px;
+      padding: 6px 9px; font-size: 13px; font-weight: 600; color: #1e293b;
+      outline: none; font-family: inherit; text-align: center;
+    }
+    .stock-input:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+    .stock-stepper .stock-input {
+      width: 100%; height: 38px; border-left: none; border-right: none; border-radius: 0;
+      font-size: 15px; font-weight: 800; box-shadow: none;
+    }
+    .stock-stepper .stock-input:focus { position: relative; border-color: var(--p); box-shadow: inset 0 0 0 1px var(--p); }
+    .stock-threshold-input { width: 100%; height: 38px; }
+    .stock-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+    .stock-pill.untracked { background: var(--g100); color: var(--g500); }
+    .stock-pill.ok { background: #d1fae5; color: #065f46; }
+    .stock-pill.low { background: #fef3c7; color: #92400e; }
+    .stock-pill.out { background: #fee2e2; color: #991b1b; }
+    .btn-stock-save {
+      background: var(--p); color: #fff; border: none; border-radius: 8px;
+      padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background .15s;
+    }
+    .btn-stock-save:hover { background: var(--p-dark); }
+    .btn-stock-save:disabled { opacity: .5; cursor: not-allowed; }
+    .stock-card-footer { border-top: 1px solid var(--g100); padding-top: 12px; display: flex; align-items: center; gap: 7px; }
+    .stock-action {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid var(--g200); border-radius: 8px; padding: 7px 9px;
+      background: #fff; color: var(--g700); font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .stock-action:hover { background: var(--g50); border-color: var(--g300); color: var(--g900); }
+    .stock-action.primary { color: var(--p-dark); border-color: #ddd6fe; background: #f5f3ff; }
+    .stock-save-state { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--g400); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+    .stock-save-state.saving { color: var(--p); }
+    .stock-save-state.saved { color: var(--green); }
+    .stock-save-state.error { color: var(--red); }
+    .stock-grid-message { grid-column: 1/-1; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; color: var(--g500); font-size: 13px; }
+    .urgent-restock {
+      grid-area: rail; min-width: 0; position: sticky; top: 84px;
+      max-height: calc(100vh - 106px); display: flex; flex-direction: column;
+      background: #fff; border: 1px solid #fecaca; border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(127,29,29,.08); overflow: hidden;
+    }
+    .urgent-restock-head {
+      display: flex; align-items: center; gap: 9px; padding: 14px 15px;
+      background: linear-gradient(135deg,#fff7ed,#fef2f2); border-bottom: 1px solid #fee2e2;
+    }
+    .urgent-restock-head i { color: #dc2626; }
+    .urgent-restock-title { color: var(--g900); font-size: 13px; font-weight: 900; }
+    .urgent-restock-subtitle { margin-top: 2px; color: var(--g500); font-size: 10px; font-weight: 600; }
+    .urgent-restock-count {
+      min-width: 24px; height: 24px; margin-left: auto; padding: 0 7px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 999px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 900;
+    }
+    .urgent-restock-list { min-height: 130px; padding: 10px; overflow-y: auto; }
+    .urgent-item {
+      padding: 11px; border: 1px solid #fed7aa; border-left: 4px solid #f59e0b;
+      border-radius: 11px; background: #fffbeb;
+    }
+    .urgent-item + .urgent-item { margin-top: 9px; }
+    .urgent-item.critical { border-color: #fecaca; border-left-color: #dc2626; background: #fff7f7; }
+    .urgent-item-top { display: flex; align-items: flex-start; gap: 9px; min-width: 0; }
+    .urgent-item-img {
+      width: 40px; height: 50px; flex-shrink: 0; object-fit: cover; border-radius: 7px;
+      border: 1px solid rgba(148,163,184,.3); background: #fff;
+    }
+    .urgent-item-img-placeholder { display: flex; align-items: center; justify-content: center; color: var(--g300); }
+    .urgent-item-copy { min-width: 0; flex: 1; }
+    .urgent-item-name {
+      color: var(--g900); font-size: 11.5px; line-height: 1.35; font-weight: 800;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .urgent-item-state { display: block; margin-top: 4px; color: #b45309; font-size: 10.5px; font-weight: 900; }
+    .urgent-item.critical .urgent-item-state { color: #b91c1c; }
+    .urgent-item-metrics {
+      display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px;
+      margin-top: 9px; color: var(--g600); font-size: 10px; font-weight: 700;
+    }
+    .urgent-item-metrics strong { display: block; margin-top: 2px; color: var(--g900); font-size: 12px; font-weight: 900; }
+    .urgent-item-action { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .urgent-order-qty { color: var(--g600); font-size: 10.5px; font-weight: 700; }
+    .urgent-order-qty strong { color: var(--g900); }
+    .urgent-restock-btn {
+      margin-left: auto; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      border: none; border-radius: 8px; padding: 7px 10px; background: #dc2626; color: #fff;
+      font-family: inherit; font-size: 10.5px; font-weight: 800; cursor: pointer;
+    }
+    .urgent-restock-btn:hover { background: #b91c1c; }
+    .urgent-restock-btn:focus-visible { outline: 3px solid rgba(220,38,38,.2); outline-offset: 2px; }
+    .urgent-restock-message {
+      min-height: 130px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 8px; padding: 20px; color: var(--g500); text-align: center; font-size: 11.5px;
+    }
+    .urgent-retry {
+      border: 1px solid var(--g200); border-radius: 8px; padding: 6px 10px;
+      background: #fff; color: var(--g700); font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    @media(max-width:1320px) {
+      .stock-layout { grid-template-columns: minmax(0,1fr); grid-template-areas: "rail" "main"; }
+      .urgent-restock { position: static; max-height: none; }
+      .urgent-restock-list { display: flex; gap: 9px; overflow-x: auto; overflow-y: hidden; }
+      .urgent-item { min-width: 285px; max-width: 310px; }
+      .urgent-item + .urgent-item { margin-top: 0; }
+    }
+    @media(max-width:680px) {
+      #stockView .stock-stats { grid-template-columns: minmax(0,1fr); }
+      .stock-search, .stock-publisher-filter { min-width: 100%; max-width: none; }
+      .stock-grid { grid-template-columns: minmax(0,1fr); padding: 10px; gap: 10px; }
+      .stock-card { padding: 14px; }
+      .stock-demand-metric { padding: 8px; }
+      .stock-card-body { grid-template-columns: minmax(0,1.3fr) minmax(88px,.7fr); }
+      .stock-tools > .btn-reset { flex: 1; }
+      .urgent-item { min-width: min(285px,calc(100vw - 58px)); }
+      body.stock-mode .topbar > .topbar-btn:not(.danger),
+      body.stock-mode .topbar > a.topbar-btn { display: none; }
+    }
+    @media(max-width:380px) {
+      .stock-card-body { grid-template-columns: minmax(0,1fr); }
+      .stock-card-footer { flex-wrap: wrap; }
+      .stock-save-state { width: 100%; margin-left: 0; }
+      .stock-demand-value { white-space: normal; }
+      .stock-demand-unit { display: block; margin-top: 2px; }
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       Shobaz additions. Everything above is the Amolbooks order page CSS
+       (custom-orders.html before its 2026-11-08 compact header), with the
+       table rules scoped to .orders-table. Below: the shared sidebar from
+       admin-shell.js, the team board and call tags (Amolbooks staff-live /
+       staff-attribution look on Shobaz markup), and smaller screens.
+       ════════════════════════════════════════════════════════════════════ */
+    a { color: inherit; }
+    button, input, select, textarea { font-family: inherit; }
+    .muted { color: var(--g500); }
+    .subtle { color: var(--g400); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    body.salesman-mode [data-salesman-hidden] { display: none !important; }
+
+    /* Shared sidebar (rendered by admin-shell.js) in the Amolbooks look */
+    .sidebar-logo { text-decoration: none; }
+    .sidebar-logo .logo-mark {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--p), #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; color: #fff;
+    }
+    .nav-section + .nav-section .nav-label { margin-top: 8px; }
+    .nav-item span { min-width: 0; }
+    #snapshotSlot { border-top: 1px solid rgba(255,255,255,.06); }
+    .snapshot {
+      margin: 12px 14px 0; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.09); border-radius: 12px; overflow: hidden;
+    }
+    .snapshot-head {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: none; border: 0; cursor: pointer; user-select: none;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #475569;
+    }
+    .snapshot-head::before { content: "\f080"; font-family: "Font Awesome 6 Free"; font-weight: 900; color: #7c3aed; margin-right: 5px; }
+    .snapshot-head { justify-content: flex-start; }
+    .snapshot-head i { margin-left: auto; color: #475569; font-size: 10px; transition: transform .2s; }
+    .snapshot.collapsed .snapshot-head i { transform: rotate(-90deg); }
+    .snapshot.collapsed .snapshot-body { display: none; }
+    .snapshot-body { padding: 0 14px 12px; }
+    .snapshot-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px; color: #64748b; font-weight: 500; }
+    .snapshot-row:last-of-type { border-bottom: none; }
+    .snapshot-row > span::before { display: inline-block; width: 12px; margin-right: 6px; text-align: center; font-family: "Font Awesome 6 Free"; font-weight: 900; }
+    .snapshot-row:nth-child(1) > span::before { content: "\f51e"; color: #f59e0b; }
+    .snapshot-row:nth-child(2) > span::before { content: "\f09a"; font-family: "Font Awesome 6 Brands"; font-weight: 400; color: #1877f2; }
+    .snapshot-row:nth-child(3) > span::before { content: "\f201"; color: #34d399; }
+    .snapshot-row:nth-child(4) > span::before { content: "\f290"; color: #a78bfa; }
+    .snapshot-row strong { font-size: 12px; font-weight: 700; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+    .snapshot-row strong.pos { color: #34d399; }
+    .snapshot-row strong.neg { color: #f87171; }
+    .snapshot-link { display: block; text-align: center; margin-top: 10px; font-size: 11px; font-weight: 700; color: #7c3aed; text-decoration: none; opacity: .8; }
+    .snapshot-link:hover { opacity: 1; }
+    .nav-back { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.06); margin-top: 12px; }
+    .nav-back a { display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; font-size: 12px; font-weight: 600; transition: color .15s; }
+    .nav-back a:hover { color: #94a3b8; }
+
+    /* Top bar: the right-hand buttons sit in .topbar-right (AI Assist hooks in there) */
+    .topbar-right { display: contents; }
+    .topbar-title { display: flex; align-items: center; min-width: 0; }
+    .topbar-title h1 { font: inherit; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .page-subtitle, #topbarUser { display: none; }
+    .search-wrap input::-webkit-search-cancel-button { filter: invert(1); }
+    .topbar .sa-ai-btn {
+      display: flex; align-items: center; gap: 6px; width: auto; min-height: 0; height: auto;
+      padding: 8px 14px; border-radius: 100px; font: 700 12px/1.2 'Inter', 'Segoe UI', sans-serif;
+      border: 1px solid rgba(255,255,255,.25); color: #fff; background: rgba(16,185,129,.3); white-space: nowrap; flex-shrink: 0;
+    }
+    .topbar .sa-ai-btn:hover { background: rgba(16,185,129,.5); }
+    .topbar .sa-ai-btn i { font-size: 12px; }
+    .topbar-btn, .hamburger { flex-shrink: 0; }
+
+    /* Date boxes: stack the two dates when a box gets narrow */
+    .date-box { container-type: inline-size; }
+    .date-box > div { min-width: 0; }
+    @container (max-width: 300px) {
+      .date-inputs { flex-direction: column; align-items: stretch; gap: 2px; }
+      .date-inputs span { display: none; }
+    }
+
+    /* Number cards (8 in the incomplete view) */
+    .stat-card[hidden] { display: none; }
+    .stat-card.c5 { background: linear-gradient(135deg, #0891b2, #0e7490); }
+    .stat-card.c6 { background: linear-gradient(135deg, #0d9488, #0f766e); }
+    .stat-card.c7 { background: linear-gradient(135deg, #4f46e5, #3730a3); }
+    .stat-card.c8 { background: linear-gradient(135deg, #db2777, #9d174d); }
+    .stat-card.c9 { background: linear-gradient(135deg, #dc2626, #991b1b); }
+    .stat-info { min-width: 0; }
+
+    /* Status tabs are buttons here */
+    .status-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .status-tabs::-webkit-scrollbar { display: none; }
+    .status-tab { background: none; border: 0; border-bottom: 2px solid transparent; font-family: inherit; }
+    .status-tab.active { border-bottom-color: var(--p); }
+    .dropdown-item.selected { color: var(--p); font-weight: 700; }
+    .btn-bulk-apply.danger { background: var(--red); }
+    .badge-converted { background: #cffafe; color: #0e7490; border: 1px solid #a5f3fc; }
+    .badge i { font-size: 9px; }
+    .bulk-bar { display: none; }
+
+    /* Team board + Calling now (Amolbooks staff-live look) */
+    .team-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 14px; margin: 0 0 14px; }
+    .team-grid[hidden], .calls-strip[hidden] { display: none; }
+    .team-card, .calls-strip {
+      background: #fff; border: 1px solid #e7e3f6; border-radius: 16px;
+      box-shadow: 0 6px 22px rgba(76, 29, 149, .07); padding: 16px 18px; min-width: 0;
+    }
+    .team-hero { display: flex; gap: 14px; align-items: center; border-left: 5px solid var(--ab-tl-accent, #7c3aed); }
+    .team-hero .hero-icon {
+      flex: 0 0 auto; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center;
+      font-size: 22px; color: #fff; background: var(--ab-tl-accent, #7c3aed);
+    }
+    .team-hero[data-state='top'] { --ab-tl-accent: #d97706; background: linear-gradient(100deg, #fffbeb, #fff 70%); }
+    .team-hero[data-state='behind'] { --ab-tl-accent: #2563eb; }
+    .team-hero[data-state='poor'] { --ab-tl-accent: #dc2626; background: linear-gradient(100deg, #fef2f2, #fff 70%); }
+    .team-hero[data-state='idle'] { --ab-tl-accent: #64748b; }
+    .team-hero[data-state='owner'] { --ab-tl-accent: #7c3aed; }
+    .hero-eyebrow { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7c6f9b; margin-bottom: 3px; }
+    .hero-title { display: block; font-size: 18px; line-height: 1.3; font-weight: 800; color: #1e1b3a; }
+    .hero-sub { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: #55607a; }
+    .team-board-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .team-board-head strong { font-size: 13px; font-weight: 800; color: #1e1b3a; }
+    .team-board-head small { font-size: 11px; color: #7c879f; white-space: nowrap; }
+    .live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #16a34a; vertical-align: 1px; }
+    .team-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .team-list li { display: grid; grid-template-columns: 24px minmax(80px, 190px) minmax(40px, 1fr) 46px; align-items: center; gap: 10px; font-size: 12.5px; color: #27304a; }
+    .team-list li:only-child .team-name { grid-column: 2 / -1; white-space: normal; }
+    .team-rank { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #eef0f6; color: #4b5675; }
+    .team-list li.is-top .team-rank { background: #f59e0b; color: #fff; }
+    .team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .team-name small { font-weight: 600; color: #7c3aed; }
+    .team-list li.is-me .team-name { font-weight: 800; }
+    .team-name .on-call { margin-left: 4px; color: #ea580c; font-size: 11px; }
+    .team-list .progress { display: block; height: 10px; border-radius: 5px; background: #f1f2f8; overflow: hidden; }
+    .team-list .progress > span { display: block; height: 100%; min-width: 3px; border-radius: 5px; background: #8b5cf6; }
+    .team-list li.is-me .progress > span { background: #6d28d9; }
+    .team-list li.is-poor .progress > span { background: #f87171; }
+    .team-pts { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .team-pts small { display: block; font-size: 10px; font-weight: 600; color: #8a93a8; }
+    .calls-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; margin: 0 0 18px; font-size: 12.5px; color: #55607a; }
+    .calls-strip > strong { color: #1e1b3a; font-weight: 800; margin-right: 2px; }
+    .calls-strip .muted { color: #55607a; }
+    .call-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-weight: 600; }
+    .call-chip.is-mine { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: ab-tl-pulse 1.6s ease-in-out infinite; }
+    @keyframes ab-tl-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+    /* "I'm calling" / "Called by" on order rows */
+    .call-box { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 5px; white-space: normal; }
+    .call-btn {
+      font: inherit; font-size: 11px; font-weight: 700; line-height: 1; padding: 5px 9px; border-radius: 999px;
+      border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; white-space: nowrap;
+    }
+    .call-btn:hover { border-color: #a5b4fc; background: #eef2ff; color: #3730a3; }
+    .call-btn[data-call-done] { border-color: #86efac; color: #166534; }
+    .call-btn:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 1px; }
+    .call-btn i { font-size: 10px; }
+    .call-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; line-height: 1.25; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+    .call-pill.is-busy { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
+    .call-pill.is-mine { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .call-pill.is-recent { padding: 0; font-weight: 600; color: #64748b; }
+    .call-pill b { font-weight: 800; }
+    .orders-table tr.call-busy > td { background: #fff7ed !important; }
+    .orders-table tr.call-busy > td:first-child { box-shadow: inset 4px 0 0 #f97316; }
+
+    /* "Sent by" / "Note by" / "by" labels (Amolbooks staff-attribution look) */
+    .staff-by { display: block; margin-top: 4px; font-size: 11px; line-height: 1.35; color: #64748b; font-weight: 500; white-space: normal; }
+    .staff-by strong { color: #5b21b6; font-weight: 700; }
+
+    /* Order row cells */
+    .cust-name { font-weight: 600; }
+    .addr { max-width: 200px; word-break: break-word; line-height: 1.5; font-size: 12px; }
+    .date-cell span { display: block; }
+    .date-cell .ago { color: #a78bfa; font-size: 10px; }
+    .amount { color: var(--p); font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+    .courier-id { font-size: 10.5px; }
+    .charge { color: #0f766e; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .dash, .charge-wait { color: #94a3b8; font-size: 11px; }
+    .charge-wait { font-size: 10.5px; white-space: nowrap; }
+    .orderby { font-size: 11.5px; color: #64748b; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .row-actions .cnt { margin-left: 0; }
+    .btn-action { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+    .btn-addorder { background: #d1fae5; color: #047857; }
+    .btn-addorder:hover { background: #a7f3d0; }
+    .btn-delete { background: #fee2e2; color: #b91c1c; }
+    .btn-delete:hover { background: #fecaca; }
+    .btn-note { background: #e0e7ff; color: #4338ca; }
+    .mobile-only { display: none !important; }
+    .btn-courier:disabled, .btn-fraud:disabled { opacity: .6; cursor: wait; }
+    .admin-note-text { display: block; font-size: 12px; color: #1e40af; cursor: pointer; line-height: 1.5; word-break: break-word; padding: 3px 6px; border-radius: 5px; background: #eff6ff; }
+    .admin-note-text:hover { background: #dbeafe; }
+    .admin-note-cell { min-width: 140px; max-width: 180px; }
+    .admin-note-input { min-height: 56px; }
+    .note-actions { display: flex; }
+    .orders-table .loading-row td, .orders-table .empty-row td { background: #fff !important; }
+    .empty-state i { display: block; margin: 0 auto 10px; font-size: 32px; color: #cbd5e1; }
+    .loading-row .spinner { display: block; margin: 0 auto 10px; }
+    .page-ellipsis { padding: 0 4px; color: var(--g400); font-size: 13px; }
+
+    /* Order popup extras */
+    .btn-m-edit { background: #ede9fe; color: #6d28d9; border: none; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+    .btn-m-edit:hover { background: #ddd6fe; }
+    .mic-val[hidden], .mic-lbl[hidden] { display: none; }
+
+    /* Stock view on Shobaz (no publisher filter or urgent rail) */
     body.stock-mode .orders-only { display: none !important; }
-    .stock-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-    .stock-search { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; background: #fff; border: 1px solid var(--sa-input-border); border-radius: 8px; }
-    .stock-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 13px var(--sa-font); }
-    .stock-search:focus-within { border-color: var(--sa-focus); box-shadow: 0 0 0 1px var(--sa-focus); }
-    .stock-low-toggle.active { background: var(--tone-attention-bg); }
-    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-    .stock-card { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #fff; border: 1px solid var(--sa-border); border-radius: var(--sa-radius); box-shadow: var(--sa-shadow); }
-    .stock-card.is-saving { opacity: .85; }
-    .stock-card.is-error { border-color: #e51c00; }
-    .stock-card-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: start; }
-    .stock-card-img { width: 44px; height: 58px; border-radius: 6px; object-fit: cover; background: var(--sa-surface-3); }
-    .stock-card-img-placeholder { display: flex; align-items: center; justify-content: center; color: var(--sa-text-3); }
-    .stock-prod-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .stock-prod-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; font-size: 12px; color: var(--sa-text-2); }
-    .stock-status { grid-column: 2; }
-    .stock-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 550; background: var(--tone-success-bg); color: var(--tone-success-fg); }
-    .stock-pill.low { background: var(--tone-attention-bg); color: var(--tone-attention-fg); }
-    .stock-pill.out { background: var(--tone-critical-bg); color: var(--tone-critical-fg); }
-    .stock-pill.untracked { background: var(--tone-neutral-bg); color: var(--sa-text-2); }
-    .stock-pill i { font-size: 10px; }
-    .stock-demand-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--sa-border-2); border: 1px solid var(--sa-border-2); border-radius: 8px; overflow: hidden; }
-    .stock-demand-metric { background: var(--sa-surface-2); padding: 6px 8px; }
-    .stock-demand-label { display: block; font-size: 11px; color: var(--sa-text-2); }
-    .stock-demand-value { font-weight: 650; font-variant-numeric: tabular-nums; }
-    .stock-demand-unit { font-weight: 500; font-size: 11px; color: var(--sa-text-3); }
-    .stock-card-body { display: grid; grid-template-columns: 1fr 110px; gap: 10px; }
-    .stock-field-label { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 550; color: var(--sa-text-2); }
-    .stock-stepper { display: grid; grid-template-columns: 32px 1fr 32px; }
-    .stock-step-btn { height: 32px; border: 1px solid var(--sa-input-border); background: #fff; font-size: 16px; cursor: pointer; }
-    .stock-step-btn:first-child { border-radius: 8px 0 0 8px; }
-    .stock-step-btn:last-child { border-radius: 0 8px 8px 0; }
-    .stock-step-btn:hover { background: var(--sa-hover); }
-    .stock-input { width: 100%; height: 32px; padding: 0 8px; border: 1px solid var(--sa-input-border); border-radius: 8px; font: 500 13px var(--sa-font); text-align: center; outline: 0; }
-    .stock-stepper .stock-input { border-radius: 0; border-left: 0; border-right: 0; }
-    .stock-input:focus { border-color: var(--sa-focus); box-shadow: 0 0 0 1px var(--sa-focus); }
-    .stock-card-footer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .stock-action { height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 8px; background: #fff; color: var(--sa-text); font: 550 12px var(--sa-font); cursor: pointer; box-shadow: inset 0 -1px 0 0 #b5b5b5, inset 0 0 0 1px rgba(0, 0, 0, .1); }
-    .stock-action:hover { background: var(--sa-hover); }
-    .stock-action.primary { background: var(--sa-primary); color: #fff; box-shadow: none; }
-    .stock-action.primary:hover { background: var(--sa-primary-hover); }
-    .stock-save-state { margin-left: auto; font-size: 12px; color: var(--sa-text-3); }
-    .stock-save-state.dirty { color: var(--tone-attention-fg); }
-    .stock-save-state.error { color: #c70a24; }
-    .stock-save-state.saved i { color: #29845a; }
-    .stock-grid-message { grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--sa-text-2); }
-    .stock-pagination { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0; }
+    body.stock-mode .topbar .search-wrap, body.stock-mode .topbar .sa-ai-btn { display: none !important; }
+    .stock-low-toggle { font-family: inherit; }
+    #restockModal .modal-body { padding: 18px 20px; }
+    #restockModal .modal-footer { justify-content: flex-end; }
+    #historyModal .modal-body { padding-bottom: 8px; }
 
-    /* AI Assist button (injected by ai-assist-widget.js) in the page header */
-    .page-actions .sa-ai-btn { width: auto; min-height: 0; height: 32px; padding: 0 12px; gap: 6px; border: 0; border-radius: 8px; background: #fff; color: var(--sa-text); font: 550 13px var(--sa-font); box-shadow: inset 0 -1px 0 0 #b5b5b5, inset 0 0 0 1px rgba(0, 0, 0, .1), inset 0 .5px 0 1.5px #fff; }
-    .page-actions .sa-ai-btn:hover { background: var(--sa-hover); }
-    .page-actions .sa-ai-btn i { color: #8051ff; font-size: 12px; }
-    .page-actions .sa-ai-btn .sa-btn-text { display: inline; }
-
-    .metrics.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    /* ── Smaller screens ──
+       ≤ 1250  Backfill and Logout become icons     ≤ 1150  every top-bar button is an icon
+       ≤ 1200  number cards 2 per row                ≤ 1100  team cards stacked
+       ≤ 1024  sidebar opens from the menu button    ≤ 900   orders as cards
+       ≤ 768   phone: two-row top bar                                                     */
+    @media (max-width: 1250px) {
+      #courierBackfillBtn .btn-label, .topbar-btn.danger .btn-label { display: none; }
+      #courierBackfillBtn, .topbar-btn.danger { padding: 8px 11px; }
+    }
+    @media (max-width: 1200px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 1150px) {
+      .topbar-btn .btn-label, .topbar .sa-ai-btn .sa-btn-text { display: none; }
+      .topbar-btn, .topbar .sa-ai-btn { padding: 8px 11px; }
+      .search-wrap { min-width: 180px; }
+    }
     @media (max-width: 1100px) {
       .team-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 900px) {
-      .filters-row { grid-template-columns: 1fr 1fr; }
-      .filters-row .btn { grid-column: 1 / -1; min-height: 36px; }
-      .info-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.35); }
+      .main { margin-left: 0; }
+      .hamburger { display: flex; align-items: center; justify-content: center; }
     }
-    @media (max-width: 768px) {
-      .metrics.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .filters-row { grid-template-columns: 1fr; }
-      .date-filter-box > i { display: none; }
-      .page-actions .btn, .page-actions .sa-ai-btn { flex: 1 1 auto; }
-      .filters-row { gap: 8px; margin-bottom: 12px; }
-      .date-filter-box { padding: 6px 10px; }
-      .filters-row .btn { min-height: 34px; }
-      .team-hero { padding: 12px; gap: 10px; }
-      .team-hero .hero-icon { width: 32px; height: 32px; font-size: 14px; }
-      .hero-title { font-size: 15px; }
-      .filter-bar { gap: 6px; }
-      .filter-bar > div, .filter-bar > select { flex: 0 1 auto; }
-      .filter-bar .spacer { display: none; }
-      .team-list li { grid-template-columns: 22px minmax(0, 1fr) auto; }
-      .team-list .progress { grid-column: 2 / -1; grid-row: 2; }
-
-      /* Orders as compact cards: number, date and total on one line, then
-         customer, address, status chips and one row of icon actions. */
+    @media (max-width: 900px) {
+      /* Orders as cards: number, date and amount, then name and phone, address,
+         pills, courier, fraud and one row of actions. */
+      .orders-table { min-width: 0; font-size: 12.5px; }
       .orders-table thead { display: none; }
       .orders-table, .orders-table tbody { display: block; }
       .orders-table tbody tr {
         position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
-        padding: 10px 12px 12px 42px; border-bottom: 1px solid var(--sa-border-2);
+        padding: 11px 12px 12px 42px; border-bottom: 1px solid var(--g100);
       }
-      .orders-table tbody tr { box-shadow: inset 4px 0 0 var(--row-accent, transparent); }
-      .orders-table tbody tr:nth-child(even) { background: #f4f4f5; }
-      .orders-table tbody tr.row-sent { background: #e6f6eb; }
-      .orders-table tbody tr.call-busy { background: #fffbeb; }
-      .orders-table tbody tr td, .orders-table tbody tr:hover td { background: none !important; box-shadow: none !important; }
-      .orders-table tbody td { display: block; min-width: 0; padding: 0 !important; border: 0 !important; width: auto !important; }
-      .orders-table td.c-check { position: absolute; left: 12px; top: 11px; }
-      /* Order and Total cells hold several pieces on laptop; on the phone each
-         piece is placed on its own (number · date · total, then chips). */
-      .orders-table tbody td.c-order, .orders-table tbody td.c-total { display: contents; }
-      .orders-table td.c-order .order-no { order: 1; font-size: 14px; }
-      .orders-table td.c-order .date-cell { order: 2; margin-top: 0; }
-      .orders-table td.c-order .order-sub { order: 2; flex: 1 1 auto; white-space: nowrap; }
-      .orders-table td.c-order .order-by { display: none; }
-      .orders-table td.c-total .amount { order: 3; margin-left: auto; font-size: 14px; }
-      .orders-table td.c-cust { order: 4; flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
-      .orders-table td.c-addr { order: 5; flex: 1 1 100%; }
-      .orders-table td.c-total .stack { order: 6; margin-top: 0; }
-      .orders-table td.c-total .status-wrap { order: 7; margin-top: 0; }
-      .orders-table tbody td.c-courier { display: contents; }
-      .orders-table td.c-courier > * { order: 8; }
-      .orders-table td.c-courier .cs-line { order: 9; margin-top: 0; }
-      .orders-table td.c-courier .cs-line:has(.subtle) { display: none; }
-      .orders-table td.c-fraud { order: 11; }
-      .orders-table tbody td.c-actions { order: 12; flex: 1 1 100%; position: static; }
-      .orders-table td.c-notes { order: 13; flex: 1 1 100%; }
-      .orders-table td.c-courier:has(.dash),
-      .orders-table td.c-notes:not(:has(.cnote)):has(.btn-add-note),
-      .orders-table .admin-note-cell:has(.btn-add-note) { display: none; }
-      .orders-table .date-cell { display: flex; flex-wrap: wrap; gap: 0 6px; font-size: 12px; color: var(--sa-text-2); white-space: nowrap; }
-      .orders-table .date-cell .time { display: none; }
-      .orders-table .order-sub .ago::before { content: '· '; }
-      .orders-table .cust-name { flex: 1 1 0; min-width: 56px; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .orders-table .phone-cell { flex: 0 0 auto; flex-wrap: nowrap; }
-      .orders-table .phone-cell, .orders-table .call-box { margin-top: 0; }
-      .orders-table .call-box { margin-left: auto; }
-      .orders-table .addr { min-width: 0; max-width: none; font-size: 12px; color: var(--sa-text-2); }
-      .orders-table .status-select { height: 24px; font-size: 12px; padding-left: 6px; }
-      .orders-table .courier-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-size: 12px; }
+      .orders-table tbody tr::after { content: ''; order: 3; flex: 0 0 100%; height: 0; }
+      .orders-table tbody tr.loading-row, .orders-table tbody tr.empty-row { display: block; padding: 0; border-left: 0; }
+      .orders-table tbody tr.loading-row::after, .orders-table tbody tr.empty-row::after { display: none; }
+      .orders-table tbody td { display: block; min-width: 0 !important; padding: 0 !important; border: 0; }
+      .orders-table tbody td:first-child { position: absolute; left: 13px; top: 12px; }
+      .orders-table tr.call-busy > td:first-child { box-shadow: none; }
+      .orders-table td.c-order { order: 1; }
+      .orders-table td.c-order .order-no { font-size: 14px; }
+      .orders-table td.c-date { order: 2; flex: 1 1 auto; }
+      .orders-table td.c-total { order: 3; margin-left: auto; }
+      .orders-table td.c-total .amount { font-size: 14.5px; }
+      .orders-table td.c-name { order: 4; flex: 1 1 0; min-width: 60px; }
+      .orders-table td.c-phone { order: 5; display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+      .orders-table td.c-addr { order: 6; flex: 1 1 100%; }
+      .orders-table td.c-ptype, .orders-table td.c-pstatus { order: 7; }
+      .orders-table td.c-status { order: 8; }
+      .orders-table td.c-courier { order: 9; }
+      .orders-table td.c-cstatus { order: 10; }
+      .orders-table td.c-charge { order: 11; }
+      .orders-table td.c-fraud { order: 12; }
+      .orders-table td.c-actions { order: 13; flex: 1 1 100%; }
+      .orders-table td.c-invoice { display: none; }
+      .orders-table td.c-anote { order: 14; flex: 1 1 100%; }
+      .orders-table td.c-cnote { order: 15; flex: 1 1 100%; }
+      .orders-table td.c-orderby,
+      .orders-table td.c-cstatus:has(.dash), .orders-table td.c-courier:has(.dash),
+      .orders-table td.c-charge:has(.dash), .orders-table td.c-charge:has(.charge-wait),
+      .orders-table td.c-cnote:has(.dash), .orders-table td.c-anote:has(.btn-add-note) { display: none; }
+      .orders-table .date-cell { display: flex; flex-wrap: wrap; gap: 0 6px; color: var(--g500); }
+      .orders-table .date-cell span { display: inline; }
+      .orders-table .date-cell .time:not(.ago) { display: none; }
+      .orders-table .date-cell .ago::before { content: '· '; }
+      .orders-table .cust-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .orders-table .call-box { margin-top: 0; flex-wrap: nowrap; }
+      .orders-table .addr { max-width: none; color: var(--g500); }
+      .orders-table .courier-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
       .orders-table .courier-cell br { display: none; }
-      .orders-table .courier-name { font-size: 12px; }
       .orders-table .staff-by { margin-top: 0; }
-      .orders-table .fraud-cell { flex-direction: row; align-items: center; gap: 4px; }
-      .orders-table .fraud-counts { display: none; }
-      .orders-table .fraud-cell:has(.fraud-chip) .btn-fraud-check { height: 24px; }
-      .orders-table .row-actions { min-width: 0; flex-wrap: nowrap; gap: 6px; }
-      .orders-table .row-actions .btn { flex: 1 1 0; height: 34px; padding: 0 6px; }
-      .orders-table .row-actions .btn i { font-size: 14px; }
+      .orders-table .fraud-cell { flex-direction: row; align-items: center; min-width: 0; }
+      .orders-table .row-actions { flex-wrap: nowrap; }
+      .orders-table .row-actions .btn-action { flex: 1 1 0; justify-content: center; height: 36px; padding: 0 6px; border-radius: 9px; }
+      .orders-table .row-actions .btn-action i { font-size: 15px; }
       .orders-table .row-actions .lbl { display: none; }
-      .orders-table .row-actions .cnt { font-size: 12px; color: var(--sa-text-2); }
       .orders-table .row-actions .mobile-only { display: inline-flex !important; }
-      .orders-table .note-cell { min-width: 0; max-width: none; font-size: 12px; }
-      .orders-table .note-cell.cnote { margin-bottom: 4px; }
-      .orders-table .note-cell.cnote::before { content: 'Customer note: '; }
-      .orders-table .admin-note-input { width: 100%; }
-      .orders-table tbody tr.loading-row, .orders-table tbody tr.empty-row { display: block; padding: 0; }
-      .stock-card-body { grid-template-columns: 1fr; }
+      .orders-table .note-cell, .orders-table .admin-note-cell { max-width: none; }
+      .orders-table td.c-cnote .note-cell::before { content: 'Customer note: '; color: var(--g400); }
+      .modal-info-grid { grid-template-columns: 1fr 1fr; }
+      .mic:nth-child(3) { grid-column: 1 / -1; border-right: none; border-top: 1px solid var(--g100); }
+    }
+    @media (max-width: 768px) {
+      /* Two-row top bar: menu, title, refresh, logout / search and the other buttons */
+      .topbar { height: auto; flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+      .topbar-title { order: 1; flex: 1 1 calc(100% - 128px); font-size: 16px; }
+      .topbar-title > i { display: none; }
+      .topbar-spacer { display: none; }
+      .topbar-btn.refresh-btn, .topbar-btn.danger { order: 2; }
+      .search-wrap { order: 4; flex: 1 1 120px; min-width: 0; height: 36px; }
+      .search-wrap input { padding: 0; }
+      a.topbar-btn, #courierBackfillBtn, .topbar .sa-ai-btn { order: 5; }
+      .topbar-btn, .topbar .sa-ai-btn { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%; }
+      .hamburger { width: 32px; height: 36px; }
+
+      .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+      .btn-today { grid-column: 1 / -1; justify-content: center; min-height: 42px; }
+      .date-box { min-width: 0; padding: 9px 10px; gap: 8px; }
+      .date-box-icon { display: none; }
+      .stats-row { gap: 8px; margin-bottom: 12px; }
+      .stat-card { padding: 12px 14px; gap: 10px; border-radius: 12px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 9px; }
+      .stat-info .val { font-size: 20px; }
+      .team-card, .calls-strip { padding: 13px 14px; }
+      .team-hero .hero-icon { width: 42px; height: 42px; font-size: 18px; }
+      .hero-title { font-size: 15.5px; }
+      .team-list li { grid-template-columns: 22px minmax(70px, 1fr) minmax(40px, 1fr) 42px; gap: 8px; }
+      .calls-strip { margin-bottom: 12px; }
+      .status-tab { padding: 10px 11px; }
+      .filter-bar > .dd-wrap, .filter-bar > select, .filter-bar > button { flex: 1 1 calc(50% - 6px); min-width: 0; }
+      .filter-btn { width: 100%; justify-content: space-between; }
+      .filter-bar .spacer { display: none; }
+      .btn-reset, .btn-export { justify-content: center; }
+      .dropdown { right: 0; min-width: 0; }
+      .in-review-tools-actions { width: 100%; }
+      .in-review-tools-actions > button { flex: 1 1 0; justify-content: center; }
+      .pagination-bar { padding: 10px 14px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .login-box { padding: 34px 24px; }
+      #login-overlay { padding: 16px; }
+
+      /* Order popup as a sheet (Amolbooks phone layout) */
+      .modal-overlay { padding: 8px; }
+      .modal-box { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); border-radius: 18px; }
+      .modal-box::before { content: ''; display: block; width: 40px; height: 4px; background: var(--g200); border-radius: 2px; margin: 8px auto 0; flex: 0 0 auto; }
+      .modal-header { padding: 8px 14px 10px; }
+      .modal-order-id { font-size: 17px; }
+      .mic { padding: 12px 14px; min-width: 0; }
+      .mic-val { overflow-wrap: anywhere; }
+      .modal-fraud-row { padding: 10px 12px; gap: 8px; }
+      .modal-section-title { padding: 11px 12px 7px; }
+      .product-table th { padding: 8px 7px; }
+      .product-table td { padding: 10px 7px; }
+      #productsModal .modal-footer { padding: 10px 12px; flex-direction: column; align-items: stretch; gap: 9px; }
+      #productsModal .modal-totals { width: 100%; justify-content: space-between; gap: 8px; }
+      #productsModal .footer-actions { width: 100%; flex-wrap: nowrap; }
+      #productsModal .footer-actions > * { min-width: 0; flex: 1 1 0; justify-content: center; padding: 9px 8px; white-space: nowrap; }
+
+      #stockView .stock-stats { grid-template-columns: 1fr; }
+      .stock-search { min-width: 100%; }
+      .stock-grid { grid-template-columns: minmax(0, 1fr); padding: 10px; gap: 10px; }
+      .stock-card { padding: 14px; }
+      .stock-tools > .btn-reset, .stock-low-toggle { flex: 1; justify-content: center; }
+    }
+    @media (max-width: 400px) {
+      .stats-row:not(.stock-stats) .stat-icon { display: none; }
+    }
+    @media (max-width: 480px) {
+      .modal-info-grid { grid-template-columns: 1fr; }
+      .mic { border-right: none; border-bottom: 1px solid var(--g100); }
+      .mic:nth-child(3) { grid-column: auto; border-top: none; }
+      .modal-fraud-row { align-items: flex-start; }
+      .mfr-btn { margin-left: 0; }
+      .product-name { font-size: 12px; }
     }
   </style>
 </head>
@@ -362,223 +1348,283 @@
 <!-- Login -->
 <div id="login-overlay" class="hidden">
   <div class="login-box">
-    <div class="login-logo"><i class="fas fa-store"></i></div>
-    <div class="login-title">Sign in</div>
-    <div class="login-sub">Shobaz order management</div>
-    <div class="login-field"><label for="login-username">Username</label><input type="text" id="login-username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()"></div>
-    <div class="login-field"><label for="login-password">Password</label><div class="login-input-wrap"><input type="password" id="login-password" autocomplete="current-password" onkeydown="if(event.key==='Enter')window.doLogin()"><button class="pw-toggle" type="button" onclick="togglePw()" tabindex="-1" aria-label="Show password"><i class="fas fa-eye" id="pw-eye-icon"></i></button></div></div>
-    <button class="login-btn" id="login-btn" type="button" onclick="doLogin()">Sign in</button>
+    <div class="login-logo">🛒</div>
+    <div class="login-title">Admin Login</div>
+    <div class="login-sub">Sign in to manage orders</div>
+    <div class="login-field">
+      <label for="login-username">Username</label>
+      <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+    </div>
+    <div class="login-field">
+      <label for="login-password">Password</label>
+      <div class="login-input-wrap">
+        <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')window.doLogin()">
+        <button class="pw-toggle" type="button" onclick="togglePw()" tabindex="-1" aria-label="Show password"><i class="fas fa-eye" id="pw-eye-icon"></i></button>
+      </div>
+    </div>
+    <button class="login-btn" id="login-btn" type="button" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="login-error" role="alert"></div>
   </div>
 </div>
 
 <div class="layout">
+  <!-- Sidebar (filled by admin-shell.js) -->
   <aside class="sidebar" id="sidebar"></aside>
 
+  <!-- Main -->
   <div class="main">
+    <!-- Topbar -->
     <header class="topbar">
       <button class="hamburger" id="hamburger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
-      <div class="search-box orders-only">
-        <i class="fas fa-search" aria-hidden="true"></i>
-        <input type="search" id="searchInput" placeholder="Search order no, phone or name" aria-label="Search orders">
-      </div>
-      <div class="topbar-spacer" id="topbarSpacer" hidden></div>
+      <div class="topbar-title"><i class="fas fa-shopping-cart" aria-hidden="true"></i><h1 id="pageTitle">Order List</h1><span class="page-subtitle" id="pageSubtitle"></span></div>
+      <div class="topbar-spacer" id="topbarSpacer"></div>
       <div class="topbar-right">
-        <button class="topbar-icon-btn" type="button" onclick="refreshCurrentView()" title="Refresh" aria-label="Refresh"><i class="fas fa-rotate"></i></button>
+        <div class="search-wrap orders-only">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input type="search" id="searchInput" placeholder="Search order / phone / name…" aria-label="Search orders">
+        </div>
+        <a href="#" onclick="this.href=ADMIN_URL+'/sales/add-order'" target="_blank" rel="noopener" class="topbar-btn btn-add orders-only" title="Add order"><i class="fas fa-plus"></i><span class="btn-label"> Add Order</span></a>
+        <button class="topbar-btn orders-only" type="button" id="courierBackfillBtn" onclick="startCourierBackfill()" title="Retrieve missing historical Steadfast statuses" style="display:none" data-salesman-hidden>
+          <i class="fas fa-clock-rotate-left"></i><span class="btn-label"> Backfill Courier</span>
+        </button>
+        <button class="topbar-btn refresh-btn" type="button" onclick="refreshCurrentView()" title="Refresh" aria-label="Refresh"><i class="fas fa-sync-alt"></i></button>
         <span id="topbarUser"></span>
-        <button class="topbar-icon-btn" type="button" onclick="doLogout()" title="Log out" aria-label="Log out"><i class="fas fa-arrow-right-from-bracket"></i></button>
+        <button class="topbar-btn danger" type="button" onclick="doLogout()" title="Log out" aria-label="Log out"><i class="fas fa-sign-out-alt"></i><span class="btn-label"> Logout</span></button>
       </div>
     </header>
 
+    <!-- Content -->
     <main class="content">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title" id="pageTitle">Orders</h1>
-          <div class="page-subtitle" id="pageSubtitle">Every order, with courier, calls and staff activity.</div>
-        </div>
-        <div class="page-actions topbar-right orders-only">
-          <button class="btn" type="button" id="courierBackfillBtn" onclick="startCourierBackfill()" title="Retrieve missing historical Steadfast statuses" style="display:none" data-salesman-hidden>
-            <i class="fas fa-clock-rotate-left"></i><span class="btn-label"> Backfill courier</span>
-          </button>
-          <a href="#" onclick="this.href=ADMIN_URL+'/sales/add-order'" target="_blank" rel="noopener" class="btn btn-primary btn-add"><i class="fas fa-plus"></i><span class="btn-text"> Add order</span></a>
-        </div>
-      </div>
 
-      <!-- Stock management -->
-      <section id="stockView" aria-labelledby="pageTitle">
-        <div class="metrics">
-          <div class="metric"><span class="metric-label">All products</span><div class="metric-value" id="stockTrackedCount">—</div></div>
-          <div class="metric"><span class="metric-label">Low stock</span><div class="metric-value" id="stockLowCount">—</div></div>
-          <div class="metric"><span class="metric-label">Out of stock</span><div class="metric-value" id="stockOutCount">—</div></div>
+      <!-- Stock Management -->
+      <section id="stockView" aria-labelledby="stockHeading">
+        <div class="stock-head">
+          <h2 id="stockHeading"><i class="fas fa-boxes-stacked"></i>Stock Management</h2>
+        </div>
+        <div class="stats-row stock-stats">
+          <div class="stat-card c3">
+            <div class="stat-icon"><i class="fas fa-cubes"></i></div>
+            <div class="stat-info"><label>All Products</label><div class="val" id="stockTrackedCount">—</div></div>
+          </div>
+          <div class="stat-card c2">
+            <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="stat-info"><label>Low Stock</label><div class="val" id="stockLowCount">—</div></div>
+          </div>
+          <div class="stat-card c9">
+            <div class="stat-icon"><i class="fas fa-ban"></i></div>
+            <div class="stat-info"><label>Out of Stock</label><div class="val" id="stockOutCount">—</div></div>
+          </div>
         </div>
         <div class="stock-tools">
-          <label class="stock-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" id="stockSearch" placeholder="Search product / SKU…" autocomplete="off" aria-label="Search products"></label>
-          <button type="button" class="btn stock-low-toggle" id="stockLowToggle" onclick="toggleStockLowOnly()"><i class="fas fa-triangle-exclamation"></i> Low stock only</button>
-          <button type="button" class="btn" onclick="loadStockList()"><i class="fas fa-rotate"></i> Refresh</button>
+          <div class="stock-search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search" id="stockSearch" placeholder="Search product / SKU…" autocomplete="off" aria-label="Search products">
+          </div>
+          <button type="button" class="stock-low-toggle" id="stockLowToggle" onclick="toggleStockLowOnly()"><i class="fas fa-triangle-exclamation"></i> Low stock only</button>
+          <button type="button" class="btn-reset" onclick="loadStockList()"><i class="fas fa-sync-alt"></i> Refresh</button>
         </div>
-        <div class="stock-grid" id="stockBody" aria-live="polite">
-          <div class="stock-grid-message"><div class="spinner"></div>Loading products…</div>
-        </div>
-        <div class="stock-pagination">
-          <div class="pagination-info" id="stockPageInfo">—</div>
-          <div class="pagination-controls">
-            <button class="page-btn" id="stockPrev" type="button" onclick="stockGoPage(-1)">‹ Prev</button>
-            <button class="page-btn" id="stockNext" type="button" onclick="stockGoPage(1)">Next ›</button>
+        <div class="table-card stock-main">
+          <div class="stock-grid" id="stockBody" aria-live="polite">
+            <div class="stock-grid-message"><div class="spinner"></div><div>Loading products…</div></div>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination-info" id="stockPageInfo">—</div>
+            <div class="pagination-controls">
+              <button class="page-btn" id="stockPrev" type="button" onclick="stockGoPage(-1)">‹ Prev</button>
+              <button class="page-btn" id="stockNext" type="button" onclick="stockGoPage(1)">Next ›</button>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Date filters -->
-      <div class="filters-row orders-only">
-        <div class="date-filter-box">
-          <i class="fas fa-calendar" aria-hidden="true"></i>
-          <div style="flex:1;min-width:0">
-            <label for="createdFrom">Order date</label>
-            <div class="date-range">
+      <!-- Date Filters -->
+      <div class="date-row orders-only" id="dateRow">
+        <div class="date-box">
+          <div class="date-box-icon v"><i class="fas fa-calendar-alt"></i></div>
+          <div style="flex:1">
+            <label for="createdFrom">Order Date Range</label>
+            <div class="date-inputs">
               <input type="date" id="createdFrom" aria-label="Order date from">
-              <span>–</span>
+              <span>—</span>
               <input type="date" id="createdTo" aria-label="Order date to">
             </div>
           </div>
-          <button class="date-clear" type="button" onclick="clearDateFilter('created')" title="Clear order dates" aria-label="Clear order dates"><i class="fas fa-xmark"></i></button>
+          <button class="date-clear" type="button" onclick="clearDateFilter('created')" title="Clear" aria-label="Clear order dates"><i class="fas fa-times"></i></button>
         </div>
-        <div class="date-filter-box">
-          <i class="fas fa-truck" aria-hidden="true"></i>
-          <div style="flex:1;min-width:0">
-            <label for="deliveryFrom">Delivery date</label>
-            <div class="date-range">
+        <div class="date-box">
+          <div class="date-box-icon o"><i class="fas fa-truck"></i></div>
+          <div style="flex:1">
+            <label for="deliveryFrom">Delivery Date Range</label>
+            <div class="date-inputs">
               <input type="date" id="deliveryFrom" aria-label="Delivery date from">
-              <span>–</span>
+              <span>—</span>
               <input type="date" id="deliveryTo" aria-label="Delivery date to">
             </div>
           </div>
-          <button class="date-clear" type="button" onclick="clearDateFilter('delivery')" title="Clear delivery dates" aria-label="Clear delivery dates"><i class="fas fa-xmark"></i></button>
+          <button class="date-clear" type="button" onclick="clearDateFilter('delivery')" title="Clear" aria-label="Clear delivery dates"><i class="fas fa-times"></i></button>
         </div>
-        <button class="btn" type="button" onclick="filterToday()"><i class="fas fa-calendar-day"></i> Today</button>
-      </div>
-
-      <!-- Numbers -->
-      <div class="metrics orders-only">
-        <div class="metric"><span class="metric-label" id="totalOrdersLabel">Processing orders</span><div class="metric-value" id="totalOrders">—</div></div>
-        <div class="metric" data-salesman-hidden><span class="metric-label" id="totalAmountLabel">Total amount</span><div class="metric-value" id="totalAmount">—</div></div>
-        <div class="metric"><span class="metric-label">Today's orders</span><div class="metric-value" id="todayOrders">—</div></div>
-        <div class="metric" data-salesman-hidden><span class="metric-label">Today's amount</span><div class="metric-value" id="todayAmount">—</div></div>
-        <div class="metric incomplete-only" hidden><span class="metric-label">Converted today</span><div class="metric-value" id="convertedOrders">—</div></div>
-        <div class="metric incomplete-only" hidden data-salesman-hidden><span class="metric-label">Converted today (৳)</span><div class="metric-value" id="convertedAmount">—</div></div>
-        <div class="metric incomplete-only" hidden><span class="metric-label">All converted</span><div class="metric-value" id="allConvertedOrders">—</div></div>
-        <div class="metric incomplete-only" hidden data-salesman-hidden><span class="metric-label">All converted (৳)</span><div class="metric-value" id="allConvertedAmount">—</div></div>
+        <button class="btn-today" type="button" onclick="filterToday()"><i class="fas fa-calendar-day"></i> Today</button>
       </div>
 
       <!-- Team today -->
       <section class="team-grid orders-only" id="teamPanel" hidden aria-label="Today's staff performance">
-        <div class="card team-hero" id="teamHero" data-state="idle" aria-live="polite">
+        <div class="team-card team-hero" id="teamHero" data-state="idle" aria-live="polite">
           <span class="hero-icon" aria-hidden="true"><i class="fas fa-chart-simple"></i></span>
           <div>
-            <div class="hero-eyebrow">Team today</div>
-            <div class="hero-title" id="teamHeroTitle">Loading…</div>
-            <div class="hero-sub" id="teamHeroSub"></div>
+            <span class="hero-eyebrow">Team today</span>
+            <strong class="hero-title" id="teamHeroTitle">Loading…</strong>
+            <span class="hero-sub" id="teamHeroSub"></span>
           </div>
         </div>
-        <div class="card team-board">
-          <div class="card-head">
-            <span class="card-title">Today's team</span>
-            <span class="live-stamp" title="Updates every minute"><span class="live-dot" aria-hidden="true"></span><span id="teamUpdated">Live</span></span>
+        <div class="team-card team-board">
+          <div class="team-board-head">
+            <strong>Today’s team</strong>
+            <small title="Updates every minute"><span class="live-dot" aria-hidden="true"></span><span id="teamUpdated">Live</span></small>
           </div>
           <ol class="team-list" id="teamList" aria-label="Today's team"></ol>
         </div>
       </section>
-      <div class="card calls-strip orders-only" id="callsStrip" hidden aria-live="polite"></div>
+      <div class="calls-strip orders-only" id="callsStrip" hidden aria-live="polite"></div>
 
-      <!-- Orders -->
-      <div class="card table-card orders-only">
-        <div class="status-tabs" id="statusTabs" role="tablist">
-          <button class="status-tab active" id="tab-all" type="button" onclick="setStatusTab('all')">All <span class="tab-count" id="tabCount-all">—</span></button>
-          <button class="status-tab" id="tab-in_review" type="button" onclick="setStatusTab('in_review')">In review <span class="tab-count" id="tabCount-in_review">—</span></button>
-          <button class="status-tab" id="tab-processing" type="button" onclick="setStatusTab('processing')">Processing <span class="tab-count" id="tabCount-processing">—</span></button>
-          <button class="status-tab" id="tab-8" type="button" onclick="setStatusTab(8)">Confirmed <span class="tab-count" id="tabCount-8">—</span></button>
-          <button class="status-tab" id="tab-5" type="button" onclick="setStatusTab(5)">Completed <span class="tab-count" id="tabCount-5">—</span></button>
-          <button class="status-tab" id="tab-6" type="button" onclick="setStatusTab(6)">Cancelled <span class="tab-count" id="tabCount-6">—</span></button>
-          <button class="status-tab" id="tab-10" type="button" onclick="setStatusTab(10)">Trash <span class="tab-count" id="tabCount-10">—</span></button>
+      <!-- Stats -->
+      <div class="stats-row orders-only">
+        <div class="stat-card c1">
+          <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+          <div class="stat-info"><label id="totalOrdersLabel">Total Orders</label><div class="val" id="totalOrders">—</div></div>
         </div>
+        <div class="stat-card c2" data-salesman-hidden>
+          <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="stat-info"><label id="totalAmountLabel">Total Amount</label><div class="val" id="totalAmount">—</div></div>
+        </div>
+        <div class="stat-card c3">
+          <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+          <div class="stat-info"><label>Today Orders</label><div class="val" id="todayOrders">—</div></div>
+        </div>
+        <div class="stat-card c4" data-salesman-hidden>
+          <div class="stat-icon"><i class="fas fa-coins"></i></div>
+          <div class="stat-info"><label>Today Amount</label><div class="val" id="todayAmount">—</div></div>
+        </div>
+        <div class="stat-card c5 incomplete-only" hidden>
+          <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+          <div class="stat-info"><label>Today Converted</label><div class="val" id="convertedOrders">—</div></div>
+        </div>
+        <div class="stat-card c6 incomplete-only" hidden data-salesman-hidden>
+          <div class="stat-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+          <div class="stat-info"><label>Today Conv. Amount</label><div class="val" id="convertedAmount">—</div></div>
+        </div>
+        <div class="stat-card c7 incomplete-only" hidden>
+          <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+          <div class="stat-info"><label>All Converted</label><div class="val" id="allConvertedOrders">—</div></div>
+        </div>
+        <div class="stat-card c8 incomplete-only" hidden data-salesman-hidden>
+          <div class="stat-icon"><i class="fas fa-sack-dollar"></i></div>
+          <div class="stat-info"><label>All Conv. Amount</label><div class="val" id="allConvertedAmount">—</div></div>
+        </div>
+      </div>
 
-        <div class="in-review-tools" id="inReviewTools">
-          <div class="in-review-copy" id="inReviewSyncStatus"><i class="fas fa-arrows-rotate"></i> Live courier queue · checks Steadfast status and charges every 60 seconds when nothing is selected</div>
-          <div class="btn-group">
-            <button class="btn btn-sm" type="button" onclick="printSelectedInReviewLabels()"><i class="fas fa-print"></i> Print selected</button>
-            <button class="btn btn-sm btn-primary" type="button" onclick="printAllInReviewLabels()"><i class="fas fa-layer-group"></i> Print all in review</button>
+      <!-- Status Tabs -->
+      <div class="status-tabs orders-only" id="statusTabs" role="tablist">
+        <button class="status-tab active" id="tab-all" type="button" onclick="setStatusTab('all')">All <span class="tab-count" id="tabCount-all">—</span></button>
+        <button class="status-tab" id="tab-in_review" type="button" onclick="setStatusTab('in_review')">In Review <span class="tab-count" id="tabCount-in_review">—</span></button>
+        <button class="status-tab" id="tab-processing" type="button" onclick="setStatusTab('processing')">Processing <span class="tab-count" id="tabCount-processing">—</span></button>
+        <button class="status-tab" id="tab-8" type="button" onclick="setStatusTab(8)">Confirmed <span class="tab-count" id="tabCount-8">—</span></button>
+        <button class="status-tab" id="tab-5" type="button" onclick="setStatusTab(5)">Completed <span class="tab-count" id="tabCount-5">—</span></button>
+        <button class="status-tab" id="tab-6" type="button" onclick="setStatusTab(6)">Cancelled <span class="tab-count" id="tabCount-6">—</span></button>
+        <button class="status-tab" id="tab-10" type="button" onclick="setStatusTab(10)">Trash <span class="tab-count" id="tabCount-10">—</span></button>
+      </div>
+
+      <div class="in-review-tools orders-only" id="inReviewTools">
+        <div class="in-review-tools-copy" id="inReviewSyncStatus"><i class="fas fa-arrows-rotate"></i> Live courier queue · checks Steadfast status and charges every 60 seconds when nothing is selected</div>
+        <div class="in-review-tools-actions">
+          <button class="btn-label-print" type="button" onclick="printSelectedInReviewLabels()"><i class="fas fa-print"></i> Print Selected</button>
+          <button class="btn-label-print primary" type="button" onclick="printAllInReviewLabels()"><i class="fas fa-layer-group"></i> Print All In Review</button>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar orders-only">
+        <div class="dd-wrap">
+          <button class="filter-btn" id="paymentStatusBtn" type="button" onclick="toggleDropdown('paymentStatusDropdown')"><i class="fas fa-credit-card"></i> Payment Status <span id="paymentStatusLabel"></span><i class="fas fa-chevron-down chev"></i></button>
+          <div class="dropdown" id="paymentStatusDropdown">
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', '', 'Payment Status')"><span class="dot" style="background:#94a3b8"></span>All</div>
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', 'paid', 'Paid')"><span class="dot" style="background:#059669"></span>Paid</div>
+            <div class="dropdown-item" onclick="setFilter('paymentStatus', 'unpaid', 'Unpaid')"><span class="dot" style="background:#d97706"></span>Unpaid</div>
           </div>
         </div>
-
-        <div class="filter-bar">
-          <div style="position:relative">
-            <button class="filter-btn" id="paymentStatusBtn" type="button" onclick="toggleDropdown('paymentStatusDropdown')"><i class="fas fa-plus-circle"></i> Payment status<span id="paymentStatusLabel"></span></button>
-            <div class="dropdown" id="paymentStatusDropdown">
-              <div class="dropdown-item" onclick="setFilter('paymentStatus', '', 'Payment status')">All</div>
-              <div class="dropdown-item" onclick="setFilter('paymentStatus', 'paid', 'Paid')"><span class="dot" style="background:#29845a"></span> Paid</div>
-              <div class="dropdown-item" onclick="setFilter('paymentStatus', 'unpaid', 'Unpaid')"><span class="dot" style="background:#e5a000"></span> Unpaid</div>
-            </div>
+        <div class="dd-wrap">
+          <button class="filter-btn" id="paymentTypeBtn" type="button" onclick="toggleDropdown('paymentTypeDropdown')"><i class="fas fa-wallet"></i> Payment Type <span id="paymentTypeLabel"></span><i class="fas fa-chevron-down chev"></i></button>
+          <div class="dropdown" id="paymentTypeDropdown">
+            <div class="dropdown-item" onclick="setFilter('paymentType', '', 'Payment Type')">All</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'cash_on_delivery', 'COD')">Cash on Delivery</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'card', 'Card')">Card</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'bkash', 'bKash')">bKash</div>
+            <div class="dropdown-item" onclick="setFilter('paymentType', 'nagad', 'Nagad')">Nagad</div>
           </div>
-          <div style="position:relative">
-            <button class="filter-btn" id="paymentTypeBtn" type="button" onclick="toggleDropdown('paymentTypeDropdown')"><i class="fas fa-plus-circle"></i> Payment type<span id="paymentTypeLabel"></span></button>
-            <div class="dropdown" id="paymentTypeDropdown">
-              <div class="dropdown-item" onclick="setFilter('paymentType', '', 'Payment type')">All</div>
-              <div class="dropdown-item" onclick="setFilter('paymentType', 'cash_on_delivery', 'COD')">Cash on delivery</div>
-              <div class="dropdown-item" onclick="setFilter('paymentType', 'card', 'Card')">Card</div>
-              <div class="dropdown-item" onclick="setFilter('paymentType', 'bkash', 'bKash')">bKash</div>
-              <div class="dropdown-item" onclick="setFilter('paymentType', 'nagad', 'Nagad')">Nagad</div>
-            </div>
-          </div>
-          <div style="position:relative">
-            <button class="filter-btn" id="orderStatusBtn" type="button" onclick="toggleDropdown('orderStatusDropdown')"><i class="fas fa-plus-circle"></i> Order status<span id="orderStatusLabel"></span></button>
-            <div class="dropdown" id="orderStatusDropdown">
-              <div class="dropdown-item" onclick="setFilter('orderStatus', '', 'Order status')">All</div>
-              <div class="dropdown-item" onclick="setFilter('orderStatus', 3, 'Processing')">Processing</div>
-              <div class="dropdown-item" onclick="setFilter('orderStatus', 5, 'Completed')">Completed</div>
-              <div class="dropdown-item" onclick="setFilter('orderStatus', 6, 'Cancelled')">Cancelled</div>
-              <div class="dropdown-item" onclick="setFilter('orderStatus', 10, 'Trash')">Trash</div>
-            </div>
-          </div>
-          <select class="per-page-select" id="perPageSelect" onchange="changePageSize()" aria-label="Orders per page">
-            <option value="10">10 / page</option>
-            <option value="25" selected>25 / page</option>
-            <option value="50">50 / page</option>
-            <option value="100">100 / page</option>
-          </select>
-          <div class="spacer"></div>
-          <button class="btn btn-sm" type="button" onclick="resetAllFilters()"><i class="fas fa-rotate-left"></i> Reset</button>
-          <button class="btn btn-sm" type="button" onclick="exportToCSV()"><i class="fas fa-file-arrow-down"></i> Export</button>
         </div>
-
-        <div id="bulkBar" role="region" aria-label="Bulk actions">
-          <span class="bulk-count" id="bulkCount"></span>
-          <select id="bulkStatus" aria-label="New status">
-            <option value="">Change status to…</option>
-            <option value="3">Processing</option>
-            <option value="5">Completed</option>
-            <option value="6">Cancelled</option>
-            <option value="10">Trash</option>
-          </select>
-          <button class="btn btn-sm btn-primary" id="bulkApplyBtn" type="button" onclick="applyBulkStatus()">Apply</button>
-          <button class="btn btn-sm" type="button" onclick="clearSelection()">Clear</button>
+        <div class="dd-wrap">
+          <button class="filter-btn" id="orderStatusBtn" type="button" onclick="toggleDropdown('orderStatusDropdown')"><i class="fas fa-truck"></i> Order Status <span id="orderStatusLabel"></span><i class="fas fa-chevron-down chev"></i></button>
+          <div class="dropdown" id="orderStatusDropdown">
+            <div class="dropdown-item" onclick="setFilter('orderStatus', '', 'Order Status')">All</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 3, 'Processing')">⏳ Processing</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 5, 'Completed')">✅ Completed</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 6, 'Cancelled')">❌ Cancelled</div>
+            <div class="dropdown-item" onclick="setFilter('orderStatus', 10, 'Trash')">🗑️ Trash</div>
+          </div>
         </div>
+        <select class="per-page-select" id="perPageSelect" onchange="changePageSize()" aria-label="Orders per page">
+          <option value="10">10 / page</option>
+          <option value="25" selected>25 / page</option>
+          <option value="50">50 / page</option>
+          <option value="100">100 / page</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn-reset" type="button" onclick="resetAllFilters()"><i class="fas fa-undo"></i> Reset</button>
+        <button class="btn-export" type="button" onclick="exportToCSV()"><i class="fas fa-file-excel"></i> Export</button>
+      </div>
 
+      <!-- Bulk Bar -->
+      <div class="bulk-bar orders-only" id="bulkBar" role="region" aria-label="Bulk actions">
+        <span id="bulkCount"></span>
+        <select id="bulkStatus" aria-label="New status">
+          <option value="">— Change status —</option>
+          <option value="3">⏳ Processing</option>
+          <option value="5">✅ Completed</option>
+          <option value="6">❌ Cancelled</option>
+          <option value="10">🗑️ Trash</option>
+        </select>
+        <button class="btn-bulk-apply" id="bulkApplyBtn" type="button" onclick="applyBulkStatus()">Apply</button>
+        <button class="btn-bulk-clear" type="button" onclick="clearSelection()">Clear</button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card orders-only">
         <div class="table-wrap">
           <table class="orders-table" id="ordersTable">
             <thead>
               <tr>
                 <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all orders"></th>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Fraud check</th>
+                <th>Order No</th>
+                <th>Phone</th>
+                <th>Name</th>
                 <th>Address</th>
-                <th>Total &amp; status</th>
+                <th>Date &amp; Time</th>
+                <th>Amount</th>
                 <th>Courier</th>
-                <th>Notes</th>
-                <th class="th-actions">Actions</th>
+                <th>Courier Status</th>
+                <th>Courier Charge</th>
+                <th>Fraud</th>
+                <th>View</th>
+                <th>Pay Type</th>
+                <th>Pay Status</th>
+                <th>Status</th>
+                <th>Order By</th>
+                <th>Invoice</th>
+                <th>Customer Note</th>
+                <th>Admin Note</th>
               </tr>
             </thead>
             <tbody id="ordersBody">
-              <tr class="loading-row"><td colspan="9"><div class="spinner"></div>Loading orders…</td></tr>
+              <tr class="loading-row"><td colspan="19"><div class="spinner"></div><div>Loading orders…</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -587,105 +1633,108 @@
           <div class="pagination-controls" id="paginationControls"></div>
         </div>
       </div>
+
     </main>
   </div>
 </div>
 
+<!-- Toast -->
 <div id="toast" role="status"></div>
 
-<!-- Order modal -->
+<!-- Order Modal -->
 <div class="modal-overlay" id="productsModal" onclick="closeModal(event)">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-header">
       <div>
-        <div class="modal-title" id="modalTitle">Order #—</div>
-        <div class="modal-sub" id="modalOrderDate"></div>
+        <div class="modal-order-id" id="modalTitle">Order #—</div>
+        <div class="modal-order-date" id="modalOrderDate"></div>
       </div>
-      <div class="modal-head-right">
+      <div class="modal-header-right">
         <span id="modalStatusBadge"></span>
         <button class="modal-close" type="button" onclick="document.getElementById('productsModal').classList.remove('open')" aria-label="Close">&times;</button>
       </div>
     </div>
     <div class="modal-body">
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-label">Customer</div>
-          <div class="info-value" id="modalCustomerName">—</div>
-          <div class="info-label">Phone</div>
-          <div class="info-value" id="modalPhone">—</div>
-          <div class="info-label" id="modalEmailLabel" hidden>Email</div>
-          <div class="info-value" id="modalEmail" hidden>—</div>
+      <div class="modal-info-grid">
+        <div class="mic">
+          <div class="mic-icon b"><i class="fas fa-user"></i></div>
+          <div class="mic-lbl">Customer</div><div class="mic-val" id="modalCustomerName">—</div>
+          <div class="mic-lbl" style="margin-top:10px">Phone</div><div class="mic-val" id="modalPhone">—</div>
+          <div class="mic-lbl" id="modalEmailLabel" style="margin-top:10px" hidden>Email</div><div class="mic-val" id="modalEmail" hidden>—</div>
         </div>
-        <div class="info-card">
-          <div class="info-label">Address</div>
-          <div class="info-value" id="modalAddress">—</div>
-          <div class="info-label">Shipping</div>
-          <div class="info-value" id="modalShippingMethod">—</div>
+        <div class="mic">
+          <div class="mic-icon g"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="mic-lbl">Address</div><div class="mic-val" id="modalAddress">—</div>
+          <div class="mic-lbl" style="margin-top:10px">Shipping</div><div class="mic-val" id="modalShippingMethod">—</div>
         </div>
-        <div class="info-card">
-          <div class="info-label">Payment</div>
-          <div class="info-value" id="modalPaymentType">—</div>
-          <div class="info-label">Payment status</div>
-          <div class="info-value" id="modalPaymentStatus">—</div>
+        <div class="mic">
+          <div class="mic-icon o"><i class="fas fa-credit-card"></i></div>
+          <div class="mic-lbl">Payment</div><div class="mic-val" id="modalPaymentType">—</div>
+          <div class="mic-lbl" style="margin-top:10px">Status</div><div class="mic-val" id="modalPaymentStatus">—</div>
         </div>
       </div>
-      <div class="fraud-row">
-        <strong><i class="fas fa-shield-halved" style="color:var(--sa-text-2);margin-right:4px"></i>Fraud check</strong>
-        <div class="fraud-stats" id="modalFraudStats"><span class="muted">Not checked yet</span></div>
-        <button id="modalFraudBtn" class="btn btn-sm" type="button" onclick="modalCheckFraud()">Check</button>
+      <div class="modal-fraud-row" id="modalFraudRow">
+        <div class="mfr-label"><i class="fas fa-shield-alt" style="margin-right:5px"></i>Fraud Check</div>
+        <div class="mfr-stats" id="modalFraudStats"><span style="color:#94a3b8;font-size:12px">Not checked yet</span></div>
+        <div class="mfr-btn"><button id="modalFraudBtn" class="btn-fraud-modal" type="button" onclick="modalCheckFraud()">Check</button></div>
       </div>
-      <div class="section-title">Ordered items</div>
+      <div class="modal-section-title">📦 Ordered Items</div>
       <table class="product-table">
-        <thead><tr><th>Product</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Total</th></tr></thead>
+        <colgroup><col><col style="width:90px"><col style="width:56px"><col style="width:96px"></colgroup>
+        <thead><tr><th>Product</th><th class="r">Price</th><th class="c">Qty</th><th class="r">Total</th></tr></thead>
         <tbody id="modalProductsBody"></tbody>
       </table>
     </div>
     <div class="modal-footer">
       <div class="modal-totals">
-        <span>Subtotal<strong id="modalSubtotal">৳0</strong></span>
-        <span>Delivery<strong id="modalDelivery">৳0</strong></span>
-        <span>Total<strong id="modalGrandTotal">৳0</strong></span>
+        <div class="mt-item">Subtotal<span id="modalSubtotal">৳0</span></div>
+        <div class="mt-item">Delivery<span id="modalDelivery">৳0</span></div>
+        <div class="mt-item grand">Grand Total<span id="modalGrandTotal">৳0</span></div>
       </div>
-      <button id="modalEditBtn" class="btn" type="button" onclick="modalEditOrder()"><i class="fas fa-pen"></i> Edit</button>
-      <button id="modalCourierBtn" class="btn btn-primary" type="button" onclick="modalSendToCourier()" style="display:none"><i class="fas fa-truck"></i> Send to courier</button>
-      <a id="modalInvoiceLink" href="#" target="_blank" rel="noopener" class="btn"><i class="fas fa-file-invoice"></i> Invoice</a>
-      <button class="btn" type="button" onclick="document.getElementById('productsModal').classList.remove('open')">Close</button>
+      <div class="footer-actions">
+        <button id="modalEditBtn" class="btn-m-edit" type="button" onclick="modalEditOrder()"><i class="fas fa-pen"></i> Edit</button>
+        <button id="modalCourierBtn" class="btn-m-courier" type="button" onclick="modalSendToCourier()" style="display:none"><i class="fas fa-truck"></i> Courier</button>
+        <a id="modalInvoiceLink" href="#" target="_blank" rel="noopener" class="btn-m-invoice"><i class="fas fa-file-invoice"></i> Invoice</a>
+        <button class="btn-m-close" type="button" onclick="document.getElementById('productsModal').classList.remove('open')">Close</button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Stock Restock Modal -->
 <div class="modal-overlay" id="restockModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box" style="max-width:420px" role="dialog" aria-modal="true" aria-labelledby="restockProductName">
     <div class="modal-header">
-      <div class="modal-title" id="restockProductName">Restock</div>
-      <button class="modal-close" type="button" onclick="document.getElementById('restockModal').classList.remove('open')" aria-label="Close">&times;</button>
+      <div><div class="modal-order-id" id="restockProductName">Restock</div></div>
+      <div class="modal-header-right"><button class="modal-close" type="button" onclick="document.getElementById('restockModal').classList.remove('open')" aria-label="Close">&times;</button></div>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
-      <div class="field"><label for="restockQty">Quantity received</label><input type="number" min="1" id="restockQty" class="input" placeholder="e.g. 50"></div>
-      <div class="field"><label for="restockUnitCost">Unit cost (৳)</label><input type="number" min="0" id="restockUnitCost" class="input" placeholder="e.g. 120"></div>
-      <div class="field"><label for="restockSupplier">Supplier (optional)</label><input type="text" id="restockSupplier" class="input" placeholder="Supplier name"></div>
-      <div class="field"><label for="restockNote">Note (optional)</label><input type="text" id="restockNote" class="input" placeholder="Optional note"></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label for="restockQty" style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Quantity received</label><input type="number" min="1" id="restockQty" class="stock-input" style="width:100%" placeholder="e.g. 50"></div>
+        <div><label for="restockUnitCost" style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Unit cost (৳)</label><input type="number" min="0" id="restockUnitCost" class="stock-input" style="width:100%" placeholder="e.g. 120"></div>
+        <div><label for="restockSupplier" style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Supplier (optional)</label><input type="text" id="restockSupplier" class="stock-input" style="width:100%" placeholder="Supplier name"></div>
+        <div><label for="restockNote" style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">Note (optional)</label><input type="text" id="restockNote" class="stock-input" style="width:100%" placeholder="Optional note"></div>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" type="button" onclick="document.getElementById('restockModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary" id="restockSubmitBtn" type="button" onclick="submitRestock()">Save restock</button>
+      <button class="btn-m-close" type="button" onclick="document.getElementById('restockModal').classList.remove('open')">Cancel</button>
+      <button class="btn-stock-save" id="restockSubmitBtn" type="button" onclick="submitRestock()">Save Restock</button>
     </div>
   </div>
 </div>
 
+<!-- Stock Movement History Modal -->
 <div class="modal-overlay" id="historyModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box" style="max-width:640px" role="dialog" aria-modal="true" aria-labelledby="historyProductName">
     <div class="modal-header">
-      <div class="modal-title" id="historyProductName">Stock history</div>
-      <button class="modal-close" type="button" onclick="document.getElementById('historyModal').classList.remove('open')" aria-label="Close">&times;</button>
+      <div><div class="modal-order-id" id="historyProductName">Stock History</div></div>
+      <div class="modal-header-right"><button class="modal-close" type="button" onclick="document.getElementById('historyModal').classList.remove('open')" aria-label="Close">&times;</button></div>
     </div>
     <div class="modal-body">
-      <div style="overflow-x:auto">
-        <table class="product-table">
-          <thead><tr><th>Date</th><th>Reason</th><th class="r">Qty</th><th class="r">Stock after</th><th>Admin</th></tr></thead>
-          <tbody id="historyBody"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
+      <table class="product-table" style="width:100%">
+        <thead><tr><th>Date</th><th>Reason</th><th class="r">Qty</th><th class="r">Stock After</th><th>Admin</th></tr></thead>
+        <tbody id="historyBody"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -728,27 +1777,26 @@
     if (isStockView) {
       document.body.classList.add('stock-mode');
       document.title = 'Stock — Shobaz Admin';
-      title.textContent = 'Stock management';
+      title.textContent = 'Stock Management';
       sub.textContent = 'Stock levels, low-stock alerts, restocks and sales speed.';
       document.getElementById('topbarSpacer').hidden = false;
       return;
     }
     if (isIncompleteView) {
       document.title = 'Incomplete orders — Shobaz Admin';
-      title.textContent = 'Incomplete orders';
+      title.textContent = 'Incomplete Order List';
       sub.textContent = 'Checkouts that were started but not finished. Call, edit, and turn them into orders.';
       document.getElementById('searchInput').placeholder = 'Search abandoned order, phone or name';
       document.getElementById('statusTabs').style.display = 'none';
       document.getElementById('orderStatusBtn').parentElement.style.display = 'none';
       document.getElementById('bulkStatus').style.display = 'none';
       document.getElementById('bulkApplyBtn').textContent = 'Delete selected';
-      document.getElementById('bulkApplyBtn').className = 'btn btn-sm btn-critical';
+      document.getElementById('bulkApplyBtn').className = 'btn-bulk-apply danger';
       document.getElementById('totalOrdersLabel').textContent = 'Abandoned';
       document.getElementById('totalAmountLabel').textContent = 'Abandoned amount';
       document.querySelectorAll('.incomplete-only').forEach(function (el) { el.hidden = false; });
-      document.getElementById('totalOrders').closest('.metrics').classList.add('cols-4');
     } else {
-      document.getElementById('totalOrdersLabel').textContent = 'Orders';
+      document.getElementById('totalOrdersLabel').textContent = 'Total Orders';
     }
   }
 
@@ -998,7 +2046,7 @@
   var loadSeq = 0;
   function loadOrders() {
     var seq = ++loadSeq;
-    document.getElementById('ordersBody').innerHTML = '<tr class="loading-row"><td colspan="9"><div class="spinner"></div>Loading orders…</td></tr>';
+    document.getElementById('ordersBody').innerHTML = '<tr class="loading-row"><td colspan="19"><div class="spinner"></div>Loading orders…</td></tr>';
     var url = API + (isIncompleteView ? '/api/order/get-all-incomplete-orders' : '/api/order/get-all');
     if (state.search) url += '?q=' + encodeURIComponent(state.search);
     fetch(url, { method: 'POST', headers: authHeaders(), body: JSON.stringify(buildRequestBody()) })
@@ -1027,7 +2075,7 @@
       })
       .catch(function (err) {
         if (seq !== loadSeq) return;
-        document.getElementById('ordersBody').innerHTML = '<tr class="empty-row"><td colspan="9"><div class="empty-state"><i class="fas fa-triangle-exclamation"></i>Could not load orders: ' + esc(err.message) + '<br><small>Check that the API is running at ' + esc(API) + '</small></div></td></tr>';
+        document.getElementById('ordersBody').innerHTML = '<tr class="empty-row"><td colspan="19"><div class="empty-state"><i class="fas fa-triangle-exclamation"></i>Could not load orders: ' + esc(err.message) + '<br><small>Check that the API is running at ' + esc(API) + '</small></div></td></tr>';
         document.getElementById('paginationInfo').textContent = '';
       });
   }
@@ -1102,39 +2150,31 @@
     0: 'attention', 1: 'attention', 2: 'attention', 3: 'attention', 4: 'attention',
     5: 'success', 6: 'critical', 7: 'critical', 8: 'info', 9: 'critical', 10: 'neutral',
   };
+  var STATUS_BADGES = { 0: 'processing', 1: 'processing', 2: 'processing', 3: 'processing', 4: 'processing', 5: 'delivered', 6: 'cancel', 7: 'cancel', 8: 'confirm', 9: 'cancel', 10: 'hold' };
   function statusBadge(code) {
-    return '<span class="badge badge-dot tone-' + (STATUS_TONES[code] || 'neutral') + '">' + esc(STATUS_NAMES[code] || code) + '</span>';
+    return '<span class="badge badge-' + (STATUS_BADGES[code] || 'pending') + '">' + esc(STATUS_NAMES[code] || code) + '</span>';
   }
   function paymentStatusBadge(ps) {
     var p = String(ps || 'unpaid').toLowerCase();
-    return p === 'paid'
-      ? '<span class="badge badge-dot tone-neutral">Paid</span>'
-      : '<span class="badge badge-hollow tone-warning">' + esc(p.charAt(0).toUpperCase() + p.slice(1)) + '</span>';
+    return '<span class="badge badge-' + (p === 'paid' ? 'paid' : 'unpaid') + '">' + esc(p.charAt(0).toUpperCase() + p.slice(1)) + '</span>';
   }
   function paymentTypeBadge(pt) {
     var raw = String(pt || 'cod').trim().toLowerCase().replace(/[\s-]+/g, '_');
     var label = raw === 'cash_on_delivery' || raw === 'cod' ? 'COD' : raw === 'bkash' ? 'bKash' : raw.replace(/_/g, ' ').replace(/^\w/, function (c) { return c.toUpperCase(); });
-    return '<span class="badge tone-subdued">' + esc(label) + '</span>';
+    return '<span class="badge badge-cod">' + esc(label) + '</span>';
   }
 
   /* ── Cells ── */
-  /* Order column: number, then "7 Nov, 6:18 PM" (year only when not this year), then "2 hrs ago · by Rahim". */
-  function orderCell(numberHtml, val, by) {
-    var html = numberHtml;
-    var d = val ? new Date(val) : null;
-    if (d && !isNaN(d)) {
-      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      var hr = d.getHours(); var mn = String(d.getMinutes()).padStart(2, '0');
-      var ampm = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
-      var year = d.getFullYear() === new Date().getFullYear() ? '' : ' ' + d.getFullYear();
-      html += '<div class="date-cell"><span>' + d.getDate() + ' ' + months[d.getMonth()] + year + '</span>' +
-        '<span class="time">, ' + hr + ':' + mn + ' ' + ampm + '</span></div>' +
-        '<div class="order-sub"><span class="ago" data-ago="' + esc(d.toISOString()) + '">' + esc(A.timeAgo(d)) + '</span>' +
-        (by ? '<span class="order-by">by ' + by + '</span>' : '') + '</div>';
-    } else if (by) {
-      html += '<div class="order-sub"><span class="order-by">by ' + by + '</span></div>';
-    }
-    return html;
+  function dateCell(val) {
+    if (!val) return '<span class="dash">—</span>';
+    var d = new Date(val);
+    if (isNaN(d)) return esc(String(val));
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var hr = d.getHours(); var mn = String(d.getMinutes()).padStart(2, '0');
+    var ampm = hr >= 12 ? 'PM' : 'AM'; hr = hr % 12 || 12;
+    return '<div class="date-cell"><span>' + d.getDate() + ' ' + months[d.getMonth()] + ', ' + d.getFullYear() + '</span>' +
+      '<span class="time">' + hr + ':' + mn + ' ' + ampm + '</span>' +
+      '<span class="ago" data-ago="' + esc(d.toISOString()) + '">' + esc(A.timeAgo(d)) + '</span></div>';
   }
   function refreshAgo() {
     document.querySelectorAll('.ago[data-ago]').forEach(function (el) { el.textContent = A.timeAgo(el.getAttribute('data-ago')); });
@@ -1154,16 +2194,17 @@
     var count = repeatMap[phone] || 0;
     var html = '<div class="phone-cell"><a href="tel:' + esc(phone) + '" class="phone-link"><i class="fas fa-phone" aria-hidden="true"></i>' + esc(phone) + '</a>';
     if (count > 1) {
-      var tone = count >= 5 ? 'tone-critical' : count >= 3 ? 'tone-warning' : 'tone-info';
-      html += '<span class="repeat-badge ' + tone + '" title="' + count + ' orders from this number">' + count + '×</span>';
+      var color = count >= 5 ? '#b91c1c' : count >= 3 ? '#d97706' : '#1d4ed8';
+      html += '<span class="repeat-badge" style="background:' + color + '" title="' + count + ' orders from this number">' + count + '×</span>';
     }
     html += '</div>';
     var key = Calls.phoneKey(phone);
     if (key) html += '<div class="call-box" data-phone-key="' + esc(key) + '">' + Calls.rowHtml(key) + '</div>';
     return html;
   }
-  function customerCell(o) {
-    return '<div class="cust-name" title="' + esc(o.name || '') + '">' + esc(o.name || '—') + '</div>' + phoneCell(o.phoneNo);
+  function customerCells(o) {
+    return '<td class="c-phone">' + phoneCell(o.phoneNo) + '</td>' +
+      '<td class="c-name"><div class="cust-name" title="' + esc(o.name || '') + '">' + esc(o.name || '—') + '</div></td>';
   }
 
   function rowAddress(order) {
@@ -1183,17 +2224,15 @@
       html += fraudChipHtml(fraud.overall);
       hasStored = true;
     }
-    html += '<button class="btn btn-xs btn-fraud-check" type="button" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')" title="' + (hasStored ? 'Recheck fraud' : 'Fraud check') + '" aria-label="' + (hasStored ? 'Recheck fraud' : 'Check fraud') + '">' + (hasStored ? 'Recheck' : 'Check') + '</button></div>';
+    html += '<button class="btn-fraud" type="button" id="fc-' + mongoId + '" onclick="checkFraud(\'' + mongoId + '\',\'' + esc(phone) + '\')" title="Fraud check" aria-label="' + (hasStored ? 'Recheck fraud' : 'Check fraud') + '">' + (hasStored ? 'Recheck' : 'Check') + '</button></div>';
     return html;
   }
   function fraudChipHtml(o) {
     var total = o.total || 0, delivered = o.delivered || 0, returned = o.returned || 0;
     var ratio = typeof o.success_ratio === 'number' ? o.success_ratio : 0;
-    var tone = ratio >= 80 ? 'success' : ratio >= 50 ? 'attention' : 'critical';
-    if (!total) tone = 'neutral';
-    return '<div class="fraud-chip" title="All orders: ' + total + ' · delivered: ' + delivered + ' · returned: ' + returned + '">' +
-      '<span class="badge tone-' + tone + '"><i class="fas fa-shield-halved fraud-icon" aria-hidden="true"></i>' + ratio.toFixed(1) + '%<span class="lbl"> success</span></span>' +
-      '<span class="fraud-counts"><span class="ok">✓' + delivered + '</span> <span class="bad">✗' + returned + '</span></span></div>';
+    var cls = !total ? '' : ratio >= 80 ? ' low' : ratio >= 50 ? ' mid' : ' high';
+    return '<div class="fraud-chip' + cls + '" style="font-size:10.5px;line-height:1.6" title="All orders: ' + total + ' · delivered: ' + delivered + ' · returned: ' + returned + ' · success ' + ratio.toFixed(1) + '%">' +
+      'All:<strong>' + total + '</strong> ✓<strong>' + delivered + '</strong> ✗<strong>' + returned + '</strong><br><strong>' + ratio.toFixed(1) + '%</strong></div>';
   }
 
   function courierCell(o) {
@@ -1205,7 +2244,7 @@
       return html + '</div>';
     }
     if (o.orderStatus !== 8 && [6, 7, 9, 10].indexOf(Number(o.orderStatus)) === -1) {
-      return '<button class="btn btn-xs btn-primary" type="button" onclick="sendToCourier(\'' + o._id + '\', this)"><i class="fas fa-truck"></i> Send</button>';
+      return '<button class="btn-courier" type="button" onclick="sendToCourier(\'' + o._id + '\', this)"><i class="fas fa-truck"></i> Send</button>';
     }
     return '<span class="dash">—</span>';
   }
@@ -1223,30 +2262,26 @@
     hold: ['On hold', 'warning'],
     unknown: ['Unknown', 'neutral'],
   };
-  /* Live parcel status and charge, shown under the parcel in the Courier column ('' when there is none). */
   function courierStatusCell(o) {
-    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '';
-    if (o.courierData.providerName !== 'Steadfast Courier' && !(o.courierStatus && o.courierStatus.status)) return '';
+    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '<span class="dash">—</span>';
+    if (o.courierData.providerName !== 'Steadfast Courier' && !(o.courierStatus && o.courierStatus.status)) {
+      return '<span class="dash" title="Status tracking is available for Steadfast parcels">—</span>';
+    }
     var raw = o.courierStatus && o.courierStatus.status ? String(o.courierStatus.status).toLowerCase() : '';
     var mapped = COURIER_STATUSES[raw] || (raw ? [raw.replace(/_/g, ' ').replace(/^\w/, function (c) { return c.toUpperCase(); }), 'neutral'] : ['Awaiting update', 'subdued']);
     var message = o.courierStatus && o.courierStatus.trackingMessage ? o.courierStatus.trackingMessage : '';
-    return '<span class="badge badge-dot tone-' + mapped[1] + '"' + (message ? ' title="' + esc(message) + '"' : '') + '>' + esc(mapped[0]) + '</span>';
+    var badge = raw === 'hold' ? 'hold' : ({ attention: 'pending', info: 'review', magic: 'review', success: 'delivered', warning: 'partial', critical: 'cancelled' })[mapped[1]] || 'unknown';
+    return '<span class="courier-status-badge courier-status-' + badge + '"' + (message ? ' title="' + esc(message) + '"' : '') + '>' + esc(mapped[0]) + '</span>';
   }
   function courierChargeCell(o) {
-    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '';
+    if (isIncompleteView || !o.courierData || !o.courierData.providerName) return '<span class="dash">—</span>';
     var charge = o.courierStatus && o.courierStatus.deliveryCharge;
     if (charge === undefined || charge === null || charge === '' || !isFinite(Number(charge))) {
-      if (o.courierData.providerName !== 'Steadfast Courier') return '';
+      if (o.courierData.providerName !== 'Steadfast Courier') return '<span class="dash">—</span>';
       var lookupError = o.courierStatus && o.courierStatus.chargeLookupError;
-      return '<span class="subtle"' + (lookupError ? ' title="' + esc(lookupError) + '"' : '') + '>Awaiting charge</span>';
+      return '<span class="charge-wait"' + (lookupError ? ' title="' + esc(lookupError) + '"' : '') + '>Awaiting charge</span>';
     }
-    return '<span class="cs-label">Charge</span> <span class="charge" title="Charge reported by Steadfast">৳' + Number(charge).toLocaleString('en-BD', { maximumFractionDigits: 2 }) + '</span>';
-  }
-  function courierColumn(o) {
-    var status = courierStatusCell(o), charge = courierChargeCell(o);
-    return courierCell(o) +
-      (status ? '<div class="cs-line">' + status + '</div>' : '') +
-      (charge ? '<div class="cs-line">' + charge + '</div>' : '');
+    return '<span class="charge" title="Charge reported by Steadfast">৳' + Number(charge).toLocaleString('en-BD', { maximumFractionDigits: 2 }) + '</span>';
   }
 
   /* WhatsApp */
@@ -1281,29 +2316,28 @@
     window.open('https://wa.me/' + number + '?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
   };
   function whatsappAction(o, kind) {
-    return '<button class="btn btn-xs btn-whatsapp" type="button" data-phone="' + esc(o.phoneNo || '') + '" data-kind="' + kind + '" data-order-id="' + esc(o.orderId || '') + '" data-book-summary="' + esc(whatsappBookSummary(o.orderedItems)) + '" onclick="openOrderWhatsApp(this.dataset.phone,this.dataset.kind,this.dataset.orderId,this.dataset.bookSummary)" title="Message the customer on WhatsApp" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i><span class="lbl"> WhatsApp</span></button>';
+    return '<button class="btn-action btn-whatsapp" type="button" data-phone="' + esc(o.phoneNo || '') + '" data-kind="' + kind + '" data-order-id="' + esc(o.orderId || '') + '" data-book-summary="' + esc(whatsappBookSummary(o.orderedItems)) + '" onclick="openOrderWhatsApp(this.dataset.phone,this.dataset.kind,this.dataset.orderId,this.dataset.bookSummary)" title="Message the customer on WhatsApp" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i><span class="lbl"> WhatsApp</span></button>';
   }
   /* Phone layout only: the empty admin-note cell is hidden there, so notes open from the action row. */
   function noteAction(o) {
-    return '<button class="btn btn-xs btn-icon mobile-only" type="button" onclick="editAdminNote(\'' + o._id + '\')" title="Admin note" aria-label="Admin note"><i class="fas fa-note-sticky"></i></button>';
+    return '<button class="btn-action btn-note mobile-only" type="button" onclick="editAdminNote(\'' + o._id + '\')" title="Admin note" aria-label="Admin note"><i class="fas fa-note-sticky"></i></button>';
   }
 
   function statusSelect(mongoId, current) {
-    var options = [{ val: 3, label: 'Processing' }, { val: 5, label: 'Completed' }, { val: 6, label: 'Cancelled' }, { val: 10, label: 'Trash' }];
+    var options = [{ val: 3, label: '⏳ Processing' }, { val: 5, label: '✅ Completed' }, { val: 6, label: '❌ Cancelled' }, { val: 10, label: '🗑️ Trash' }];
     var displayVal = current;
     if ([0, 1, 2, 4, 8].indexOf(current) !== -1) displayVal = 3;
     if (current === 7 || current === 9) displayVal = 6;
     var html = '<select class="status-select" aria-label="Order status" onchange="changeStatus(\'' + mongoId + '\', this.value, this)">';
-    if (current === 8) html += '<option value="8" selected>Confirmed</option>';
+    if (current === 8) html += '<option value="8" selected>✔ Confirmed</option>';
     options.forEach(function (o) { html += '<option value="' + o.val + '"' + (o.val === displayVal && current !== 8 ? ' selected' : '') + '>' + o.label + '</option>'; });
     return html + '</select>';
   }
 
-  /* One Notes column: the customer's checkout note (if any), then the team's admin note. */
-  function notesCell(o) {
-    return '<td class="c-notes">' +
-      (o.note ? '<div class="note-cell cnote">' + esc(o.note) + '</div>' : '') +
-      '<div class="note-cell admin-note-cell" data-id="' + o._id + '">' + adminNoteInner(o) + '</div></td>';
+  function noteCells(o) {
+    var customer = '<td class="c-cnote"><div class="note-cell">' + (o.note ? esc(o.note) : '<span class="dash">—</span>') + '</div></td>';
+    var admin = '<td class="c-anote"><div class="note-cell admin-note-cell" data-id="' + o._id + '">' + adminNoteInner(o) + '</div></td>';
+    return customer + admin;
   }
   function adminNoteInner(o) {
     return o.adminNote
@@ -1314,68 +2348,94 @@
   /* ── Rows ── */
   function incompleteRow(o) {
     var converted = o.status === 'converted';
+    var deleteBtn = function (extra) {
+      return '<button class="btn-action btn-delete' + extra + '" type="button" onclick="deleteIncompleteOrder(\'' + o._id + '\')" title="Delete" aria-label="Delete incomplete order"><i class="fas fa-trash"></i></button>';
+    };
+    var deleteAction = deleteBtn(' mobile-only');
     var actions = '<div class="row-actions">' +
-      '<button class="btn btn-xs" type="button" onclick="openProducts(\'' + o._id + '\')" title="View items" aria-label="View"><i class="fas fa-eye"></i><span class="lbl"> View</span></button>' +
-      (converted ? '' : '<button class="btn btn-xs" type="button" onclick="ShobazIncompleteEditor.open(\'' + o._id + '\')" title="Edit customer and books" aria-label="Edit"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
-      (converted ? '' : '<button class="btn btn-xs" type="button" onclick="convertIncompleteOrder(\'' + o._id + '\')" title="Create an order from this checkout" aria-label="Add order"><i class="fas fa-plus"></i><span class="lbl"> Add order</span></button>') +
+      '<button class="btn-action btn-view" type="button" onclick="openProducts(\'' + o._id + '\')" aria-label="View"><i class="fas fa-eye"></i><span class="lbl"> View</span></button>' +
+      (converted ? '' : '<button class="btn-action btn-edit" type="button" onclick="ShobazIncompleteEditor.open(\'' + o._id + '\')" aria-label="Edit"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
+      (converted ? '' : '<button class="btn-action btn-addorder" type="button" onclick="convertIncompleteOrder(\'' + o._id + '\')" title="Create an order from this checkout" aria-label="Add order"><i class="fas fa-plus"></i><span class="lbl"> Add order</span></button>') +
       whatsappAction(o, 'incomplete') +
-      '<button class="btn btn-xs btn-icon" type="button" onclick="deleteIncompleteOrder(\'' + o._id + '\')" title="Delete" aria-label="Delete incomplete order"><i class="fas fa-trash" style="color:#c70a24"></i></button>' +
-      noteAction(o) +
+      deleteAction + noteAction(o) +
       '</div>';
     var courier = converted
-      ? '<span class="badge tone-success"><i class="fas fa-check"></i> Sent</span>'
-      : '<button class="btn btn-xs btn-primary" type="button" onclick="sendIncompleteToCourier(\'' + o._id + '\')"><i class="fas fa-truck"></i> Send</button>';
+      ? '<span class="badge badge-delivered"><i class="fas fa-check"></i>Sent</span>'
+      : '<button class="btn-courier" type="button" onclick="sendIncompleteToCourier(\'' + o._id + '\')"><i class="fas fa-truck"></i> Send</button>';
     if (o.courierData && o.courierData.providerName) courier = '<div class="courier-cell"><span class="courier-name">' + esc(o.courierData.providerName) + '</span></div>';
     var status = converted
-      ? '<span class="badge badge-dot tone-success">Converted</span>' + staffBy('by', o.convertedBy)
-      : '<span class="badge badge-hollow tone-attention">Incomplete</span>';
-    var sentRow = o.courierData && o.courierData.providerName ? ' row-sent' : '';
-    return '<tr data-id="' + o._id + '" class="row-tone-' + (converted ? 'success' : 'attention') + sentRow + '">' +
+      ? '<span class="badge badge-converted">Converted</span>' + staffBy('by', o.convertedBy)
+      : '<span class="badge badge-pending">Incomplete</span>';
+    return '<tr data-id="' + o._id + '" class="' + (o.courierData && o.courierData.providerName ? 'row-confirmed' : 'row-processing') + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
-      '<td class="c-order">' + orderCell('<span class="order-no">' + esc(o.orderId || String(o._id).slice(-6)) + '</span>', o.createdAt || o.checkoutDate, o.user ? 'Customer' : 'Guest') + '</td>' +
-      '<td class="c-cust">' + customerCell(o) + '</td>' +
-      '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
+      '<td class="c-order"><span class="order-no">' + esc(o.orderId || String(o._id).slice(-6)) + '</span></td>' +
+      customerCells(o) +
       '<td class="c-addr"><div class="addr">' + esc(rowAddress(o)) + '</div></td>' +
-      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span>' +
-        '<div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus || 'unpaid') + '</div>' +
-        '<div class="status-wrap">' + status + '</div></td>' +
+      '<td class="c-date">' + dateCell(o.createdAt || o.checkoutDate) + '</td>' +
+      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span></td>' +
       '<td class="c-courier">' + courier + '</td>' +
-      notesCell(o) +
+      '<td class="c-cstatus"><span class="dash">—</span></td>' +
+      '<td class="c-charge"><span class="dash">—</span></td>' +
+      '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
       '<td class="c-actions">' + actions + '</td>' +
+      '<td class="c-ptype">' + paymentTypeBadge(o.paymentType) + '</td>' +
+      '<td class="c-pstatus">' + paymentStatusBadge(o.paymentStatus || 'unpaid') + '</td>' +
+      '<td class="c-status">' + status + '</td>' +
+      '<td class="c-orderby"><span class="orderby">' + (o.user ? 'Customer' : 'Guest') + '</span></td>' +
+      '<td class="c-invoice">' + deleteBtn('') + '</td>' +
+      noteCells(o) +
       '</tr>';
+  }
+
+  /* Row colour: processing, confirmed / sent to courier (light green), completed, cancelled, trash. */
+  function rowClass(o) {
+    var st = Number(o.orderStatus);
+    if (st === 10) return 'row-trash';
+    if ([6, 7, 9].indexOf(st) !== -1) return 'row-cancelled';
+    if (st === 5) return 'row-completed';
+    if (st === 8 || (o.courierData && o.courierData.providerName)) return 'row-confirmed';
+    return 'row-processing';
   }
 
   function orderRow(o) {
     var itemCount = o.orderedItems ? o.orderedItems.length : 0;
     var orderBy = o.admin && o.admin.name ? esc(o.admin.name) : (o.user ? 'Customer' : 'Website');
     var cancelled = [6, 7, 9, 10].indexOf(Number(o.orderStatus)) !== -1;
+    var invoiceLink = function (extra) {
+      return '<a class="btn-action btn-invoice' + extra + '" href="' + API + '/invoice/invoice-' + esc(o.orderId) + '.pdf" target="_blank" rel="noopener" title="Invoice" aria-label="Invoice"><i class="fas fa-file-invoice"></i></a>';
+    };
     var actions = '<div class="row-actions">' +
-      '<button class="btn btn-xs" type="button" onclick="openProducts(\'' + o._id + '\')" title="View ' + itemCount + ' item(s)" aria-label="View order"><i class="fas fa-eye"></i><span class="lbl"> View</span>' + (itemCount ? '<span class="cnt"> (' + itemCount + ')</span>' : '') + '</button>' +
-      (cancelled ? '' : '<button class="btn btn-xs" type="button" onclick="ShobazIncompleteEditor.openOrder(\'' + o._id + '\')" title="Edit customer, books and prices" aria-label="Edit order"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
+      '<button class="btn-action btn-view" type="button" onclick="openProducts(\'' + o._id + '\')" title="View ' + itemCount + ' item(s)" aria-label="View order"><i class="fas fa-eye"></i><span class="lbl"> View</span>' + (itemCount ? '<span class="cnt"> (' + itemCount + ')</span>' : '') + '</button>' +
+      (cancelled ? '' : '<button class="btn-action btn-edit" type="button" onclick="ShobazIncompleteEditor.openOrder(\'' + o._id + '\')" title="Edit customer, books and prices" aria-label="Edit order"><i class="fas fa-pen"></i><span class="lbl"> Edit</span></button>') +
       whatsappAction(o, 'order') +
-      '<a class="btn btn-xs btn-icon" href="' + API + '/invoice/invoice-' + esc(o.orderId) + '.pdf" target="_blank" rel="noopener" title="Invoice" aria-label="Invoice"><i class="fas fa-file-invoice"></i></a>' +
+      invoiceLink(' mobile-only') +
       noteAction(o) +
       '</div>';
-    var sent = o.courierData && o.courierData.providerName ? ' row-sent' : '';
-    return '<tr data-id="' + o._id + '" class="row-tone-' + (STATUS_TONES[o.orderStatus] || 'neutral') + sent + '">' +
+    return '<tr data-id="' + o._id + '" class="' + rowClass(o) + '">' +
       '<td class="c-check"><input type="checkbox" class="row-check" value="' + o._id + '" onchange="updateBulkBar()" aria-label="Select"></td>' +
-      '<td class="c-order">' + orderCell('<a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" rel="noopener" class="order-no">#' + esc(o.orderId || String(o._id).slice(-6)) + '</a>', o.createdAt || o.checkoutDate, orderBy) + '</td>' +
-      '<td class="c-cust">' + customerCell(o) + '</td>' +
-      '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
+      '<td class="c-order"><a href="' + ADMIN_URL + '/sales/order-details/' + o._id + '" target="_blank" rel="noopener" class="order-no">#' + esc(o.orderId || String(o._id).slice(-6)) + '</a></td>' +
+      customerCells(o) +
       '<td class="c-addr"><div class="addr">' + esc(rowAddress(o)) + '</div></td>' +
-      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span>' +
-        '<div class="stack">' + paymentTypeBadge(o.paymentType) + paymentStatusBadge(o.paymentStatus) + '</div>' +
-        '<div class="status-wrap">' + statusSelect(o._id, o.orderStatus) + '</div></td>' +
-      '<td class="c-courier">' + courierColumn(o) + '</td>' +
-      notesCell(o) +
+      '<td class="c-date">' + dateCell(o.createdAt || o.checkoutDate) + '</td>' +
+      '<td class="c-total"><span class="amount">' + money(o.grandTotal) + '</span></td>' +
+      '<td class="c-courier">' + courierCell(o) + '</td>' +
+      '<td class="c-cstatus">' + courierStatusCell(o) + '</td>' +
+      '<td class="c-charge">' + courierChargeCell(o) + '</td>' +
+      '<td class="c-fraud">' + fraudCell(o.fraudChecker, o._id, o.phoneNo || '') + '</td>' +
       '<td class="c-actions">' + actions + '</td>' +
+      '<td class="c-ptype">' + paymentTypeBadge(o.paymentType) + '</td>' +
+      '<td class="c-pstatus">' + paymentStatusBadge(o.paymentStatus) + '</td>' +
+      '<td class="c-status">' + statusSelect(o._id, o.orderStatus) + '</td>' +
+      '<td class="c-orderby"><span class="orderby">' + orderBy + '</span></td>' +
+      '<td class="c-invoice">' + invoiceLink('') + '</td>' +
+      noteCells(o) +
       '</tr>';
   }
 
   function renderTable(orders) {
     var tbody = document.getElementById('ordersBody');
     if (!orders.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i>No orders found</div></td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="19"><div class="empty-state"><i class="fas fa-inbox"></i>No orders found</div></td></tr>';
       return;
     }
     tbody.innerHTML = orders.map(function (o) { return isIncompleteView ? incompleteRow(o) : orderRow(o); }).join('');
@@ -1392,9 +2452,9 @@
     var html = '<button class="page-btn" type="button" onclick="goPage(' + (state.page - 1) + ')"' + (state.page === 0 ? ' disabled' : '') + ' aria-label="Previous page"><i class="fas fa-chevron-left"></i></button>';
     var start = Math.max(0, state.page - 2);
     var end = Math.min(pageCount - 1, state.page + 2);
-    if (start > 0) html += '<button class="page-btn" type="button" onclick="goPage(0)">1</button>' + (start > 1 ? '<span class="subtle">…</span>' : '');
+    if (start > 0) html += '<button class="page-btn" type="button" onclick="goPage(0)">1</button>' + (start > 1 ? '<span class="page-ellipsis">…</span>' : '');
     for (var p = start; p <= end; p++) html += '<button class="page-btn' + (p === state.page ? ' active' : '') + '" type="button" onclick="goPage(' + p + ')">' + (p + 1) + '</button>';
-    if (end < pageCount - 1) html += (end < pageCount - 2 ? '<span class="subtle">…</span>' : '') + '<button class="page-btn" type="button" onclick="goPage(' + (pageCount - 1) + ')">' + pageCount + '</button>';
+    if (end < pageCount - 1) html += (end < pageCount - 2 ? '<span class="page-ellipsis">…</span>' : '') + '<button class="page-btn" type="button" onclick="goPage(' + (pageCount - 1) + ')">' + pageCount + '</button>';
     html += '<button class="page-btn" type="button" onclick="goPage(' + (state.page + 1) + ')"' + (state.page >= pageCount - 1 ? ' disabled' : '') + ' aria-label="Next page"><i class="fas fa-chevron-right"></i></button>';
     document.getElementById('paginationControls').innerHTML = html;
   }
@@ -1746,11 +2806,11 @@
   };
   function modalFraudHtml(o) {
     var ratio = typeof o.success_ratio === 'number' ? o.success_ratio : 0;
-    var tone = ratio >= 80 ? 'success' : ratio >= 50 ? 'attention' : 'critical';
-    return '<span class="badge tone-neutral">All: ' + (o.total || 0) + '</span>' +
-      '<span class="badge tone-success">Delivered: ' + (o.delivered || 0) + '</span>' +
-      '<span class="badge tone-critical">Returned: ' + (o.returned || 0) + '</span>' +
-      '<span class="badge badge-dot tone-' + tone + '">' + ratio.toFixed(1) + '% success</span>';
+    var rCls = ratio >= 80 ? 'good' : ratio >= 50 ? 'mid' : 'bad';
+    return '<span class="mfr-chip all">📦 All: <strong>' + (o.total || 0) + '</strong></span>' +
+      '<span class="mfr-chip ok">✓ <strong>' + (o.delivered || 0) + '</strong></span>' +
+      '<span class="mfr-chip ret">✗ <strong>' + (o.returned || 0) + '</strong></span>' +
+      '<span class="mfr-ratio ' + rCls + '">' + ratio.toFixed(1) + '% success</span>';
   }
   window.modalCheckFraud = function () {
     var btn = document.getElementById('modalFraudBtn');
@@ -1784,7 +2844,7 @@
       document.getElementById('modalTitle').textContent = (isIncompleteView ? 'Incomplete #' : 'Order #') + (order.orderId || String(mongoId).slice(-6));
       document.getElementById('modalOrderDate').textContent = order.createdAt ? new Date(order.createdAt).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short' }) + ' · ' + A.timeAgo(order.createdAt) : '';
       document.getElementById('modalStatusBadge').innerHTML = isIncompleteView
-        ? (order.status === 'converted' ? '<span class="badge badge-dot tone-success">Converted</span>' : '<span class="badge badge-hollow tone-attention">Incomplete</span>')
+        ? (order.status === 'converted' ? '<span class="badge badge-converted">Converted</span>' : '<span class="badge badge-pending">Incomplete</span>')
         : statusBadge(order.orderStatus);
       document.getElementById('modalCustomerName').textContent = order.name || '—';
       var phone = order.phoneNo || '';
@@ -1832,8 +2892,8 @@
             : type === 'CASH' && amt > 0 ? Math.floor(listPrice - amt) : (item.unitPrice || listPrice);
           var qty = item.quantity || item.selectedQty || 1;
           var author = item.author && item.author.name ? '<div class="product-author">' + esc(item.author.name) + '</div>' : '';
-          return '<tr><td><div>' + esc(item.name || item.nameEn || 'Unknown') + '</div>' + author + '</td>' +
-            '<td class="r">৳' + Number(unitPrice).toLocaleString() + '</td><td class="r">' + qty + '</td>' +
+          return '<tr><td><div class="product-name">' + esc(item.name || item.nameEn || 'Unknown') + '</div>' + author + '</td>' +
+            '<td class="r">৳' + Number(unitPrice).toLocaleString() + '</td><td class="c">' + qty + '</td>' +
             '<td class="r"><strong>৳' + Number(unitPrice * qty).toLocaleString() + '</strong></td></tr>';
         }).join('');
       }
@@ -1882,9 +2942,9 @@
     var actions = document.createElement('div');
     actions.className = 'note-actions';
     var saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-xs btn-primary'; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
+    saveBtn.className = 'btn-note-save'; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
     var cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-xs'; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-note-cancel'; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
     actions.appendChild(saveBtn); actions.appendChild(cancelBtn);
     cell.innerHTML = '';
     cell.appendChild(textarea); cell.appendChild(actions);
